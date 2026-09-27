@@ -1,8 +1,8 @@
-gradle-wrapper.jar
+# NOTE: the gradle wrapper (gradlew, gradlew.bat, gradle-wrapper.jar) IS
+# committed on purpose — CI builds the APK on GitHub Actions and needs the
+# wrapper; Flutter can regenerate it, but a committed wrapper is reproducible.
 /.gradle
 /captures/
-/gradlew
-/gradlew.bat
 /local.properties
 GeneratedPluginRegistrant.java
 .cxx/
