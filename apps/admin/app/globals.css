@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* Sunnah Life admin — tokens mirror packages/design-tokens/tokens.json */
+:root {
+  --bg: #f7f4ec;
+  --card: #ffffff;
+  --fg: #222222;
+  --muted: #666666;
+  --primary: #1f4d3d;
+  --primary-fg: #f7f4ec;
+  --primary-soft: #eaf0ec;
+  --secondary: #efe9dc;
+  --gold: #c99a3b;
+  --gold-soft: #f6ecd8;
+  --border: #e4dccb;
+  --success: #2e7d5b;
+  --alert: #c0392b;
+  --alert-soft: #fce4e4;
+}
+.dark {
+  --bg: #0e1613;
+  --card: #16211c;
+  --fg: #f1ede3;
+  --muted: #9faaa2;
+  --primary: #4c9b72;
+  --primary-fg: #0b140f;
+  --primary-soft: #1a2b23;
+  --secondary: #1c2a24;
+  --gold: #d9b25f;
+  --gold-soft: #2a2416;
+  --border: #26382f;
+  --success: #4c9b72;
+  --alert: #e06a5a;
+  --alert-soft: #3a211d;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
+  line-height: 1.65;
+}

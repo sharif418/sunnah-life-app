@@ -1,0 +1,9 @@
+{
+  "name": "@sunnahlife/content",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sunnah Life versioned content packs: amal catalog, assessment templates, level rules, du'as, adhkar, 99 names, Islamic names, 70 branches of Iman, sunnahs, articles, courses, quizzes, mosques, FAQ, Qur'an text + Bengali translation.",
+  "exports": {
+    "./*": "./*"
+  }
+}

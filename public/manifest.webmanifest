@@ -1,0 +1,19 @@
+{
+  "name": "সুন্নাহ লাইফ — Sunnah Life",
+  "short_name": "সুন্নাহ লাইফ",
+  "description": "নামাজের সময়, আমলের মুহাসাবা, কুরআন, দোয়া ও দাওয়াত প্রোগ্রাম — আস-সুন্নাহ ফাউন্ডেশন",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F7F4EC",
+  "theme_color": "#1F4D3D",
+  "lang": "bn",
+  "dir": "auto",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "name": "@sunnahlife/worker",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sunnah Life — BullMQ worker entrypoint (same codebase as @sunnahlife/api, separate process).",
+  "scripts": {
+    "start": "bun run src/main.ts",
+    "start:dev": "bun --hot src/main.ts",
+    "build": "echo 'worker runs from source via bun (same codebase as api)' && exit 0"
+  },
+  "dependencies": {
+    "@sunnahlife/api": "workspace:*"
+  }
+}

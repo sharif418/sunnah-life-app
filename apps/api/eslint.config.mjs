@@ -1,0 +1,39 @@
+// ESLint 9 flat config — @sunnahlife/api
+// TypeScript project (NestJS + Prisma + jest + bun scripts). Pragmatic rule
+// relaxations mirror the web workspace so Bengali-first app code (DTO
+// decorators, mapped rows, deliberate non-null assertions after guards) stays
+// readable; everything else uses the recommended sets.
+import eslint from "@eslint/js";
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(
+  {
+    ignores: [
+      "dist/**",
+      "node_modules/**",
+      "coverage/**",
+      "storage/**",
+      "openapi.json",
+      "prisma/migrations/**",
+    ],
+  },
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  {
+    files: ["**/*.ts"],
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" },
+      ],
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/no-require-imports": "off",
+      "no-console": "off",
+      "no-empty": "off",
+      "prefer-const": "off",
+      "no-case-declarations": "off",
+    },
+  }
+);

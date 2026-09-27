@@ -1,0 +1,35 @@
+# Root .dockerignore — used for any build with the REPOSITORY ROOT as context.
+# The web workspace IS the repo root (docs/PLAN.md §3): `infra/web.Dockerfile`
+# builds with context "..". Keep this list SAFE for the web app — never exclude
+# src/, content/, public/, prisma/, packages/, configs. BuildKit additionally
+# uses the stricter infra/web.Dockerfile.dockerignore for that Dockerfile.
+
+# dependencies & build output (regenerated inside the image)
+node_modules
+**/node_modules
+.next
+**/.next
+
+# secrets — NEVER bake .env files into any image
+.env
+.env.*
+!.env.example
+
+# version control / CI
+.git
+.github
+
+# Flutter app builds from its own context (apps/mobile)
+apps/mobile
+
+# local databases, dumps, logs, scratch
+db
+dumps
+tool-results
+*.log
+*.db
+
+# toolchain caches
+.turbo
+**/.turbo
+.zscripts

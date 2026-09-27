@@ -1,0 +1,362 @@
+/// App root: ProviderScope bootstrap → MaterialApp.router with the token
+/// themes, locale bn/en/ar (manual string table), RTL for Arabic, and a
+/// go_router StatefulShellRoute with the 5 tabs (হোম / আমল / দাওয়াত / ইলম /
+/// আরও).
+library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+import 'design/design_tokens.dart';
+import 'features/amal/habit_screen.dart';
+import 'features/amal/month_screen.dart';
+import 'features/amal/self_test_screen.dart';
+import 'features/amal/today_screen.dart';
+import 'features/auth/auth_screen.dart';
+import 'features/dawah/dawah_screen.dart';
+import 'features/home/home_screen.dart';
+import 'features/ilm/adhkar_screen.dart';
+import 'features/ilm/articles_screen.dart';
+import 'features/ilm/duas_screen.dart';
+import 'features/ilm/iman_branches_screen.dart';
+import 'features/ilm/islamic_names_screen.dart';
+import 'features/ilm/ilm_screen.dart';
+import 'features/ilm/names99_screen.dart';
+import 'features/ilm/quran_reader_screen.dart';
+import 'features/ilm/sunnahs_screen.dart';
+import 'features/more/about_screen.dart';
+import 'features/more/live_screen.dart';
+import 'features/more/masala_screen.dart';
+import 'features/more/more_screen.dart';
+import 'features/more/mosques_screen.dart';
+import 'features/more/profile_screen.dart';
+import 'features/more/qibla_screen.dart';
+import 'features/more/zakat_screen.dart';
+import 'features/onboarding/onboarding_screen.dart';
+import 'features/shared/widgets.dart';
+import 'l10n/app_strings.dart';
+import 'state/amal_state.dart';
+import 'state/providers.dart';
+
+/// Single-flight bootstrap: read the persisted guest profile before the
+/// router mounts so the onboarding redirect never races hydration.
+final bootstrapProvider = FutureProvider<void>((ref) async {
+  final db = ref.watch(dbProvider);
+  final row = await db.guestProfile();
+  ref.read(profileProvider.notifier).hydrateFrom(row);
+  // Offline-first background sync: 60s outbox flush (see SyncNotifier).
+  ref.read(syncProvider.notifier).startPeriodicFlush();
+});
+
+/// Bridges riverpod changes into GoRouter's refreshListenable.
+class _RiverpodListenable extends ChangeNotifier {
+  _RiverpodListenable(Ref ref) {
+    ref.listen(profileProvider, (_, _) => notifyListeners());
+    ref.listen(authProvider, (_, _) => notifyListeners());
+  }
+}
+
+final routerProvider = Provider<GoRouter>((ref) {
+  final listenable = _RiverpodListenable(ref);
+  ref.onDispose(listenable.dispose);
+  return GoRouter(
+    initialLocation: '/',
+    refreshListenable: listenable,
+    redirect: (context, state) {
+      final profile = ref.read(profileProvider);
+      final loc = state.matchedLocation;
+      final onOnboarding = loc == '/onboarding';
+      if (!profile.onboardingDone) return onOnboarding ? null : '/onboarding';
+      if (onOnboarding) return '/';
+      // Da'wah engine is daee+ territory — hide the branch for everyone
+      // else (the tab disappears too; the screen itself also gates).
+      final auth = ref.read(authProvider);
+      if (loc.startsWith('/dawah') &&
+          !(auth.userOrNull?.canSeeDawah ?? false)) {
+        return '/';
+      }
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
+      GoRoute(path: '/auth', builder: (context, state) => const AuthScreen()),
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AppShellScaffold(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [GoRoute(path: '/', builder: (c, s) => const HomeScreen())],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/amal',
+                builder: (c, s) => const AmalHubScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'month',
+                    builder: (c, s) => const MonthGridScreen(),
+                  ),
+                  GoRoute(
+                    path: 'habit',
+                    builder: (c, s) => const HabitBuilderScreen(),
+                  ),
+                  GoRoute(
+                    path: 'self-test',
+                    builder: (c, s) => const SelfTestScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(path: '/dawah', builder: (c, s) => const DawahScreen()),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/ilm',
+                builder: (c, s) => const IlmScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'quran',
+                    builder: (c, s) => const QuranReaderScreen(),
+                  ),
+                  GoRoute(
+                    path: 'adhkar',
+                    builder: (c, s) => const AdhkarScreen(),
+                  ),
+                  GoRoute(path: 'duas', builder: (c, s) => const DuasScreen()),
+                  GoRoute(
+                    path: 'names99',
+                    builder: (c, s) => const Names99Screen(),
+                  ),
+                  GoRoute(
+                    path: 'islamic-names',
+                    builder: (c, s) => const IslamicNamesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'iman-branches',
+                    builder: (c, s) => const ImanBranchesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'sunnahs',
+                    builder: (c, s) => const SunnahsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'articles',
+                    builder: (c, s) => const ArticlesScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/more',
+                builder: (c, s) => const MoreScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'zakat',
+                    builder: (c, s) => const ZakatScreen(),
+                  ),
+                  GoRoute(
+                    path: 'qibla',
+                    builder: (c, s) => const QiblaScreen(),
+                  ),
+                  GoRoute(
+                    path: 'mosques',
+                    builder: (c, s) => const MosquesScreen(),
+                  ),
+                  GoRoute(
+                    path: 'masala',
+                    builder: (c, s) => const MasalaScreen(),
+                  ),
+                  GoRoute(path: 'live', builder: (c, s) => const LiveScreen()),
+                  GoRoute(
+                    path: 'about',
+                    builder: (c, s) => const AboutScreen(),
+                  ),
+                  GoRoute(
+                    path: 'profile',
+                    builder: (c, s) => const ProfileScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    ],
+  );
+});
+
+class SunnahLifeApp extends ConsumerWidget {
+  const SunnahLifeApp({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(profileProvider);
+    final lang = LangX.fromCode(profile.language);
+    final themeMode = switch (profile.themeMode) {
+      'light' => ThemeMode.light,
+      'dark' => ThemeMode.dark,
+      _ => ThemeMode.system,
+    };
+    return MaterialApp.router(
+      title: 'সুন্নাহ লাইফ',
+      debugShowCheckedModeBanner: false,
+      theme: buildSunnahLightTheme(),
+      darkTheme: buildSunnahDarkTheme(),
+      themeMode: themeMode,
+      // Manual locale model (no flutter_localizations): force directionality
+      // so Arabic gets full RTL and bn/en stay LTR.
+      builder: (context, child) => Directionality(
+        textDirection: lang.isRtl ? TextDirection.rtl : TextDirection.ltr,
+        child: child!,
+      ),
+      routerConfig: ref.watch(routerProvider),
+    );
+  }
+}
+
+/// Splash while the local DB read completes (sub-frame on real devices).
+class BootstrapGate extends ConsumerWidget {
+  const BootstrapGate({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final boot = ref.watch(bootstrapProvider);
+    return boot.when(
+      loading: () => Directionality(
+        textDirection: TextDirection.ltr,
+        child: Container(
+          color: SLColors.primary,
+          alignment: Alignment.center,
+          child: const _SplashLogo(),
+        ),
+      ),
+      error: (e, _) => Directionality(
+        textDirection: TextDirection.ltr,
+        child: MaterialApp(
+          home: Scaffold(body: Center(child: Text('শুরু করা যায়নি: $e'))),
+        ),
+      ),
+      data: (_) => const SunnahLifeApp(),
+    );
+  }
+}
+
+class _SplashLogo extends StatelessWidget {
+  const _SplashLogo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: const BoxDecoration(
+            color: SLColors.gold,
+            shape: BoxShape.circle,
+          ),
+          child: const Center(
+            child: Icon(Icons.star, color: SLColors.primaryDeep, size: 40),
+          ),
+        ),
+        const SizedBox(height: SLSpacing.s16),
+        Text(
+          'সুন্নাহ লাইফ',
+          style: GoogleFonts.hindSiliguri(
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
+            color: SLColors.lightPrimaryForeground,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Bottom-nav shell: 5 destinations for daee+ (হোম / আমল / দাওয়াত / ইলম /
+/// আরও), 4 for everyone else (the Da'wah branch is hidden, not merely
+/// gated). Always-visible labels, 44dp targets.
+class AppShellScaffold extends ConsumerWidget {
+  const AppShellScaffold({super.key, required this.navigationShell});
+  final StatefulNavigationShell navigationShell;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final lang = context.lang;
+    final canSeeDawah = ref.watch(
+      authProvider.select((s) => s.userOrNull?.canSeeDawah ?? false),
+    );
+
+    // Branch index ↔ visible tab index (branch 2 = Da'wah is skipped when
+    // the role doesn't qualify).
+    final current = navigationShell.currentIndex;
+    final selectedTab = !canSeeDawah && current > 2 ? current - 1 : current;
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
+      child: Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: selectedTab,
+          onDestinationSelected: (tab) {
+            final branch = !canSeeDawah && tab >= 2 ? tab + 1 : tab;
+            navigationShell.goBranch(
+              branch,
+              initialLocation: branch == navigationShell.currentIndex,
+            );
+          },
+          destinations: [
+            NavigationDestination(
+              icon: const Icon(Icons.mosque_outlined),
+              selectedIcon: const Icon(Icons.mosque),
+              label: S.tr(lang, 'tab_home'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.menu_book_outlined),
+              selectedIcon: const Icon(Icons.menu_book),
+              label: S.tr(lang, 'tab_amal'),
+            ),
+            if (canSeeDawah)
+              NavigationDestination(
+                icon: const Icon(Icons.campaign_outlined),
+                selectedIcon: const Icon(Icons.campaign),
+                label: S.tr(lang, 'tab_dawah'),
+              ),
+            NavigationDestination(
+              icon: const Icon(Icons.auto_stories_outlined),
+              selectedIcon: const Icon(Icons.auto_stories),
+              label: S.tr(lang, 'tab_ilm'),
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.grid_view_rounded),
+              selectedIcon: const Icon(Icons.grid_view),
+              label: S.tr(lang, 'tab_more'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

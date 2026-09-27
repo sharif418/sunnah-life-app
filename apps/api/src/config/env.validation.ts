@@ -1,0 +1,43 @@
+import { z } from "zod";
+
+/**
+ * Environment validation (fail-fast at boot). Secrets only via env.
+ */
+const schema = z.object({
+  DATABASE_URL: z.string().url(),
+  DIRECT_URL: z.string().url().optional(),
+  PORT: z.coerce.number().int().positive().default(3001),
+  CORS_ORIGINS: z.string().optional().default(""),
+  REDIS_URL: z.string().optional().default("redis://127.0.0.1:6380"),
+  MEILI_HOST: z.string().optional().default(""),
+  MEILI_KEY: z.string().optional().default(""),
+  JWT_SECRET: z.string().min(8, "JWT_SECRET must be set (min 8 chars)").default("dev-only-secret-change-me-in-production"),
+  JWT_REFRESH_SECRET: z.string().min(8).optional().default(""),
+  ACCESS_TOKEN_TTL_MIN: z.coerce.number().int().positive().default(15),
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
+  SMS_PROVIDER: z.enum(["mock", "sslwireless", "infobip"]).default("mock"),
+  SMS_SSLWIRELESS_URL: z.string().optional().default(""),
+  SMS_SSLWIRELESS_USER: z.string().optional().default(""),
+  SMS_SSLWIRELESS_PASS: z.string().optional().default(""),
+  SMS_INFOBIP_URL: z.string().optional().default(""),
+  SMS_INFOBIP_KEY: z.string().optional().default(""),
+  CONTENT_DIR: z.string().optional().default(""),
+  STORAGE_DIR: z.string().optional().default("./storage"),
+  S3_ENDPOINT: z.string().optional().default(""),
+  S3_BUCKET: z.string().optional().default(""),
+  S3_ACCESS_KEY: z.string().optional().default(""),
+  S3_SECRET_KEY: z.string().optional().default(""),
+  S3_PUBLIC_BASE: z.string().optional().default(""),
+  APP_DOMAIN: z.string().optional().default("sunnahlife.app"),
+});
+
+export type Env = z.infer<typeof schema>;
+
+export function validateEnv(config: Record<string, unknown>): Env {
+  const parsed = schema.safeParse(config);
+  if (!parsed.success) {
+    const issues = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
+    throw new Error(`Invalid environment configuration → ${issues}`);
+  }
+  return parsed.data;
+}

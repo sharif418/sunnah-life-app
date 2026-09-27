@@ -1,0 +1,239 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Sunnah Life — CI (GitHub Actions)
+#
+# Runs on every push to main/master and every pull request. Jobs activate only
+# when their workspace exists, so the pipeline stays green while the monorepo
+# lands one workstream at a time (apps/api, apps/admin, apps/mobile).
+#
+# NOTE (sandbox): there is no GitHub remote in the build sandbox — this file is
+# verified for syntax only; it runs on the client's GitHub org.
+#
+# Jobs:
+#   tokens  design-token parity guard (tokens.json ↔ web globals.css)
+#   api     lint · jest (unit + RLS e2e against postgres:16 + redis:7, seeded) · build
+#   web     lint · production build (repo root — heavy, CI only)
+#   admin   lint · build (when apps/admin exists)
+#   mobile  flutter analyze · test · debug APK (when apps/mobile exists)
+# ─────────────────────────────────────────────────────────────────────────────
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  tokens:
+    name: Design tokens — parity check
+    runs-on: ubuntu-latest
+    if: hashFiles('packages/design-tokens/package.json') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      # build.mjs is dependency-free (node:fs only) — no install step needed.
+      - name: tokens.json ↔ globals.css parity guard
+        working-directory: packages/design-tokens
+        run: node build.mjs --check
+
+  # ───────────────────────────────────────────────────────────────────────────
+  api:
+    name: API — lint · test (PG16+Redis) · build
+    runs-on: ubuntu-latest
+    if: hashFiles('apps/api/package.json') != ''
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          # Keep `sunnahlife` — the API's RLS migration hardcodes
+          # GRANT … ON DATABASE sunnahlife (apps/api/prisma/migrations/*_rls).
+          POSTGRES_DB: sunnahlife
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d sunnahlife"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      # Exactly what apps/api/src/config/env.validation.ts reads (see
+      # docs/DEPLOY_COOLIFY.md §4): runtime = the NOBYPASSRLS role, the test
+      # bootstrap below + migrations run as the owner via DIRECT_URL.
+      DATABASE_URL: postgresql://sunnah_app:sunnah_app@localhost:5432/sunnahlife
+      DIRECT_URL: postgresql://postgres:postgres@localhost:5432/sunnahlife
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-jwt-secret-not-used-in-assertions
+      SMS_PROVIDER: mock
+      # MEILI_HOST stays unset — the api skips search indexing and the health
+      # probe reports meilisearch "absent" instead of "down".
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          cache: true
+
+      - name: Install dependencies
+        working-directory: apps/api
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Prepare database (RLS role + migrations + demo seed)
+        working-directory: apps/api
+        run: |
+          # Same bootstrap as infra/postgres/init-rls.sql: the restricted role
+          # the runtime connects as (the app's own migration re-grants + adds
+          # RLS policies — see apps/api/prisma/migrations/*_rls).
+          psql "postgresql://postgres:postgres@localhost:5432/sunnahlife" \
+            -c "CREATE ROLE sunnah_app LOGIN PASSWORD 'sunnah_app' NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS" \
+            -c "GRANT CONNECT ON DATABASE sunnahlife TO sunnah_app" \
+            -c "GRANT USAGE, CREATE ON SCHEMA public TO sunnah_app"
+          # Tables + indexes + RLS policies (owner connection).
+          bun run migrate:deploy
+          # Demo users + amal history the RLS e2e signs in with
+          # (docs/DEMO_ACCOUNTS.md) — idempotent, connects as DIRECT_URL.
+          bun run seed
+
+      - name: Lint (eslint)
+        working-directory: apps/api
+        run: |
+          if grep -q '"lint":' package.json; then bun run lint; else echo 'no lint script — skipping'; fi
+
+      - name: Unit + e2e tests (jest — includes the RLS gender-isolation e2e)
+        working-directory: apps/api
+        run: |
+          if grep -q '"test":' package.json; then bun run test; fi
+          if grep -q '"test:e2e":' package.json; then bun run test:e2e; fi
+
+      - name: Build (nest build)
+        working-directory: apps/api
+        run: |
+          if grep -q '"build":' package.json; then bun run build; else echo 'no build script — skipping'; fi
+
+  # ───────────────────────────────────────────────────────────────────────────
+  web:
+    name: Web — lint · production build (repo root)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          cache: true
+
+      # NOTE: `next build` is intentionally NOT run in the build sandbox (2
+      # vCPU / 4 GB) — here on CI it gets a proper runner.
+      - name: Install dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Lint (eslint)
+        run: bun run lint
+
+      - name: Production build (next build, standalone)
+        run: bun run build
+        env:
+          DATABASE_URL: file:/tmp/ci-build.db
+
+  # ───────────────────────────────────────────────────────────────────────────
+  admin:
+    name: Admin — lint · build
+    runs-on: ubuntu-latest
+    if: hashFiles('apps/admin/package.json') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          cache: true
+
+      - name: Install dependencies
+        working-directory: apps/admin
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Lint (if configured)
+        working-directory: apps/admin
+        run: |
+          if grep -q '"lint":' package.json; then bun run lint; else echo 'no lint script — skipping'; fi
+
+      - name: Build (if configured)
+        working-directory: apps/admin
+        run: |
+          if grep -q '"build":' package.json; then bun run build; else echo 'no build script — skipping'; fi
+        env:
+          DATABASE_URL: file:/tmp/ci-build.db
+
+  # ───────────────────────────────────────────────────────────────────────────
+  mobile:
+    name: Flutter — analyze · test · debug APK
+    runs-on: ubuntu-latest
+    if: hashFiles('apps/mobile/pubspec.yaml') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 17 for AGP 8 / Gradle (flutter build apk needs it; the runner's
+      # default JDK is not guaranteed to match).
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile/android/**/*.gradle*', 'apps/mobile/android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Flutter doctor
+        run: flutter --version
+
+      - name: Pub get
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: apps/mobile
+        run: flutter analyze
+
+      - name: Test
+        working-directory: apps/mobile
+        run: flutter test
+
+      - name: Build debug APK
+        working-directory: apps/mobile
+        run: flutter build apk --debug
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-debug-apk
+          path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+          if-no-files-found: warn

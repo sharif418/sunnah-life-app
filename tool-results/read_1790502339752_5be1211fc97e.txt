@@ -1,0 +1,743 @@
+     1→// ─────────────────────────────────────────────────────────────────────────────
+     2→// Sunnah Life — database seed (PostgreSQL, RLS-aware).
+     3→// Run: bun prisma/seed.ts        (or: bunx prisma db seed)
+     4→//
+     5→// The seed is a trusted bootstrap: it connects with DIRECT_URL (superuser)
+     6→// because RLS refuses bulk writes without a user context. It is idempotent —
+     7→// wipes and reseeds the transactional tables deterministically (mulberry32).
+     8→//
+     9→// Seeds: full amal catalog (content/amal-catalog.json), Farze Ain v1
+    10→// assessment template, 2 usrahs (1 male + 1 female) with the reserved demo
+    11→// phones, referral closure tree, 30 days of deterministic amal history,
+    12→// weekly reviews, assessments, level transitions, live programs,
+    13→// announcements, reminders, personal goals, day unlock, audit log.
+    14→// ─────────────────────────────────────────────────────────────────────────────
+    15→
+    16→import { PrismaClient } from "@prisma/client";
+    17→import { promises as fs } from "fs";
+    18→import path from "path";
+    19→
+    20→// Same calendar helpers as apps/api/src/shared/calendars (inlined so the seed
+    21→// has no imports from compiled app code).
+    22→const BN_DIGITS = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    23→function dateKey(d: Date): string {
+    24→  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    25→}
+    26→function parseKey(key: string): Date {
+    27→  const [y, m, d] = key.split("-").map(Number);
+    28→  return new Date(y, m - 1, d);
+    29→}
+    30→function addDays(key: string, days: number): string {
+    31→  const d = parseKey(key);
+    32→  d.setDate(d.getDate() + days);
+    33→  return dateKey(d);
+    34→}
+    35→function weekStartOfSafe(d: Date): string {
+    36→  const diff = (d.getDay() + 1) % 7; // Sat → 0, Sun → 1, … Fri → 6
+    37→  return dateKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff));
+    38→}
+    39→function hijriArithmetic(d: Date): { year: number; monthIndex: number; day: number } {
+    40→  const jd = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000) + 2440588;
+    41→  let l = jd - 1948440 + 10632;
+    42→  const n = Math.floor((l - 1) / 10631);
+    43→  l = l - 10631 * n + 354;
+    44→  const j =
+    45→    Math.floor((10985 - l) / 5316) * Math.floor((50 * l) / 17719) +
+    46→    Math.floor(l / 5670) * Math.floor((43 * l) / 15238);
+    47→  l =
+    48→    l -
+    49→    Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) -
+    50→    Math.floor(j / 16) * Math.floor((15238 * j) / 43) +
+    51→    29;
+    52→  const month = Math.floor((24 * l) / 709);
+    53→  const day = l - Math.floor((709 * month) / 24);
+    54→  const year = 30 * n + j - 30;
+    55→  return { year, monthIndex: month - 1, day };
+    56→}
+    57→function hijriIso(d: Date): string {
+    58→  const h = hijriArithmetic(d);
+    59→  return `${h.year}-${h.monthIndex + 1}-${h.day}`;
+    60→}
+    61→function isAyyamBeez(d: Date): boolean {
+    62→  const day = hijriArithmetic(d).day;
+    63→  return day === 13 || day === 14 || day === 15;
+    64→}
+    65→
+    66→// deterministic PRNG so reseeding always produces the same history
+    67→function mulberry32(seed: number) {
+    68→  let a = seed >>> 0;
+    69→  return () => {
+    70→    a |= 0;
+    71→    a = (a + 0x6d2b79f5) | 0;
+    72→    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    73→    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    74→    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    75→  };
+    76→}
+    77→function hashStr(s: string): number {
+    78→  let h = 2166136261;
+    79→  for (const c of s) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
+    80→  return h >>> 0;
+    81→}
+    82→
+    83→interface DefShape {
+    84→  key: string;
+    85→  titleBn: string;
+    86→  titleEn: string;
+    87→  category: string;
+    88→  inputType: string;
+    89→  cadence: string;
+    90→  targetJson?: Record<string, number> | null;
+    91→  unit?: string | null;
+    92→  minLevel?: string;
+    93→  sortOrder?: number;
+    94→  autoSource?: string | null;
+    95→}
+    96→
+    97→const CONTENT_DIR =
+    98→  process.env.CONTENT_DIR ||
+    99→  path.resolve(__dirname, "..", "..", "..", "packages", "content");
+   100→
+   101→const seedUrl = process.env.SEED_DATABASE_URL || process.env.DIRECT_URL || process.env.DATABASE_URL;
+   102→const db = new PrismaClient({
+   103→  datasources: { db: { url: seedUrl } },
+   104→});
+   105→
+   106→async function main() {
+   107→  console.log(`— Sunnah Life seed (postgres, url role: ${/\/\/([^:@]+)[:@]/.exec(seedUrl)?.[1] ?? "?"})`);
+   108→  console.log("  Wiping transactional tables…");
+   109→  await db.amalEntry.deleteMany();
+   110→  await db.personalGoal.deleteMany();
+   111→  await db.dayUnlock.deleteMany();
+   112→  await db.weeklyReview.deleteMany();
+   113→  await db.assessment.deleteMany();
+   114→  await db.levelTransition.deleteMany();
+   115→  await db.announcement.deleteMany();
+   116→  await db.reminder.deleteMany();
+   117→  await db.auditLog.deleteMany();
+   118→  await db.masalaQuestion.deleteMany();
+   119→  await db.feedback.deleteMany();
+   120→  await db.liveProgram.deleteMany();
+   121→  await db.enrollment.deleteMany();
+   122→  await db.quizAttempt.deleteMany();
+   123→  await db.session.deleteMany();
+   124→  await db.refreshToken.deleteMany();
+   125→  await db.otpCode.deleteMany();
+   126→  await db.referralClosure.deleteMany();
+   127→  await db.user.deleteMany();
+   128→  await db.usrah.deleteMany();
+   129→  await db.amalDefinition.deleteMany();
+   130→  await db.assessmentTemplate.deleteMany();
+   131→
+   132→  // ── 1) Amal catalog ──────────────────────────────────────────────────────
+   133→  const catalog = JSON.parse(
+   134→    await fs.readFile(path.join(CONTENT_DIR, "amal-catalog.json"), "utf8")
+   135→  ) as { definitions: DefShape[] };
+   136→  await db.amalDefinition.createMany({
+   137→    data: catalog.definitions.map((d) => ({
+   138→      key: d.key,
+   139→      titleBn: d.titleBn,
+   140→      titleEn: d.titleEn,
+   141→      category: d.category,
+   142→      inputType: d.inputType,
+   143→      cadence: d.cadence,
+   144→      targetJson: d.targetJson ?? null,
+   145→      unit: d.unit ?? null,
+   146→      minLevel: d.minLevel ?? "none",
+   147→      sortOrder: d.sortOrder ?? 0,
+   148→      autoSource: d.autoSource ?? null,
+   149→      active: true,
+   150→    })),
+   151→  });
+   152→  console.log(`  AmalDefinitions: ${catalog.definitions.length}`);
+   153→
+   154→  // ── 2) Assessment template (verbatim Farze Ain v1) ────────────────────────
+   155→  const tmpl = JSON.parse(
+   156→    await fs.readFile(path.join(CONTENT_DIR, "assessment-farze-ain-v1.json"), "utf8")
+   157→  ) as {
+   158→    key: string; version: number; titleBn: string; titleEn: string;
+   159→    sections: { key: string; titleBn: string; criteria: { key: string; titleBn: string; hintBn?: string }[] }[];
+   160→  };
+   161→  await db.assessmentTemplate.create({
+   162→    data: {
+   163→      key: tmpl.key,
+   164→      version: tmpl.version,
+   165→      titleBn: tmpl.titleBn,
+   166→      titleEn: tmpl.titleEn,
+   167→      sectionsJson: tmpl.sections,
+   168→    },
+   169→  });
+   170→  const allCriteria = tmpl.sections.flatMap((s) => s.criteria.map((c) => ({ section: s.key, key: c.key })));
+   171→  console.log(`  AssessmentTemplate: ${tmpl.key} (${allCriteria.length} criteria)`);
+   172→
+   173→  // ── 3) Users ──────────────────────────────────────────────────────────────
+   174→  const NOW = new Date();
+   175→  const d = (days: number, hours = 0) => new Date(NOW.getTime() - (days * 86400 + hours * 3600) * 1000);
+   176→
+   177→  interface Spec {
+   178→    phone: string; name: string; gender: "M" | "F"; role: string; category?: string;
+   179→    memberCode?: string; refBy?: string; level?: string; levelDays?: number;
+   180→    district?: string; city?: string; lat?: number; lng?: number; devout: number;
+   181→  }
+   182→  const users: Spec[] = [
+   183→    { phone: "01000000001", name: "আব্দুল্লাহ আল মামুন", gender: "M", role: "full_admin", district: "dhaka", city: "ঢাকা", lat: 23.8103, lng: 90.4125, devout: 0.95 },
+   184→    { phone: "01000000002", name: "হাফেজ যাকারিয়া", gender: "M", role: "invigilator", category: "hafez", district: "dhaka", city: "ঢাকা", lat: 23.7808, lng: 90.2794, devout: 0.92 },
+   185→    { phone: "01000000003", name: "মাওলানা ইউসুফ", gender: "M", role: "usrah_head", category: "alim", memberCode: "DS-000003", level: "farze_ain_1", levelDays: 400, district: "dhaka", city: "ঢাকা", lat: 23.8103, lng: 90.4125, devout: 0.95 },
+   186→    { phone: "01000000004", name: "রাফিউল ইসলাম", gender: "M", role: "daee", memberCode: "DS-000004", refBy: "01000000003", level: "muhibbus_sunnah", levelDays: 150, district: "dhaka", city: "ঢাকা", lat: 23.7806, lng: 90.4074, devout: 0.88 },
+   187→    { phone: "01000000005", name: "উম্মে হাবিবা", gender: "F", role: "usrah_head", category: "alim", memberCode: "DS-000005", level: "farze_ain_1", levelDays: 380, district: "dhaka", city: "ঢাকা", lat: 23.7925, lng: 90.4045, devout: 0.95 },
+   188→    { phone: "01000000006", name: "মারিয়াম হাসান", gender: "F", role: "daee", memberCode: "DS-000006", refBy: "01000000005", level: "muhibbus_sunnah", levelDays: 148, district: "dhaka", city: "ঢাকা", lat: 23.7509, lng: 90.3934, devout: 0.86 },
+   189→    { phone: "01000000007", name: "তানভীর হোসেন", gender: "M", role: "user", refBy: "01000000004", district: "chattogram", city: "চট্টগ্রাম", lat: 22.3569, lng: 91.7832, devout: 0.55 },
+   190→    { phone: "01000000008", name: "সাইফুল ইসলাম", gender: "M", role: "user", refBy: "01000000004", district: "dhaka", city: "ঢাকা", lat: 23.7383, lng: 90.3945, devout: 0.5 },
+   191→    { phone: "01000000009", name: "মেহেদী হাসান", gender: "M", role: "daee", category: "hafez", memberCode: "DS-000009", refBy: "01000000004", level: "muhibbus_sunnah", levelDays: 60, district: "cumilla", city: "কুমিল্লা", lat: 23.4607, lng: 91.1809, devout: 0.72 },
+   192→    { phone: "01000000010", name: "আব্দুর রহিম", gender: "M", role: "user", refBy: "01000000009", district: "rajshahi", city: "রাজশাহী", lat: 24.3745, lng: 88.6042, devout: 0.45 },
+   193→    { phone: "01000000011", name: "ফাতিমা আক্তার", gender: "F", role: "user", refBy: "01000000006", district: "dhaka", city: "ঢাকা", lat: 23.8114, lng: 90.4373, devout: 0.58 },
+   194→    { phone: "01000000012", name: "নুসরাত জাহান", gender: "F", role: "user", refBy: "01000000006", district: "sylhet", city: "সিলেট", lat: 24.8949, lng: 91.8687, devout: 0.52 },
+   195→    { phone: "01000000013", name: "সাদিয়া রহমান", gender: "F", role: "daee", memberCode: "DS-000013", refBy: "01000000006", level: "muhibbus_sunnah", levelDays: 90, district: "dhaka", city: "ঢাকা", lat: 23.7261, lng: 90.4086, devout: 0.74 },
+   196→    { phone: "01000000014", name: "রাইসা খাতুন", gender: "F", role: "user", refBy: "01000000013", district: "khulna", city: "খুলনা", lat: 22.8456, lng: 89.5403, devout: 0.42 },
+   197→    { phone: "01000000015", name: "উস্তায়া সালেহা আক্তার", gender: "F", role: "invigilator", district: "dhaka", city: "ঢাকা", lat: 23.7951, lng: 90.4015, devout: 0.93 },
+   198→  ];
+   199→
+   200→  const idByPhone = new Map<string, string>();
+   201→  for (const u of users) {
+   202→    const created = await db.user.create({
+   203→      data: {
+   204→        phone: u.phone,
+   205→        name: u.name,
+   206→        gender: u.gender,
+   207→        role: u.role,
+   208→        category: u.category ?? "general",
+   209→        memberCode: u.memberCode ?? null,
+   210→        referredById: u.refBy ? idByPhone.get(u.refBy)! : null,
+   211→        level: u.level ?? "none",
+   212→        levelStartedAt: u.levelDays ? d(u.levelDays) : null,
+   213→        district: u.district ?? null,
+   214→        city: u.city ?? null,
+   215→        lat: u.lat ?? null,
+   216→        lng: u.lng ?? null,
+   217→        language: "bn",
+   218→        madhhab: "hanafi",
+   219→        calcMethod: "karachi",
+   220→        createdAt: d(240),
+   221→      },
+   222→    });
+   223→    idByPhone.set(u.phone, created.id);
+   224→  }
+   225→  console.log(`  Users: ${users.length}`);
+   226→
+   227→  // ── 4) Usrahs ─────────────────────────────────────────────────────────────
+   228→  const furqan = await db.usrah.create({
+   229→    data: {
+   230→      name: "উসরা আল-ফুরকান",
+   231→      gender: "M",
+   232→      headUserId: idByPhone.get("01000000003")!,
+   233→      invigilatorUserId: idByPhone.get("01000000002")!,
+   234→      district: "dhaka",
+   235→    },
+   236→  });
+   237→  const ayesha = await db.usrah.create({
+   238→    data: {
+   239→      name: "উসরা আয়েশা সিদ্দিকা",
+   240→      gender: "F",
+   241→      headUserId: idByPhone.get("01000000005")!,
+   242→      invigilatorUserId: idByPhone.get("01000000015")!,
+   243→      district: "dhaka",
+   244→    },
+   245→  });
+   246→  const mMembers = ["01000000003", "01000000004", "01000000007", "01000000008", "01000000009", "01000000010"];
+   247→  const fMembers = ["01000000005", "01000000006", "01000000011", "01000000012", "01000000013", "01000000014"];
+   248→  for (const p of mMembers) await db.user.update({ where: { phone: p }, data: { usrahId: furqan.id } });
+   249→  for (const p of fMembers) await db.user.update({ where: { phone: p }, data: { usrahId: ayesha.id } });
+   250→  console.log(`  Usrahs: আল-ফুরকান (M, ${mMembers.length}) + আয়েশা সিদ্দিকা (F, ${fMembers.length})`);
+   251→
+   252→  // ── 5) Referral closure tree ──────────────────────────────────────────────
+   253→  const closures: { ancestorId: string; descendantId: string; depth: number }[] = [];
+   254→  for (const u of users) {
+   255→    if (!u.refBy) continue;
+   256→    const me = idByPhone.get(u.phone)!;
+   257→    const inviter = idByPhone.get(u.refBy)!;
+   258→    for (const c of closures.filter((c) => c.descendantId === inviter)) {
+   259→      closures.push({ ancestorId: c.ancestorId, descendantId: me, depth: c.depth + 1 });
+   260→    }
+   261→    closures.push({ ancestorId: inviter, descendantId: me, depth: 1 });
+   262→  }
+   263→  await db.referralClosure.createMany({ data: closures });
+   264→  console.log(`  ReferralClosure rows: ${closures.length}`);
+   265→
+   266→  // ── 6) 30 days of amal history (deterministic) ────────────────────────────
+   267→  const today = dateKey(NOW);
+   268→  const dates: string[] = Array.from({ length: 30 }, (_, i) => addDays(today, -(29 - i)));
+   269→  const defs = await db.amalDefinition.findMany({ where: { active: true } });
+   270→  const dailyDefs = defs.filter((x) => x.cadence === "daily");
+   271→  const usersWithDiary = users.filter((u) => mMembers.includes(u.phone) || fMembers.includes(u.phone));
+   272→
+   273→  function cadenceDue(def: { cadence: string }, dateStr: string): boolean {
+   274→    const wd = parseKey(dateStr).getDay(); // 0=Sun … 5=Fri, 6=Sat
+   275→    switch (def.cadence) {
+   276→      case "daily": case "weekly:any": return true;
+   277→      case "weekly:fri": return wd === 5;
+   278→      case "weekly:mon_thu": return wd === 1 || wd === 4;
+   279→      case "monthly:ayyam_beez": return isAyyamBeez(parseKey(dateStr));
+   280→      default: return true;
+   281→    }
+   282→  }
+   283→  function targetOf(def: { targetJson: unknown }, category: string): number {
+   284→    if (!def.targetJson) return 1;
+   285→    try {
+   286→      const t = def.targetJson as Record<string, number>;
+   287→      return t[category] ?? t.general ?? 1;
+   288→    } catch {
+   289→      return 1;
+   290→    }
+   291→  }
+   292→
+   293→  const entries: {
+   294→    userId: string; amalKey: string; date: string; hijriDate: string;
+   295→    valueJson: unknown; source: string; clientUpdatedAt: Date;
+   296→  }[] = [];
+   297→
+   298→  for (const u of usersWithDiary) {
+   299→    const uid = idByPhone.get(u.phone)!;
+   300→    const rnd = mulberry32(hashStr(u.phone + "sunnahlife"));
+   301→    const category = u.category ?? "general";
+   302→    for (const dateStr of dates) {
+   303→      const isToday = dateStr === today;
+   304→      for (const def of defs) {
+   305→        if (!cadenceDue(def, dateStr)) continue;
+   306→        const r = rnd();
+   307→        // Today: only items whose hour has passed are recorded yet (running day)
+   308→        if (isToday) {
+   309→          const morningKeys = ["salat_fajr", "adhkar_morning", "tilawat", "durood_100", "istighfar_100", "miswak_5", "dhikr_any", "salat_witr", "tahajjud", "ishraq_salat", "sunnah_muakkadah_12"];
+   310→          const eveningKeys = ["salat_dhuhr", "salat_asr", "salat_maghrib", "salat_isha", "adhkar_evening", "post_salat_tasbih", "quran_reading", "dua_private_10min", "muzakara_imani", "help_person", "dawat_15min", "salat_slowly", "avoided_entertainment", "bed_by_1030", "no_sleep_before_ishraq"];
+   311→          const nowHour = NOW.getHours();
+   312→          const hourOfDef = morningKeys.includes(def.key) ? 7 : eveningKeys.includes(def.key) ? (def.key.startsWith("salat_dhuhr") ? 13 : def.key.startsWith("salat_asr") ? 16 : def.key.startsWith("salat_maghrib") ? 18 : 20) : 21;
+   313→          if (nowHour < hourOfDef - 1) continue;
+   314→        }
+   315→        let value: unknown = null;
+   316→        if (def.inputType === "tristate") {
+   317→          if (r < u.devout * 0.92) value = rnd() < 0.8 ? "jamaat" : "alone";
+   318→          else if (r < u.devout * 0.92 + 0.06) value = "qaza";
+   319→          else continue; // missed — no entry
+   320→        } else if (def.inputType === "boolean") {
+   321→          if (r >= u.devout) continue;
+   322→          value = true;
+   323→        } else if (def.inputType === "count") {
+   324→          const t = targetOf(def, category);
+   325→          if (r < u.devout) value = t + Math.floor(rnd() * Math.max(1, t));
+   326→          else if (r < u.devout + 0.15) value = Math.max(1, Math.floor(t * (0.3 + rnd() * 0.5)));
+   327→          else continue;
+   328→        } else if (def.inputType === "quantity") {
+   329→          const t = targetOf(def, category);
+   330→          if (r < u.devout) value = Math.round((t + rnd() * t) * 10) / 10;
+   331→          else if (r < u.devout + 0.12) value = Math.round(t * (0.3 + rnd() * 0.5) * 10) / 10;
+   332→          else continue;
+   333→        } else {
+   334→          continue; // text inputs are user-authored, not seeded
+   335→        }
+   336→        // auto-source story: product 1 feeds product 2
+   337→        let source = "manual";
+   338→        if (def.autoSource && rnd() < 0.45) source = def.autoSource;
+   339→        const hour = 5 + Math.floor(rnd() * 18);
+   340→        const clientUpdatedAt = isToday
+   341→          ? new Date(Math.min(NOW.getTime() - 3600_000, parseKey(dateStr).getTime() + hour * 3600_000))
+   342→          : new Date(parseKey(dateStr).getTime() + hour * 3600_000 + Math.floor(rnd() * 3600_000));
+   343→        entries.push({
+   344→          userId: uid,
+   345→          amalKey: def.key,
+   346→          date: dateStr,
+   347→          hijriDate: hijriIso(parseKey(dateStr)),
+   348→          valueJson: value,
+   349→          source,
+   350→          clientUpdatedAt,
+   351→        });
+   352→      }
+   353→    }
+   354→  }
+   355→  for (let i = 0; i < entries.length; i += 500) {
+   356→    await db.amalEntry.createMany({ data: entries.slice(i, i + 500) });
+   357→  }
+   358→  console.log(`  AmalEntries: ${entries.length} across ${usersWithDiary.length} diaries × ${dates.length} days`);
+   359→
+   360→  // ── 7) Weekly reviews (last 2 completed weeks, real computed summaries) ────
+   361→  function summaryFor(uid: string, weekStart: string) {
+   362→    const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+   363→    const elapsed = days.filter((x) => x <= today);
+   364→    const wk = entries.filter((e) => e.userId === uid && days.includes(e.date) && dailyDefs.some((dd) => dd.key === e.amalKey));
+   365→    const user = usersWithDiary.find((u) => idByPhone.get(u.phone) === uid)!;
+   366→    const category = user.category ?? "general";
+   367→    let points = 0;
+   368→    const byCategory: Record<string, { p: number }> = {};
+   369→    const perDay: Record<string, number> = {};
+   370→    for (const e of wk) {
+   371→      const def = defs.find((dd) => dd.key === e.amalKey)!;
+   372→      const v = e.valueJson;
+   373→      let p = 0;
+   374→      if (def.inputType === "tristate") p = v === "jamaat" || v === "alone" ? 1 : 0;
+   375→      else if (def.inputType === "boolean") p = v === true ? 1 : 0;
+   376→      else {
+   377→        const t = targetOf(def, category);
+   378→        const n = typeof v === "number" ? v : 0;
+   379→        p = n >= t ? 1 : n > 0 ? 0.5 : 0;
+   380→      }
+   381→      points += p;
+   382→      const bc = (byCategory[def.category] ??= { p: 0 });
+   383→      bc.p += p;
+   384→      perDay[e.date] = (perDay[e.date] ?? 0) + p;
+   385→    }
+   386→    const expected = dailyDefs.length * elapsed.length;
+   387→    const dayPct = (ds: string) => (dailyDefs.length ? (perDay[ds] ?? 0) / dailyDefs.length : 0);
+   388→    let streak = 0;
+   389→    for (let i = elapsed.length - 1; i >= 0; i--) {
+   390→      if (dayPct(elapsed[i]) >= 0.5) streak++;
+   391→      else break;
+   392→    }
+   393→    return {
+   394→      overallPct: expected ? Math.round((points / expected) * 100) : 0,
+   395→      byCategory: Object.fromEntries(
+   396→        Object.entries(byCategory).map(([k, v]) => [k, expected ? Math.round((v.p / (dailyDefs.filter(x => x.category === k).length * elapsed.length)) * 100) : 0])
+   397→      ),
+   398→      streak,
+   399→      missedDays: elapsed.filter((ds) => dayPct(ds) === 0).length,
+   400→    };
+   401→  }
+   402→
+   403→  const reviewSpecs: { phone: string; reviewer: string }[] = [
+   404→    { phone: "01000000004", reviewer: "01000000003" },
+   405→    { phone: "01000000007", reviewer: "01000000003" },
+   406→    { phone: "01000000009", reviewer: "01000000003" },
+   407→    { phone: "01000000006", reviewer: "01000000005" },
+   408→    { phone: "01000000012", reviewer: "01000000005" },
+   409→  ];
+   410→  const comments = [
+   411→    "আলহামদুলিল্লাহ, এই সপ্তাহে নামাজের নিয়মিততা ভালো ছিল। তিলাওয়াতের পরিমাণ আরও বাড়ানোর চেষ্টা করুন।",
+   412→    "সকালের আযকার কয়েকদিন বাদ পড়েছে — ফজরের পর একই জায়গায় বসে পড়ার অভ্যাস করুন। বাকি সব মাশাআল্লাহ ঠিক আছে।",
+   413→    "দাওয়াতি কাজে অগ্রগতি সন্তোষজনক। আগামী সপ্তাহে অন্তত ৩ জনকে প্রোগ্রামে যুক্ত করার লক্ষ্য রাখুন।",
+   414→    "এই সপ্তাহে তাহাজ্জুদে ধারাবাহিকতা কমেছে। রাতে ঘুমের সময় একটু এগিয়ে যাওয়ার পরামর্শ দিচ্ছি।",
+   415→    "মাশাআল্লাহ খুব ভালো সপ্তাহ কাটিয়েছেন। পরবর্তী লক্ষ্য: প্রতিদিন অন্তত ১ পারা তিলাওয়াত।",
+   416→  ];
+   417→  let ci = 0;
+   418→  for (const spec of reviewSpecs) {
+   419→    for (const back of [7, 14]) {
+   420→      const ws = addDays(weekStartOfSafe(NOW), -back);
+   421→      const uid = idByPhone.get(spec.phone)!;
+   422→      await db.weeklyReview.create({
+   423→        data: {
+   424→          userId: uid,
+   425→          reviewerId: idByPhone.get(spec.reviewer)!,
+   426→          weekStart: ws,
+   427→          summaryJson: summaryFor(uid, ws),
+   428→          comment: comments[ci % comments.length],
+   429→          rating: 3 + (ci % 3),
+   430→          nextGoals: ci % 2 === 0 ? "তিলাওয়াত দৈনিক ১ পৃষ্ঠা → ২ পৃষ্ঠা" : "সপ্তাহে অন্তত ৩ দিন তাহাজ্জুদ",
+   431→          status: "done",
+   432→          createdAt: new Date(parseKey(addDays(ws, 7)).getTime() + 7200_000),
+   433→          completedAt: new Date(parseKey(addDays(ws, 7)).getTime() + 7200_000),
+   434→        },
+   435→      });
+   436→      ci++;
+   437→    }
+   438→  }
+   439→  console.log(`  WeeklyReviews: ${reviewSpecs.length * 2} (done, computed summaries)`);
+   440→
+   441→  // ── 8) Assessments ────────────────────────────────────────────────────────
+   442→  const assessSpecs: { phone: string; assessor: string; strong: boolean; cat: number }[] = [
+   443→    { phone: "01000000004", assessor: "01000000003", strong: true, cat: 1 },
+   444→    { phone: "01000000006", assessor: "01000000005", strong: true, cat: 1 },
+   445→    { phone: "01000000009", assessor: "01000000003", strong: false, cat: 1 },
+   446→  ];
+   447→  const assessmentIds: string[] = [];
+   448→  for (const a of assessSpecs) {
+   449→    const rnd = mulberry32(hashStr(a.phone + "assess"));
+   450→    const scores: Record<string, { score: number; comment?: string }> = {};
+   451→    for (const c of allCriteria) {
+   452→      const r = rnd();
+   453→      scores[c.key] = { score: a.strong ? (r < 0.15 ? 1 : 2) : r < 0.5 ? 1 : r < 0.7 ? 0 : 1 };
+   454→    }
+   455→    // majority-complete-per-section rule (same as API): every section needs >50% criteria ≥1
+   456→    let passed = true;
+   457→    if (a.strong) {
+   458→      for (const c of allCriteria) if (scores[c.key].score === 0) scores[c.key].score = 1;
+   459→    } else {
+   460→      // deliberately fail akhlaq: set half its criteria to 0 → “not_yet”
+   461→      const akhlaqKeys = allCriteria.filter((c) => c.section === "akhlaq").map((c) => c.key);
+   462→      akhlaqKeys.slice(0, Math.ceil(akhlaqKeys.length / 2)).forEach((k) => (scores[k].score = 0));
+   463→      passed = false;
+   464→    }
+   465→    const created = await db.assessment.create({
+   466→      data: {
+   467→        templateKey: "farze_ain_v1",
+   468→        assesseeId: idByPhone.get(a.phone)!,
+   469→        assessorId: idByPhone.get(a.assessor)!,
+   470→        participantCategory: a.cat,
+   471→        scoresJson: scores,
+   472→        overallComment: a.strong
+   473→          ? "আলহামদুলিল্লাহ, সামগ্রিকভাবে সন্তোষজনক। কিছু ক্ষেত্রে আরও গভীরতা আসলে ভালো হবে।"
+   474→          : "আখলাক অংশে উন্নতি দরকার — বিশেষত পর্দা ও মিথ্যা পরিহারে আরও মনোযোগী হতে হবে। ইনশাআল্লাহ পরবর্তী মূল্যায়নে আবার মিলব।",
+   475→        assessorSignedAt: d(10),
+   476→        assesseeSignedAt: d(10, -1),
+   477→        result: passed ? "passed" : "not_yet",
+   478→        createdAt: d(10, 1),
+   479→      },
+   480→    });
+   481→    assessmentIds.push(created.id);
+   482→  }
+   483→  console.log(`  Assessments: ${assessmentIds.length}`);
+   484→
+   485→  // ── 9) Level transitions + audit ──────────────────────────────────────────
+   486→  const ltSpecs: { phone: string; from: string; to: string; days: number; evidence?: object }[] = [
+   487→    { phone: "01000000003", from: "muhibbus_sunnah", to: "farze_ain_1", days: 400 },
+   488→    { phone: "01000000005", from: "muhibbus_sunnah", to: "farze_ain_1", days: 380 },
+   489→    { phone: "01000000004", from: "none", to: "muhibbus_sunnah", days: 150, evidence: { monthsInLevel: 5, referralsAtLevel: 3 } },
+   490→    { phone: "01000000006", from: "none", to: "muhibbus_sunnah", days: 148, evidence: { monthsInLevel: 5, referralsAtLevel: 3 } },
+   491→    { phone: "01000000009", from: "none", to: "muhibbus_sunnah", days: 60, evidence: { monthsInLevel: 2, referralsAtLevel: 1 } },
+   492→    { phone: "01000000013", from: "none", to: "muhibbus_sunnah", days: 90, evidence: { monthsInLevel: 3, referralsAtLevel: 1 } },
+   493→  ];
+   494→  for (const lt of ltSpecs) {
+   495→    await db.levelTransition.create({
+   496→      data: {
+   497→        userId: idByPhone.get(lt.phone)!,
+   498→        fromLevel: lt.from,
+   499→        toLevel: lt.to,
+   500→        at: d(lt.days),
+   501→        evidenceJson: lt.evidence ?? {},
+   502→      },
+   503→    });
+   504→    await db.auditLog.create({
+   505→      data: {
+   506→        actorId: idByPhone.get("01000000001")!,
+   507→        action: "promote_level",
+   508→        targetType: "user",
+   509→        targetId: idByPhone.get(lt.phone)!,
+   510→        metaJson: { from: lt.from, to: lt.to },
+   511→        createdAt: d(lt.days),
+   512→      },
+   513→    });
+   514→  }
+   515→
+   516→  // ── 10) Live programs ─────────────────────────────────────────────────────
+   517→  await db.liveProgram.createMany({
+   518→    data: [
+   519→      {
+   520→        titleBn: "সাপ্তাহিক তাফসীর মজলিস — সূরা কাহফ",
+   521→        descBn: "শুক্রবারের তাফসীর সেশন। সূরা কাহফের শিক্ষা ও বাস্তব প্রয়োগ।",
+   522→        hostName: "মাওলানা ইউসুফ",
+   523→        startsAt: new Date(NOW.getTime() - 30 * 60_000),
+   524→        endsAt: new Date(NOW.getTime() + 90 * 60_000),
+   525→        youtubeId: "jfKfPfyJRdk",
+   526→        gender: "M",
+   527→        status: "live",
+   528→      },
+   529→      {
+   530→        titleBn: "ঈমানের শাখা-প্রশাখা — পর্ব ১২",
+   531→        descBn: "৭০টি ঈমানের শাখা নিয়ে ধারাবাহিক আলোচনা।",
+   532→        hostName: "হাফেজ যাকারিয়া",
+   533→        startsAt: new Date(NOW.getTime() + 2 * 86400_000),
+   534→        endsAt: new Date(NOW.getTime() + 2 * 86400_000 + 3600_000),
+   535→        gender: "M",
+   536→        status: "upcoming",
+   537→      },
+   538→      {
+   539→        titleBn: "বোনদের তারবিয়াহ সেশন — পর্দা ও চরিত্র",
+   540→        descBn: "কেবল বোনদের জন্য। লিঙ্ক শুধু অ্যাপে পাওয়া যাবে।",
+   541→        hostName: "উম্মে হাবিবা",
+   542→        startsAt: new Date(NOW.getTime() + 86400_000),
+   543→        endsAt: new Date(NOW.getTime() + 86400_000 + 3600_000),
+   544→        gender: "F",
+   545→        status: "upcoming",
+   546→      },
+   547→      {
+   548→        titleBn: "সুন্নাহ লাইফ পরিচিতি ও প্রশ্নোত্তর",
+   549→        descBn: "প্ল্যাটফর্মের ব্যবহার ও তারবিয়াহ প্রোগ্রাম নিয়ে বিস্তারিত।",
+   550→        hostName: "আব্দুল্লাহ আল মামুন",
+   551→        startsAt: new Date(NOW.getTime() - 3 * 86400_000),
+   552→        endsAt: new Date(NOW.getTime() - 3 * 86400_000 + 5400_000),
+   553→        youtubeId: "aqz-KE-bpKQ",
+   554→        gender: "M",
+   555→        status: "past",
+   556→        recordingUrl: "https://www.youtube.com/embed/aqz-KE-bpKQ",
+   557→      },
+   558→    ],
+   559→  });
+   560→  console.log("  LivePrograms: 4 (1 live, 2 upcoming, 1 past)");
+   561→
+   562→  // ── 11) Announcements (usrah-scoped) ───────────────────────────────────────
+   563→  await db.announcement.createMany({
+   564→    data: [
+   565→      {
+   566→        usrahId: furqan.id,
+   567→        authorId: idByPhone.get("01000000003")!,
+   568→        kind: "announcement",
+   569→        body: "📢 আগামী শুক্রবার বাদ ইশা উসরার সাপ্তাহিক মজলিস অনুষ্ঠিত হবে ইনশাআল্লাহ। সবাইকে যথাসময়ে উপস্থিত থাকার অনুরোধ রইল।",
+   570→        pinned: true,
+   571→        createdAt: d(2),
+   572→      },
+   573→      {
+   574→        usrahId: furqan.id,
+   575→        authorId: idByPhone.get("01000000003")!,
+   576→        kind: "question",
+   577→        body: "এই সপ্তাহের উসরা প্রশ্ন: “ইখলাস কী এবং আমলে ইখলাস কীভাবে অর্জন করা যায়?” — নিজের ভাষায় সংক্ষেপে লিখে আনুন।",
+   578→        createdAt: d(1),
+   579→      },
+   580→      {
+   581→        usrahId: ayesha.id,
+   582→        authorId: idByPhone.get("01000000005")!,
+   583→        kind: "announcement",
+   584→        body: "🌸 আগামী শনিবার সকাল ১০টায় বোনদের সাপ্তাহিক মুহাসাবা মজলিস। নিজ নিজ ডায়েরি সঙ্গে আনার অনুরোধ রইল।",
+   585→        pinned: true,
+   586→        createdAt: d(3),
+   587→      },
+   588→      {
+   589→        usrahId: ayesha.id,
+   590→        authorId: idByPhone.get("01000000005")!,
+   591→        kind: "exam",
+   592→        body: "“ঈমানের অপরিহার্য পাঠ” বইয়ের ৩য় অধ্যায় পড়ে আসা — আগামী মজলিসে মৌখিক পরীক্ষা হবে ইনশাআল্লাহ।",
+   593→        createdAt: d(2),
+   594→      },
+   595→    ],
+   596→  });
+   597→
+   598→  // ── 12) Reminders ─────────────────────────────────────────────────────────
+   599→  await db.reminder.createMany({
+   600→    data: [
+   601→      {
+   602→        userId: idByPhone.get("01000000004")!,
+   603→        kind: "review",
+   604→        title: "আপনার সাপ্তাহিক রিভিউ সম্পন্ন হয়েছে",
+   605→        body: "মাওলানা ইউসুফ আপনার গত সপ্তাহের আমলের রিভিউ সম্পন্ন করেছেন।",
+   606→        link: "dawah",
+   607→        read: true,
+   608→        createdAt: d(2),
+   609→      },
+   610→      {
+   611→        userId: idByPhone.get("01000000006")!,
+   612→        kind: "review",
+   613→        title: "আপনার সাপ্তাহিক রিভিউ সম্পন্ন হয়েছে",
+   614→        body: "উম্মে হাবিবা আপনার গত সপ্তাহের আমলের রিভিউ সম্পন্ন করেছেন।",
+   615→        link: "dawah",
+   616→        read: true,
+   617→        createdAt: d(2),
+   618→      },
+   619→      {
+   620→        userId: idByPhone.get("01000000007")!,
+   621→        kind: "live",
+   622→        title: "লাইভ প্রোগ্রাম শুরু হয়েছে",
+   623→        body: "সাপ্তাহিক তাফসীর মজলিস এখন লাইভ।",
+   624→        link: "ilm",
+   625→        read: false,
+   626→        createdAt: new Date(NOW.getTime() - 1800_000),
+   627→      },
+   628→      {
+   629→        userId: idByPhone.get("01000000004")!,
+   630→        kind: "broadcast",
+   631→        title: "নতুন মাসের মুহাসাবা ডায়েরি চালু",
+   632→        body: "এই মাসের ডায়েরি পূরণ শুরু করুন — প্রতিদিনের হিসাব রাখুন।",
+   633→        link: "amal",
+   634→        read: false,
+   635→        createdAt: d(5),
+   636→      },
+   637→      {
+   638→        userId: idByPhone.get("01000000004")!,
+   639→        kind: "goal",
+   640→        title: "আজকের ব্যক্তিগত লক্ষ্য মনে করিয়ে দিচ্ছি",
+   641→        body: "তাহাজ্জুদ — আজ রাতে জাগার নিয়ত করুন।",
+   642→        link: "amal",
+   643→        scheduledAt: new Date(NOW.getTime() + 3600_000),
+   644→        read: false,
+   645→        createdAt: d(0, 2),
+   646→      },
+   647→    ],
+   648→  });
+   649→
+   650→  // ── 13) Personal goals + a demo day-unlock + audit ────────────────────────
+   651→  await db.personalGoal.createMany({
+   652→    data: [
+   653→      {
+   654→        userId: idByPhone.get("01000000004")!,
+   655→        amalKey: "tahajjud",
+   656→        title: "তাহাজ্জুদ নিয়মিত করা",
+   657→        note: "রিভিউয়ারের পরামর্শ: এশার পর তাড়াতাড়ি ঘুমানো শুরু করুন।",
+   658→        target: "সপ্তাহে অন্তত ৪ দিন",
+   659→        startDate: addDays(today, -20),
+   660→        active: true,
+   661→      },
+   662→      {
+   663→        userId: idByPhone.get("01000000004")!,
+   664→        amalKey: "dua_private_10min",
+   665→        title: "মুনাজাতে ১০ মিনিট",
+   666→        note: "তাহাজ্জুদের আগে মুনাজাতের সয় রাখুন।",
+   667→        target: "প্রতিদিন",
+   668→        startDate: addDays(today, -20),
+   669→        active: true,
+   670→      },
+   671→      {
+   672→        userId: idByPhone.get("01000000006")!,
+   673→        amalKey: "tilawat",
+   674→        title: "প্রতিদিন ১ পৃষ্ঠা → ২ পৃষ্ঠা",
+   675→        note: "ফজরের পরপরই তিলাওয়াত করার অভ্যাস গড়ুন।",
+   676→        target: "দৈনিক ২ পৃষ্ঠা",
+   677→        startDate: addDays(today, -15),
+   678→        active: true,
+   679→      },
+   680→    ],
+   681→  });
+   682→  await db.dayUnlock.create({
+   683→    data: {
+   684→      userId: idByPhone.get("01000000008")!,
+   685→      date: addDays(today, -3),
+   686→      byUserId: idByPhone.get("01000000003")!,
+   687→      reason: "অসুস্থ ছিলেন — পরে পূরণ করবেন",
+   688→      createdAt: d(2),
+   689→    },
+   690→  });
+   691→  await db.auditLog.createMany({
+   692→    data: [
+   693→      {
+   694→        actorId: idByPhone.get("01000000003")!,
+   695→        action: "unlock_day",
+   696→        targetType: "amal_day",
+   697→        targetId: `${idByPhone.get("01000000008")!}:${addDays(today, -3)}`,
+   698→        metaJson: { reason: "অসুস্থ ছিলেন" },
+   699→        createdAt: d(2),
+   700→      },
+   701→      {
+   702→        actorId: idByPhone.get("01000000001")!,
+   703→        action: "change_role",
+   704→        targetType: "user",
+   705→        targetId: idByPhone.get("01000000009")!,
+   706→        metaJson: { from: "user", to: "daee" },
+   707→        createdAt: d(60),
+   708→      },
+   709→      {
+   710→        actorId: idByPhone.get("01000000003")!,
+   711→        action: "sign_assessment",
+   712→        targetType: "assessment",
+   713→        targetId: assessmentIds[0],
+   714→        metaJson: { assessor: true },
+   715→        createdAt: d(10),
+   716→      },
+   717→    ],
+   718→  });
+   719→
+   720→  // ── done ──────────────────────────────────────────────────────────────────
+   721→  const counts = {
+   722→    users: await db.user.count(),
+   723→    usrahs: await db.usrah.count(),
+   724→    defs: await db.amalDefinition.count(),
+   725→    entries: await db.amalEntry.count(),
+   726→    reviews: await db.weeklyReview.count(),
+   727→    assessments: await db.assessment.count(),
+   728→    closures: await db.referralClosure.count(),
+   729→    programs: await db.liveProgram.count(),
+   730→  };
+   731→  console.log("— SEED COMPLETE:", JSON.stringify(counts));
+   732→  console.log('  Demo phones: 01000000001 (full_admin) 01000000002 (invigilator M) 01000000003 (usrah_head M)');
+   733→  console.log('               01000000004 (daee M) 01000000005 (usrah_head F) 01000000006 (daee F) 01000000007 (user)');
+   734→  console.log('               …01000000015 (invigilator F). OTP devCode is returned by POST /api/auth/otp/request.');
+   735→  await db.$disconnect();
+   736→}
+   737→
+   738→main().catch(async (e) => {
+   739→  console.error("SEED FAILED:", e);
+   740→  await db.$disconnect();
+   741→  process.exit(1);
+   742→});
+   743→

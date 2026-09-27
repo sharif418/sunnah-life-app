@@ -1,0 +1,33 @@
+{
+  "muhibbus_sunnah": {
+    "minMonths": 4,
+    "requireAssessmentPassed": true,
+    "minReferralsAtLevel": 5,
+    "checklistBn": [
+      {
+        "key": "iman",
+        "label": "ঈমান: ঈমানের অপরিহার্য পাঠ সম্পন্ন"
+      },
+      {
+        "key": "ibadat",
+        "label": "ইবাদত: নামাজ-যিকরের নিয়মিত অনুশীলন"
+      },
+      {
+        "key": "ilm",
+        "label": "ইলম: মূল শিক্ষা অর্জন"
+      },
+      {
+        "key": "akhlaq",
+        "label": "আখলাক: দৈনন্দিন সদাচরণ"
+      },
+      {
+        "key": "sifat",
+        "label": "সিফাত: দায়ীর গুণাবলী অর্জন"
+      },
+      {
+        "key": "tyag",
+        "label": "ত্যাগ-ো-কুরবানি: আত্মত্যাগের মানসিকতা"
+      }
+    ]
+  }
+}

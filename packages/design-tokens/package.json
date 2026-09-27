@@ -1,0 +1,13 @@
+{
+  "name": "@sunnahlife/design-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sunnah Life design tokens — single source of truth exported to Tailwind (web/admin) and Flutter ThemeData (mobile).",
+  "type": "module",
+  "main": "tokens.json",
+  "scripts": {
+    "build": "node build.mjs",
+    "check": "node build.mjs --check"
+  },
+  "files": ["tokens.json", "dist"]
+}

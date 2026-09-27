@@ -1,0 +1,43 @@
+# Sunnah Life — optional Caddy reverse proxy (compose profile `proxy`).
+#
+# In production Cloudflare sits in FRONT of this (DNS-proxied): the edge gives
+# you SSL, WAF and caching; Caddy terminates the origin connection with its
+# own cert. Domains are injected via environment variables ({$...} placeholders
+# are read by Caddy from the container env — see the `proxy` service in
+# infra/docker-compose.yml).
+#
+# Enable with:  docker compose --env-file .env -f infra/docker-compose.yml --profile proxy up -d
+#
+# WebSockets (live sessions, future LiveKit) work out of the box: Caddy
+# reverse_proxy upgrades them automatically and Cloudflare supports them over
+# the proxied HTTPS ports 443/2053/2083/2087/2096/8443.
+
+{
+	# Origin TLS — Cloudflare validates whatever cert Caddy obtains.
+	email {$ACME_EMAIL:-admin@sunnahlife.app}
+}
+
+# ── public web app ───────────────────────────────────────────────────────────
+{$WEB_DOMAIN:web.sunnahlife.app} {
+	encode zstd gzip
+	reverse_proxy web:3000
+}
+
+# ── admin panel (restrict by IP or Cloudflare Access in production!) ─────────
+{$ADMIN_DOMAIN:admin.sunnahlife.app} {
+	encode zstd gzip
+	reverse_proxy admin:3000
+}
+
+# ── NestJS API (Flutter app, admin panel, integrations) ──────────────────────
+{$API_DOMAIN:api.sunnahlife.app} {
+	encode zstd gzip
+	# generous body size for the 23-criterion assessment form + report uploads
+	request_body {
+		max_size 10MB
+	}
+	reverse_proxy api:4000
+}
+
+# ── Meilisearch: NEVER expose publicly. Internal-only (compose has no ports) ─
+# ── MinIO: likewise internal. Use `docker compose exec` / mc for access.  ─────

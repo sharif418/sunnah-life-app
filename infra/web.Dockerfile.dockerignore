@@ -1,0 +1,53 @@
+# BuildKit picks this up automatically for builds that use the repo root as
+# the context with -f infra/web.Dockerfile (Docker 20.10+ / docker compose v2).
+# Patterns are relative to the build context (repository root).
+#
+# KEEP THIS LIST SAFE for the web build (it must never exclude src/, content/,
+# public/, prisma/, package.json, configs). Everything here is either
+# regenerable inside the image or not needed by the web workspace.
+
+# dependencies & build output (regenerated inside the image)
+node_modules
+**/node_modules
+.next
+**/.next
+
+# secrets — NEVER bake .env files into the image (the root .env holds POSTGRES/
+# JWT/MinIO secrets; NEXT_PUBLIC_* values come in via build ARGs instead)
+.env
+.env.*
+!.env.example
+
+# version control / CI
+.git
+.github
+
+# sibling workspaces — the web app is the repo root itself (PLAN.md §3);
+# apps/* (api, admin, mobile, worker) build from their own contexts.
+apps
+
+# local databases, dumps, logs, scratch
+db
+dumps
+tool-results
+*.log
+*.db
+*.sqlite
+
+# toolchain caches
+.turbo
+**/.turbo
+.zscripts
+opt
+
+# sandbox-only things
+Caddyfile
+dev.log
+server.log
+tests
+mini-services
+examples
+skills
+download
+upload
+docs

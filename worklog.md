@@ -1,0 +1,195 @@
+# Sunnah Life — Shared Worklog
+
+All agents MUST read this file before starting, and MUST append their section
+(using the template at the bottom) after finishing. Never overwrite others'
+sections. The coordination bible is `docs/API_CONTRACTS.md` — read it too.
+
+---
+
+Task ID: 1
+Agent: lead-architect (main session)
+Task: Foundation — PLAN.md, Prisma schema, design tokens, fonts, core libs (prayer engine, calendars, qibla, cities, i18n, store, API client), app shell (5-tab nav, onboarding, auth modal), auth/config/join/quran/reminders API routes, Qur'an data download, API contracts doc.
+
+Work Log:
+- Verified sandbox: Next.js 16 dev server on :3000, Bun 1.3.14, Tailwind v4 (CSS-first), full shadcn/ui set, Prisma+SQLite, no Docker/Flutter/pnpm. Network OK (Google Fonts, alquran.cloud reachable).
+- Wrote docs/PLAN.md (architecture, sandbox adaptation matrix, assumptions).
+- Downloaded content/quran-uthmani.json (2.1MB, 114 surahs) + content/quran-bn.json (2.9MB Bengali translation, Muhiuddin Khan) from api.alquran.cloud.
+- prisma/schema.prisma: User (roles/gender/memberCode/usrahId/level/…), Session, OtpCode, ReferralClosure, Usrah, AmalDefinition, AmalEntry (unique userId+amalKey+date), DayUnlock, PersonalGoal, WeeklyReview, AssessmentTemplate, Assessment, LevelTransition, Announcement, Reminder, AuditLog, MasalaQuestion, Feedback, LiveProgram, Enrollment, QuizAttempt. Pushed with `bun run db:push`.
+- globals.css: full token system — light (cream #F7F4EC bg, card white, primary #1F4D3D, gold #C99A3B, alert #C0392B) + dark (green-black #0E1613). Radii 8/12/16, shadow-card/lifted, font-arabic/font-quran utilities, Islamic lattice patterns, scroll-thin/no-scrollbar, safe-bottom, tap-target, RTL flip helper.
+- layout.tsx: Hind Siliguri (bn+latin) + Inter + Amiri + Amiri Quran via next/font. Metadata bn-first + manifest + themeColor.
+- src/types/domain.ts: ALL shared types + label maps (ROLE_LABELS_BN, LEVEL_LABELS_BN, ROLE_RANK, AMAL_CATEGORY_LABELS_BN, PRAYER_LABELS_BN, FARZ_PRAYERS).
+- src/lib/prayer-times.ts: PrayTimes.org solar algorithm, CALC_METHODS (karachi default 18/18, Hanafi asr factor 2), night-middle high-lat clamp with NaN guards, Ishraq=+20min, Duha=sunrise+¼ to dhuhr, Tahajjud=last third, Maghrib=sunset+3min (MAGHRIB_SAFETY_MIN), forbiddenWindows (sunrise −15/+20, zawal −10/+5, sunset −15/+5). VERIFIED against independent NOAA calc (Dhaka/London/Riyadh within 1 min) — output in docs/PROGRESS.md.
+- src/lib/calendars.ts: toBn (Bengali digits), dateKey/addDays/parseKey, Bangla calendar (2019 reform, Boishakh 1 = Apr 14, Falgun 30 iff leap), Hijri via Intl islamic-umalqura + Kuwaiti arithmetic fallback + ±adjust, isAyyamBeez (13–15), formatTimeBn (ভোর/সকাল/দুপুর/বিকাল/সন্ধ্যা/রাত periods).
+- src/lib/qibla.ts (bearing+distance+compass label bn), src/lib/cities.ts (64 BD districts + 18 intl), src/lib/i18n.ts (bn/en/ar strings + translate), src/lib/search.ts (Bengali fuzzy bigram+word scoring = Meilisearch stand-in), src/lib/content.ts (typed pack loader via dynamic import — packs: duas, adhkar, names99, islamicNames, imanBranches, sunnahs, articles, courses, quizzes, mosques, faq; placeholders exist in content/).
+- src/lib/store.ts: zustand+persist — nav(tab,view,params)/back()/navHistory, adminOpen overlay flag, user+authChecked+authModal, persisted guest profile (name/gender/lang/city/lat/lng/method/madhhab/onboardingDone), amalCache+outbox (offline-first), writeEntry → debounced batched POST /api/amal/entries, hydrateFromServer, online/offline listeners, currentPrayerConfig(). referralCode capture.
+- src/lib/api.ts: typed client for every endpoint (auth, me, config, amal, dawah, usrah, reviews, assessments, admin, join, reminders, live, masala, feedback, enroll, quiz-attempt, quran).
+- src/lib/server/auth.ts: sessions (HttpOnly cookie sl_session, 30d), toDomainUser, requireUser/requireRole, audit(); src/lib/server/guard.ts: assertCanAccess (RLS chokepoint: full_admin always; else same gender AND self/own-usrah/downline/invigilator), isSupervisor, assertFullAdmin, json/errorResponse helpers; src/lib/server/quran.ts: cached Qur'an loader.
+- API routes done: auth/otp/request (mock SMS, rate-limited 3/10min), auth/otp/verify (creates user + referral closure + guest amal merge with clientUpdatedAt conflict resolution), auth/logout, me (GET/PATCH allowlist), config (AppConfig), join (?code → inviter name), reminders (GET/PATCH), quran/surahs, quran/surah/[number] (Bismillah word-strip for surahs ≠1,9 — VERIFIED). All tested via curl — see PROGRESS.md.
+- App shell: src/app/page.tsx (hydration splash → onboarding gate → AppShell, ?join= capture), components/app/{providers,logo,onboarding,auth-modal,shell}. Onboarding: 3 steps (language / name+gender with female-privacy trust note / city picker sheet+GPS+madhhab+method). AuthModal: OTP flow (auto-filled devCode) + 5 demo quick-login buttons. Shell: sticky header (logo, desktop tabs, sync badge, bell sheet, theme toggle, profile dropdown with admin entry), mobile fixed bottom nav (5 tabs, spring pill), offline banner, AdminConsole overlay stub.
+- Public assets: manifest.webmanifest, icon.svg (8-point star + dome), PWA metadata.
+- bun run lint: 0 issues. GET / → 200. All foundation APIs curl-tested.
+
+Stage Summary:
+- Foundation COMPLETE. App skeleton runs at / with onboarding + shell + auth.
+- Demo phones reserved (content agent must seed exactly these):
+  01000000001 full_admin M "আব্দুল্লাহ আল মামুন"
+  01000000002 invigilator M "হাফেজ যাকারিয়া"
+  01000000003 usrah_head M "মাওলানা ইউসুফ" (head of উসরা আল-ফুরকান, M)
+  01000000004 daee M "রাফিউল ইসলাম" DS-000004, level muhibbus_sunnah
+  01000000005 usrah_head F "উম্মে হাবিবা" (head of উসরা আয়েশা সিদ্দিকা, F)
+  01000000006 daee F "মারিয়াম হাসান" DS-000006, level muhibbus_sunnah
+  01000000007 user M "তানভীর হোসেন"
+  Plus ~8 usrah members (01000000008–01000000015, mixed M/F across the two usrahs) with 30 days of seeded amal history.
+- Content pack placeholder files exist in content/ (agents overwrite them).
+- View stubs at src/components/{home,amal,dawah,ilm,more}/… and admin/console.tsx are REPLACED by their owning agents.
+
+Template for new sections:
+---
+Task ID: <id>
+Agent: <agent name>
+Task: <task>
+Work Log:
+- <steps>
+Stage Summary:
+- <results / decisions / artifacts>
+
+---
+Task ID: 2-b
+Agent: backend-api (main session)
+Task: All remaining API routes — amal diary engine (locking rule), goals, dawah engine, usrah, weekly reviews + assessments, full admin console backend, engagement (live/masala/feedback/enroll/quiz) + shared server helpers (amal/reviews/levels).
+
+Work Log:
+- Read worklog + API_CONTRACTS + domain types + auth/guard + schema + api.ts. Implemented 22 route files + 3 helper files; all responses type-matched to src/types/domain.ts (ISO dates, parsed JSON fields, cast enums).
+- Helpers created:
+  - src/lib/server/amal.ts: mapDefinition/mapEntry mappers; 30s TTL cache for active AmalDefinitions (invalidateDefinitionCache used by amal-catalog); Dhaka wall-clock helpers (bdToday/bdNowShifted — server TZ independent, server runs UTC); computeLockDeadline/isDateLocked implementing the Ishraq-of-D+1 rule via computePrayerTimes (user lat/lng or Dhaka 23.8103/90.4125, tz +6, user calcMethod/madhhab); amalPoints (tristate jamaat/alone=1, qaza=0; boolean; count/quantity >=target else 0.5 partial; target lookup by user category w/ "general" fallback); completionPctFromEntries + completion7dForUsers (batch, 1 query) + completion7d; ownUsrahIds.
+  - src/lib/server/reviews.ts: weekStartOf (Saturday), weekDays, computeWeekSummary (overallPct/byCategory/streak≥50%/missedDays/counts over weekStart..+6; only elapsed days ≤ Dhaka-today count toward expectations so a running week isn't punished), mapReview.
+  - src/lib/server/levels.ts: loadLevelRules (fs + 60s cache, accepts flat / {muhibbus_sunnah} / {levels.muhibbus_sunnah} shapes; checklist items accepted as strings OR {key,label} objects — matches the real content/level-rules.json the content agent landed mid-task; defaults minMonths 4 / assessment true / referrals 5); monthsInLevelOf (30.44-day months); computeRequirements (min_months / assessment_passed / min_referrals + informational checklist items, done=false); nextLevelOf ladder.
+- Routes implemented (all with Bengali ApiError messages, json()/errorResponse() from guard):
+  - amal/definitions GET (public — guests keep a local diary): active defs, sortOrder, targetJson→target parsed.
+  - amal/entries GET (from/to + optional userId via assertCanAccess) & POST batch sync (≤500): future dates → "ভবিষ্যতের তারিখ"; locked days → "লক হয়ে গেছে — উসরা প্রধানের অনুমতি দরকার" (DayUnlock override honored); unknown key → "অজানা আমল"; conflict rule existing.clientUpdatedAt >= incoming → "নতুন সংস্করণ আছে"; returns HTTP 200 {accepted, rejected} per-entry (store.ts flush contract — 423 was NOT used, deliberate deviation from older contracts doc text); touches lastActiveAt.
+  - amal/unlock POST: usrah_head+ + assertCanAccess; DayUnlock upsert + audit "unlock_day".
+  - goals GET/POST/DELETE: own PersonalGoals, max 14 active → "সর্বোচ্চ ১৪টি লক্ষ্য". NOTE: no domain type exists for PersonalGoal — response shape is the DB row mapped (id, amalKey, title, note, target, startDate, active, createdAt ISO); api.ts has no goals methods (frontend fetches directly) — flagged for integrator.
+  - dawah GET: daee+ only (403 otherwise); memberCode, referralLink https://sunnahlife.app/?join=…, invitedCount, downline depth 1..3 (manual join via ReferralClosure — no FK relation in schema), level/monthsInLevel, requirements, nextLevel (ladder: none→muhibbus→farze_ain_1→farze_ain_2), assessment summaries w/ scorePct.
+  - usrah GET: own usrah + members w/ completion7d + headName + usrah-scoped announcements (pinned first) w/ authorName; {usrah:null, announcements:[]} when none.
+  - reviews GET (self w/ reviewerName) / ?scope=queue (head: own-usrah users; invigilator: own gender; full_admin: role daee+usrah_head): lazily creates this Saturday-week's pending reviews (pre-check + createMany, race tolerated — SQLite Prisma has NO skipDuplicates), marks >7d-old pending overdue, returns queue w/ joined user (name/memberCode/level/completion7d); POST (supervisor + guard): computes summary server-side, upserts → done + completedAt, creates member Reminder (kind review, title "সাপ্তাহিক রিভিউ সম্পন্ন হয়েছে", body=first 100 chars), rating validated 1..5.
+  - assessments/templates GET; assessments GET ?userId (guard; default self; includes both given+received) w/ template joined + names + scorePct; POST (supervisor + guard): sanitizes scores to 0|1|2, result = "passed" iff EVERY section has strict majority (count×2 > total) of criteria ≥1, assessorSignedAt=now, member Reminder, audit "create_assessment".
+  - admin/overview GET (role-scoped): head → headed/member usrahs; invigilator → own-gender usrahs; full_admin → all. Per-usrah UsrahHealth (members, reviewPct = done/(members×4) last 4 weeks capped 100, avgCompletion via completion7d batch, inactiveCount >3d); totals; recentAudit last 15 (full_admin: all, others: own actions only) w/ actorName.
+  - admin/users GET ?q= (name/phone/memberCode contains; full_admin all, invigilator own gender, head own-usrah members; usrahName joined) + PATCH (full_admin): role/gender/usrahId/category; audits "change_role"/"change_gender" w/ old→new; role→daee auto-assigns next memberCode (max DS-NNNNNN + 1).
+  - admin/month-grid GET ?userId&month: guard-checked; days 1..EOM, all active definitions, rows keyed by amalKey w/ cells (value parsed, source "none" when absent).
+  - admin/promote POST (full_admin): validates computeRequirements for muhibbus_sunnah target → 422 "চাহিদা পূরণ হয়নি: <labels>" if unmet (farze levels promote directly — no rules defined); updates level+levelStartedAt, LevelTransition w/ evidence snapshot, audit "promote_level", user Reminder "আপনি নতুন স্তরে উন্নীত হয়েছেন".
+  - admin/broadcast POST (usrah_head+): Announcement + Reminder fan-out; scoping enforced (head → own usrahs only; invigilator → own-gender usrah/users; global fan-out full_admin only) + audit "broadcast".
+  - admin/amal-catalog POST (full_admin): upsert by key (accepts `target` object or raw `targetJson`), full field validation, invalidates cache, returns all active definitions.
+  - admin/audit GET (full_admin): last 100, actorName joined, metaJson parsed.
+  - live GET (public): F programs visible ONLY to signed-in F users (guests/M see only general M programs); order live→upcoming→past (past newest-first); status = seeded "live" honored else computed from startsAt/endsAt (+2h fallback). POST {id}: requireUser, gender-checked, dedup Reminder w/ scheduledAt=program.startsAt.
+  - masala POST (guest ok, links userId when signed in); feedback POST (guest ok); enroll POST/PATCH (upsert + progressJson string); quiz-attempt POST (requireUser — 401 for guests, client stores locally).
+- CURL VERIFICATION (dev server, full OTP sign-in flow; used throwaway 017xxx users because the content agent's seed had NOT landed yet — the 0100xxxxxxx demo phones weren't in the DB; role/gender/usrah structure mirrored the reserved demo set; ALL test data was torn down afterwards, DB back to 0 rows):
+  - definitions (guest) → 5 defs, target parsed; entries POST: today accepted, future → "ভবিষ্যতের তারিখ", 5-days-ago → lock reason, re-POST older clientUpdatedAt → "নতুন সংস্করণ আছে", unknown key → "অজানা আমল"; GET range returns parsed entries.
+  - unlock: head3 unlocks own member ✓; head5 (F) → 403 "বিপরীত লিঙ্গের তথ্য দেখার অনুমতি নেই"; member re-posts unlocked day → accepted.
+  - dawah (daee): memberCode DS-000004, link, invitedCount 2, downline 3 (depth 1,1,2), monthsInLevel 5, requirements [months ✓, assessment ✓, referrals 2/5 ✗], nextLevel farze_ain_1, assessment scorePct 88; plain user → 403. Verified again after content agent landed level-rules.json: 6 checklist items render with keys checklist_iman/ibadat/ilm/akhlaq/sifat/tyag.
+  - usrah: member sees usrah+members (completion7d 57% — hand-verified against seeded entries) ; no-usrah user → {usrah:null}.
+  - reviews: queue lazy-creates pending (Sat weekStart 2026-09-26); head POST → done + auto-summary (overallPct 25 = 2pts/(4defs×2 elapsed days) — hand-verified, streak/missedDays/byCategory correct); member sees done review w/ reviewerName; queue doesn't re-create done weeks; >7d-old pending → overdue; plain user queue → 403.
+  - assessments: templates parsed; POST all-2s → passed (scorePct 88); one failed section → not_yet (50); cross-gender assessor → 403; GET ?userId joins template+names.
+  - admin/overview: head → own usrah (reviewPct 13, avgCompletion 29, own audit only); head5 → F usrah only; plain user → 403.
+  - admin/users: head search scoped to own usrah; full_admin sees 9; PATCH role→daee auto-assigns DS-900010, category/usrahId/gender updates + audits (change_role, change_gender visible in /admin/audit); head PATCH → 403.
+  - month-grid: 30 days × 5 rows w/ values; GENDER ISOLATION head3 (M) → F member = 403 (exact scenario requested); head5 (F) → own F member 200.
+  - promote: unmet requirements → 422 with Bengali missing list; daee→farze_ain_1 → 200 + LevelTransition + reminder; head → 403.
+  - broadcast: head→own usrah ✓, foreign usrah → 403, global non-admin → 403, global admin ✓; announcement visible in member's /api/usrah; reminders fan-out confirmed via /api/reminders.
+  - amal-catalog: upsert new + update target object (returned catalog reflects both); head → 403. audit: last entries w/ actorName + parsed meta; non-admin → 403.
+  - live: guest → 3 programs (no F), F user → 4 (F session visible), M user → 3; live-first ordering; notify: guest 401, M ok, dedup ok, M on F program → 403 "এই সেশনটি শুধু বোনদের জন্য".
+  - masala/feedback guests ok + validation 400s; enroll POST/PATCH ok, guest 401; quiz-attempt ok / guest 401; goals CRUD + 14-limit ("সর্বোচ্চ ১৪টি লক্ষ্য") + invalid date 400.
+  - bun run lint: 0 issues (run twice, before and after final edits). dev.log: no compile errors, no 500s from my routes.
+
+Stage Summary:
+- ALL contracted endpoints from src/lib/api.ts are implemented and curl-verified end-to-end; business logic 100% server-side; frontend stays dumb.
+- Deviations/decisions (integrator please note):
+  1) amal/entries POST returns HTTP 200 with per-entry rejected[] (NOT 423) — matches store.ts flush handling + task spec; older API_CONTRACTS wording superseded.
+  2) nextLevel ladder extends spec: farze_ain_1→farze_ain_2, farze_ain_2 terminal (spec only defined none→muhibbus→farze_ain_1).
+  3) /api/goals has no domain type & no api.ts client method — response shapes: GET {goals:GoalItem[]}, POST {goal}, DELETE ?id → {ok}. GoalItem = {id,amalKey,title,note,target,startDate,active,createdAt}.
+  4) reviews queue target sets: head → all own-usrah members (excl. self); invigilator → all own-gender users; full_admin → role ∈ {daee, usrah_head} (excl. self).
+  5) Requirements validation on promote only applies to toLevel=muhibbus_sunnah (level-rules.json defines no farze thresholds).
+  6) BUG FOUND in lead's route (not mine to fix): src/app/api/auth/otp/verify/route.ts uses createMany({skipDuplicates:true}) — Prisma+SQLite rejects `skipDuplicates` at runtime (verified), so guest amal merge would 500 whenever guestEntries are sent. Suggest replacing with per-entry upserts or try/catch. My own routes never use skipDuplicates.
+  7) completion7d/review summaries use daily-cadence definitions only; a running week's summary counts only elapsed days (≤ Dhaka today).
+  8) Demo phones 0100xxxxxxx were not seeded yet at test time → verification used role/gender-matched 017xxx throwaways (full OTP flow), 100% removed afterwards (DB counts: 0 users/usrahs/defs/entries/…). Integrator should re-smoke-test against the real seed once 2-a lands it (same code paths: lock dates are relative to "today", so they'll behave identically).
+---
+Task ID: 3
+Agent: lead-architect (main session, round 2)
+Task: Mandated-stack environment bring-up + seed repair + monorepo scaffolding + design-tokens package (user rejected the earlier web-only adaptation; full stack now enforced).
+
+Work Log:
+- Rewrote docs/PLAN.md for the MANDATED architecture (Flutter/NestJS/PG16+RLS/Redis+BullMQ/MinIO/Meili/admin/monorepo) with a sandbox-execution matrix.
+- Installed (user-level, no root): Flutter 3.47.5 (ranged-parallel download workaround for stalled storage.googleapis.com — script /home/z/opt/parallel-dl.sh), Android SDK 36 (cmdline-tools 13114758 + platform-tools + build-tools; licenses accepted; flutter doctor Android ✓), PostgreSQL 16.10 portable (:5433, RUNNING, data /home/z/opt/pgdata), Redis 7.0.15 via dpkg-deb extraction + liblzf1 (:6380, RUNNING), Meilisearch 1.54 (:7700, RUNNING). All documented in docs/ENVIRONMENT.md. MinIO: dl.min.io serves 410 here → code-only (compose + S3 module). Docker impossible without root → compose/Dockerfiles code-only.
+- DB WAS EMPTY (content agent's seed never landed) → wrote prisma/seed.ts (idempotent): 15 users (the reserved 0100xxxxxxx demo phones, all roles, M+F), 2 usrahs (আল-ফুরকান M / আয়েশা সিদ্দিকা F), 20 referral-closure rows, 6901 deterministic amal entries over 30 days (tristate/boolean/count/quantity; cadence-aware incl. ayyam_beez via Hijri; auto: sources ~45%), 10 done weekly reviews with real computed summaries, 3 assessments (2 passed incl. signed, 1 not_yet with failed akhlaq), level transitions + audit log, 4 live programs (1 live now, 1 F-only), announcements, reminders, personal goals, demo DayUnlock. `bun run db:seed`.
+- Fixed agent 2-b's flagged bug: auth/otp/verify used createMany skipDuplicates (SQLite runtime error) → per-entry upsert with clientUpdatedAt latest-wins conflict rule.
+- Monorepo scaffolding: pnpm-workspace.yaml (root=web + apps/* + packages/*), turbo.json, content/package.json (@sunnahlife/content) + packages/content symlink, .gitignore, eslint ignores scoped to web app only.
+- packages/design-tokens: tokens.json (single source: brand/light/dark palettes exact from globals.css, radii 8/12/16, 8-pt spacing, bn type scale, motion 120/200/320, tap target 44) + build.mjs → dist/tailwind.css + dist/flutter/design_tokens.dart (complete ThemeData builders light/dark, GoogleFonts, SLElevation, SLType.quran/dua) + --check parity guard (verified in sync with globals.css). PACKAGE READY FOR FLUTTER AGENT.
+- packages/shared-types: left for the API agent to generate from OpenAPI.
+
+Stage Summary:
+- Toolchain RUNNING: PG16 :5433 (postgres/trust), Redis :6380, Meili :7700. Start script: /home/z/opt/start-services.sh. All survive across sessions (daemonized).
+- Web app verified alive after scaffolding: GET / 200, quran 114 surahs, defs 200.
+- Subagent briefs issued next: 3-a Flutter app (apps/mobile), 3-b NestJS API+worker (apps/api, apps/worker), 3-d infra+docs; 3-c admin panel queued after 3-b.
+- Disk ~2.2GB free — gradle -Xmx1536m, clean caches when possible.
+---
+Task ID: 3-a-1
+Agent: flutter-scaffold (subagent F1, chunk 1 of 3)
+Task: Flutter app skeleton + core (apps/mobile): project, deps, design tokens, content packs, core engines (calendars/prayer/cities/digits), models, Drift DB, API client, providers, 5-tab shell, tests.
+
+Work Log:
+- Found a partially-built apps/mobile from an interrupted prior run (no worklog entry): real feature screens, state, services, l10n, core engines, gradle config and 6 test files existed and analyzed clean, but with gaps vs the chunk-1 spec. COMPLETED rather than recreated (everything below verified green).
+- Project: org bd.asunnah.sunnah_life, platforms android+ios. pubspec has the full mandated stack (flutter_riverpod 2.6, go_router 14, drift 2.24 + sqlite3_flutter_libs, adhan_dart 1.0.11, hijri 3.0, flutter_local_notifications 18, google_fonts 6.2, shared_preferences, http, intl, path_provider, path; dev: flutter_test, flutter_lints 6, build_runner, drift_dev). `flutter pub get` clean. android/gradle.properties: -Xmx1536m/MaxMetaspace 512m, daemon=false, + android.enableR8=true.
+- design tokens: lib/design/design_tokens.dart = formatted copy of packages/design-tokens/dist/flutter/design_tokens.dart (SLColors/SLSpacing/SLRadius/SLMotion/SLElevation/SLType, buildSunnahLightTheme/DarkTheme; bundled TTFs in assets/google_fonts, allowRuntimeFetching=false in main).
+- Content: assets/content/ refreshed from repo content/ (12 packs incl. quran-uthmani 2.1MB + quran-bn 2.9MB; faq/mosques/quizzes/quran-meta still placeholder `{}` in the repo — app has in-code fallbacks).
+- NEW lib/api/fallback_catalog.dart: 15 const Dart records (key/titleBn/titleEn/category/inputType/cadence/sortOrder/target/unit/autoSource) mirroring amal-catalog.json salat_fajr…dua_private_10min EXACTLY + fallbackDefinitions() → AmalDefinition list. Replaced the looser 12-entry kFallbackAmalCatalog in content_models.dart (call sites + month-grid test updated).
+- lib/core (pure Dart, no Flutter): bn_digits (toBn ০-৯), calendars (Bangla 2019-reform, hijri pkg + Kuwaiti fallback, hijriDate(adjustDays), isAyyamBeez 13–15, formatTimeBn, dateKey/parseKey/addDays in date_keys.dart), prayer_engine (adhan_dart wrapper: fajr…isha minutes-from-midnight + tahajjud/ishraq+20/duha ¼, maghrib+3 BD safety, forbiddenWindows sunrise −15/+20 · zawal −10/+5 · sunset −15/+5), cities (64 BD + 18 intl const), qibla, amal_engine (locking rule, points, cadence), sync_merge (mergeEntry/mergeLists — latest clientUpdatedAt wins, tie → remote).
+- lib/l10n/app_strings.dart: S.tr + full bn/en/ar table (completeness enforced by test/widget_test.dart); Lang/LangX + context extension.
+- lib/models: SPLIT per spec into user.dart (User, Role/Gender/Level/UserCategory/Madhhab/CalcMethod + Json extensions + labelBn + rank), amal.dart, dawah.dart, review.dart (WeeklyReview + WeekSummary), assessment.dart (+ NEW AssessmentCriterion/Section/Template/Score/Detail — weren't in the prior code), usrah.dart, live.dart; models/domain.dart is now a barrel so ALL existing imports keep working. Typed fromJson everywhere, no Map sprawl.
+- lib/db: Drift AppDatabase (implementation database.dart + generated database.g.dart; spec-path alias app_db.dart). Tables: AmalEntries (natural key amalKey+date, valueJson, source, clientUpdatedAt, synced), Outbox (one pending op per amalKey+date), GuestProfiles (single row: name/gender/language/city/lat/lng/tz/method/madhhab/category/themeMode/hijriAdjust/onboardingDone), SettingsTable KV, LastRead, AyahBookmarks. DAOs: writeEntry/upsert (tx: entry+outbox), entry, entriesForDates, entriesBetween, pendingEntries(≤500), markSynced, pendingSyncCount, mergeServerEntries (uses sync_merge), guestProfile/saveGuestProfile, setting/setSetting, lastReadEntry/saveLastRead, bookmarks/toggleBookmark. build_runner output already generated (schema untouched this round).
+- lib/api/api_client.dart: baseUrl from --dart-define=SUNNAH_API_BASE (default https://sunnahlife.app), Bearer token; typed methods per src/lib/api.ts: requestOtp→devCode, verifyOtp(phone,code,name,gender,referredByCode,guestEntries)→{user,token}, me, updateMe, config, amalDefinitions/amalEntries/amalUpsert→{accepted,rejected}, amalUnlock, dawahOverview, usrah, reviews, reminders, live, masala, feedback, quranSurahs. NEW: any 401 → token cleared + onUnauthorized hook → AuthNotifier.forceSignOut() (wired in providers; no network round-trip).
+- State: lib/state/providers.dart (dbProvider, apiProvider, ProfileState/ProfileNotifier persisted via Drift guest row + best-effort PATCH /me; AuthNotifier session in SharedPreferences), amal_state.dart (definitions API-else-fallback, optimistic AmalNotifier with lock rule + debounced flush; SyncNotifier outbox flush) + remote_state.dart (config/dawah/usrah/reviews/live). Spec-path aliases: lib/providers/settings_provider.dart + lib/providers/sync_provider.dart (documented re-exports).
+- NEW sync scheduling: SyncNotifier.startPeriodicFlush() — 60s Timer.periodic started once from bootstrapProvider (kept OUT of build so widget tests stay timer-clean; ref.onDispose cancels). Attempt = connectivity probe (ApiException → lastMessage, retries next tick). Manual flush exists via SyncBadge.
+- lib/app.dart: ProviderScope → BootstrapGate (splash) → MaterialApp.router (token themes, locale bn/en/ar + RTL for ar, themeMode from profile). go_router StatefulShellRoute.indexedStack, 5 branches (/, /amal +month|habit|self-test, /dawah, /ilm +8 subroutes, /more +7 subroutes), onboarding/auth routes with redirect. NEW: Da'wah branch HIDDEN for role < daee — bottom nav renders 4 destinations with tab↔branch index mapping + router redirect /dawah → / for non-qualified (screen + provider also gate). Spec-path aliases: lib/screens/{home,amal,dawah,ilm,more}_screen.dart re-export the real feature screens (which are full implementations, not placeholders — home/amal/dawah/ilm/more all built with content packs, quran reader, month heatmap, habit builder, self-test, zakat, qibla, mosques, live, masala, profile).
+- test/: NEW smoke_test.dart (boots the REAL app through BootstrapGate with in-memory Drift: daee override → 5 tabs হোম/আমল/দাওয়াত/ইলম/আরও; guest → 4 tabs, দাওয়াত hidden; containers disposed in-body so no pending timers). Pre-existing tests fixed for the new fallback catalog (15 defs): amal_logic, month_grid (31×15 cells), prayer_snapshots, sync_conflict, today_diary, l10n completeness.
+- `flutter analyze`: No issues found. `flutter test`: All 38 tests passed.
+
+Stage Summary:
+- DONE: chunk-1 skeleton complete and green (analyze 0, tests 38/38) on top of the interrupted prior run — verify-first policy: what existed was audited against the spec, gaps closed, nothing thrown away.
+- Layout map for F2/F3: screens/features (NOT bare placeholders): lib/features/{home,amal,dawah,ilm,more,auth,onboarding,shared}/*; spec-path aliases in lib/screens/. State: lib/state/{providers,amal_state,remote_state,prayer_state}.dart (+ aliases in lib/providers/). Models: lib/models/{user,amal,dawah,review,assessment,usrah,live,content_models,quran_models}.dart, barrel domain.dart. DB: lib/db/database.dart (alias app_db.dart). API: lib/api/{api_client,fallback_catalog}.dart. Core: lib/core/*. l10n: lib/l10n/app_strings.dart (S.tr / context.t — ADD NEW KEYS THERE, table completeness is test-enforced).
+- Notes: 60s sync flush starts in bootstrapProvider (startPeriodicFlush); guests are local-only (flush no-ops); auth token in SharedPreferences 'sl_token', cleared on 401; Dart define SUNNAH_API_BASE for the API. Demo phones for sign-in flow tests: see Task ID 3 section of this worklog.
+- Not done (intentionally): no gradle build attempted (disk-rationed sandbox; analyze+tests green), FCM/push remains a seam (PushAdapter), quran-meta-bn.json still a placeholder upstream.
+---
+Task ID: 3-d
+Agent: infra-docs-ci (subagent D2)
+Task: Audit the interrupted infra/ deliverable (compose, 4 Dockerfiles + .dockerignores, postgres/ RLS bootstrap, up.sh), write/verify the docs set (README, DATA_MODEL, DEPLOY_COOLIFY, DEMO_ACCOUNTS, DESIGN_SYSTEM, .env.example) and the CI pipeline (.github/workflows/ci.yml).
+
+Work Log:
+- AUDIT (read every infra file + the sources of truth: apps/api/src/config/env.validation.ts, main.ts, health/queues/content controllers, prisma seed + both RLS/init SQL files, root + api package.json, tokens.json, both prisma schemas, root .dockerignore):
+  * env-var names cross-checked against what apps/api ACTUALLY reads (DATABASE_URL, DIRECT_URL, REDIS_URL, MEILI_HOST, MEILI_KEY, S3_ENDPOINT/BUCKET/ACCESS_KEY/SECRET_KEY/PUBLIC_BASE, JWT_SECRET, JWT_REFRESH_SECRET [read by auth.service as optional refresh-secret fallback to JWT_SECRET], ACCESS_TOKEN_TTL_MIN, REFRESH_TOKEN_TTL_DAYS, PORT, CORS_ORIGINS, APP_DOMAIN, SMS_PROVIDER + SMS_SSLWIRELESS_* + SMS_INFOBIP_*, CONTENT_DIR, STORAGE_DIR). Compose now matches 1:1 (JWT_REFRESH_SECRET added to api+worker; no phantom vars).
+- INFRA FIXES (all in infra/ + root dotfiles — src/apps/prisma/content untouched):
+  1. docker-compose.yml — api PORT was `${API_PORT:-4000}` while the port mapping pinned the container side to 4000: overriding API_PORT made the app listen on a port nothing mapped/probed. PORT is now pinned to 4000 inside the container (API_PORT = host side only); compose healthcheck simplified to `curl :4000/health`.
+  2. docker-compose.yml — worker had NO healthcheck → inherited the api image's HTTP probe and would read permanently (unhealthy) (the worker serves no HTTP). Added an override: PID-1 alive + live Redis PING via `bun -e "import('ioredis')…"` (the exact one-liner was live-tested against the sandbox Redis: PONG, exit 0).
+  3. docker-compose.yml + api.Dockerfile — CRITICAL: the api image was built from context `apps/api` only, but the entrypoint seed reads `packages/content/amal-catalog.json` + `assessment-farze-ain-v1.json` and the content routes serve the Qur'an/packs from `contentDir()`; in the image both resolve to `/packages/content` (absent) → empty DB, dead /api/content routes. Build context is now the REPO ROOT for api + worker; Dockerfile COPYs `apps/api/…` and `content → /app/packages/content` (real dir, not the packages/content symlink — a copied symlink would dangle) with `ENV CONTENT_DIR=/app/packages/content`. api.Dockerfile.dockerignore rewritten for the root context (keeps apps/api + content; excludes node_modules/.next/apps-mobile/admin/.git/.env/db/dumps/…).
+  4. .dockerignore (root) + infra/web.Dockerfile.dockerignore — SECRET LEAK: neither excluded `.env`, so `COPY . .` baked the repo-root .env (POSTGRES/JWT/MinIO secrets) into the web image. Both now exclude `.env`/`.env.*` (re-include `.env.example`); NEXT_PUBLIC_* still arrive via build ARGs.
+  5. postgres/init-rls.sql — `GRANT CONNECT ON DATABASE sunnahlife` + `ALTER DEFAULT PRIVILEGES FOR ROLE postgres` hardcoded names; now `GRANT … ON DATABASE current_database() \gexec` + bare `ALTER DEFAULT PRIVILEGES IN SCHEMA public` (applies to POSTGRES_USER whoever it is). Still fully idempotent (\gexec + DO $$ blocks). DRY-RUN VERIFIED against the sandbox PG16: ran twice on a scratch DB with ON_ERROR_STOP (pass 1 + replay both exit 0; role NOBYPASSRLS confirmed via pg_roles). NOTE: the api's own RLS migration hardcodes `GRANT … ON DATABASE sunnahlife` → documented everywhere: keep POSTGRES_DB=sunnahlife.
+  6. worker.Dockerfile — added the missing HEALTHCHECK (`kill -0 1` liveness — no HTTP in a worker) + updated the drop-in instructions for the repo-root-context pattern.
+  7. .env.example — added optional `JWT_REFRESH_SECRET` (empty ⇒ JWT_SECRET), POSTGRES_DB keep-`sunnahlife` warning.
+- CI (.github/workflows/ci.yml — existed from the interrupted run, audited + fixed):
+  * env bug: `JWT_ACCESS_SECRET`/`JWT_REFRESH_SECRET` were set but apps/api reads `JWT_SECRET` (refresh falls back) → now `JWT_SECRET` + `SMS_PROVIDER=mock`.
+  * DB name bug: service used `sunnahlife_test` but the RLS migration hardcodes `GRANT … ON DATABASE sunnahlife` → migrate:deploy would fail → POSTGRES_DB/healthcheck/URLs all `sunnahlife`.
+  * MISSING SEED: the RLS e2e (test/rls.e2e-spec.ts — landed by 3-b mid-task) signs in as the demo phones → added `bun run seed` (idempotent, DIRECT_URL) after migrate:deploy.
+  * removed misleading env (MEILI_HOST pointing at nothing → health would report "down"; S3_* + unread S3_FORCE_PATH_STYLE).
+  * mobile job: added actions/setup-java temurin 17 (AGP 8 needs JDK 17; runner default not guaranteed).
+  * jobs: tokens (build.mjs --check parity) · api (bun install, psql role bootstrap + migrate + seed, eslint, jest with postgres:16 + redis:7 services, nest build) · web (root: bun install, lint, `bun run build` — CI-only, never in the sandbox) · admin (`if: hashFiles('apps/admin/package.json') != ''`) · mobile (flutter-action@v2 stable, pub get, analyze, test, apk --debug + artifact, setup-java + gradle caches). concurrency: cancel-in-progress ✓.
+- DOCS (all six existed from the interrupted run — VERIFIED against the sources and patched, not rewritten):
+  * README.md — one-command starts (sandbox: bun install && db:push && db:seed && dev; VPS: cp .env.example .env && ./infra/up.sh) ✓, fixed a garbled phrase, added packages/shared-types to the repo map (now exists — 3-b generated it), stack table, demo pointer, docs index all verified.
+  * docs/DATA_MODEL.md — ERD verified against apps/api/prisma/schema.prisma (22 models incl. RefreshToken; SQLite mirror 21); RLS table cross-checked line-by-line with migrations/*_rls/migration.sql → fixed the Reminder row (policy is `sl_visible_user(userId)`, not owner-only); GUCs (app.user_id/gender/usrah_id/role incl. system) ✓; Ishraq-of-D+1 locking-rule flowchart ✓; both mermaid blocks fenced ```mermaid.
+  * docs/DEMO_ACCOUNTS.md — every phone/name/role/memberCode/usrah/level verified against apps/api/prisma/seed.ts (all 15 accounts, both usrahs, referral tree, 88% passed / akhlaq-failed assessments, D−3 day-unlock for 01000000008, 4 live programs incl. F-only session); OTP mock (devCode in response, auto-filled + toast in the auth modal, 5 quick-login buttons), referral link forms (?join= emitted by the api today, /join/DS-XXXX canonical), gender-visibility matrix, guest→merge, web-SQLite + api-PG duality ✓.
+  * docs/DESIGN_SYSTEM.md — verified value-by-value against packages/design-tokens/tokens.json (brand/light/dark palettes, 8-pt spacing, radii 8/12/16+20/pill, type scale 16/1.6 body…quran 26/2.2, motion 120/200/320 + 3 curves, tinted elevation, tap target 44, RTL + Bengali-numeral rules, web + Flutter component inventory incl. catalog_app run command, WCAG AA).
+  * docs/DEPLOY_COOLIFY.md — updated for the fixes: api/worker build contexts (repo root), JWT_REFRESH_SECRET row, POSTGRES_DB pin, worker liveness note; everything else re-checked against compose + env.validation (prereqs 2vCPU/4GB, paths A/B/C, full env var reference, Cloudflare Full-strict + websocket notes, pgBackRest off-site + MinIO mirror + cron, update procedure with `prisma migrate deploy` in the api entrypoint + idempotent seeds, /health + /metrics, STACK_TAG rollback).
+  * .env.example — see fix 7.
+- VERIFICATION: `python3 yaml.safe_load` OK on infra/docker-compose.yml + .github/workflows/ci.yml (services: postgres redis minio minio-init meilisearch api worker web admin proxy; jobs: tokens api web admin mobile) · `node build.mjs --check` → "✓ globals.css in sync with tokens.json (68 color values verified)" · worker healthcheck one-liner → PONG/exit 0 against sandbox redis · init-rls.sql double-run on scratch PG → clean · `cd /home/z/my-project && bun run lint` → **0 issues (exit 0)** · all docs code fences balanced, mermaid blocks fenced.
+- Sandbox side-effect repaired: my init-rls.sql dry-run ALTER ROLE reset the shared sandbox `sunnah_app` password; restored from apps/api/.env and re-verified the runtime role reconnects (super=false, bypassrls=false, login ok). Scratch DB dropped.
+
+Stage Summary:
+- infra/ + CI + docs are consistent with the real code (env names, DB name, content-pack path, health endpoints). Known pending workstreams (documented, not blockers): apps/admin (3-c) — compose `admin` service + CI admin job activate on arrival (`hashFiles` guard); apps/worker (3-b in flight, dir exists) — compose worker reuses the api image and needs dist/worker.js or a start:worker script in it; if apps/worker lands as its own package, switch the compose worker to infra/worker.Dockerfile (repo-root context pattern per its header) or extend api.Dockerfile to COPY apps/worker too.
+- CI turns green on GitHub as soon as the workstreams land; the api job requires the seeded demo DB (seed step included) because the RLS e2e signs in with the 0100xxxxxxx phones.
+- Rollback-able ops documented end-to-end (STACK_TAG image rollback, forward-only migrations, pgBackRest restore drill).

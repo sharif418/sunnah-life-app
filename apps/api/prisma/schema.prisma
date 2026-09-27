@@ -1,0 +1,323 @@
+// Sunnah Life — Dawatus Sunnah Tarbiyah Engine
+// Prisma schema (PostgreSQL 16 + Row-Level Security).
+// Mirrors the repo-root SQLite schema 1:1 (same model/field names) with the
+// JSON-string columns typed as Prisma `Json` and an extra RefreshToken table
+// for the JWT rotating-refresh auth of the NestJS API.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────── Identity & program ───────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  phone         String?   @unique
+  email         String?
+  name          String
+  photoUrl      String?
+  gender        String // "M" | "F" — set once at onboarding, changed only by full_admin
+  role          String    @default("user") // user | daee | usrah_head | invigilator | full_admin
+  category      String    @default("general") // general | hafez | alim
+  memberCode    String?   @unique // DS-000001, assigned when promoted to daee
+  referredById  String?
+  referredBy    User?     @relation("Referrals", fields: [referredById], references: [id])
+  referrals     User[]    @relation("Referrals")
+  usrahId       String?
+  usrah         Usrah?    @relation("UsrahMembers", fields: [usrahId], references: [id])
+  level         String    @default("none") // none | muhibbus_sunnah | farze_ain_1 | farze_ain_2
+  levelStartedAt DateTime?
+  district      String?
+  workplace     String?
+  department    String?
+  language      String    @default("bn")
+  madhhab       String    @default("hanafi")
+  calcMethod    String    @default("karachi")
+  lat           Float?
+  lng           Float?
+  city          String?
+  createdAt     DateTime  @default(now())
+  lastActiveAt  DateTime  @default(now())
+
+  sessions              Session[]
+  refreshTokens         RefreshToken[]
+  amalEntries           AmalEntry[]
+  personalGoals         PersonalGoal[]
+  dayUnlocks            DayUnlock[]   @relation("UnlockedFor")
+  unlockActions         DayUnlock[]   @relation("UnlockedBy")
+  weeklyReviewsGiven    WeeklyReview[] @relation("Reviewer")
+  weeklyReviewsReceived WeeklyReview[] @relation("Reviewee")
+  assessmentsGiven      Assessment[]   @relation("Assessor")
+  assessmentsReceived    Assessment[]   @relation("Assessee")
+  announcements          Announcement[]
+  reminders             Reminder[]
+  enrollments           Enrollment[]
+  quizAttempts          QuizAttempt[]
+  masalaQuestions       MasalaQuestion[]
+  feedbacks             Feedback[]
+}
+
+model Session {
+  id        String   @id // opaque token (web mirror uses HttpOnly cookie)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model RefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  familyId  String // rotation family — revoked as a whole on reuse detection
+  tokenHash String    @unique // sha256 of the issued JWT refresh token
+  expiresAt DateTime
+  usedAt    DateTime? // set on first use; a second use = replay → family revoked
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  code      String
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+}
+
+model ReferralClosure {
+  id           String   @id @default(cuid())
+  ancestorId   String
+  descendantId String
+  depth        Int
+  createdAt    DateTime @default(now())
+
+  @@unique([ancestorId, descendantId])
+}
+
+model Usrah {
+  id                String   @id @default(cuid())
+  name              String
+  gender            String // must equal head's and all members' gender
+  headUserId        String?  @unique
+  invigilatorUserId String?
+  district          String?
+  createdAt         DateTime @default(now())
+
+  members       User[]         @relation("UsrahMembers")
+  announcements Announcement[]
+}
+
+// ─────────────────────────── Muhasaba diary ───────────────────────────
+
+model AmalDefinition {
+  id         String  @id @default(cuid())
+  key        String  @unique
+  titleBn    String
+  titleEn    String
+  category   String // salah | quran | dhikr | akhlaq | dawat | lifestyle | sunnah
+  inputType  String // tristate | boolean | count | quantity | text
+  cadence    String  @default("daily") // daily | weekly:fri | weekly:mon_thu | monthly:ayyam_beez
+  targetJson Json? // {"general":1,"hafez":1,"alim":10} + unit
+  unit       String? // পৃষ্ঠা / পারা / মিনিট / টি
+  minLevel   String  @default("none")
+  sortOrder  Int     @default(0)
+  autoSource String? // e.g. auto:adhkar:morning, auto:quran:tilawat, auto:prayer:fajr
+  active     Boolean @default(true)
+}
+
+model AmalEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amalKey         String
+  date            String // YYYY-MM-DD (Gregorian, natural key part)
+  hijriDate       String? // e.g. 1446-12-10
+  valueJson       Json // tristate: "jamaat|alone|qaza"; boolean: true; count/quantity: number
+  source          String   @default("manual") // manual | auto:<feature>
+  clientUpdatedAt DateTime // conflict winner
+  serverUpdatedAt DateTime @default(now())
+
+  @@unique([userId, amalKey, date])
+  @@index([userId, date])
+}
+
+model DayUnlock {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation("UnlockedFor", fields: [userId], references: [id], onDelete: Cascade)
+  date      String // YYYY-MM-DD unlocked for this user
+  byUserId  String
+  byUser    User     @relation("UnlockedBy", fields: [byUserId], references: [id])
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@unique([userId, date])
+}
+
+model PersonalGoal {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amalKey   String
+  title     String
+  note      String? // reviewer notes
+  target    String? // free-form target description
+  startDate String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────── Reviews & assessment ───────────────────────────
+
+model WeeklyReview {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation("Reviewee", fields: [userId], references: [id], onDelete: Cascade)
+  reviewerId   String
+  reviewer     User      @relation("Reviewer", fields: [reviewerId], references: [id])
+  weekStart    String // YYYY-MM-DD (Saturday, BD week convention)
+  summaryJson  Json? // auto: per-category completion, streaks, missed days
+  comment      String?
+  rating       Int?
+  nextGoals    String?
+  status       String    @default("pending") // pending | done | overdue
+  createdAt    DateTime  @default(now())
+  completedAt  DateTime?
+
+  @@unique([userId, weekStart])
+}
+
+model AssessmentTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique // farze_ain_v1
+  version     Int      @default(1)
+  titleBn     String
+  titleEn     String
+  sectionsJson Json // [{key,titleBn,criteria:[{key,titleBn,hintBn}]}]
+  createdAt   DateTime @default(now())
+}
+
+model Assessment {
+  id                  String    @id @default(cuid())
+  templateKey         String
+  assesseeId          String
+  assessee            User      @relation("Assessee", fields: [assesseeId], references: [id])
+  assessorId          String
+  assessor            User      @relation("Assessor", fields: [assessorId], references: [id])
+  participantCategory Int       @default(1) // 1 = beginner (45–60 min/day), 2 = advanced (60–90)
+  scoresJson          Json // {"criterionKey": {score: 0|1|2, comment?}}
+  overallComment      String?
+  assessorSignedAt    DateTime?
+  assesseeSignedAt    DateTime? // OTP-confirmed signature
+  result              String    @default("not_yet") // passed | not_yet
+  createdAt           DateTime  @default(now())
+}
+
+model LevelTransition {
+  id           String   @id @default(cuid())
+  userId       String
+  fromLevel    String
+  toLevel      String
+  at           DateTime @default(now())
+  evidenceJson Json? // {assessmentId, monthsInLevel, referralsAtLevel}
+}
+
+// ─────────────────────────── Content & engagement ───────────────────────────
+
+model Announcement {
+  id        String   @id @default(cuid())
+  usrahId   String?
+  usrah     Usrah?   @relation(fields: [usrahId], references: [id])
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  kind      String   @default("announcement") // announcement | question | exam
+  body      String
+  pinned    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Reminder {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        String // prayer | review | broadcast | live | goal | detox | assessment
+  title       String
+  body        String?
+  link        String? // app subview hint
+  scheduledAt DateTime?
+  read        Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String // unlock_day | change_role | change_gender | promote_level | broadcast | sign_assessment
+  targetType String
+  targetId   String?
+  metaJson   Json?
+  createdAt  DateTime @default(now())
+}
+
+model MasalaQuestion {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  name      String
+  phone     String?
+  question  String
+  status    String   @default("new") // new | answered
+  answer    String?
+  createdAt DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model LiveProgram {
+  id           String    @id @default(cuid())
+  titleBn      String
+  descBn       String?
+  hostName     String?
+  startsAt     DateTime
+  endsAt       DateTime?
+  youtubeId    String? // unlisted embed; female sessions are never public
+  gender       String    @default("M") // audience gender scope
+  status       String    @default("upcoming") // upcoming | live | past
+  recordingUrl String?
+  createdAt    DateTime  @default(now())
+}
+
+model Enrollment {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId     String
+  progressJson Json     @default("{}") // {lessonIndex, completed: []}
+  updatedAt    DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model QuizAttempt {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  quizId    String
+  score     Int
+  total     Int
+  createdAt DateTime @default(now())
+}

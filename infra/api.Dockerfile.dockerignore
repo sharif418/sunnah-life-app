@@ -1,0 +1,51 @@
+# BuildKit picks this up automatically for builds that use the REPOSITORY ROOT
+# as the context with -f infra/api.Dockerfile (Docker 20.10+ / docker compose
+# v2). Patterns are relative to the build context (repository root).
+#
+# KEEP THIS LIST SAFE for the api image: it must never exclude apps/api/ or
+# packages/content/ (the seed + content routes read the packs — see
+# infra/api.Dockerfile).
+
+# dependencies & build output (regenerated inside the image)
+node_modules
+**/node_modules
+**/dist
+**/.next
+**/coverage
+
+# version control / CI
+.git
+.github
+
+# sibling workspaces the api image does not need
+apps/mobile
+apps/admin
+
+# secrets never enter an image
+**/.env
+**/.env.*
+!**/.env.example
+
+# local databases, dumps, logs, scratch
+db
+dumps
+tool-results
+*.log
+*.db
+*.sqlite
+
+# toolchain caches / sandbox-only things
+.turbo
+**/.turbo
+.zscripts
+opt
+Caddyfile
+dev.log
+server.log
+tests
+mini-services
+examples
+skills
+download
+upload
+docs

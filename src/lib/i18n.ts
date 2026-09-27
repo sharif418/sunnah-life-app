@@ -1,0 +1,97 @@
+"use client";
+
+// i18n — Bengali (default) / English / Arabic (RTL). UI strings only;
+// content packs carry their own multilingual fields.
+
+import type { Lang } from "@/types/domain";
+
+type Dict = Record<string, { bn: string; en: string; ar: string }>;
+
+export const STRINGS: Dict = {
+  "app.name": { bn: "সুন্নাহ লাইফ", en: "Sunnah Life", ar: "السنة لايف" },
+  "app.tagline": { bn: "আস-সুন্নাহ ফাউন্ডেশন — দাওয়াতুস সুন্নাহ", en: "As-Sunnah Foundation — Dawatus Sunnah", ar: "مؤسسة السنة — دعوة السنة" },
+  "nav.home": { bn: "হোম", en: "Home", ar: "الرئيسية" },
+  "nav.amal": { bn: "আমল", en: "Amal", ar: "الأعمال" },
+  "nav.dawah": { bn: "দাওয়াত", en: "Da'wah", ar: "الدعوة" },
+  "nav.ilm": { bn: "ইলম", en: "Ilm", ar: "العلم" },
+  "nav.more": { bn: "আরও", en: "More", ar: "المزيد" },
+  "common.seeAll": { bn: "সব দেখুন", en: "See all", ar: "الكل" },
+  "common.back": { bn: "পেছানে", en: "Back", ar: "رجوع" },
+  "common.save": { bn: "সংরক্ষণ", en: "Save", ar: "حفظ" },
+  "common.cancel": { bn: "বাতিল", en: "Cancel", ar: "إلغاء" },
+  "common.confirm": { bn: "নিশ্চিত করুন", en: "Confirm", ar: "تأكيد" },
+  "common.close": { bn: "বন্ধ করুন", en: "Close", ar: "إغلاق" },
+  "common.search": { bn: "খুঁজুন…", en: "Search…", ar: "بحث…" },
+  "common.loading": { bn: "লোড হচ্ছে…", en: "Loading…", ar: "جار التحميل…" },
+  "common.empty": { bn: "এখনো কিছু নেই", en: "Nothing here yet", ar: "لا شيء بعد" },
+  "common.error": { bn: "কিছু একটা ভুল হয়েছে", en: "Something went wrong", ar: "حدث خطأ" },
+  "common.retry": { bn: "আবার চেষ্টা করুন", en: "Retry", ar: "أعد المحاولة" },
+  "common.today": { bn: "আজ", en: "Today", ar: "اليوم" },
+  "common.share": { bn: "শেয়ার", en: "Share", ar: "مشاركة" },
+  "common.copy": { bn: "কপি", en: "Copy", ar: "نسخ" },
+  "common.copied": { bn: "কপি হয়েছে", en: "Copied", ar: "تم النسخ" },
+  "common.done": { bn: "সম্পন্ন", en: "Done", ar: "تم" },
+  "common.next": { bn: "পরবর্তী", en: "Next", ar: "التالي" },
+  "common.yes": { bn: "হ্যাঁ", en: "Yes", ar: "نعم" },
+  "common.no": { bn: "না", en: "No", ar: "لا" },
+  "common.min": { bn: "মিনিট", en: "min", ar: "دقيقة" },
+  "auth.signIn": { bn: "সাইন ইন", en: "Sign in", ar: "تسجيل الدخول" },
+  "auth.signOut": { bn: "সাইন আউট", en: "Sign out", ar: "تسجيل الخروج" },
+  "auth.guest": { bn: "অতিথি", en: "Guest", ar: "ضيف" },
+  "auth.phone": { bn: "মোবাইল নম্বর", en: "Phone number", ar: "رقم الهاتف" },
+  "auth.otpSent": { bn: "যাচাইকরণ কোড পাঠানো হয়েছে", en: "Verification code sent", ar: "تم إرسال رمز التحقق" },
+  "auth.enterCode": { bn: "কোড লিখুন", en: "Enter code", ar: "أدخل الرمز" },
+  "auth.welcome": { bn: "স্বাগতম", en: "Welcome", ar: "مرحبا" },
+  "auth.demoAccounts": { bn: "ডেমো অ্যাকাউন্ট", en: "Demo accounts", ar: "حسابات تجريبية" },
+  "onb.language": { bn: "ভাষা নির্বাচন করুন", en: "Choose language", ar: "اختر اللغة" },
+  "onb.name": { bn: "আপনার নাম", en: "Your name", ar: "اسمك" },
+  "onb.gender": { bn: "লিঙ্গ", en: "Gender", ar: "الجنس" },
+  "onb.male": { bn: "পুরুষ", en: "Male", ar: "ذكر" },
+  "onb.female": { bn: "নারী", en: "Female", ar: "أنثى" },
+  "onb.genderNote": {
+    bn: "নারীদের তথ্য শুধুমাত্র নারী সুপারভাইজর দেখতে পারবেন — এটি নিশ্চিত করা হয়েছে।",
+    en: "Women's data is visible only to female supervisors — guaranteed.",
+    ar: "بيانات النساء تظهر للمشرفات فقط — مضمون.",
+  },
+  "onb.location": { bn: "আপনার অবস্থান", en: "Your location", ar: "موقعك" },
+  "onb.madhhab": { bn: "মাযহাব (আসর)", en: "Madhhab (Asr)", ar: "المذهب (العصر)" },
+  "onb.finish": { bn: "শুরু করুন", en: "Get started", ar: "ابدأ" },
+  "home.nextPrayer": { bn: "পরবর্তী নামাজ", en: "Next prayer", ar: "الصلاة القادمة" },
+  "home.todaySchedule": { bn: "আজকের সময়সূচি", en: "Today's schedule", ar: "جدول اليوم" },
+  "home.forbiddenTimes": { bn: "নিষিদ্ধ সময়", en: "Forbidden times", ar: "أوقات النهي" },
+  "home.askPrayer": { bn: "নামাজ কেমন হলো?", en: "How was your prayer?", ar: "كيف كانت صلاتك؟" },
+  "home.jamaat": { bn: "জামাতে", en: "In jamaat", ar: "جماعة" },
+  "home.alone": { bn: "একা", en: "Alone", ar: "فرادى" },
+  "home.qaza": { bn: "কাযা", en: "Qaza", ar: "قضاء" },
+  "amal.today": { bn: "আজকের আমল", en: "Today's amal", ar: "أعمال اليوم" },
+  "amal.month": { bn: "মাসিক ছক", en: "Month grid", ar: "شبكة الشهر" },
+  "amal.goals": { bn: "ব্যক্তিগত লক্ষ্য", en: "Personal goals", ar: "أهداف شخصية" },
+  "amal.locked": { bn: "লক হয়ে গেছে", en: "Locked", ar: "مقفل" },
+  "amal.streak": { bn: "ধারাবাহিকতা", en: "Streak", ar: "سلسلة" },
+  "amal.completion": { bn: "সম্পন্নতা", en: "Completion", ar: "الإنجاز" },
+  "dawah.myCode": { bn: "আমার কোড", en: "My code", ar: "رمزي" },
+  "dawah.myMadu": { bn: "আমার মাদউ", en: "My invitees", ar: "مدعوّيّ" },
+  "dawah.myUsrah": { bn: "আমার উসরা", en: "My usrah", ar: "أسرتي" },
+  "dawah.myLevel": { bn: "আমার স্তর", en: "My level", ar: "مستواي" },
+  "dawah.weeklyReview": { bn: "সাপ্তাহিক রিভিউ", en: "Weekly review", ar: "المراجعة الأسبوعية" },
+  "ilm.quran": { bn: "কুরআন", en: "Qur'an", ar: "القرآن" },
+  "ilm.duas": { bn: "দোয়া সংগ্রহ", en: "Du'a library", ar: "مكتبة الأدعية" },
+  "ilm.adhkar": { bn: "আযকার", en: "Adhkar", ar: "الأذكار" },
+  "ilm.names99": { bn: "আল্লাহর ৯৯ নাম", en: "99 Names", ar: "أسماء الله ٩٩" },
+  "ilm.courses": { bn: "কোর্স", en: "Courses", ar: "دورات" },
+  "ilm.quizzes": { bn: "কুইজ", en: "Quizzes", ar: "اختبارات" },
+  "ilm.live": { bn: "লাইভ", en: "Live", ar: "مباشر" },
+  "more.zakat": { bn: "যাকাত ক্যালকুলেটর", en: "Zakat calculator", ar: "حاسبة الزكاة" },
+  "more.qibla": { bn: "কিবলা কম্পাস", en: "Qibla compass", ar: "بوصلة القبلة" },
+  "more.profile": { bn: "প্রোফাইল", en: "Profile", ar: "الملف الشخصي" },
+  "more.settings": { bn: "সেটিংস", en: "Settings", ar: "الإعدادات" },
+  "more.about": { bn: "আমাদের সম্পর্কে", en: "About", ar: "حول" },
+  "theme.light": { bn: "লাইট", en: "Light", ar: "فاتح" },
+  "theme.dark": { bn: "ডার্ক", en: "Dark", ar: "داكن" },
+};
+
+export function translate(lang: Lang, key: string): string {
+  const entry = STRINGS[key];
+  if (!entry) return key;
+  return entry[lang] ?? entry.bn;
+}

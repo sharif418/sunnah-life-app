@@ -1,0 +1,10 @@
+# BuildKit picks this up automatically for builds that use
+# ../apps/admin as the context with -f infra/admin.Dockerfile (Docker 20.10+ /
+# docker compose v2). Patterns are relative to the build context (apps/admin).
+node_modules
+.next
+.env
+.env.*
+*.log
+coverage
+.DS_Store

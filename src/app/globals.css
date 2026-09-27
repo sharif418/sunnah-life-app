@@ -1,0 +1,252 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-hind-siliguri), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  /* Sunnah Life semantic extensions */
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-soft: var(--gold-soft);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(31 77 61 / 0.05), 0 4px 16px rgb(31 77 61 / 0.06);
+  --shadow-lifted: 0 2px 4px rgb(31 77 61 / 0.08), 0 12px 32px rgb(31 77 61 / 0.12);
+}
+
+:root {
+  --radius: 1rem;
+  /* Sunnah Life — light (cream + deep green + gold) */
+  --background: #f7f4ec;
+  --foreground: #222222;
+  --card: #ffffff;
+  --card-foreground: #222222;
+  --popover: #ffffff;
+  --popover-foreground: #222222;
+  --primary: #1f4d3d;
+  --primary-foreground: #f7f4ec;
+  --primary-soft: #eaf0ec;
+  --secondary: #efe9dc;
+  --secondary-foreground: #1f4d3d;
+  --muted: #f1ede2;
+  --muted-foreground: #666666;
+  --accent: #c99a3b;
+  --accent-foreground: #3b2b0e;
+  --destructive: #c0392b;
+  --destructive-foreground: #ffffff;
+  --border: #e4dccb;
+  --input: #e4dccb;
+  --ring: #1f4d3d;
+  --chart-1: #1f4d3d;
+  --chart-2: #c99a3b;
+  --chart-3: #2e7d5b;
+  --chart-4: #8a9a5b;
+  --chart-5: #b7791f;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #222222;
+  --sidebar-primary: #1f4d3d;
+  --sidebar-primary-foreground: #f7f4ec;
+  --sidebar-accent: #efe9dc;
+  --sidebar-accent-foreground: #1f4d3d;
+  --sidebar-border: #e4dccb;
+  --sidebar-ring: #1f4d3d;
+  --success: #2e7d5b;
+  --success-foreground: #f7f4ec;
+  --warning: #b7791f;
+  --warning-foreground: #ffffff;
+  --gold: #c99a3b;
+  --gold-foreground: #3b2b0e;
+  --gold-soft: #f6ecd8;
+  --alert: #c0392b;
+  --alert-soft: #fce4e4;
+}
+
+.dark {
+  /* Sunnah Life — dark (deep green-black) */
+  --background: #0e1613;
+  --foreground: #f1ede3;
+  --card: #16211c;
+  --card-foreground: #f1ede3;
+  --popover: #16211c;
+  --popover-foreground: #f1ede3;
+  --primary: #4c9b72;
+  --primary-foreground: #0b140f;
+  --primary-soft: #1a2b23;
+  --secondary: #1c2a24;
+  --secondary-foreground: #d8e5dd;
+  --muted: #1a2620;
+  --muted-foreground: #9faaa2;
+  --accent: #d9b25f;
+  --accent-foreground: #241a05;
+  --destructive: #e06a5a;
+  --destructive-foreground: #1a0505;
+  --border: #26382f;
+  --input: #26382f;
+  --ring: #4c9b72;
+  --chart-1: #4c9b72;
+  --chart-2: #d9b25f;
+  --chart-3: #7fbf9f;
+  --chart-4: #a3b845;
+  --chart-5: #e0c184;
+  --sidebar: #121d18;
+  --sidebar-foreground: #f1ede3;
+  --sidebar-primary: #4c9b72;
+  --sidebar-primary-foreground: #0b140f;
+  --sidebar-accent: #1c2a24;
+  --sidebar-accent-foreground: #d8e5dd;
+  --sidebar-border: #26382f;
+  --sidebar-ring: #4c9b72;
+  --success: #4c9b72;
+  --success-foreground: #0b140f;
+  --warning: #d9b25f;
+  --warning-foreground: #241a05;
+  --gold: #d9b25f;
+  --gold-foreground: #241a05;
+  --gold-soft: #2a2416;
+  --alert: #e06a5a;
+  --alert-soft: #3a211d;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-size: 1rem;
+    line-height: 1.65;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: var(--gold-soft);
+    color: var(--foreground);
+  }
+}
+
+@layer utilities {
+  .font-arabic {
+    font-family: var(--font-amiri), serif;
+    line-height: 2.1;
+  }
+  .font-quran {
+    font-family: var(--font-amiri-quran), var(--font-amiri), serif;
+    line-height: 2.2;
+  }
+  .font-latin {
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-bottom-margin {
+    margin-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .tap-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--primary) 24%, transparent) transparent;
+  }
+  .scroll-thin::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+  .scroll-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb {
+    background: color-mix(in srgb, var(--primary) 24%, transparent);
+    border-radius: 999px;
+  }
+  .scroll-thin::-webkit-scrollbar-thumb:hover {
+    background: color-mix(in srgb, var(--primary) 40%, transparent);
+  }
+  /* Subtle Islamic geometric lattice (eight-point star) */
+  .bg-pattern-islamic {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.07' stroke-width='1'%3E%3Cpath d='M36 4 L44 28 L68 36 L44 44 L36 68 L28 44 L4 36 L28 28 Z'/%3E%3Ccircle cx='36' cy='36' r='15'/%3E%3Crect x='15' y='15' width='42' height='42' transform='rotate(45 36 36)' /%3E%3C/g%3E%3C/svg%3E");
+  }
+  .bg-pattern-islamic-light {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72' viewBox='0 0 72 72'%3E%3Cg fill='none' stroke='%231F4D3D' stroke-opacity='0.06' stroke-width='1'%3E%3Cpath d='M36 4 L44 28 L68 36 L44 44 L36 68 L28 44 L4 36 L28 28 Z'/%3E%3Ccircle cx='36' cy='36' r='15'/%3E%3Crect x='15' y='15' width='42' height='42' transform='rotate(45 36 36)' /%3E%3C/g%3E%3C/svg%3E");
+  }
+  .text-balance {
+    text-wrap: balance;
+  }
+  .motion-fast {
+    transition-duration: 120ms;
+  }
+  .motion-base {
+    transition-duration: 200ms;
+  }
+  .motion-slow {
+    transition-duration: 320ms;
+  }
+}
+
+/* Bengali/Arabic long-form readability */
+[dir="rtl"] .flip-rtl {
+  transform: scaleX(-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

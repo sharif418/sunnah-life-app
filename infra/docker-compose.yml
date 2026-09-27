@@ -1,0 +1,358 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Sunnah Life — full production stack (single command brings every service up).
+#
+#   cp .env.example .env      # then edit the secrets!
+#   docker compose --env-file .env -f infra/docker-compose.yml up -d --build
+#
+# (or simply: ./infra/up.sh  — a thin wrapper around the same command)
+#
+# Run from the REPOSITORY ROOT. `--env-file .env` is needed because compose
+# looks for .env next to the compose file (infra/), while the repo keeps it at
+# the root. All bind-mount paths are relative to this file (infra/).
+#
+# Services: postgres:16 (+RLS bootstrap), redis:7, minio (+bucket init),
+# meilisearch, api (NestJS), worker (same image, BullMQ), web (Next.js PWA),
+# admin (Next.js) and — behind the optional `proxy` profile — Caddy.
+# Everything talks on the internal `sunnah` network; only web (3000),
+# admin (3002) and api (4000) are published to the host. Cloudflare fronts
+# them in production (docs/DEPLOY_COOLIFY.md).
+#
+# Requires Docker Engine 20.10+ with BuildKit (docker compose v2) — per-image
+# .dockerignore files (infra/*.Dockerfile.dockerignore) need it.
+#
+# Build contexts (BuildKit): api + worker build from the REPOSITORY ROOT (they
+# need apps/api AND packages/content — the seed + content routes read the
+# packs); web also builds from the root; admin builds from apps/admin.
+# ─────────────────────────────────────────────────────────────────────────────
+name: sunnahlife
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+networks:
+  sunnah:
+    name: sunnah
+    driver: bridge
+
+volumes:
+  pgdata: # PostgreSQL 16 data (backup it — see docs/DEPLOY_COOLIFY.md §Backups)
+  pgsocket: # postgres unix socket dir — shared with the pgBackRest one-shot containers
+  miniodata: # MinIO objects (media, PDFs, versioned content packs)
+  meili: # Meilisearch indexes (rebuildable from the database)
+  webdata: # web mirror SQLite database + seed marker
+  caddy_data: # proxy profile — TLS state
+  caddy_config: # proxy profile
+
+services:
+  # ── PostgreSQL 16 + RLS bootstrap ─────────────────────────────────────────
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-sunnahlife}
+      # consumed by infra/postgres/init-rls.sql (psql \getenv, psql ≥ 16)
+      SUNNAH_APP_PASSWORD: ${SUNNAH_APP_PASSWORD:?set SUNNAH_APP_PASSWORD in .env}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-256MB}
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS:-100}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # shared unix-socket dir → the pgBackRest backup containers connect
+      # "locally" (the official image trusts local connections)
+      - pgsocket:/var/run/postgresql
+      # runs once on an EMPTY volume: creates the NOBYPASSRLS role sunnah_app.
+      # The API's migrations add the tables + RLS policies (docs/DATA_MODEL.md).
+      - ./postgres/init-rls.sql:/docker-entrypoint-initdb.d/10-rls.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sunnahlife}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [sunnah]
+    # To inspect from the host (optional):
+    # ports: ["127.0.0.1:5432:5432"]
+
+  # ── Redis 7 — BullMQ queues + cache (no persistence by design) ────────────
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    logging: *default-logging
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks: [sunnah]
+    # ports: ["127.0.0.1:6379:6379"]
+
+  # ── MinIO — S3 object storage (console :9001 + API :9000, internal only) ──
+  minio:
+    image: minio/minio:latest # pin a RELEASE.20xx-xx-xx tag in production
+    restart: unless-stopped
+    logging: *default-logging
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      # `mc ready local` is what the image ships; curl covers older images.
+      test: ["CMD-SHELL", "mc ready local || curl -fsS http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    networks: [sunnah]
+    # ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
+
+  # One-shot: create the sunnahlife bucket (idempotent, safe on every boot).
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    logging: *default-logging
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        mc alias set s3 http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD"
+        mc mb --ignore-existing "s3/${S3_BUCKET:-sunnahlife}"
+        echo "[minio-init] bucket ${S3_BUCKET:-sunnahlife} ready"
+    networks: [sunnah]
+
+  # ── Meilisearch — Bengali typo-tolerant search ────────────────────────────
+  meilisearch:
+    image: getmeili/meilisearch:v1.54.0 # pinned to the version used in the sandbox
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:7700/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks: [sunnah]
+    # ports: ["127.0.0.1:7700:7700"]
+
+  # ── NestJS API — migrations + idempotent seed + serve (infra/api.Dockerfile)
+  # Build context = repo root: the image needs packages/content (seed catalog,
+  # level rules, Qur'an + content packs served by /api/content/*).
+  api:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    image: sunnahlife/api:${STACK_TAG:-latest}
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      TZ: UTC
+      # The container always listens on 4000 (Dockerfile ENV PORT=4000);
+      # API_PORT below only changes the HOST side of the port mapping.
+      PORT: 4000
+      # runtime connection = NOBYPASSRLS role (RLS always applies)
+      DATABASE_URL: postgresql://sunnah_app:${SUNNAH_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
+      # migrations/seed connection = owner (bypasses RLS, by design)
+      DIRECT_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
+      REDIS_URL: redis://redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-sunnahlife}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+      S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      # optional second secret for refresh tokens — empty ⇒ JWT_SECRET is used
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      ACCESS_TOKEN_TTL_MIN: ${ACCESS_TOKEN_TTL_MIN:-15}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-7}
+      APP_DOMAIN: ${APP_DOMAIN:-sunnahlife.app}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002}
+      SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      SMS_SSLWIRELESS_URL: ${SMS_SSLWIRELESS_URL:-}
+      SMS_SSLWIRELESS_USER: ${SMS_SSLWIRELESS_USER:-}
+      SMS_SSLWIRELESS_PASS: ${SMS_SSLWIRELESS_PASS:-}
+      SMS_INFOBIP_URL: ${SMS_INFOBIP_URL:-}
+      SMS_INFOBIP_KEY: ${SMS_INFOBIP_KEY:-}
+    ports:
+      - "${API_PORT:-4000}:4000"
+    healthcheck:
+      # PORT is pinned to 4000 inside the container (see environment above).
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s # first boot = migrations + seed; give it room
+    networks: [sunnah]
+
+  # ── BullMQ worker — SAME IMAGE as api, different command ───────────────────
+  # Migrations/seed run in the api entrypoint first; the worker waits for a
+  # healthy api before touching the database.
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    image: sunnahlife/api:${STACK_TAG:-latest}
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      TZ: UTC
+      DATABASE_URL: postgresql://sunnah_app:${SUNNAH_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
+      DIRECT_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
+      REDIS_URL: redis://redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}
+      S3_ENDPOINT: http://minio:9000
+      S3_BUCKET: ${S3_BUCKET:-sunnahlife}
+      S3_ACCESS_KEY: ${MINIO_ROOT_USER:?set MINIO_ROOT_USER in .env}
+      S3_SECRET_KEY: ${MINIO_ROOT_PASSWORD:?set MINIO_ROOT_PASSWORD in .env}
+      S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-}
+      ACCESS_TOKEN_TTL_MIN: ${ACCESS_TOKEN_TTL_MIN:-15}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-7}
+      APP_DOMAIN: ${APP_DOMAIN:-sunnahlife.app}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002}
+      SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+    command:
+      - /bin/sh
+      - -c
+      - |
+        if [ -f dist/worker.js ]; then exec bun dist/worker.js;
+        elif [ -f dist/src/worker.js ]; then exec bun dist/src/worker.js;
+        elif grep -q '"start:worker":' package.json; then exec bun run start:worker;
+        else echo '[worker] no worker entrypoint in the api image (dist/worker.js / start:worker)'; exit 1; fi
+    # The worker serves no HTTP port — override the api image's HTTP healthcheck
+    # with a liveness probe: PID 1 (dumb-init) still alive + a live Redis ping
+    # from inside the container. A crashed worker exits the container, which the
+    # restart policy reaps; this override stops the image's /health curl from
+    # marking the (HTTP-less) worker permanently unhealthy.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          kill -0 1 &&
+          bun -e "import('ioredis').then(({default:R})=>{const r=new R(process.env.REDIS_URL||'redis://127.0.0.1:6379',{maxRetriesPerRequest:1,lazyConnect:true});r.connect().then(()=>r.ping()).then(p=>process.exit(p==='PONG'?0:1)).catch(()=>process.exit(1))})"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks: [sunnah]
+
+  # ── Web — Next.js public site + PWA (repo root, infra/web.Dockerfile) ──────
+  # Mirror mode: standalone Next.js with its own seeded SQLite on /data, so
+  # `docker compose up` yields a fully working demo without other services.
+  web:
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-}
+    image: sunnahlife/web:${STACK_TAG:-latest}
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:/data/sunnahlife.db
+      SEED_WEB_MIRROR: ${SEED_WEB_MIRROR:-true}
+      PORT: 3000
+    volumes:
+      - webdata:/data
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/config"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s # first boot = prisma db push + demo seed
+    networks: [sunnah]
+
+  # ── Admin panel — Next.js (apps/admin, infra/admin.Dockerfile) ────────────
+  admin:
+    build:
+      context: ../apps/admin
+      dockerfile: ../../infra/admin.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: ${PUBLIC_API_BASE:-http://localhost:4000}
+    image: sunnahlife/admin:${STACK_TAG:-latest}
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - "${ADMIN_PORT:-3002}:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks: [sunnah]
+
+  # ── Optional: Caddy reverse proxy (compose profile `proxy`) ────────────────
+  # Cloudflare (proxied DNS) → this Caddy → web/admin/api. See infra/Caddyfile.
+  proxy:
+    image: caddy:2-alpine
+    profiles: ["proxy"]
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on: [web, admin, api]
+    environment:
+      WEB_DOMAIN: ${WEB_DOMAIN:-web.sunnahlife.app}
+      ADMIN_DOMAIN: ${ADMIN_DOMAIN:-admin.sunnahlife.app}
+      API_DOMAIN: ${API_DOMAIN:-api.sunnahlife.app}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@sunnahlife.app}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [sunnah]
