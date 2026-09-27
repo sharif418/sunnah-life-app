@@ -36,7 +36,7 @@ docs when you change it.
 | `meilisearch` | getmeili/meilisearch:v1.54.0 | — (internal) | Bengali typo-tolerant search; volume `meili` |
 | `api` | built from the repo root (`apps/api` + `packages/content`) via `infra/api.Dockerfile` | **4000** | NestJS; runs migrations + idempotent seed then serves |
 | `worker` | same image as `api` | — | BullMQ workers, different command; no HTTP — health = liveness probe (PID 1 + Redis ping) |
-| `web` | built from repo root via `infra/web.Dockerfile` | **3000** | Next.js PWA (standalone) + seeded SQLite mirror on volume `webdata` |
+| `web` | built from `apps/web` via `infra/web.Dockerfile` | **3000** | Next.js PWA (standalone). **No local database** — all data via the NestJS API (`NEXT_PUBLIC_API_BASE`, default `http://api:4000` inside the compose network). Gender isolation is enforced by Postgres RLS inside the api service. |
 | `admin` | built from `apps/admin` via `infra/admin.Dockerfile` | **3002** → 3000 | Next.js admin panel |
 | `proxy` (optional profile) | caddy:2-alpine | 80/443 | reverse proxy; Cloudflare sits in front anyway |
 
@@ -68,7 +68,7 @@ docker compose --env-file .env -f infra/docker-compose.yml up -d --build
 First boot order is orchestrated by healthchecks: postgres/redis/meili/minio
 become healthy → `minio-init` creates the bucket → `api` runs
 `prisma migrate deploy` + the idempotent seed → `worker` starts after the api
-is healthy → `web` builds its SQLite mirror + demo seed on its volume →
+is healthy → `web` serves the PWA talking to `http://api:4000` (no local database) →
 `admin` comes up.
 
 Verify:
@@ -188,8 +188,8 @@ per `apps/api/src/config/env.validation.ts`.)
 | Variable | Example | Req | Notes |
 |---|---|---|---|
 | `WEB_PORT` | `3000` | ✔ | host port |
-| `SEED_WEB_MIRROR` | `true` | opt | first-boot SQLite mirror + demo seed (docs/DEMO_ACCOUNTS.md); `false` = clean web |
-| `NEXT_PUBLIC_API_BASE` | *(empty)* | opt | reserved: when the web client is switched to call the NestJS API directly it is baked at build time; empty = the web app uses its own routes (mirror mode) |
+
+| `NEXT_PUBLIC_API_BASE` | `http://api:4000` | opt | where the web PWA sends its API calls (baked at build time; same compose-network name by default, or the public `https://api.<domain>` behind Cloudflare) |
 
 ### Admin (apps/admin)
 
@@ -243,7 +243,7 @@ per `apps/api/src/config/env.validation.ts`.)
 
 ## 6. Volumes & backup strategy
 
-Docker named volumes: `pgdata` (critical), `webdata` (web mirror DB),
+Docker named volumes: `pgdata` (critical),
 `miniodata` (media), `meili` (rebuildable indexes).
 
 ### 6.1 PostgreSQL — pgBackRest to off-site S3 (the critical backup)
@@ -385,7 +385,7 @@ Coolify Path B/C: the same flow is "pull latest → redeploy" per resource.
   rotation per container, configured via the compose `x-logging` anchor).
   Structured logs on the api (`src/common/structured-logger.ts`); no PII in
   logs.
-- **Web mirror sanity:** `GET /api/config` (200) is the web healthcheck.
+- **Web sanity:** `GET /` (200) is the web healthcheck — the page shell must load; data errors would surface in the browser console as `/api/*` failures against the api service.
 - Coolify shows per-service CPU/RAM graphs on Path C.
 
 ---
@@ -419,7 +419,7 @@ demo login works (docs/DEMO_ACCOUNTS.md §5).
 | `postgres` unhealthy | `docker compose logs postgres`; if it loops on init, the `pgdata` volume was initialised with different `POSTGRES_*` values — either set them back or `docker volume rm sunnahlife_pgdata` (destroys data!) and re-up |
 | api unhealthy, log shows RLS/permission errors | role `sunnah_app` missing grants → `docker compose exec postgres psql -U postgres -d sunnahlife -f -` and replay `infra/postgres/init-rls.sql` (it is idempotent) |
 | api log: `JWT_SECRET must be set` | a `:?` variable is missing from `.env` — compose prints which one |
-| web shows demo accounts missing | `SEED_WEB_MIRROR` was false, or `/data/.seeded` exists without a seed — `docker compose exec web rm /data/.seeded` and restart (re-seeds) |
+| web data errors / 500s | the PWA has no local DB — check the `api` service health first (`docker compose ps`, `docker compose logs api`); the web healthcheck is the shell only |
 | admin blank / CORS errors | `PUBLIC_API_BASE` baked wrong (rebuild the admin image) or `CORS_ORIGINS` missing the admin origin |
 | minio-init fails | `MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD` mismatch — they must satisfy MinIO's ≥8-char rule |
 | builds fail on the api | context must contain `apps/api` with its `bun.lock`; `docker compose build api` shows the failing layer |
