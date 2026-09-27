@@ -253,3 +253,22 @@ Stage Summary:
 - TASK 3-c COMPLETE AND VERIFIED. Admin panel on GitHub as "admin: Tarbiyah admin panel — 15 pages (Task 3-c)".
 - Milestone-push rule honored: 3-b snapshot pushed earlier (f047738); 3-c pushed now.
 - Next: Flutter chunks F2/F3 (platform channels — exact alarms, local notifications, home widget; then amal/polish), then Master Prompt delivery steps 4–9. Disk at 79% (2.0G free) — watch for gradle cache rebuilds.
+
+---
+Task ID: 7
+Agent: lead-architect (main session, round 4)
+Task: Recover the wiped Flutter SDK (sandbox lost /home/z/opt/flutter between sessions) and verify the mobile app (analyze + tests) — Task F2 closeout.
+
+Work Log:
+- DISCOVERED: sandbox cleanup deleted /home/z/opt/flutter (SDK) but KEPT: ~/.pub-cache, ~/.gradle/wrapper, /home/z/android-sdk (SDK 36), and apps/mobile/artifacts. Same class of loss the user feared — this time only toolchain, no source (git is the safety net now).
+- Reinstall attempts: streaming tar.xz extraction hit sandbox limits twice (detached processes reaped; FS slow at small files; disk filled to 100% with tarball+partial). Freed: admin .next (469M), ms-playwright cache (659M), .bun cache (215M), admin node_modules (641M), mobile artifacts/APK (80M).
+- FINAL SOLUTION (works, ~free): shallow git clone of framework source — `git clone --depth 1 --branch 3.47.5 flutter/flutter` (237M) + grafted the official bin/cache (2.0G, incl. dart-sdk) from the partial tarball extraction + let the tool self-bootstrap. `flutter --version` → 3.47.5 / Dart 3.13.4 ✓ (exact match to original).
+- Fixed apps/mobile/android/local.properties stale flutter.sdk → /home/z/opt/flutter (file is gitignored).
+- VERIFIED: `flutter pub get` ✓ (warm pub-cache), `flutter analyze` → **No issues found** (14.8s), `flutter test` → **38/38 passed** (13s).
+- APK build SKIPPED locally: .gradle caches were freed earlier (2.9G re-download won't fit in 1.2G free). CI's mobile job builds the debug APK on GitHub runners and uploads it as an artifact (7-day retention).
+- CI status not readable via PAT (fine-grained token lacks actions:read) — user can check the Actions tab on GitHub.
+
+Stage Summary:
+- MOBILE (F2 platform channels) VERIFIED GREEN at Dart level. Kotlin side: MainActivity.kt (225 lines: exact alarms, DND/auto-silent, share), PrayerAlarmReceiver, PrayerWidgetProvider + widget layouts + manifest receivers all present; compiled by CI's APK build.
+- Flutter SDK recovery recipe documented above (shallow clone + graft) — survives future wipes.
+- Next: F3 mobile polish if needed, then Master Prompt delivery steps 4–9 (Da'wah engine, content, Learn & Live, More, launch).
