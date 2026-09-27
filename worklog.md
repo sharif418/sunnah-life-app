@@ -193,3 +193,23 @@ Stage Summary:
 - infra/ + CI + docs are consistent with the real code (env names, DB name, content-pack path, health endpoints). Known pending workstreams (documented, not blockers): apps/admin (3-c) — compose `admin` service + CI admin job activate on arrival (`hashFiles` guard); apps/worker (3-b in flight, dir exists) — compose worker reuses the api image and needs dist/worker.js or a start:worker script in it; if apps/worker lands as its own package, switch the compose worker to infra/worker.Dockerfile (repo-root context pattern per its header) or extend api.Dockerfile to COPY apps/worker too.
 - CI turns green on GitHub as soon as the workstreams land; the api job requires the seeded demo DB (seed step included) because the RLS e2e signs in with the 0100xxxxxxx phones.
 - Rollback-able ops documented end-to-end (STACK_TAG image rollback, forward-only migrations, pgBackRest restore drill).
+
+---
+Task ID: 4
+Agent: lead-architect (main session, round 3)
+Task: GitHub safety snapshot (user-provided repo sharif418/sunnah-life-app + PAT) — push everything BEFORE continuing, so any sandbox loss is recoverable via git pull.
+
+Work Log:
+- Sandbox shell layer crashed mid-audit (100+ failed tool calls, 403 broken session); recovered on new turn. Codebase was never lost — verified git tree clean, all work intact on disk.
+- Pre-push hygiene (nothing had been pushed yet, so history amended safely):
+  - Untracked `.env` (sandbox-local credentials) from the initial commit — kept locally, ignored by .gitignore. Secret never reached GitHub.
+  - Dropped sandbox junk: tool-results/ persisted-output dumps (auto-committed by the crashed session), added to .gitignore.
+  - Untracked apps/mobile/artifacts/app-debug.apk (79 MB build artifact; CI rebuilds APKs) — repo shrank 93 MB → 14 MB.
+- Single clean commit `ef44577` "Sunnah Life — monorepo snapshot (web app, Flutter mobile, NestJS api, worker, content packs, design tokens, infra, docs)" — 445 files.
+- Remote `origin` = github.com/sharif418/sunnah-life-app (PAT embedded in URL for session-long pushes). `git ls-remote` verified main = ef44577. Remote was empty pre-push (no conflicts, no force needed).
+- STANDING RULE from user: push after every meaningful milestone; if the sandbox breaks again, re-clone from GitHub and continue (worklog.md + docs/PROGRESS.md are the resume points).
+
+Stage Summary:
+- SAFETY SNAPSHOT COMPLETE: entire codebase (Tasks 1, 2-b, 3, 3-a-1, 3-d) is on GitHub.
+- Pending workstreams (next up): Task 3-b audit/finish (NestJS apps/api + apps/worker — partially done, RLS e2e landed mid-task), Task 3-c admin panel (compose/CI guards already waiting), Flutter chunks F2/F3 (platform channels, polish), then delivery steps 4–9.
+- Remote is private (404 to anonymous HTTP) — expected.
