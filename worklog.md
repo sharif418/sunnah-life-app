@@ -213,3 +213,23 @@ Stage Summary:
 - SAFETY SNAPSHOT COMPLETE: entire codebase (Tasks 1, 2-b, 3, 3-a-1, 3-d) is on GitHub.
 - Pending workstreams (next up): Task 3-b audit/finish (NestJS apps/api + apps/worker — partially done, RLS e2e landed mid-task), Task 3-c admin panel (compose/CI guards already waiting), Flutter chunks F2/F3 (platform channels, polish), then delivery steps 4–9.
 - Remote is private (404 to anonymous HTTP) — expected.
+
+---
+Task ID: 5
+Agent: lead-architect (main session, round 3)
+Task: Finish + verify Task 3-b (NestJS api + worker) — unblock bun-runtime, compiled worker entrypoint, shared-types generation.
+
+Work Log:
+- Disk was 100% full (api install NoSpaceLeft) → freed 3.4 GB: .gradle/caches (2.9G), .gradle/daemon, apps/mobile/build (593M). Keep: .pub-cache, .gradle/wrapper, artifacts/app-debug.apk (build evidence).
+- bun install apps/api (311 pkgs) → build exit 0 → tests 4 suites 34/34 GREEN (incl. rls.e2e.spec.ts gender-isolation proof).
+- FIXED Bun-ESM runtime bug: `import { AuthedRequest, currentUser }` + emitDecoratorMetadata retained the erased interface as runtime import → strict ESM link error. All 11 controllers now `import type { AuthedRequest }`. openapi:export works again (35 paths).
+- FIXED shared-types generate.ts: createRequire directory anchor (needs FILE anchor: apps/api/package.json) + wrong relative requires → "./dist/app.module.js"; openapi-typescript cwd pointed at nonexistent packages/api → now `bun x openapi-typescript` from packages/shared-types (devDep installed). Generates dist/openapi.json + dist/schema.d.ts ✓.
+- CREATED apps/api/src/worker.ts (canonical compiled entrypoint; nest build → dist/worker.js; package.json start:worker script added) — satisfies infra compose worker service fallback chain (dist/worker.js found first). apps/worker stays as the bun --hot dev twin; its package.json no longer declares the unresolvable workspace:* dep.
+- Lint 0 errors/0 warnings (removed 7 unused imports: seed BN_DIGITS, admin IsUUID/Matches, amal Param, content Query, rls-raw UseGuards, prayer-times Madhhab).
+- BOOT VERIFIED (both processes, sandbox services): api :3001 /health → postgres+redis+meilisearch+storage all true; POST /api/auth/otp/request → devCode; GET /api/config → live JSON. Worker → 4 repeatable schedulers registered, delayed jobs enqueued, waiting for jobs.
+- Boot artifacts left RUNNING in background: api (node dist/main.js, log /tmp/api.log), worker (node dist/worker.js, log /tmp/worker.log).
+
+Stage Summary:
+- TASK 3-b COMPLETE AND VERIFIED. Pushed as d7c77e3 with PROGRESS.md update.
+- Next: Task 3-c admin panel (apps/admin) — compose/CI hashFiles guards already await it; then Flutter F2/F3 (platform channels, polish) and delivery-order steps 4–9.
+- Disk discipline: keep an eye on df; gradle caches will rebuild on next android build (~3G) — clean again after.
