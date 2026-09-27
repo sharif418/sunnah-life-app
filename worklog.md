@@ -462,3 +462,21 @@ Work Log:
 
 Stage Summary:
 - bn/en/ar shipped on mobile (ARB+gen-l10n, RTL) and web (catalog + RTL + logical CSS); WCAG AA contrast table documented with the two failures FIXED (gold-text, alert) and parity-check green. Honest gaps: admin keeps bn-only (RTL-ready logical classes), a few onboarding step-2 strings fall back to Bengali in the Arabic locale.
+
+---
+Task ID: B8
+Agent: lead-architect (main session, Phase B closeout)
+Task: CI for the new layout (debug APK + secrets-gated aab + ci-status self-report), docs (AUDIT.md, DEPLOY_COOLIFY de-mirrored), final fresh-clone verification, push.
+
+Work Log:
+- CI (7 jobs): branches trigger fixed ([main, master] — the corrupted line was a display artifact: od showed "[m"+"ain" being eaten as an escape in tool output); web job moved to apps/web (no DATABASE_URL — no local DB); release-bundle job (secrets-gated: ANDROID_KEYSTORE_BASE64 family → app/build.gradle.kts reads key.properties, falls back to debug signing locally); report job writes .github/ci-status.md back to main ([skip ci]) because the fine-grained PAT lacks actions:read (all Actions endpoints 403).
+- SECOND gitignore-class bug found BY the fresh-clone test: apps/api/.gitignore bare `storage/` hid src/storage/ (the whole storage module) from git — anchored to /storage/, committed (fb2a92c).
+- Fresh-clone final verification: flutter pub get ✓ · analyze No issues (5.5s) · flutter test 65/65 (an earlier 8-failure run was a disk-full artifact; freed and re-run → clean) · API bun install 369 pkgs · jest 9 suites 133/133.
+- Web production build verified locally (3/3 static pages, ~7 min) — the CI web job's exact commands all reproduce.
+- docs/AUDIT.md: §4–9 table (Done/Partial/Not done + files + proof commands + explicit "Not done in sandbox" list). DEPLOY_COOLIFY.md: mirror-mode references removed (web = API-only, no webdata volume), troubleshooting updated.
+- gradle signing: app/build.gradle.kts release signing from key.properties (fallback debug); docs/RELEASE.md §3 documents the secret injection.
+- CI status: NOT observable from the sandbox after 60+ min (no ci-status.md; every Actions API endpoint 403 on the PAT). Honest note in AUDIT.md — user must check the Actions tab; likely queued on private-repo minutes or Actions disabled.
+- Final state: all services running (web :3000, api :3001, worker, quiz-service :3030), dev.log clean.
+
+Stage Summary:
+- Phase B code-complete and pushed. CI is configured to prove everything the audit demanded but its RESULTS could not be observed from the sandbox (PAT limitation) — flagged honestly instead of claimed.

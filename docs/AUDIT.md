@@ -56,7 +56,7 @@ limitation. **Not done** = stated plainly. Last verified at commit below.
 | Mobile analyze/tests | Done | apps/mobile | `flutter analyze` → No issues · `flutter test` → 65/65 |
 | Web typecheck | Done | apps/web | `bunx tsc --noEmit` → exit 0 |
 | Swagger/OpenAPI | Done | `src/main.ts` DocumentBuilder | `GET :3001/openapi.json` |
-| CI green (lint/test/build on GitHub runners) | See run | `.github/workflows/ci.yml` (7 jobs) | run URL + `.github/ci-status.md` (auto-committed per-run) |
+| CI green (lint/test/build on GitHub runners) | Partial | `.github/workflows/ci.yml` (7 jobs incl. ci-status self-report) | every gate passes locally on a fresh clone (analyze 0 · flutter 65/65 · jest 133/133 · nest build · next build); the sandbox PAT cannot read the Actions API (403, fine-grained token) and no run result was observable within an hour of pushing — Actions tab: https://github.com/sharif418/sunnah-life-app/actions — likely queued (private-repo minutes quota) or Actions disabled for the repo; the `report` job writes `.github/ci-status.md` back to main on every completed run so results become visible in git |
 | Debug APK artifact on CI | Done | mobile job | artifact `mobile-debug-apk` (7-day retention) |
 | Release appbundle behind secrets | Done (gated) | release-bundle job | skips cleanly without ANDROID_KEYSTORE_BASE64; builds+uploads `mobile-release-aab` with it |
 | **§9 / delivery** | | | |
