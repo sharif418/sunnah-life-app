@@ -97,3 +97,42 @@ Docker compose, Postgres RLS (SQLite here — replaced by the
 **Next:** Flutter chunks F2/F3 (platform channels: exact alarms, notifications, home-screen
 widget; then polish), then delivery steps 4–9 of the Master Prompt (Da'wah engine,
 content, Learn & Live, More, launch).
+
+## Milestone — Task 8 COMPLETE: Web app all 5 views shipped + first true browser E2E
+
+**The big one.** All five placeholder views replaced with production implementations:
+
+- **Home** — prayer dashboard: triple calendar (Gregorian·Bangabda·Hijri), live clock,
+  next-waqt countdown, 6-row waqt timeline (current/next highlighting), ইশরাক/দুহা/তাহাজ্জুদ
+  footnote, qibla card (bearing + distance + compass link), today's amal summary (SVG ring +
+  category chips + cadence-aware counting), quick links, city sheet with GPS.
+- **Amal** — Muhasaba diary: week strip, completion ring, tri-state salah selectors
+  (জামাত/একা/কাযা), counters with targets, অটো (auto-source) badges, category sections,
+  month heatmap sub-view, guest offline-first cache (natural-key amalCache + outbox sync).
+- **Dawah** (daee-gated tab) — member identity card (code DS-XXXXXX, level, role),
+  referral link + copy/share + hadith, dawah stats (direct refs, tree, active),
+  level-rules progress, উসরা sub-tab (members with completion %), রিভিউ sub-tab,
+  assessment dialogs (supervisors).
+- **Ilm** — live programs (seeded), Quran reader (114 surahs, Uthmani + Bengali
+  translation per ayah, juz/page meta), duas/adhkar, courses, extras.
+- **More** — profile, prayer settings (method/madhhab/city), qibla compass, zakat
+  calculator (config nisab), mosques, masala + FAQ, contacts, about/feedback.
+
+**CRITICAL FIX:** the app had NEVER passed the splash screen in a real browser —
+zustand v5 persist fires its rehydrate callback during `create()`, so `useApp.setState`
+hit the temporal dead zone (ReferenceError swallowed by persist → hydrated stayed
+false forever). All earlier "GET / 200" checks were SSR-only. Fix: `queueMicrotask`.
+Browser-verified interactivity is now the standard of done.
+
+**Also fixed:** allowedDevOrigins (localhost/127.0.0.1) for Next 16 dev resources;
+Dawah tab role-gating in shell; content.ts getPack typing; OTP-verify closure
+narrowing; AuditEntry.actorName nullability.
+
+**E2E verified (agent-browser):** onboarding → home → amal (জামাত → ১/২৭ + localStorage
+persist) → ilm (Quran reader) → more → mobile 390px (fixed bottom nav, 4 tabs, no
+overflow) → daee sign-in → Dawah (member card, referral link, stats, usrah roster).
+Lint 0/0 · tsc 0 (src/) · dev.log clean.
+
+**Remaining for next round:** fresh-visitor referral-signup E2E (?join=DS-000004),
+mosques.json + faq.json packs are empty (views degrade gracefully), delivery step 9
+polish (PWA manifest, meta tags), NestJS-worker parity items.
