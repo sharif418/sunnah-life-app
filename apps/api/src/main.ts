@@ -12,7 +12,7 @@
 // app.gender / app.usrah_id / app.role) so PostgreSQL itself enforces the
 // gender/usrah/downline visibility model — see prisma/migrations/*_rls.
 // ─────────────────────────────────────────────────────────────────────────────
-import { ValidationPipe } from "@nestjs/common";
+import { ValidationPipe, Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
@@ -24,6 +24,21 @@ async function bootstrap(): Promise<void> {
 
   // Product routes under /api (web + mobile contract); infra endpoints bare.
   app.setGlobalPrefix("api", { exclude: ["health", "metrics"] });
+
+  // Request access log — one line per /api hit (method, route, status, ms).
+  // This is the operator-facing proof that web/mobile traffic reaches the
+  // API port; keep it cheap (no body logging, no PII).
+  const access = new Logger("HTTP");
+  app.use((req: { method?: string; originalUrl?: string }, res: { statusCode?: number; on?: (ev: string, cb: () => void) => void }, next: () => void) => {
+    const startedAt = Date.now();
+    const url = req.originalUrl ?? "";
+    if (url.startsWith("/api/") && res.on) {
+      res.on("finish", () => {
+        access.log(`${req.method} ${url} → ${res.statusCode} ${Date.now() - startedAt}ms`);
+      });
+    }
+    next();
+  });
 
   // DTO validation: strip unknown props, auto-transform payloads.
   app.useGlobalPipes(
