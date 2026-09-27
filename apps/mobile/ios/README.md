@@ -4,6 +4,12 @@ The iOS runner is code-complete but **cannot be compiled here** (no macOS /
 Xcode possible in this environment — see `docs/ENVIRONMENT.md`). What is in
 place, and what the signing Mac must do:
 
+> **Push notifications (Task B2):** the full iOS push runbook — APNs key
+> upload, `GoogleService-Info.plist` placement, capabilities, swizzling —
+> lives in `docs/IOS_BUILD.md`. `AppDelegate.swift`, `Runner.entitlements`
+> (aps-environment) and `Info.plist` (UIBackgroundModes remote-notification,
+> `sunnahlife://` URL scheme) already carry the code side.
+
 ## What already exists
 - `ios/Runner` project from `flutter create` (AppDelegate, Info.plist,
   Assets, Base.lproj) with **Swift channel stubs** for the three platform

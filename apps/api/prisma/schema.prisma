@@ -46,9 +46,11 @@ model User {
   lastActiveAt  DateTime  @default(now())
 
   sessions              Session[]
+  deviceTokens          DeviceToken[]
   refreshTokens         RefreshToken[]
   amalEntries           AmalEntry[]
   personalGoals         PersonalGoal[]
+  monthlyReports        MonthlyReport[]
   dayUnlocks            DayUnlock[]   @relation("UnlockedFor")
   unlockActions         DayUnlock[]   @relation("UnlockedBy")
   weeklyReviewsGiven    WeeklyReview[] @relation("Reviewer")
@@ -69,6 +71,26 @@ model Session {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   expiresAt DateTime
+}
+
+// FCM registration tokens for push delivery (Task B2). One row per
+// (user, device-token): re-registering refreshes lastSeenAt; users keep at
+// most MAX_TOKENS_PER_USER rows (oldest evicted). RLS: members see/modify
+// only their own rows; usrah heads/invigilators may SELECT (resolve for
+// fan-out) but never mutate — and only same-gender rows (see the
+// *_device_tokens migration).
+model DeviceToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token      String // FCM registration token (device+app install)
+  platform   String   @default("android") // android | ios
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now())
+
+  @@unique([userId, token])
+  @@index([userId])
 }
 
 model RefreshToken {
@@ -173,6 +195,23 @@ model PersonalGoal {
   startDate String
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
+}
+
+// ─────────────────────────── Monthly Muhasaba report ───────────────────────────
+
+model MonthlyReport {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month       String // YYYY-MM (Gregorian)
+  storageKey  String // reports/{userId}/{month}.pdf (S3 object or STORAGE_DIR-relative path)
+  byteSize    Int      @default(0)
+  status      String   @default("ready") // ready | failed
+  errorBn     String? // failure reason (Bengali, worker-set)
+  generatedAt DateTime @default(now())
+
+  @@unique([userId, month])
+  @@index([month])
 }
 
 // ─────────────────────────── Reviews & assessment ───────────────────────────

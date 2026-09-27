@@ -5,6 +5,8 @@ import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-
 import { addDays } from "../shared/calendars";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
+import { PushService } from "../push/push.service";
+import { DEEP_LINKS } from "../push/deep-links";
 import { toDomainUser } from "../common/mappers";
 import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
@@ -168,7 +170,8 @@ export class AmalCatalogDto {
 export class AdminService {
   constructor(
     private readonly rls: RlsService,
-    private readonly guard: GuardService
+    private readonly guard: GuardService,
+    private readonly push: PushService
   ) {}
 
   /** GET /api/admin/overview — role-scoped dashboard. */
@@ -485,9 +488,10 @@ export class AdminService {
       throw new ApiError(403, "সবার জন্য ঘোষণা শুধু প্রধান অ্যাডমিন পাঠাতে পারবেন");
     }
 
-    return this.rls.run(user, async (tx) => {
-      let targetUserIds: string[] = [];
+    // resolved inside the RLS transaction, kept for the post-commit push
+    let targetUserIds: string[] = [];
 
+    await this.rls.run(user, async (tx) => {
       if (usrahId) {
         const usrah = await tx.usrah.findUnique({ where: { id: usrahId }, include: { members: true } });
         if (!usrah) throw new ApiError(400, "উসরা পাওয়া যায়নি");
@@ -530,9 +534,30 @@ export class AdminService {
         gender,
         recipients: targetUserIds.length,
       });
-
-      return { ok: true };
     });
+
+    // Push fan-out (B2) — AFTER the RLS transaction commits, under the acting
+    // user's context: a male head's token resolution physically cannot see a
+    // female member's DeviceToken rows (RLS on DeviceToken), and the no-op
+    // transport keeps dev/sandbox observable without Firebase. Reminders are
+    // the always-on fallback — push never fails the broadcast.
+    let push: { sent: number; users: number } | undefined;
+    try {
+      const outcome = await this.push.send(
+        targetUserIds,
+        {
+          title: "নতুন ঘোষণা",
+          body: text.slice(0, 200),
+          deepLink: usrahId ? DEEP_LINKS.usrah : DEEP_LINKS.more,
+        },
+        { actor: user }
+      );
+      push = { sent: outcome.sent, users: outcome.users };
+    } catch {
+      // push transport hiccup — the announcement + reminders already landed
+    }
+
+    return { ok: true, ...(push ? { push } : {}) };
   }
 
   /**

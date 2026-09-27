@@ -4,6 +4,17 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// ── FCM / google-services guard (Task B2) ─────────────────────────────────────
+// The plugin is applied ONLY when the real google-services.json exists — CI
+// (and fresh clones) must build WITHOUT it. Copy google-services.example.json
+// → google-services.json and fill the real values (docs/RELEASE.md §Firebase).
+// The Flutter firebase_* plugins initialize from lib/firebase_options.dart
+// (flutterfire configure), so the JSON itself is optional for the build.
+val googleServicesJson = file("google-services.json")
+if (googleServicesJson.exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "bd.asunnah.sunnah_life"
     compileSdk = flutter.compileSdkVersion

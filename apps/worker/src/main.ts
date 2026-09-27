@@ -2,7 +2,8 @@
 // Sunnah Life — BullMQ worker entrypoint.
 //
 // Same codebase as apps/api (spec: "worker — BullMQ workers, same codebase as
-// api, separate entrypoint"). Boots the Nest AppModule as a standalone
+// api, separate entrypoint"). Boots the WorkerAppModule (AppModule +
+// processors) as a standalone
 // application context (no HTTP), which registers the QueueModule processors:
 //
 //   • prayer-push      — nightly 00:05 BD: compute next-day waqt times per
@@ -21,12 +22,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
-import { AppModule } from "../../api/src/app.module";
+import { WorkerAppModule } from "../../api/src/worker-app.module";
 import { QueuesService } from "../../api/src/queues/queues.service";
 
 async function bootstrap() {
   const logger = new Logger("Worker");
-  const app = await NestFactory.createApplicationContext(AppModule, {
+  const app = await NestFactory.createApplicationContext(WorkerAppModule, {
     logger: ["log", "warn", "error"],
   });
   app.enableShutdownHooks();

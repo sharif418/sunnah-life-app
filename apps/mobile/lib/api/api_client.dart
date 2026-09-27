@@ -321,6 +321,22 @@ class ApiClient {
   Future<void> feedback(String message) =>
       _req('POST', '/api/feedback', body: {'message': message});
 
+  // ── Push (B2) — device token registration ────────────────────────────────────
+
+  /// Register/refresh the FCM token (upserts per user+token server-side).
+  Future<void> registerPushToken({
+    required String token,
+    required String platform,
+  }) => _req(
+    'POST',
+    '/api/push/token',
+    body: {'token': token, 'platform': platform},
+  );
+
+  /// Remove one device token (sign-out on this device).
+  Future<void> unregisterPushToken(String token) =>
+      _req('DELETE', '/api/push/token', body: {'token': token});
+
   // ── Quran (server mirror — the bundled pack is the offline fallback) ────────
 
   Future<List<SurahBrief>> quranSurahs() async {

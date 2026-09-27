@@ -356,6 +356,19 @@ export interface GoalItem {
   createdAt: string;
 }
 
+export interface MonthlyReportItem {
+  id: string;
+  userId: string;
+  userName: string | null;
+  memberCode: string | null;
+  month: string;
+  storageKey: string;
+  byteSize: number;
+  status: string;
+  errorBn: string | null;
+  generatedAt: string;
+}
+
 // ── endpoints ────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -471,7 +484,55 @@ export const api = {
 
   // dawah dashboard (daee+): own member code, downline, level requirements
   dawah: () => call<DawahOverview>("/api/dawah"),
+
+  // monthly Muhasaba PDF reports (B3)
+  monthlyReports: (month?: string, userId?: string) => {
+    const qs = new URLSearchParams();
+    if (month) qs.set("month", month);
+    if (userId) qs.set("userId", userId);
+    const q = qs.toString();
+    return call<{ reports: MonthlyReportItem[] }>(`/api/admin/reports${q ? `?${q}` : ""}`);
+  },
+  generateReport: (userId: string, month: string) =>
+    call<MonthlyReportItem>("/api/admin/reports/generate", { method: "POST", json: { userId, month } }),
 };
+
+/**
+ * Download a monthly report PDF through the gateway (auth header can't ride
+ * on a plain window.open link — fetch → blob → object URL). One transparent
+ * token refresh + retry on 401, same contract as call().
+ */
+export async function downloadReportPdf(report: MonthlyReportItem): Promise<void> {
+  const doFetch = () =>
+    fetch(gatewayUrl(`/api/admin/reports/${report.id}/download`), {
+      headers: { ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
+      cache: "no-store",
+    });
+
+  let res = await doFetch();
+  if (res.status === 401) {
+    const refreshed = await rawCall<{ accessToken: string; refreshToken: string }>("/api/auth/refresh", {
+      method: "POST",
+      json: { refreshToken: getRefreshToken() },
+      skipAuthRefresh: true,
+    });
+    setTokens(refreshed.accessToken, refreshed.refreshToken);
+    res = await doFetch();
+  }
+  if (!res.ok) {
+    const data = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new ApiError(res.status, data?.error ?? `HTTP ${res.status}`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `muhasaba-${report.memberCode ?? report.userId.slice(0, 8)}-${report.month}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 export interface DownlineNode {
   id: string;

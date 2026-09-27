@@ -79,6 +79,12 @@ apps/mobile/linux/
 apps/mobile/macos/
 apps/mobile/windows/
 apps/mobile/web/
+# ── Firebase (Task B2): the REAL credential files never get committed.
+# The committed google-services.example.json documents the shape; CI builds
+# apply the google-services Gradle plugin ONLY when the real file exists
+# (apps/mobile/android/app/build.gradle.kts — file-existence guard).
+apps/mobile/android/app/google-services.json
+apps/mobile/ios/Runner/GoogleService-Info.plist
 # sandbox toolchain artifacts
 opt/
 

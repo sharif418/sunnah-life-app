@@ -2,14 +2,17 @@
 // Sunnah Life — BullMQ worker entrypoint (canonical).
 //
 // Same codebase as the api (spec: "worker — BullMQ workers, same codebase as
-// api, separate entrypoint"). Boots the Nest AppModule as a standalone
-// application context (no HTTP), which registers the QueueModule processors:
+// api, separate entrypoint"). Boots the WorkerAppModule (AppModule + the
+// processor providers) as a standalone application context (no HTTP), which
+// registers the QueueModule queues/schedulers AND consumes the jobs:
 //
 //   • prayer-push      — nightly 00:05 BD: compute next-day waqt times per
-//                        user and enqueue/store reminder payloads (FCM seam).
+//                        user, store reminder payloads and enqueue delayed
+//                        per-waqt FCM pushes (PushService — Task B2).
 //   • weekly-reviews   — Saturday 00:05 BD: create this week's pending
-//                        WeeklyReviews for every da'ee+ and remind both
-//                        parties; mark old pending ones overdue.
+//                        WeeklyReviews for every da'ee+ and remind BOTH
+//                        parties (in-app Reminder + push); mark old pending
+//                        ones overdue.
 //   • monthly-report   — 1st of month: generate the Muhasaba PDF report per
 //                        member (31-column paper-form layout, Bengali font)
 //                        and upload to MinIO when configured.
@@ -24,12 +27,12 @@
 // ─────────────────────────────────────────────────────────────────────────────
 import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
-import { AppModule } from "./app.module";
+import { WorkerAppModule } from "./worker-app.module";
 import { QueuesService } from "./queues/queues.service";
 
 async function bootstrap() {
   const logger = new Logger("Worker");
-  const app = await NestFactory.createApplicationContext(AppModule, {
+  const app = await NestFactory.createApplicationContext(WorkerAppModule, {
     logger: ["log", "warn", "error"],
   });
   app.enableShutdownHooks();

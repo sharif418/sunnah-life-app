@@ -208,6 +208,10 @@ services:
       SMS_SSLWIRELESS_PASS: ${SMS_SSLWIRELESS_PASS:-}
       SMS_INFOBIP_URL: ${SMS_INFOBIP_URL:-}
       SMS_INFOBIP_KEY: ${SMS_INFOBIP_KEY:-}
+      # FCM HTTP v1 service account (object string OR a container file path).
+      # Empty ⇒ the no-op push transport (no Firebase project configured).
+      # Worker needs it too — it is the main push fan-out process (B2).
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
     ports:
       - "${API_PORT:-4000}:4000"
     healthcheck:
@@ -254,6 +258,8 @@ services:
       APP_DOMAIN: ${APP_DOMAIN:-sunnahlife.app}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002}
       SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      # FCM (B2): the worker delivers prayer/review/broadcast pushes.
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
     command:
       - /bin/sh
       - -c

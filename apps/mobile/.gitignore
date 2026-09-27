@@ -46,3 +46,8 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Firebase real config (Task B2): never commit the real keys — commit only the
+# *.example.json placeholders; CI builds fine without the real files.
+/android/app/google-services.json
+/ios/Runner/GoogleService-Info.plist

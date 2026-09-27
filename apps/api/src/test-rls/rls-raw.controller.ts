@@ -48,4 +48,34 @@ export class RlsRawTestController {
       note: "raw unfiltered findMany/count under requesting user's RLS context",
     };
   }
+
+  /**
+   * TEST-ONLY DeviceToken twin of the probe above (Task B2): runs
+   * `prisma.deviceToken.findMany({ where: { userId } })` inside the acting
+   * user's RLS context with NO application-level filter. The DeviceToken
+   * policy is stricter than the generic visibility pattern — same-gender
+   * AND (self | same usrah | usrah I head) — so the database itself must
+   * return 0 rows for an opposite-gender member's device tokens even if
+   * membership data drifted (defense in depth for the push fan-out).
+   */
+  @Get("rls-raw-device-tokens")
+  @ApiOperation({ summary: "TEST-ONLY: raw DeviceToken query under RLS context" })
+  async rawDeviceTokens(
+    @Query("userId") userId: string | undefined,
+    @Req() req: AuthedRequest
+  ) {
+    if (req.headers["x-rls-raw-test"] !== "1" || process.env.NODE_ENV === "production") {
+      throw new ApiError(404, "পাওয়া যায়নি");
+    }
+    const user = this.guard.requireUser(currentUser(req));
+    if (!userId) throw new ApiError(400, "ব্যবহারকারী নির্বাচন করা হয়নি");
+
+    const rows = await this.rls.run(user, (tx) =>
+      tx.deviceToken.findMany({ where: { userId }, select: { token: true } })
+    );
+    return {
+      rows: rows.length,
+      note: "raw unfiltered DeviceToken findMany under requesting user's RLS context",
+    };
+  }
 }

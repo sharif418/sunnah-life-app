@@ -29,6 +29,9 @@ const schema = z.object({
   S3_SECRET_KEY: z.string().optional().default(""),
   S3_PUBLIC_BASE: z.string().optional().default(""),
   APP_DOMAIN: z.string().optional().default("sunnahlife.app"),
+  // FCM service-account JSON — object string OR a path to the JSON file.
+  // Empty/absent ⇒ the no-op push transport (dev/sandbox default).
+  FCM_SERVICE_ACCOUNT_JSON: z.string().optional().default(""),
 });
 
 export type Env = z.infer<typeof schema>;

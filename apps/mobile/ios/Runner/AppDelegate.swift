@@ -1,5 +1,7 @@
 import Flutter
 import UIKit
+import FirebaseCore
+import FirebaseMessaging
 
 /// Sunnah Life iOS surface.
 ///
@@ -20,7 +22,35 @@ import UIKit
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
+    // ── Push notifications (Task B2) ─────────────────────────────────────────
+    // APNs registration for FCM. firebase_messaging swizzles the app delegate
+    // by DEFAULT (FirebaseAppDelegateProxyEnabled defaults to YES in
+    // Info.plist): the plugin forwards the APNs token to FCM and presents
+    // notification messages itself. We still register explicitly and bridge
+    // the token below — that is the documented pattern for builds where
+    // swizzling is disabled, and it is a harmless no-op when enabled.
+    // FirebaseApp.configure() itself happens on the Dart side
+    // (Firebase.initializeApp in services/push_service.dart).
+    UIApplication.shared.registerForRemoteNotifications()
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  // APNs token → FCM (used when swizzling is disabled; ignored otherwise).
+  override func application(
+    _ application: UIApplication,
+    didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
+  ) {
+    Messaging.messaging().apnsToken = deviceToken
+    super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+  }
+
+  override func application(
+    _ application: UIApplication,
+    didFailToRegisterForRemoteNotificationsWithError error: Error
+  ) {
+    NSLog("[push] APNs registration failed: \(error.localizedDescription)")
+    super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {

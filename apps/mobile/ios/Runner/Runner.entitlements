@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Task B2 — push notifications: APNs environment entitlement.
+	     Xcode resolves `development` from the automatic provisioning profile
+	     when the Push Notifications capability is toggled; App Store/TestFlight
+	     builds get the production environment at upload time. -->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

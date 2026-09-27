@@ -4,6 +4,8 @@
 /// আরও).
 library;
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +40,7 @@ import 'features/more/zakat_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shared/widgets.dart';
 import 'l10n/app_strings.dart';
+import 'services/push_service.dart';
 import 'state/amal_state.dart';
 import 'state/providers.dart';
 
@@ -49,6 +52,30 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   ref.read(profileProvider.notifier).hydrateFrom(row);
   // Offline-first background sync: 60s outbox flush (see SyncNotifier).
   ref.read(syncProvider.notifier).startPeriodicFlush();
+  // Push (B2): FCM handlers + deep-link navigation; registration follows the
+  // auth session. Everything degrades to local-only when Firebase is
+  // unavailable (placeholder options / no Play Services / widget tests).
+  await PushService.instance.ensureInitialized(
+    onNavigate: (route) => ref.read(routerProvider).go(route),
+  );
+  ref.watch(pushRegistrationProvider);
+});
+
+/// Push registration lifecycle: register the FCM token when signed in,
+/// unregister on sign-out. Watches the session; fireImmediately covers the
+/// restored-session boot case.
+final pushRegistrationProvider = Provider<void>((ref) {
+  ref.listen<AuthState>(authProvider, (prev, next) {
+    final wasIn = prev?.status == AuthStatus.signedIn;
+    final signedIn = next.status == AuthStatus.signedIn;
+    if (wasIn == signedIn && prev != null) return; // no-op flip
+    unawaited(
+      PushService.instance.syncRegistration(
+        api: ref.read(apiProvider),
+        signedIn: signedIn,
+      ),
+    );
+  }, fireImmediately: true);
 });
 
 /// Bridges riverpod changes into GoRouter's refreshListenable.

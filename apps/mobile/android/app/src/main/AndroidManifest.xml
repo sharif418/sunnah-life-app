@@ -8,6 +8,9 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <!-- Posting notifications on Android 13+. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- FCM background delivery (notification messages while the app is
+         not in the foreground). -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:label="সুন্নাহ লাইফ"
@@ -35,7 +38,25 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- sunnahlife:// deep links (push payloads use in-app routing; this
+                 registers the OS-level scheme so browser/QR links work too). -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="sunnahlife" android:host="*"/>
+            </intent-filter>
         </activity>
+
+        <!-- FCM (Task B2): system-tray notifications on background/terminated
+             pushes route through this channel + icon (mirrored by the Dart
+             PushService's foreground local notifications). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="sunnah_life_push" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
 
         <!-- Waqt exact-alarm receiver (fires the notification). -->
         <receiver

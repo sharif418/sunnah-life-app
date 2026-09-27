@@ -176,6 +176,7 @@ per `apps/api/src/config/env.validation.ts`.)
 | `SMS_PROVIDER` | `mock` | opt | `mock` (dev — OTP returned as `devCode`) · `sslwireless` · `infobip` |
 | `SMS_SSLWIRELESS_URL` / `_USER` / `_PASS` | | opt | SSL Wireless credentials |
 | `SMS_INFOBIP_URL` / `_KEY` | | opt | Infobip credentials |
+| `FCM_SERVICE_ACCOUNT_JSON` | *(empty)* | opt | Firebase service-account JSON (object string **or** a file path) for FCM HTTP v1 pushes — create via docs/RELEASE.md §Firebase. Empty ⇒ the no-op transport (pushes logged, never delivered). Passed to **both** `api` and `worker` (the worker is the main fan-out process). |
 
 ### Web (repo-root Next.js)
 

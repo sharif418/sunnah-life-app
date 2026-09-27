@@ -5,6 +5,7 @@ import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { validateEnv } from "./config/env.validation";
 import { CommonModule } from "./common/common.module";
+import { StorageModule } from "./storage/storage.module";
 import { JwtAuthGuard } from "./common/auth.guard";
 import { AllExceptionsFilter } from "./common/all-exceptions.filter";
 import { MetricsInterceptor } from "./common/metrics";
@@ -30,7 +31,9 @@ import { UsrahModule } from "./usrah/usrah.module";
 import { ReviewsModule } from "./reviews/reviews.module";
 import { AssessmentsModule } from "./assessments/assessments.module";
 import { AdminModule } from "./admin/admin.module";
+import { ReportsModule } from "./reports/reports.module";
 import { EngagementModule } from "./engagement/engagement.module";
+import { PushModule } from "./push/push.module";
 import { JoinModule } from "./join/join.module";
 import { LiveModule } from "./live/live.module";
 import { MeModule } from "./me/me.module";
@@ -56,6 +59,7 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
       // .env is loaded by Nest; prisma seed reads DIRECT_URL itself.
     }),
     CommonModule, // @Global: Prisma + RLS + Guard + Jwt
+    StorageModule, // @Global: S3/local object storage (monthly report PDFs)
     QueueModule, // BullMQ queues + schedulers (Redis)
     AuthModule,
     HealthModule,
@@ -67,7 +71,9 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
     ReviewsModule,
     AssessmentsModule,
     AdminModule,
+    ReportsModule,
     EngagementModule,
+    PushModule, // FCM push: token registration + PushService fan-out (B2)
     JoinModule,
     LiveModule,
     MeModule,
