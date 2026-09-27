@@ -1,9 +1,10 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res } from "@nestjs/common";
+import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
 import { LogoutDto, OtpRequestDto, OtpVerifyDto, RefreshDto } from "./dto/auth.dto";
 import { ApiError } from "../common/api-error";
+import { readCookie } from "../common/auth.guard";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -44,13 +45,16 @@ export class AuthController {
   /**
    * POST /api/auth/refresh — rotating refresh. A replayed (already used)
    * token revokes the whole family (reuse detection) and returns 401.
+   * The token may come from the body (mobile/Bearer clients) or the HttpOnly
+   * sl_refresh cookie (web PWA clients cannot read it to echo it back).
    */
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Rotate the refresh token (family revoke on reuse)" })
-  async refresh(@Body() dto: RefreshDto, @Res({ passthrough: true }) res: Response) {
-    if (!dto?.refreshToken) throw new ApiError(400, "রিফ্রেশ টোকেন দিন");
-    const result = await this.auth.refresh(dto.refreshToken);
+  @ApiOperation({ summary: "Rotate the refresh token (body token or sl_refresh cookie)" })
+  async refresh(@Body() dto: RefreshDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = dto?.refreshToken || readCookie(req, "sl_refresh");
+    if (!token) throw new ApiError(400, "রিফ্রেশ টোকেন দিন");
+    const result = await this.auth.refresh(token);
     setTokenCookies(res, result.tokens.accessToken, result.tokens.refreshToken);
     return { user: result.user, ...result.tokens };
   }
@@ -59,8 +63,9 @@ export class AuthController {
   @Post("logout")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Sign out (revoke refresh family)" })
-  async logout(@Body() dto: LogoutDto, @Res({ passthrough: true }) res: Response) {
-    const result = await this.auth.logout(dto?.refreshToken);
+  async logout(@Body() dto: LogoutDto, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+    const token = dto?.refreshToken || readCookie(req, "sl_refresh");
+    const result = await this.auth.logout(token || undefined);
     res.clearCookie("sl_access");
     res.clearCookie("sl_refresh");
     return result;

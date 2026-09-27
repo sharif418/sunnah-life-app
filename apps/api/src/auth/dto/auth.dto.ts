@@ -81,9 +81,12 @@ export class OtpVerifyDto {
 }
 
 export class RefreshDto {
-  @ApiProperty()
+  // Optional: cookie-based clients (web PWA) rely on the HttpOnly sl_refresh
+  // cookie instead of echoing the token back in the body.
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString({ message: "রিফ্রেশ টোকেন দিন" })
-  refreshToken!: string;
+  refreshToken?: string;
 }
 
 export class LogoutDto {

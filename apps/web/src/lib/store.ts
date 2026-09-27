@@ -9,6 +9,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { AmalEntry, Gender, Lang, CalcMethodKey, Madhhab, User } from "@/types/domain";
 import { CITIES, DHAKA } from "@/lib/cities";
+import { API_BASE, apiUrl } from "@/lib/api-base";
 
 export type Tab = "home" | "amal" | "dawah" | "ilm" | "more";
 
@@ -222,10 +223,12 @@ function scheduleFlush(get: () => AppState, set: (p: Partial<AppState>) => void)
     }
     set({ syncState: "syncing" });
     try {
-      const res = await fetch("/api/amal/entries", {
+      // Outbox flush goes through the sanctioned URL builder too (same-origin
+      // gateway in the sandbox, absolute API base in production).
+      const res = await fetch(apiUrl("/api/amal/entries"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
+        credentials: API_BASE ? "include" : "same-origin",
         body: JSON.stringify({ entries: pending }),
       });
       if (!res.ok) throw new Error("flush failed");

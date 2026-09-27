@@ -1,4 +1,4 @@
-import { Req, Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Req, Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import type { Prisma } from "@prisma/client";
@@ -11,6 +11,8 @@ import { ApiError } from "../common/api-error";
 import { bdToday, completion7dForUsers, isValidDateKey, ownUsrahIds } from "../shared/amal";
 import { computeWeekSummary, mapReview, weekStartOf, type ReviewRow } from "../shared/reviews";
 import { ReviewSubmitDto } from "../auth/dto/auth.dto";
+import { Roles } from "../common/roles.decorator";
+import { RolesGuard } from "../common/roles.guard";
 import type { Gender, Level, User, UserCategory, UsrahMember, WeeklyReview } from "../shared/domain";
 
 @Injectable()
@@ -194,6 +196,7 @@ export class ReviewsService {
 
 @ApiTags("reviews")
 @Controller("reviews")
+@UseGuards(RolesGuard)
 export class ReviewsController {
   constructor(private readonly service: ReviewsService) {}
 
@@ -205,6 +208,7 @@ export class ReviewsController {
 
   @Post()
   @ApiOperation({ summary: "Submit a weekly review (auto-summary server-side)" })
+  @Roles("usrah_head") // usrah_head and above (heads, invigilators, admin)
   submit(@Body() dto: ReviewSubmitDto, @Req() req: AuthedRequest) {
     return this.service.submit(currentUser(req), dto);
   }

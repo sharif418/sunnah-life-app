@@ -1,4 +1,4 @@
-import { Req, Body, Controller, Get, Patch, Post, Query } from "@nestjs/common";
+import { Req, Body, Controller, Get, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
@@ -9,6 +9,8 @@ import { toDomainUser } from "../common/mappers";
 import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
 import { ApiError } from "../common/api-error";
+import { Roles } from "../common/roles.decorator";
+import { RolesGuard } from "../common/roles.guard";
 import {
   bdToday,
   completion7dForUsers,
@@ -667,6 +669,10 @@ async function nextMemberCode(tx: import("@prisma/client").Prisma.TransactionCli
 
 @ApiTags("admin")
 @Controller("admin")
+@UseGuards(RolesGuard)
+// Supervisors and above (usrah_head / invigilator / full_admin); the services
+// re-check finer scopes (assertFullAdmin, gender/usrah RLS) per route.
+@Roles("usrah_head")
 export class AdminController {
   constructor(private readonly service: AdminService) {}
 
@@ -684,6 +690,7 @@ export class AdminController {
 
   @Patch("users")
   @ApiOperation({ summary: "full_admin: change role/gender/usrah/category (audited)" })
+  @Roles("full_admin")
   patchUser(@Body() dto: AdminUserPatchDto, @Req() req: AuthedRequest) {
     return this.service.patchUser(currentUser(req), dto);
   }
@@ -700,6 +707,7 @@ export class AdminController {
 
   @Post("promote")
   @ApiOperation({ summary: "full_admin: promote a level (validates requirements)" })
+  @Roles("full_admin")
   promote(@Body() dto: PromoteDto, @Req() req: AuthedRequest) {
     return this.service.promote(currentUser(req), dto);
   }
@@ -712,12 +720,14 @@ export class AdminController {
 
   @Post("amal-catalog")
   @ApiOperation({ summary: "full_admin: upsert an amal definition by key" })
+  @Roles("full_admin")
   upsertCatalog(@Body() dto: AmalCatalogDto, @Req() req: AuthedRequest) {
     return this.service.upsertCatalog(currentUser(req), dto);
   }
 
   @Get("audit")
   @ApiOperation({ summary: "full_admin: last 100 audit entries" })
+  @Roles("full_admin")
   audit(@Req() req: AuthedRequest) {
     return this.service.audit(currentUser(req));
   }

@@ -1,4 +1,4 @@
-import { Req, Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Req, Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { IsDateString, IsOptional, IsString, Matches } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
@@ -6,6 +6,8 @@ import { AmalService } from "./amal.service";
 import { AmalEntriesSyncDto, UnlockDto } from "../auth/dto/auth.dto";
 import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
+import { Roles } from "../common/roles.decorator";
+import { RolesGuard } from "../common/roles.guard";
 
 export class EntriesQueryDto {
   @ApiProperty({ example: "2025-06-01" })
@@ -34,6 +36,7 @@ export class MonthQueryDto {
 
 @ApiTags("amal")
 @Controller("amal")
+@UseGuards(RolesGuard)
 export class AmalController {
   constructor(private readonly amal: AmalService) {}
 
@@ -64,6 +67,7 @@ export class AmalController {
   /** POST /api/amal/unlock — usrah_head+ unlocks a locked day (audited). */
   @Post("unlock")
   @ApiOperation({ summary: "Unlock a locked diary day (usrah_head+)" })
+  @Roles("usrah_head") // usrah_head and above
   unlock(@Body() dto: UnlockDto, @Req() req: AuthedRequest) {
     return this.amal.unlock(currentUser(req), dto.userId, dto.date, dto.reason);
   }

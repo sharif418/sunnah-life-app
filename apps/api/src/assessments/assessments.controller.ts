@@ -1,4 +1,4 @@
-import { Req, Body, Controller, Get, Post, Query } from "@nestjs/common";
+import { Req, Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import { RlsService } from "../common/rls.service";
@@ -7,6 +7,8 @@ import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
 import { ApiError } from "../common/api-error";
 import { AssessmentSubmitDto } from "../auth/dto/auth.dto";
+import { Roles } from "../common/roles.decorator";
+import { RolesGuard } from "../common/roles.guard";
 import type {
   AssessmentDetail,
   AssessmentSection,
@@ -255,6 +257,7 @@ export class AssessmentsService {
 
 @ApiTags("assessments")
 @Controller("assessments")
+@UseGuards(RolesGuard)
 export class AssessmentsController {
   constructor(private readonly service: AssessmentsService) {}
 
@@ -272,6 +275,7 @@ export class AssessmentsController {
 
   @Post()
   @ApiOperation({ summary: "Record a signed assessment (majority-per-section rule)" })
+  @Roles("invigilator") // invigilator and above (invigilator / usrah_head / full_admin)
   submit(@Body() dto: AssessmentSubmitDto, @Req() req: AuthedRequest) {
     return this.service.submit(currentUser(req), dto);
   }

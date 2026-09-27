@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Get, Patch, Post, Req } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import { IsInt, IsNotEmpty, IsOptional, IsString, Min, MaxLength } from "class-validator";
@@ -203,7 +203,7 @@ export class MasalaController {
   constructor(private readonly service: EngagementService) {}
   @Post()
   @ApiOperation({ summary: "Ask a fiqh question (guests allowed)" })
-  masala(@Body() dto: MasalaDto, req: AuthedRequest) {
+  masala(@Body() dto: MasalaDto, @Req() req: AuthedRequest) {
     return this.service.masala(currentUser(req), dto);
   }
 }
@@ -214,7 +214,7 @@ export class FeedbackController {
   constructor(private readonly service: EngagementService) {}
   @Post()
   @ApiOperation({ summary: "Send app feedback (guests allowed)" })
-  feedback(@Body() dto: FeedbackDto, req: AuthedRequest) {
+  feedback(@Body() dto: FeedbackDto, @Req() req: AuthedRequest) {
     return this.service.feedback(currentUser(req), dto);
   }
 }
@@ -225,12 +225,12 @@ export class EnrollController {
   constructor(private readonly service: EngagementService) {}
   @Post()
   @ApiOperation({ summary: "Enroll in a course (idempotent)" })
-  enroll(@Body() dto: EnrollDto, req: AuthedRequest) {
+  enroll(@Body() dto: EnrollDto, @Req() req: AuthedRequest) {
     return this.service.enroll(currentUser(req), dto);
   }
   @Patch()
   @ApiOperation({ summary: "Save course progress JSON" })
-  progress(@Body() dto: EnrollProgressDto, req: AuthedRequest) {
+  progress(@Body() dto: EnrollProgressDto, @Req() req: AuthedRequest) {
     return this.service.saveProgress(currentUser(req), dto);
   }
 }
@@ -241,7 +241,7 @@ export class QuizAttemptController {
   constructor(private readonly service: EngagementService) {}
   @Post()
   @ApiOperation({ summary: "Record a quiz attempt (login)" })
-  attempt(@Body() dto: QuizAttemptDto, req: AuthedRequest) {
+  attempt(@Body() dto: QuizAttemptDto, @Req() req: AuthedRequest) {
     return this.service.quizAttempt(currentUser(req), dto);
   }
 }
@@ -252,12 +252,12 @@ export class RemindersController {
   constructor(private readonly service: EngagementService) {}
   @Get()
   @ApiOperation({ summary: "Own reminders" })
-  list(req: AuthedRequest) {
+  list(@Req() req: AuthedRequest) {
     return this.service.reminders(currentUser(req));
   }
   @Patch()
   @ApiOperation({ summary: "Mark a reminder read" })
-  read(@Body() dto: ReadReminderDto, req: AuthedRequest) {
+  read(@Body() dto: ReadReminderDto, @Req() req: AuthedRequest) {
     return this.service.readReminder(currentUser(req), dto);
   }
 }
