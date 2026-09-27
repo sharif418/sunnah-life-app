@@ -1,8 +1,8 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { Request, Response } from "express";
 import { AuthService } from "./auth.service";
-import { LogoutDto, OtpRequestDto, OtpVerifyDto, RefreshDto } from "./dto/auth.dto";
+import { LogoutDto, OtpRequestDto, OtpVerifyDto, RefreshDto, SocialSignInDto } from "./dto/auth.dto";
 import { ApiError } from "../common/api-error";
 import { readCookie } from "../common/auth.guard";
 
@@ -33,6 +33,44 @@ export class AuthController {
     const result = await this.auth.verifyOtp(
       dto.phone,
       dto.code,
+      dto.name,
+      dto.gender,
+      dto.referredByCode,
+      dto.guestEntries
+    );
+    setTokenCookies(res, result.tokens.accessToken, result.tokens.refreshToken);
+    return { user: result.user, ...result.tokens };
+  }
+
+  /**
+   * GET /api/auth/providers — {google: bool, apple: bool}: which social
+   * sign-in buttons the client should show (env-driven; offline-safe to
+   * call — both false hides the section). (Task B5)
+   */
+  @Get("providers")
+  @ApiOperation({ summary: "Enabled social sign-in providers (env-driven)" })
+  providers() {
+    return this.auth.providersStatus();
+  }
+
+  /**
+   * POST /api/auth/social — {provider: "google"|"apple", idToken, name?,
+   * gender?, referredByCode?, guestEntries?} → {user, accessToken,
+   * refreshToken, …}: mirrors otp/verify (same envelope + cookies). The
+   * id_token is verified against the provider's JWKS (aud/iss/exp + WebCrypto
+   * signature); accounts are linked by provider sub or verified email.
+   * Gender is only applied at account creation (onboarding owns it).
+   */
+  @Post("social")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Google/Apple social sign-in (JWKS-verified id_token)" })
+  async socialSignIn(@Body() dto: SocialSignInDto, @Res({ passthrough: true }) res: Response) {
+    if (dto.provider !== "google" && dto.provider !== "apple") {
+      throw new ApiError(400, "সঠিক সাইন-ইন পদ্ধতি দিন");
+    }
+    const result = await this.auth.socialSignIn(
+      dto.provider,
+      dto.idToken,
       dto.name,
       dto.gender,
       dto.referredByCode,

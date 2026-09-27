@@ -221,6 +221,37 @@ const Map<String, Map<Lang, String>> kStringTable = {
     Lang.en: 'Enter a valid phone number',
     Lang.ar: 'أدخل رقم هاتف صحيحًا',
   },
+  // Social sign-in (Task B5) — Bengali-first copy.
+  'auth_google': {
+    Lang.bn: 'Google দিয়ে সাইন ইন',
+    Lang.en: 'Sign in with Google',
+    Lang.ar: 'الدخول عبر Google',
+  },
+  'auth_apple': {
+    Lang.bn: 'Apple দিয়ে সাইন ইন',
+    Lang.en: 'Sign in with Apple',
+    Lang.ar: 'الدخول عبر Apple',
+  },
+  'auth_or': {Lang.bn: 'অথবা', Lang.en: 'or', Lang.ar: 'أو'},
+  'auth_social_error': {
+    Lang.bn: 'সাইন-ইন ব্যর্থ হয়েছে — আবার চেষ্টা করুন',
+    Lang.en: 'Sign-in failed — try again',
+    Lang.ar: 'فشل تسجيل الدخول — حاول مجددًا',
+  },
+
+  // ── Gender + name completion (social sign-in accounts) ──
+  'complete_profile_title': {
+    Lang.bn: 'প্রোফাইল সম্পূর্ণ করুন',
+    Lang.en: 'Complete your profile',
+    Lang.ar: 'أكمل ملفك الشخصي',
+  },
+  'complete_profile_note': {
+    Lang.bn:
+        'অ্যাকাউন্ট চালু করতে নাম ও লিঙ্গ দিন। লিঙ্গ একবার দেওয়ার পর আর পরিবর্তন করা যায় না।',
+    Lang.en:
+        'Add your name and gender to activate the account. Gender cannot be changed once set.',
+    Lang.ar: 'أدخل اسمك وجنسك لتفعيل الحساب. لا يمكن تغيير الجنس بعد تحديده.',
+  },
 
   // ── Home / prayer ──
   'prayer_next': {

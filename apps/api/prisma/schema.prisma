@@ -20,9 +20,16 @@ model User {
   id            String    @id @default(cuid())
   phone         String?   @unique
   email         String?
+  // Social sign-in (Task B5): which IdP last linked the account + the
+  // provider-stable subject id. Uniqueness (per provider) is enforced by the
+  // partial unique indexes in migrations/*_social_auth — see the migration
+  // header for why they live in raw SQL (Prisma has no expression/partial DSL).
+  socialProvider String?   // google | apple
+  socialSub      String?   // IdP-stable subject claim (survives email changes;
+                          // Apple only includes `email` on FIRST authorization)
   name          String
   photoUrl      String?
-  gender        String // "M" | "F" — set once at onboarding, changed only by full_admin
+  gender        String // "M" | "F" | "unspecified" (pre-onboarding, social-created) — set once at onboarding, changed only by full_admin
   role          String    @default("user") // user | daee | usrah_head | invigilator | full_admin
   category      String    @default("general") // general | hafez | alim
   memberCode    String?   @unique // DS-000001, assigned when promoted to daee
@@ -63,6 +70,8 @@ model User {
   quizAttempts          QuizAttempt[]
   masalaQuestions       MasalaQuestion[]
   feedbacks             Feedback[]
+  usrahQuestions        UsrahQuestion[]  @relation("UsrahQuestionAuthor")
+  usrahAnswers          UsrahQuestion[]  @relation("UsrahQuestionAnswerer")
 }
 
 model Session {
@@ -135,6 +144,7 @@ model Usrah {
 
   members       User[]         @relation("UsrahMembers")
   announcements Announcement[]
+  questions     UsrahQuestion[]
 }
 
 // ─────────────────────────── Muhasaba diary ───────────────────────────
@@ -359,4 +369,27 @@ model QuizAttempt {
   score     Int
   total     Int
   createdAt DateTime @default(now())
+}
+
+// Usrah question board (Task B4): a member asks a deen/tarbiyah question
+// inside their OWN usrah; the usrah head (or supervisors) answers. Visibility
+// is usrah-scoped at the DATABASE level — see the *_usrah_questions migration
+// (SELECT = own usrah / same-gender invigilator / admin; INSERT = own usrah
+// members; UPDATE = head of that usrah / admin — answering).
+model UsrahQuestion {
+  id            String    @id @default(cuid())
+  usrahId       String
+  usrah         Usrah     @relation(fields: [usrahId], references: [id])
+  authorId      String
+  author        User      @relation("UsrahQuestionAuthor", fields: [authorId], references: [id])
+  category      String    @default("general") // general | aqeedah | salah | quran | muamalah | tarbiyah
+  question      String
+  answer        String?
+  answeredById  String?
+  answeredBy    User?     @relation("UsrahQuestionAnswerer", fields: [answeredById], references: [id])
+  answeredAt    DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now())
+
+  @@index([usrahId, createdAt])
 }

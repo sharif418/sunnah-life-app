@@ -37,9 +37,11 @@ import 'features/more/mosques_screen.dart';
 import 'features/more/profile_screen.dart';
 import 'features/more/qibla_screen.dart';
 import 'features/more/zakat_screen.dart';
+import 'features/onboarding/gender_completion_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shared/widgets.dart';
 import 'l10n/app_strings.dart';
+import 'models/domain.dart';
 import 'services/push_service.dart';
 import 'state/amal_state.dart';
 import 'state/providers.dart';
@@ -98,9 +100,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final onOnboarding = loc == '/onboarding';
       if (!profile.onboardingDone) return onOnboarding ? null : '/onboarding';
       if (onOnboarding) return '/';
+      // Social-sign-in accounts created without gender (Task B5): complete
+      // the one-time gender+name step before anything else. The refresh
+      // listener re-fires on the auth change, so finishing it lands on '/'.
+      final auth = ref.read(authProvider);
+      if (auth.userOrNull != null &&
+          auth.userOrNull!.gender.needsCompletion) {
+        return loc == '/complete-profile' ? null : '/complete-profile';
+      }
       // Da'wah engine is daee+ territory — hide the branch for everyone
       // else (the tab disappears too; the screen itself also gates).
-      final auth = ref.read(authProvider);
       if (loc.startsWith('/dawah') &&
           !(auth.userOrNull?.canSeeDawah ?? false)) {
         return '/';
@@ -113,6 +122,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(path: '/auth', builder: (context, state) => const AuthScreen()),
+      GoRoute(
+        path: '/complete-profile',
+        builder: (context, state) => const GenderCompletionScreen(),
+      ),
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppShellScaffold(navigationShell: navigationShell),

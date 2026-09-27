@@ -1,8 +1,9 @@
 # Sunnah Life — iOS build guide (IOS_BUILD.md)
 
-The iOS runner is **code-complete** (including push notifications, Task B2)
-but cannot be compiled in this environment — no macOS/Xcode host exists in
-the sandbox (`docs/ENVIRONMENT.md`). This file is the exact runbook for the
+The iOS runner is **code-complete** (including push notifications, Task B2,
+and Sign in with Apple, Task B5 — §9) but cannot be compiled in this
+environment — no macOS/Xcode host exists in the sandbox
+(`docs/ENVIRONMENT.md`). This file is the exact runbook for the
 signing Mac. (General project notes: `apps/mobile/ios/README.md`.)
 
 ---
@@ -102,3 +103,38 @@ safely; do not remove either.
   documented extension point for the Mac).
 - DND auto-silent is not possible on iOS (no public API) — the Dart layer
   already surfaces it as unsupported.
+
+## 9. Sign in with Apple (Task B5)
+
+The Apple sign-in button (`lib/features/auth/auth_screen.dart` →
+`SocialSignInService.appleIdToken`, plugin `sign_in_with_apple` 8.x) is
+**iOS-only** — on Android the button stays hidden (the web-flow alternative
+needs a `https://…/auth/callback` redirect on our own domain, deliberately
+out of scope).
+
+One-time setup on the Mac + Apple Developer portal:
+
+1. **Apple Developer portal** — Identifiers → the app id
+   (`bd.asunnah.sunnahLife`) → check **Sign In with Apple** → save (re-download
+   the provisioning profiles afterwards). Optionally create a **Services ID**
+   + **Sign in with Apple key (.p8)** — only needed for the web-style flow
+   (the api's `APPLE_SERVICES_ID` audience); the native flow needs neither.
+2. **Xcode** — Runner target → **Signing & Capabilities** →
+   **+ Capability → Sign in with Apple**. The repo's
+   `ios/Runner/Runner.entitlements` already declares
+   `com.apple.developer.applesignin = ["Default"]`; the capability toggle is
+   what bakes it into the provisioning profile (same pattern as the Push
+   Notifications capability in §4).
+3. **API env** — the native flow's id_token carries the bundle id as `aud`,
+   so the api needs `APPLE_IOS_BUNDLE_ID=bd.asunnah.sunnahLife` (see
+   docs/RELEASE.md §social-login for the full env list). Without any Apple
+   audience env set, `GET /api/auth/providers` reports `apple: false` and
+   the app hides the button — CI builds stay green without any of this.
+4. Flutter/dart side needs **no flags** — `pod install` after the first
+   `flutter pub get` that added the plugin.
+
+Behavior notes: Apple returns the **email + name only on the very first
+authorization**; later sign-ins are linked by the provider subject id stored
+on the account (`User.socialSub`). If the account was created without a
+gender, the app shows the one-time gender+name completion screen before
+anything else (`/complete-profile` → `PATCH /api/me`).

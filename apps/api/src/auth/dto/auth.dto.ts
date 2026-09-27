@@ -89,6 +89,47 @@ export class RefreshDto {
   refreshToken?: string;
 }
 
+/** POST /api/auth/social (Task B5) — Google/Apple id_token sign-in. */
+export class SocialSignInDto {
+  @ApiProperty({ example: "google", enum: ["google", "apple"] })
+  @IsIn(["google", "apple"], { message: "সঠিক সাইন-ইন পদ্ধতি দিন" })
+  provider!: "google" | "apple";
+
+  @ApiProperty({ description: "Provider id_token (JWT)" })
+  @IsString({ message: "সাইন-ইন টোকেন দিন" })
+  @MinLength(10, { message: "সাইন-ইন টোকেন দিন" })
+  idToken!: string;
+
+  @ApiProperty({ required: false, example: "রাফিউল ইসলাম" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  name?: string;
+
+  @ApiProperty({
+    required: false,
+    enum: ["M", "F"],
+    description:
+      "Only applied at ACCOUNT CREATION (onboarding gender). Ignored for existing accounts — gender is locked afterwards.",
+  })
+  @IsOptional()
+  @IsIn(["M", "F"], { message: "লিঙ্গ ঠিক নয়" })
+  gender?: "M" | "F";
+
+  @ApiProperty({ required: false, example: "DS-000004" })
+  @IsOptional()
+  @IsString()
+  referredByCode?: string;
+
+  @ApiProperty({ required: false, type: [GuestEntryDto] })
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(500, { message: "একবারে সর্বোচ্চ ৫০০টি এন্ট্রি পাঠানো যায়" })
+  @ValidateNested({ each: true })
+  @Type(() => GuestEntryDto)
+  guestEntries?: GuestEntryDto[];
+}
+
 export class LogoutDto {
   @ApiProperty({ required: false })
   @IsOptional()

@@ -25,7 +25,12 @@ import type {
   AppConfig,
   AssessmentDetail,
   AssessmentTemplate,
+  Course,
+  CourseSummary,
   DawahOverview,
+  EnrollmentItem,
+  QuizAttemptItem,
+  UsrahQuestionItem,
   User,
   Usrah,
   UsrahMember,
@@ -43,8 +48,10 @@ import type {
 
 /** Route keys exactly as the API exports them (OpenAPI paths, no "/api" prefix). */
 export type ApiRoute = Extract<keyof OpenApiPaths, string>;
-/** The single parameterised route of the surface (quran surah reader). */
+/** The parameterised routes of the surface (path params → template literals). */
 type SurahRoute = `/quran/surah/${number}`;
+type CourseRoute = `/courses/${string}`;
+type UsrahAnswerRoute = `/usrah-questions/${string}/answers`;
 
 /**
  * Compile-checked route builder: ("/amal/entries", {from, to}) →
@@ -52,7 +59,7 @@ type SurahRoute = `/quran/surah/${number}`;
  * web build instead of 404-ing at runtime.
  */
 function route(
-  path: ApiRoute | SurahRoute,
+  path: ApiRoute | SurahRoute | CourseRoute | UsrahAnswerRoute,
   query?: Record<string, string | number | undefined | null>
 ): string {
   const clean = `/api/${path.replace(/^\//, "")}`;
@@ -209,6 +216,29 @@ export const api = {
     req<{ ok: boolean }>(route("/enroll"), { method: "PATCH", body: JSON.stringify({ courseId, progressJson }) }),
   quizAttempt: (quizId: string, score: number, total: number) =>
     req<{ ok: boolean }>(route("/quiz-attempt"), { method: "POST", body: JSON.stringify({ quizId, score, total }) }),
+
+  // ilm — course catalog + enrollment/quiz history + usrah questions (B4)
+  courses: () => req<{ courses: CourseSummary[] }>(route("/courses")),
+  course: (id: string) =>
+    req<{
+      course: Course;
+      enrolledCount: number;
+      myEnrollment: { progress: { done?: string[] } | null; updatedAt: string } | null;
+    }>(route(`/courses/${id}`)),
+  enrollments: () => req<{ enrollments: EnrollmentItem[] }>(route("/enrollments")),
+  quizAttempts: () => req<{ attempts: QuizAttemptItem[] }>(route("/quiz-attempts")),
+  usrahQuestions: () => req<{ questions: UsrahQuestionItem[] }>(route("/usrah-questions")),
+  askUsrahQuestion: (payload: { question: string; category?: string }) =>
+    req<{ question: UsrahQuestionItem }>(route("/usrah-questions"), { method: "POST", body: JSON.stringify(payload) }),
+  answerUsrahQuestion: (id: string, answer: string) =>
+    req<{ question: UsrahQuestionItem }>(route(`/usrah-questions/${id}/answers`), {
+      method: "POST",
+      body: JSON.stringify({ answer }),
+    }),
+  quizLiveToken: (quizId: string) =>
+    req<{ token: string; room: string; role: "host" | "player"; quizId: string | null; exp: number }>(
+      route("/quiz/live-token", { quizId })
+    ),
 
   // quran
   quranSurahs: () =>

@@ -4,6 +4,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type Gender = "M" | "F";
+/** Sentinel stored for social-sign-in accounts created BEFORE the user
+ *  completed gender onboarding. Gender is set once (onboarding / one-time
+ *  PATCH /api/me) and locked afterwards — "unspecified" is the pre-state. */
+export type GenderOrUnset = Gender | "unspecified";
 export type Role = "user" | "daee" | "usrah_head" | "invigilator" | "full_admin";
 export type Level = "none" | "muhibbus_sunnah" | "farze_ain_1" | "farze_ain_2";
 export type UserCategory = "general" | "hafez" | "alim";
@@ -37,9 +41,13 @@ export const ROLE_RANK: Record<Role, number> = {
 export interface User {
   id: string;
   phone: string | null;
+  email: string | null;
   name: string;
   photoUrl: string | null;
-  gender: Gender;
+  /** "unspecified" until the (social-created) account completes gender
+   *  onboarding — set once via POST /api/auth/social or PATCH /api/me, then
+   *  locked (full_admin may still change it through the admin console). */
+  gender: GenderOrUnset;
   role: Role;
   category: UserCategory;
   memberCode: string | null;

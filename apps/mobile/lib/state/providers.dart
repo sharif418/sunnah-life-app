@@ -274,6 +274,64 @@ class AuthNotifier extends Notifier<AuthState> {
         );
   }
 
+  /// Social sign-in (Google/Apple — Task B5): the id_token is verified
+  /// server-side (JWKS + WebCrypto); the account is linked by provider sub
+  /// or verified email. Same session + guest-entries migration path as OTP.
+  /// When the returned user still has no gender (account created via social
+  /// elsewhere without one), the router routes to the one-time completion
+  /// screen (/complete-profile) instead of '/'.
+  Future<void> signInWithSocial({
+    required String provider,
+    required String idToken,
+    String? name,
+    Gender? gender,
+    String? referredByCode,
+  }) async {
+    final db = ref.read(dbProvider);
+    final guestEntries = await db.entriesBetween('2000-01-01', '2999-12-31');
+    final api = ref.read(apiProvider);
+    final res = await api.socialSignIn(
+      provider: provider,
+      idToken: idToken,
+      name: name,
+      gender: gender,
+      referredByCode: referredByCode,
+      guestEntries: guestEntries.take(500).toList(),
+    );
+    final token = res.token;
+    if (token != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_tokenKey, token);
+      api.token = token;
+    }
+    state = AuthState(status: AuthStatus.signedIn, user: res.user);
+    // Adopt the account's profile — EXCEPT gender while it is still
+    // "unspecified" (the local onboarding choice stays until completion).
+    await ref
+        .read(profileProvider.notifier)
+        .update(
+          name: res.user.name,
+          gender: res.user.gender.needsCompletion ? null : res.user.gender,
+          language: res.user.language,
+          city: res.user.city ?? 'ঢাকা',
+          lat: res.user.lat,
+          lng: res.user.lng,
+          method: res.user.calcMethod,
+          madhhab: res.user.madhhab,
+          category: res.user.category,
+        );
+  }
+
+  /// Replace the in-session user after a profile PATCH (gender completion).
+  void updateUser(User user) {
+    state = AuthState(status: AuthStatus.signedIn, user: user);
+  }
+
+  /// True while the signed-in account still lacks gender — the router sends
+  /// these users to /complete-profile (one-time; the API locks gender after).
+  bool get needsGenderCompletion =>
+      state.userOrNull?.gender.needsCompletion ?? false;
+
   Future<void> signOut() async {
     try {
       await ref.read(apiProvider).logout();

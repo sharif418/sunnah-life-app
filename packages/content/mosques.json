@@ -1,1 +1,220 @@
-{}
+{
+  "mosques": [
+    {
+      "id": "msj-baitul-mukarram",
+      "nameBn": "বায়তুল মোকাররম জাতীয় মসজিদ",
+      "nameEn": "Baitul Mukarram National Mosque",
+      "addressBn": "বঙ্গবন্ধু এভিনিউ, পল্টন, ঢাকা",
+      "area": "পল্টন",
+      "lat": 23.7275,
+      "lng": 90.4122
+    },
+    {
+      "id": "msj-gulshan-azad",
+      "nameBn": "গুলশান আজাদ মসজিদ",
+      "nameEn": "Gulshan Azad Mosque",
+      "addressBn": "গুলশান-২ সার্কেল, ঢাকা",
+      "area": "গুলশান",
+      "lat": 23.7925,
+      "lng": 90.4147
+    },
+    {
+      "id": "msj-tara",
+      "nameBn": "তারা মসজিদ (স্টার মসজিদ)",
+      "nameEn": "Tara Masjid (Star Mosque)",
+      "addressBn": "আরমানিটোলা রোড, পুরান ঢাকা",
+      "area": "আরমানিটোলা",
+      "lat": 23.7126,
+      "lng": 90.401
+    },
+    {
+      "id": "msj-shat-shaheed",
+      "nameBn": "ষোলশহীদ মসজিদ",
+      "nameEn": "Shat Shohid Masjid",
+      "addressBn": "লালবাগ সড়ক, ঢাকা",
+      "area": "লালবাগ",
+      "lat": 23.7186,
+      "lng": 90.3876
+    },
+    {
+      "id": "msj-sat-gambuj",
+      "nameBn": "সাত গম্বুজ মসজিদ",
+      "nameEn": "Sat Gambuj Mosque",
+      "addressBn": "মোহাম্মদপুর, ঢাকা",
+      "area": "মোহাম্মদপুর",
+      "lat": 23.7649,
+      "lng": 90.3628
+    },
+    {
+      "id": "msj-du-central",
+      "nameBn": "ঢাকা বিশ্ববিদ্যালয় কেন্দ্রীয় জামে মসজিদ",
+      "nameEn": "Dhaka University Central Mosque",
+      "addressBn": "ঢাকা বিশ্ববিদ্যালয় ক্যাম্পাস, ঢাকা",
+      "area": "শাহবাগ",
+      "lat": 23.7338,
+      "lng": 90.3927
+    },
+    {
+      "id": "msj-baitul-aman",
+      "nameBn": "বায়তুল আমান জামে মসজিদ",
+      "nameEn": "Baitul Aman Jame Masjid",
+      "addressBn": "কারওয়ান বাজার, তেজগাঁও, ঢাকা",
+      "area": "কারওয়ান বাজার",
+      "lat": 23.7528,
+      "lng": 90.3897
+    },
+    {
+      "id": "msj-khan-mridha",
+      "nameBn": "খান মোহাম্মদ মৃধা মসজিদ",
+      "nameEn": "Khan Mohammad Mridha Mosque",
+      "addressBn": "লালবাগ দুর্গ সংলগ্ন, পুরান ঢাকা",
+      "area": "লালবাগ",
+      "lat": 23.7199,
+      "lng": 90.3998
+    },
+    {
+      "id": "msj-chawkbazar-shahi",
+      "nameBn": "চকবাজার শাহী মসজিদ",
+      "nameEn": "Chawkbazar Shahi Mosque",
+      "addressBn": "চকবাজার, পুরান ঢাকা",
+      "area": "চকবাজার",
+      "lat": 23.7124,
+      "lng": 90.3994
+    },
+    {
+      "id": "msj-mirpur-10",
+      "nameBn": "মীরপুর ১০ রাউন্ড জামে মসজিদ",
+      "nameEn": "Mirpur 10 Round Jame Masjid",
+      "addressBn": "মীরপুর ১০ গোলচত্বর, ঢাকা",
+      "area": "মীরপুর",
+      "lat": 23.8068,
+      "lng": 90.3688
+    },
+    {
+      "id": "msj-sholakia-dhaka",
+      "nameBn": "মোহাম্মদপুর টাউন হল জামে মসজিদ",
+      "nameEn": "Mohammadpur Town Hall Jame Masjid",
+      "addressBn": "টাউন হল মার্কেট সংলগ্ন, মোহাম্মদপুর, ঢাকা",
+      "area": "মোহাম্মদপুর",
+      "lat": 23.7657,
+      "lng": 90.362
+    },
+    {
+      "id": "msj-dhanmondi-taqwa",
+      "nameBn": "ধানমন্ডি তাকওয়া মসজিদ",
+      "nameEn": "Dhanmondi Taqwa Masjid",
+      "addressBn": "সাত মসজিদ রোড, ধানমন্ডি, ঢাকা",
+      "area": "ধানমন্ডি",
+      "lat": 23.7465,
+      "lng": 90.3745
+    },
+    {
+      "id": "msj-mughda",
+      "nameBn": "মুগদা জামে মসজিদ",
+      "nameEn": "Mugda Jame Masjid",
+      "addressBn": "মুগদা মোড়, ঢাকা",
+      "area": "মুগদা",
+      "lat": 23.7213,
+      "lng": 90.4382
+    },
+    {
+      "id": "msj-jatrabari",
+      "nameBn": "যাত্রাবাড়ী কেন্দ্রীয় জামে মসজিদ",
+      "nameEn": "Jatrabari Central Jame Masjid",
+      "addressBn": "যাত্রাবাড়ী মোড়, ঢাকা",
+      "area": "যাত্রাবাড়ী",
+      "lat": 23.7003,
+      "lng": 90.4263
+    },
+    {
+      "id": "msj-jurain",
+      "nameBn": "জুরাইন জামে মসজিদ",
+      "nameEn": "Jurain Jame Masjid",
+      "addressBn": "জুরাইন, কদমতলী, ঢাকা",
+      "area": "জুরাইন",
+      "lat": 23.6863,
+      "lng": 90.411
+    },
+    {
+      "id": "msj-malibagh-shahi",
+      "nameBn": "মালিবাগ শাহী মসজিদ",
+      "nameEn": "Malibagh Shahi Masjid",
+      "addressBn": "মালিবাগ রেলগেট, ঢাকা",
+      "area": "মালিবাগ",
+      "lat": 23.736,
+      "lng": 90.4207
+    },
+    {
+      "id": "msj-hussaini-dalan",
+      "nameBn": "হোসেনী দালান মসজিদ",
+      "nameEn": "Hussaini Dalan Mosque",
+      "addressBn": "নয়াবাজার হোসেনী দালান রোড, পুরান ঢাকা",
+      "area": "নয়াবাজার",
+      "lat": 23.7225,
+      "lng": 90.404
+    },
+    {
+      "id": "msj-azimpur",
+      "nameBn": "আজিমপুর জামে মসজিদ",
+      "nameEn": "Azimpur Jame Masjid",
+      "addressBn": "আজিমপুর কলোনি সংলগ্ন, ঢাকা",
+      "area": "আজিমপুর",
+      "lat": 23.7295,
+      "lng": 90.3865
+    },
+    {
+      "id": "msj-new-market",
+      "nameBn": "নিউ মার্কেট জামে মসজিদ",
+      "nameEn": "New Market Jame Masjid",
+      "addressBn": "নিউ মার্কেট কমপ্লেক্স, ঢাকা",
+      "area": "নিউ মার্কেট",
+      "lat": 23.734,
+      "lng": 90.3767
+    },
+    {
+      "id": "msj-banani",
+      "nameBn": "বনানী জামে মসজিদ",
+      "nameEn": "Banani Jame Masjid",
+      "addressBn": "বনানী ব্লক-ডি, ঢাকা",
+      "area": "বনানী",
+      "lat": 23.7934,
+      "lng": 90.4042
+    },
+    {
+      "id": "msj-uttara-central",
+      "nameBn": "উত্তরা কেন্দ্রীয় জামে মসজিদ",
+      "nameEn": "Uttara Central Jame Masjid",
+      "addressBn": "উত্তরা সেক্টর ৭, ঢাকা",
+      "area": "উত্তরা",
+      "lat": 23.8734,
+      "lng": 90.3977
+    },
+    {
+      "id": "msj-rampura-taltola",
+      "nameBn": "রমপুরা তালতলা জামে মসজিদ",
+      "nameEn": "Rampura Taltola Jame Masjid",
+      "addressBn": "রমপুরা তালতলা ব্রিজ সংলগ্ন, ঢাকা",
+      "area": "রমপুরা",
+      "lat": 23.7508,
+      "lng": 90.4302
+    },
+    {
+      "id": "msj-shahjahanpur",
+      "nameBn": "শাহজাহানপুর জামে মসজিদ",
+      "nameEn": "Shahjahanpur Jame Masjid",
+      "addressBn": "শাহজাহানপুর রেলওয়ে গেট, ঢাকা",
+      "area": "শাহজাহানপুর",
+      "lat": 23.744,
+      "lng": 90.4195
+    },
+    {
+      "id": "msj-nakhalpara",
+      "nameBn": "নাখালপাড়া তাকওয়া জামে মসজিদ",
+      "nameEn": "Nakhalpara Taqwa Jame Masjid",
+      "addressBn": "নাখালপাড়া পাড়া মসজিদ রোড, তেজগাঁও, ঢাকা",
+      "area": "নাখালপাড়া",
+      "lat": 23.7632,
+      "lng": 90.389
+    }
+  ]
+}

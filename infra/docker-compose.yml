@@ -212,6 +212,13 @@ services:
       # Empty ⇒ the no-op push transport (no Firebase project configured).
       # Worker needs it too — it is the main push fan-out process (B2).
       FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
+      # Social sign-in (B5): id_token audiences verified against the provider
+      # JWKS. Empty ⇒ provider disabled (buttons hidden, endpoint 400).
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_IOS_CLIENT_ID: ${GOOGLE_IOS_CLIENT_ID:-}
+      APPLE_SERVICES_ID: ${APPLE_SERVICES_ID:-}
+      APPLE_IOS_BUNDLE_ID: ${APPLE_IOS_BUNDLE_ID:-}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
     ports:
       - "${API_PORT:-4000}:4000"
     healthcheck:

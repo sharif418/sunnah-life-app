@@ -177,6 +177,11 @@ per `apps/api/src/config/env.validation.ts`.)
 | `SMS_SSLWIRELESS_URL` / `_USER` / `_PASS` | | opt | SSL Wireless credentials |
 | `SMS_INFOBIP_URL` / `_KEY` | | opt | Infobip credentials |
 | `FCM_SERVICE_ACCOUNT_JSON` | *(empty)* | opt | Firebase service-account JSON (object string **or** a file path) for FCM HTTP v1 pushes — create via docs/RELEASE.md §Firebase. Empty ⇒ the no-op transport (pushes logged, never delivered). Passed to **both** `api` and `worker` (the worker is the main fan-out process). |
+| `GOOGLE_CLIENT_ID` | `1234…apps.googleusercontent.com` | opt | Google sign-in (Task B5): the OAuth **web** client id — the id_token audience the api accepts (`POST /api/auth/social`). Empty ⇒ Google disabled (buttons hidden, endpoint 400 Bengali). Compose passes it to the `api` only. Setup: docs/RELEASE.md §social-login. |
+| `GOOGLE_IOS_CLIENT_ID` | *(empty)* | opt | Extra accepted Google audience (the iOS OAuth client id) — only needed if iOS tokens are minted for it. |
+| `APPLE_SERVICES_ID` | *(empty)* | opt | Apple sign-in: the Services ID (web-flow id_token audience). |
+| `APPLE_IOS_BUNDLE_ID` | `bd.asunnah.sunnahLife` | opt | Apple sign-in: the **native iOS** flow audience (native ASAuthorization tokens carry the bundle id as `aud`). Set this (and/or `APPLE_SERVICES_ID`) to enable Apple. |
+| `APPLE_TEAM_ID` | *(empty)* | opt | Reserved for a future Android/web Apple flow (needs a hosted redirect) — not used today. |
 
 ### Web (repo-root Next.js)
 

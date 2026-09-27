@@ -1,12 +1,15 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { createHash, randomUUID } from "crypto";
+import type { Prisma } from "@prisma/client";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { toDomainUser } from "../common/mappers";
 import type { User } from "../shared/domain";
 import type { GuestEntryDto } from "./dto/auth.dto";
 import { SmsService } from "./sms/sms.service";
+import { socialConfig } from "./social/social.config";
+import { tokenEmail, verifyIdToken } from "./social/jwks";
 
 const OTP_TTL_MIN = 5;
 const SEND_WINDOW_MS = 10 * 60 * 1000;
@@ -29,6 +32,17 @@ export interface VerifyResult {
   user: ReturnType<typeof toDomainUser>;
   tokens: TokenPair;
 }
+
+export type SocialProvider = "google" | "apple";
+
+/** Row + whether this sign-in created the account (gender is only honored
+ *  at creation — the GENDER RULE shared by OTP and social sign-in). */
+interface FindOrCreateResult {
+  row: UserRow;
+  created: boolean;
+}
+
+type UserRow = Parameters<typeof toDomainUser>[0];
 
 function sha256(s: string): string {
   return createHash("sha256").update(s).digest("hex");
@@ -107,11 +121,7 @@ export class AuthService {
       let row = await tx.user.findUnique({ where: { phone: normalized } });
 
       if (!row) {
-        let referredById: string | null = null;
-        if (referredByCode) {
-          const inviter = await tx.user.findUnique({ where: { memberCode: referredByCode.toUpperCase() } });
-          referredById = inviter?.id ?? null;
-        }
+        const referredById = await AuthService.resolveInviterId(tx, referredByCode);
         row = await tx.user.create({
           data: {
             phone: normalized,
@@ -121,16 +131,7 @@ export class AuthService {
           },
         });
         // build the referral closure (ancestor paths of inviter + self)
-        if (referredById && row) {
-          const createdId: string = row.id;
-          const inviterRows = await tx.referralClosure.findMany({ where: { descendantId: referredById } });
-          await tx.referralClosure.createMany({
-            data: [
-              ...inviterRows.map((r) => ({ ancestorId: r.ancestorId, descendantId: createdId, depth: r.depth + 1 })),
-              { ancestorId: referredById, descendantId: createdId, depth: 1 },
-            ],
-          });
-        }
+        await AuthService.createReferralClosure(tx, row.id, referredById);
       } else if (name?.trim()) {
         row = await tx.user.update({ where: { id: row.id }, data: { name: name.trim() } });
       }
@@ -140,41 +141,252 @@ export class AuthService {
     const domain = toDomainUser(user as never);
 
     // guest → account data merge (local amal diary entries), run with the new
-    // user's own RLS context. Natural key (userId, amalKey, date); latest
-    // clientUpdatedAt wins (offline-sync rule).
-    if (guestEntries?.length) {
-      await this.rls.run(domain, async (tx) => {
-        for (const e of guestEntries.slice(0, 500)) {
-          const incoming = new Date(e.clientUpdatedAt);
-          if (isNaN(incoming.getTime())) continue;
-          const existing = await tx.amalEntry.findUnique({
-            where: { userId_amalKey_date: { userId: user.id, amalKey: e.amalKey, date: e.date } },
-          });
-          if (!existing || existing.clientUpdatedAt < incoming) {
-            await tx.amalEntry.upsert({
-              where: { userId_amalKey_date: { userId: user.id, amalKey: e.amalKey, date: e.date } },
-              create: {
-                userId: user.id,
-                amalKey: e.amalKey,
-                date: e.date,
-                valueJson: e.value as never,
-                source: e.source ?? "manual",
-                clientUpdatedAt: incoming,
-              },
-              update: {
-                valueJson: e.value as never,
-                source: e.source ?? "manual",
-                clientUpdatedAt: incoming,
-              },
-            });
-          }
-        }
-      });
-    }
+    // user's own RLS context (shared with social sign-in).
+    await this.importGuestEntries(domain, guestEntries);
 
     const tokens = await this.issueTokens(user.id);
     return { user: domain, tokens };
   }
+
+  // ── Social sign-in (Google + Apple — Task B5) ──────────────────────────────
+
+  /** GET /api/auth/providers — which sign-in buttons the clients should show. */
+  providersStatus(): { google: boolean; apple: boolean } {
+    return {
+      google: socialConfig("google")!.enabled,
+      apple: socialConfig("apple")!.enabled,
+    };
+  }
+
+  /**
+   * POST /api/auth/social — verify a provider id_token (JWKS + WebCrypto),
+   * then link or create the account.
+   *
+   * LINKING RULES (the security core):
+   *   1. Provider subject id (sub) — strongest link: same IdP identity,
+   *      survives email changes and Apple's email-only-on-first-auth.
+   *   2. Verified email — the documented link: google requires
+   *      email + email_verified=true; Apple only ever returns real verified
+   *      addresses. Stored/searched lowercase; one account per email (DB
+   *      partial unique index on lower(email)).
+   *   3. No match → CREATE: phone = null, email set, role "user", memberCode
+   *      null (assigned at daee promotion, exactly like OTP-created users).
+   *
+   * GENDER RULE (same as OTP): gender comes ONLY from onboarding — the payload
+   * may carry it at account CREATION; for an existing account it is IGNORED.
+   * A social-created account without gender is stored as "unspecified" and
+   * completes the one-time onboarding step via PATCH /api/me (locked after).
+   */
+  async socialSignIn(
+    provider: SocialProvider,
+    idToken: string,
+    name?: string,
+    gender?: "M" | "F",
+    referredByCode?: string,
+    guestEntries?: GuestEntryDto[]
+  ): Promise<VerifyResult> {
+    const cfg = socialConfig(provider);
+    if (!cfg) {
+      throw new ApiError(400, "সঠিক সাইন-ইন পদ্ধতি দিন");
+    }
+    if (!cfg.enabled) {
+      // Provider not configured — the feature is off (env empty ⇒ disabled).
+      throw new ApiError(400, "এই সাইন-ইন পদ্ধতি এখন চালু নেই");
+    }
+    if (!idToken || typeof idToken !== "string") {
+      throw new ApiError(400, "সাইন-ইন টোকেন দিন");
+    }
+
+    const payload = await verifyIdToken({
+      idToken,
+      jwksUrl: cfg.jwksUrl,
+      alg: cfg.alg,
+      issuers: cfg.issuers,
+      audiences: cfg.audiences,
+    });
+
+    const email = tokenEmail(payload);
+    if (provider === "google") {
+      if (!email) {
+        throw new ApiError(400, "Google অ্যাকাউন্টে ইমেইল নেই — অন্য অ্যাকাউন্ট দিয়ে চেষ্টা করুন");
+      }
+      if (payload.email_verified !== true) {
+        throw new ApiError(400, "Google ইমেইল যাচাই হয়নি — আগে Google-এ ইমেইল নিশ্চিত করুন");
+      }
+    }
+    const sub = typeof payload.sub === "string" && payload.sub ? payload.sub : null;
+    if (!email && !sub) {
+      // Apple second-auth without a stored identity: nothing to link by.
+      throw new ApiError(400, "অ্যাপল অ্যাকাউন্টের ইমেইল পাওয়া যায়নি — অন্য উপায়ে সাইন ইন করুন");
+    }
+    const tokenName =
+      typeof payload.name === "string" && payload.name.trim() ? payload.name.trim() : undefined;
+
+    const { row } = await this.findOrCreateSocialUser({
+      provider,
+      sub,
+      email,
+      name: name?.trim() || tokenName,
+      gender: gender === "F" ? "F" : gender === "M" ? "M" : "unspecified",
+      referredByCode,
+    });
+
+    const domain = toDomainUser(row as never);
+    await this.importGuestEntries(domain, guestEntries);
+
+    const tokens = await this.issueTokens(row.id);
+    return { user: domain, tokens };
+  }
+
+  /** Link-or-create under the system (auth bootstrap) context. */
+  private async findOrCreateSocialUser(input: {
+    provider: SocialProvider;
+    sub: string | null;
+    email: string | null;
+    name?: string;
+    gender: string;
+    referredByCode?: string;
+  }): Promise<FindOrCreateResult> {
+    const attempt = async (): Promise<FindOrCreateResult> =>
+      this.rls.system(async (tx) => {
+        // 1) Same provider identity (sub) — the stable key.
+        let row = input.sub
+          ? await tx.user.findFirst({
+              where: { socialProvider: input.provider, socialSub: input.sub },
+            })
+          : null;
+
+        if (!row) {
+          // Linking rule: an account is only ever CREATED from a verified
+          // email (phone stays null, email set). An Apple token with no email
+          // AND no previously-stored sub (e.g. server DB loss) cannot create
+          // one — the user must sign in another way first.
+          if (!input.email) {
+            throw new ApiError(400, "অ্যাপল অ্যাকাউন্টের ইমেইল পাওয়া যায়নি — অন্য উপায়ে সাইন ইন করুন");
+          }
+          // 2) Verified email (stored lowercase — one account per email).
+          row = await tx.user.findFirst({ where: { email: input.email } });
+          if (!row) {
+            // 3) Create. GENDER RULE: only honored here, at creation.
+            const referredById = await AuthService.resolveInviterId(tx, input.referredByCode);
+            row = await tx.user.create({
+              data: {
+                phone: null,
+                email: input.email,
+                socialProvider: input.provider,
+                socialSub: input.sub,
+                name: input.name || "ব্যবহারকারী",
+                gender: input.gender,
+                referredById,
+              },
+            });
+            await AuthService.createReferralClosure(tx, row.id, referredById);
+            return { row: row as unknown as UserRow, created: true };
+          }
+        }
+
+        // Existing account: stamp the social identity (and the email when it
+        // was still empty) so future sign-ins link directly. A gender in the
+        // payload is deliberately IGNORED (locked after creation).
+        const patch: { email?: string; socialProvider?: string; socialSub?: string } = {};
+        if (input.sub && (row.socialSub !== input.sub || row.socialProvider !== input.provider)) {
+          patch.socialProvider = input.provider;
+          patch.socialSub = input.sub;
+        }
+        if (input.email && !row.email) {
+          patch.email = input.email;
+        }
+        if (Object.keys(patch).length) {
+          row = await tx.user.update({ where: { id: row.id }, data: patch });
+        }
+        return { row: row as unknown as UserRow, created: false };
+      });
+
+    const result = await attempt().catch((err: { code?: string }) => {
+      // Concurrent sign-in race: the partial unique indexes fired — the
+      // account exists now, so the retry finds it and links instead.
+      if (err && err.code === "P2002") {
+        return attempt();
+      }
+      throw err;
+    });
+    return result;
+  }
+
+  // ── Shared helpers (OTP + social) ───────────────────────────────────────────
+
+  /** referredByCode (DS-XXXXXX) → inviter user id, null when unknown/absent. */
+  private static async resolveInviterId(
+    tx: Prisma.TransactionClient,
+    referredByCode?: string
+  ): Promise<string | null> {
+    if (!referredByCode) return null;
+    const inviter = await tx.user.findUnique({
+      where: { memberCode: referredByCode.toUpperCase() },
+    });
+    return inviter?.id ?? null;
+  }
+
+  /** ReferralClosure rows for a new user: inviter's ancestor paths + the
+   *  direct (depth 1) edge — shared by OTP and social sign-in. */
+  private static async createReferralClosure(
+    tx: Prisma.TransactionClient,
+    createdId: string,
+    referredById: string | null
+  ): Promise<void> {
+    if (!referredById) return;
+    const inviterRows = await tx.referralClosure.findMany({ where: { descendantId: referredById } });
+    await tx.referralClosure.createMany({
+      data: [
+        ...inviterRows.map((r) => ({
+          ancestorId: r.ancestorId,
+          descendantId: createdId,
+          depth: r.depth + 1,
+        })),
+        { ancestorId: referredById, descendantId: createdId, depth: 1 },
+      ],
+    });
+  }
+
+  /**
+   * Guest → account data merge (local amal diary entries), run with the new
+   * user's own RLS context. Natural key (userId, amalKey, date); latest
+   * clientUpdatedAt wins (offline-sync rule). Shared by OTP + social sign-in.
+   */
+  private async importGuestEntries(
+    domain: User,
+    guestEntries?: GuestEntryDto[]
+  ): Promise<void> {
+    if (!guestEntries?.length) return;
+    await this.rls.run(domain, async (tx) => {
+      for (const e of guestEntries.slice(0, 500)) {
+        const incoming = new Date(e.clientUpdatedAt);
+        if (isNaN(incoming.getTime())) continue;
+        const existing = await tx.amalEntry.findUnique({
+          where: { userId_amalKey_date: { userId: domain.id, amalKey: e.amalKey, date: e.date } },
+        });
+        if (!existing || existing.clientUpdatedAt < incoming) {
+          await tx.amalEntry.upsert({
+            where: { userId_amalKey_date: { userId: domain.id, amalKey: e.amalKey, date: e.date } },
+            create: {
+              userId: domain.id,
+              amalKey: e.amalKey,
+              date: e.date,
+              valueJson: e.value as never,
+              source: e.source ?? "manual",
+              clientUpdatedAt: incoming,
+            },
+            update: {
+              valueJson: e.value as never,
+              source: e.source ?? "manual",
+              clientUpdatedAt: incoming,
+            },
+          });
+        }
+      }
+    });
+  }
+
 
   // ── Token issuance / rotation ─────────────────────────────────────────────
 

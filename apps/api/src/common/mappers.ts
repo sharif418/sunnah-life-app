@@ -13,17 +13,35 @@ type UserRow = Omit<User, "levelStartedAt" | "createdAt" | "lastActiveAt" | "gen
   calcMethod: string;
 };
 
+/**
+ * DB user row → domain User. Explicit field list (NOT a spread): keeps the
+ * API response contract pinned and guarantees internal-only columns (the
+ * social Provider/sub ids, future internal fields) can never leak to clients.
+ */
 export function toDomainUser(u: UserRow): User {
   return {
-    ...u,
+    id: u.id,
+    phone: u.phone ?? null,
+    email: u.email ?? null,
+    name: u.name,
+    photoUrl: u.photoUrl ?? null,
     gender: u.gender as User["gender"],
     role: u.role as User["role"],
     category: u.category as User["category"],
+    memberCode: u.memberCode ?? null,
+    referredById: u.referredById ?? null,
+    usrahId: u.usrahId ?? null,
     level: u.level as User["level"],
+    levelStartedAt: u.levelStartedAt?.toISOString() ?? null,
+    district: u.district ?? null,
+    workplace: u.workplace ?? null,
+    department: u.department ?? null,
     language: u.language as User["language"],
     madhhab: u.madhhab as User["madhhab"],
     calcMethod: u.calcMethod as User["calcMethod"],
-    levelStartedAt: u.levelStartedAt?.toISOString() ?? null,
+    lat: u.lat ?? null,
+    lng: u.lng ?? null,
+    city: u.city ?? null,
     createdAt: u.createdAt.toISOString(),
     lastActiveAt: u.lastActiveAt.toISOString(),
   };

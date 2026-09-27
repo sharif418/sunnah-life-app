@@ -162,7 +162,109 @@ Rollback: `docs/DEPLOY_COOLIFY.md` §10.
 
 ---
 
-## 5. Pre-flight checklist
+## 6. Social login — Google + Apple (Task B5)
+
+"Google দিয়ে সাইন ইন" / "Apple দিয়ে সাইন ইন" on the mobile login screen. The
+client sends the **provider id_token** to `POST /api/auth/social`; the API
+verifies it **locally against the provider's JWKS** (RS256 for Google,
+ES256 for Apple — plain `fetch` + WebCrypto `crypto.subtle`, **zero new npm
+dependencies**) and links/creates the account **by verified email**
+(provider `sub` is stored as the stable fallback — Apple only includes the
+email claim on the FIRST authorization).
+
+> **The audience rule (read twice):** the `aud` claim of a Google id_token is
+> the OAuth client the token was minted for. The Android app passes the
+> **web client id** as `serverClientId`, so Android tokens carry the web
+> client id — that single value (`GOOGLE_CLIENT_ID`) is the main audience on
+> the server. iOS native Sign in with Apple tokens carry the **app bundle
+> id** (`bd.asunnah.sunnahLife`); the web-style Apple flow (Services ID) is
+> the alternative. Set the one(s) you use.
+
+### 6.1 Google Cloud console
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → pick the
+   SAME project as Firebase (§2 — one project for everything).
+2. **APIs & Services → OAuth consent screen**: External, app name
+   "Sunnah Life", support email; add the scopes `openid`, `email`,
+   `profile` (that is what `google_sign_in` requests); test users while in
+   testing mode.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**:
+   - **Web application** — no redirect needed for this flow, but its client
+     id is the one everyone shares as the token audience. Copy it →
+     `GOOGLE_CLIENT_ID` (api env) **and** `--dart-define=GOOGLE_SERVER_CLIENT_ID`
+     for the app build (same value, both sides).
+   - **Android** — package name `bd.asunnah.sunnah_life` + your SHA-1
+     (`keytool -exportcert -alias androiddebugkey -keystore … | sha1sum`).
+     Android needs no secret for this flow and **no google-services.json**
+     (the plugin takes the server client id in code; no manifest meta-data
+     is required by google_sign_in 7.x).
+   - **iOS** (optional) — bundle id `bd.asunnah.sunnahLife`; its client id
+     goes to `GOOGLE_IOS_CLIENT_ID` on the api (extra accepted audience) and
+     optionally `--dart-define=GOOGLE_IOS_CLIENT_ID` in the app.
+
+### 6.2 Apple Developer
+
+1. [developer.apple.com](https://developer.apple.com) → Certificates,
+   Identifiers & Profiles.
+2. **Identifiers → Services ID** (e.g. `bd.asunnah.sunnahlife.login`) →
+   enable **Sign In with Apple** → this id is the web-flow audience →
+   `APPLE_SERVICES_ID` on the api.
+3. **Keys → Sign in with Apple key (.p8)** — only needed for the web flow /
+   server-side token revocation checks; the mobile **native** flow does not
+   need a key. Skip it unless you add Apple sign-in to the web PWA later.
+4. **App ID** (`bd.asunnah.sunnahLife`): enable the **Sign in with Apple**
+   capability (and re-generate the provisioning profiles after).
+5. Native iOS id_tokens carry the **bundle id** as `aud` → set
+   `APPLE_IOS_BUNDLE_ID=bd.asunnah.sunnahLife` on the api.
+   `APPLE_TEAM_ID` is reserved for a future Android/web Apple flow (needs a
+   `https://…/auth/callback` redirect on our domain) — leave empty.
+
+### 6.3 Wire the env (api only — the worker never verifies id_tokens)
+
+```dotenv
+# .env (compose forwards these to the api container)
+GOOGLE_CLIENT_ID=<web-client-id>.apps.googleusercontent.com
+#GOOGLE_IOS_CLIENT_ID=<ios-client-id>.apps.googleusercontent.com
+#APPLE_SERVICES_ID=bd.asunnah.sunnahlife.login
+APPLE_IOS_BUNDLE_ID=bd.asunnah.sunnahLife
+#APPLE_TEAM_ID=
+```
+
+Empty values ⇒ provider **disabled**: `POST /api/auth/social` answers 400
+("এই সাইন-ইন পদ্ধতি এখন চালু নেই") and `GET /api/auth/providers` returns
+false for it, so the mobile buttons stay hidden. This is the sandbox state
+by design.
+
+### 6.4 Mobile build flags
+
+```bash
+cd apps/mobile
+flutter build apk --release --split-per-abi \
+  --dart-define=SUNNAH_API_BASE=https://api.sunnahlife.app \
+  --dart-define=GOOGLE_SERVER_CLIENT_ID=<web-client-id>.apps.googleusercontent.com
+# iOS additionally (optional; falls back to GoogleService-Info.plist):
+#   --dart-define=GOOGLE_IOS_CLIENT_ID=<ios-client-id>.apps.googleusercontent.com
+```
+
+Apple: iOS only (native ASAuthorization — see `docs/IOS_BUILD.md` §9 for
+the Xcode capability); the button is hidden on Android.
+
+### 6.5 Account rules (what a release reviewer should know)
+
+- **Linking:** provider `sub` first, then **verified email**
+  (case-insensitive; a partial unique index on `lower(email)` guards races).
+  Google requires `email_verified: true`; Apple emails are trusted as-is.
+- **Gender:** only set at account creation (onboarding) — an existing
+  account ignores a gender in the payload. Social accounts created without
+  one are stored as `"unspecified"` and the app routes them to the one-time
+  gender+name completion screen (`PATCH /api/me`), after which the API
+  rejects any change: "লিঙ্গ পরিবর্তন করা যায় না".
+- Guest amal entries, referral codes and the session envelope are exactly
+  the OTP flow's (shared helpers in `apps/api/src/auth/auth.service.ts`).
+
+---
+
+## 7. Pre-flight checklist
 
 - [ ] `flutter analyze` clean, `flutter test` green (apps/mobile)
 - [ ] `bun run lint` + `bun run test` green (apps/api)
@@ -175,3 +277,7 @@ Rollback: `docs/DEPLOY_COOLIFY.md` §10.
 - [ ] APNs key uploaded (iOS delivery)
 - [ ] one real device end-to-end: sign in → POST /api/push/token 200 →
       broadcast arrives → tap opens the deep-linked screen
+- [ ] social login (if enabled): `GOOGLE_CLIENT_ID` (+`APPLE_IOS_BUNDLE_ID`)
+      set in `.env` → `GET /api/auth/providers` reports them true → Google
+      sign-in on an Android device returns a session; the app build carries
+      `--dart-define=GOOGLE_SERVER_CLIENT_ID=<same value>`

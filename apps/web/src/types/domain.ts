@@ -443,6 +443,7 @@ export interface QuizQuestion {
   options: string[];
   answerIndex: number;
   explanationBn?: string;
+  difficulty?: "easy" | "medium" | "hard";
 }
 export interface Quiz {
   id: string;
@@ -452,6 +453,8 @@ export interface Quiz {
   minutes: number;
   questions: QuizQuestion[];
   live?: boolean;
+  /** scheduled live session (ISO) — upcoming hint on the card */
+  scheduledAt?: string;
 }
 
 export interface CourseLesson {
@@ -459,6 +462,7 @@ export interface CourseLesson {
   titleBn: string;
   bodyBn: string;
   minutes: number;
+  order?: number;
 }
 export interface Course {
   id: string;
@@ -466,6 +470,48 @@ export interface Course {
   descBn: string;
   level: string;
   lessons: CourseLesson[];
+}
+
+/** GET /api/courses row (lesson bodies stripped, stats included). */
+export interface CourseSummary {
+  id: string;
+  titleBn: string;
+  descBn: string;
+  level: string;
+  lessonCount: number;
+  totalMinutes: number;
+  enrolledCount: number;
+  attemptedCount: number;
+}
+
+/** GET /api/enrollments row. */
+export interface EnrollmentItem {
+  courseId: string;
+  progress: { done?: string[] } | null;
+  updatedAt: string;
+}
+
+/** GET /api/quiz-attempts row. */
+export interface QuizAttemptItem {
+  id: string;
+  quizId: string;
+  score: number;
+  total: number;
+  createdAt: string;
+}
+
+/** GET /api/usrah-questions row (own usrah only — RLS). */
+export interface UsrahQuestionItem {
+  id: string;
+  usrahId: string;
+  authorId: string;
+  authorName: string | null;
+  category: "general" | "aqeedah" | "salah" | "quran" | "muamalah" | "tarbiyah";
+  question: string;
+  answer: string | null;
+  answeredByName: string | null;
+  answeredAt: string | null;
+  createdAt: string;
 }
 
 export interface LiveProgramItem {
@@ -487,6 +533,8 @@ export interface MosqueInfo {
   addressBn: string;
   lat: number;
   lng: number;
+  nameEn?: string;
+  area?: string;
 }
 
 // ── Misc ─────────────────────────────────────────────────────────────────────

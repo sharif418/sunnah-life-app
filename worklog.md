@@ -398,3 +398,36 @@ Stage Summary:
 - Push notifications are code-complete end to end: DeviceToken (RLS, migration ALREADY applied to the live DB — verified, nothing to run), FCM HTTP v1 adapter (plain fetch + WebCrypto JWT, no SDK, ~zero deps) with no-op dev fallback, POST/DELETE /api/push/token (auth, upsert, cap 5/user via lastSeenAt eviction), gender-isolated sendToUsrah, wired flows (broadcast / weekly-reviews / prayer-push delayed per-waqt jobs), mobile firebase_messaging + deep-link routing (table in apps/api/src/push/deep-links.ts ⇄ apps/mobile/lib/core/deep_links.dart, pinned by tests), Android+iOS platform files, google-services.example.json + gradle file-existence guard (CI green without the real file — it's also gitignored now), docs/RELEASE.md + docs/IOS_BUILD.md + FCM env wired through compose to BOTH api and worker.
 - Verification: api lint 0/0 · jest 76/76 · tsc clean in all push files · flutter analyze 0 · flutter test 54/54.
 - FOR THE LEAD: (1) `cd apps/api && bun run build` then restart dist/main.js + dist/worker.js — BUT the build currently FAILS on src/reports/report-renderer.ts (17× TS2749 — monthly-reports agent's file landed after the last build; their jest passed because ts-jest isolatedModules does no full typecheck); coordinate with that agent or apply the mechanical fix (type-only PDFDocument import) before restarting. (2) After restart: verify POST /api/push/token (201) — the no-op transport logs "(no-op) would send: …" in api.log/worker output with no FCM_SERVICE_ACCOUNT_JSON set (sandbox has no Firebase project — by design). (3) Migration: NOTHING to run — 20260928120000_device_tokens is already applied (prisma migrate status = up to date; DeviceToken table + policy live, 0 rows). (4) Optional: regenerate packages/shared-types so /api/push/* lands in the OpenAPI path surface (web doesn't reference push routes, so nothing breaks without it). (5) Real delivery needs the human Firebase steps in docs/RELEASE.md §2 (service account JSON → FCM_SERVICE_ACCOUNT_JSON, flutterfire configure, google-services.json) — everything degrades to the no-op transport until then.
+
+---
+Task ID: B4
+Agent: B4 (general-purpose subagent — died to infra timeout after writing all files; verified + integrated by lead-architect)
+Task: Ilm content + quiz engine — real courses/quizzes/mosques/faq packs, enrollments/attempts/usrah-questions API (RLS), live quiz over WebSocket with per-gender leaderboard.
+
+Work Log:
+- Packs filled: courses.json 2 courses × 5 Bengali lessons (আকীদার মূলনীতি, সালাতের ফিকহ); quizzes.json 3 × 10 MCQs with explanations; mosques.json 24 Dhaka mosques with coords; faq.json 16 Bengali FAQs.
+- API: GET /api/courses + /api/courses/:id (public, lessons), GET /api/enrollments + /api/quiz-attempts (auth), GET/POST /api/usrah-questions + answers (RLS-scoped to own usrah) — new Prisma model UsrahQuestion + migration 20260928140000 (APPLIED, verified by lead).
+- GET /api/quiz/live-token (auth, HMAC {u,s,r,g,n,m,q,e} with QUIZ_SECRET) for the socket service.
+- mini-services/quiz-service (port 3030, bun --hot, socket.io): host starts quiz room per usrah, questions with countdown, per-question reveal, speed-bonus scoring, leaderboard with FIRST NAMES + member codes only (rooms are single-gender by usrah design; token carries gender).
+- Web: courses-section (cards → lesson reader + শেষ করেছি progress), quizzes-section (play flow + explanations + history), live-quiz-section (io("/?XTransformPort=3030")), extras usrah-questions UI (daee-gated).
+- LEAD FIX: live-quiz-section useEffect cleanup type (TS2322); ilm.spec unused-var rename.
+- Lead live verification: /api/courses 2 courses ✓ detail shows 5 lessons ✓ quizzes 3×10 ✓ mosques 24 ✓ faq 16 ✓ usrah-questions POST 201 + list ✓ live-token 401 unauth ✓ smoke.ts 13/13 PASS (leaderboard privacy, Bengali error on bad token, role guard) ✓ browser: কোর্স tab renders আকীদার মূলনীতি/সালাতের ফিকহ with পাঠ ✓ dev.log zero errors.
+
+Stage Summary:
+- Ilm is no longer a shell: real content packs flow through the single API, enrollment/quiz-attempt history works, usrah Q&A is RLS-scoped, live quiz runs on socket.io :3030 with gender-safe leaderboards. Quiz-service left RUNNING.
+
+---
+Task ID: B5
+Agent: B5 (general-purpose subagent — died to infra timeout after writing all files; verified + integrated by lead-architect)
+Task: Google + Apple Sign-In — JWKS-verified id_tokens (no SDK), link by verified email, gender asked at onboarding and locked after.
+
+Work Log:
+- API: POST /api/auth/social {provider, idToken, …} — Google JWKS (RS256, crypto.subtle) + Apple JWKS (ES256), aud/iss/exp checks, verified-email requirement; links to existing User by email (case-insensitive) or creates one (memberCode + referral + guestEntries import shared with OTP path); gender payload ignored for existing accounts. GET /api/auth/providers {google,apple} from env presence (GOOGLE_CLIENT_ID / APPLE_SERVICES_ID in env.validation + .env.example + DEPLOY_COOLIFY env tables).
+- me controller: gender locked after set (Bengali rejection "লিঙ্গ পরিবর্তন করা যায় না"), name editable.
+- Migrations: 20260928150000_social_auth (email field additions) — APPLIED, verified.
+- Mobile: google_sign_in + sign_in_with_apple deps; social buttons gated on /api/auth/providers; session/guest-entry migration reuses the OTP path; gender_completion_screen.dart (one-time gender+name completion for social-created accounts → PATCH /api/me); social_signin_service.dart with FLUTTER_TEST guards; Runner.entitlements + docs/IOS_BUILD.md capability notes.
+- Tests: apps/api/test/social-auth.spec.ts (JWKS reject paths: wrong aud, unverified email, expired; happy-path email linking) + apps/mobile/test/social_signin_test.dart.
+- Lead verification: providers → {"google":false,"apple":false} (disabled without env — correct); api lint 0 errors (1 warning fixed), tsc 0, jest 116/116 (8 suites); flutter analyze No issues, flutter test 58/58.
+
+Stage Summary:
+- Social auth is code-complete and statically verified; enabling live requires GOOGLE_CLIENT_ID/APPLE_SERVICES_ID env + restart (documented in RELEASE.md §social-login).

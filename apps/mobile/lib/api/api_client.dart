@@ -31,6 +31,19 @@ class VerifyResponse {
   final String? token;
 }
 
+/// GET /api/auth/providers — which social sign-in buttons to show
+/// (env-driven on the server; all-false ⇒ hide the social section).
+class AuthProviders {
+  const AuthProviders({required this.google, required this.apple});
+  final bool google;
+  final bool apple;
+
+  factory AuthProviders.fromJson(Map<String, dynamic> j) => AuthProviders(
+    google: j['google'] as bool? ?? false,
+    apple: j['apple'] as bool? ?? false,
+  );
+}
+
 class AppConfig {
   const AppConfig({
     required this.donationUrl,
@@ -188,7 +201,43 @@ class ApiClient {
     );
     return VerifyResponse(
       user: User.fromJson(j['user'] as Map<String, dynamic>),
-      token: j['token'] as String?,
+      // The API returns {accessToken, refreshToken, …} (otp/verify envelope).
+      token: j['accessToken'] as String?,
+    );
+  }
+
+  /// GET /api/auth/providers — social sign-in availability (B5).
+  Future<AuthProviders> authProviders() async =>
+    AuthProviders.fromJson(await _req('GET', '/api/auth/providers'));
+
+  /// POST /api/auth/social — Google/Apple id_token sign-in (B5). Same
+  /// envelope as otp/verify (user + accessToken/refreshToken); guestEntries
+  /// ride along exactly like the OTP flow.
+  Future<VerifyResponse> socialSignIn({
+    required String provider,
+    required String idToken,
+    String? name,
+    Gender? gender,
+    String? referredByCode,
+    List<AmalEntry>? guestEntries,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/auth/social',
+      body: {
+        'provider': provider,
+        'idToken': idToken,
+        if (name != null && name.isNotEmpty) 'name': name,
+        if (gender != null && !gender.needsCompletion) 'gender': gender.json,
+        if (referredByCode != null && referredByCode.isNotEmpty)
+          'referredByCode': referredByCode,
+        if (guestEntries != null && guestEntries.isNotEmpty)
+          'guestEntries': guestEntries.map((e) => e.toJson()).toList(),
+      },
+    );
+    return VerifyResponse(
+      user: User.fromJson(j['user'] as Map<String, dynamic>),
+      token: j['accessToken'] as String?,
     );
   }
 

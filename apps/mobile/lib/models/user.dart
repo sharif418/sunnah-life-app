@@ -2,7 +2,10 @@
 /// src/types/domain.ts. JSON string forms match the API wire format.
 library;
 
-enum Gender { m, f }
+/// M/F, plus the pre-onboarding sentinel for social-sign-in accounts that
+/// were created without a gender — the app routes those to the one-time
+/// gender+name completion screen (PATCH /api/me), after which it is locked.
+enum Gender { m, f, unspecified }
 
 enum Role { user, daee, usrahHead, invigilator, fullAdmin }
 
@@ -15,8 +18,19 @@ enum Madhhab { hanafi, shafii }
 enum CalcMethod { karachi, mwl, isna, egypt, makkah, dubai }
 
 extension GenderJson on Gender {
-  String get json => this == Gender.m ? 'M' : 'F';
-  static Gender fromJson(String v) => v == 'M' ? Gender.m : Gender.f;
+  String get json => switch (this) {
+    Gender.m => 'M',
+    Gender.f => 'F',
+    Gender.unspecified => 'unspecified',
+  };
+  static Gender fromJson(String v) => switch (v) {
+    'M' => Gender.m,
+    'F' => Gender.f,
+    _ => Gender.unspecified,
+  };
+
+  /// True while the account still needs the gender+name onboarding step.
+  bool get needsCompletion => this == Gender.unspecified;
 }
 
 extension RoleJson on Role {
@@ -122,6 +136,7 @@ class User {
     required this.role,
     required this.category,
     this.phone,
+    this.email,
     this.photoUrl,
     this.memberCode,
     this.referredById,
@@ -143,6 +158,7 @@ class User {
 
   final String id;
   final String? phone;
+  final String? email;
   final String name;
   final String? photoUrl;
   final Gender gender;
@@ -174,6 +190,7 @@ class User {
   factory User.fromJson(Map<String, dynamic> j) => User(
     id: j['id'] as String,
     phone: j['phone'] as String?,
+    email: j['email'] as String?,
     name: j['name'] as String? ?? '',
     photoUrl: j['photoUrl'] as String?,
     gender: GenderJson.fromJson(j['gender'] as String? ?? 'M'),
@@ -202,6 +219,7 @@ class User {
   Map<String, dynamic> toJson() => <String, dynamic>{
     'id': id,
     'phone': phone,
+    'email': email,
     'name': name,
     'photoUrl': photoUrl,
     'gender': gender.json,

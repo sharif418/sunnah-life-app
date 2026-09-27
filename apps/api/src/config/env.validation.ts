@@ -32,6 +32,21 @@ const schema = z.object({
   // FCM service-account JSON — object string OR a path to the JSON file.
   // Empty/absent ⇒ the no-op push transport (dev/sandbox default).
   FCM_SERVICE_ACCOUNT_JSON: z.string().optional().default(""),
+  // ── Social sign-in (Task B5) — all optional; empty ⇒ provider disabled.
+  // GOOGLE_CLIENT_ID: OAuth *web* client id — the id_token audience for the
+  // Android app (which passes it as serverClientId). Empty ⇒ Google off.
+  GOOGLE_CLIENT_ID: z.string().optional().default(""),
+  // Optional second Google audience: the iOS OAuth client id (native iOS
+  // flow tokens carry it as aud when serverClientId is not used there).
+  GOOGLE_IOS_CLIENT_ID: z.string().optional().default(""),
+  // APPLE_SERVICES_ID: Apple Services ID — the audience of web-flow id_tokens.
+  APPLE_SERVICES_ID: z.string().optional().default(""),
+  // Optional Apple audience for the NATIVE iOS flow (bundle id, e.g.
+  // bd.asunnah.sunnahLife — native ASAuthorization tokens use it as aud).
+  APPLE_IOS_BUNDLE_ID: z.string().optional().default(""),
+  // Reserved for the Android/web Apple flow (needs a redirect on our
+  // domain) — not required for the current iOS-only Apple button.
+  APPLE_TEAM_ID: z.string().optional().default(""),
 });
 
 export type Env = z.infer<typeof schema>;

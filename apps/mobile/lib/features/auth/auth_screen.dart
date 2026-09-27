@@ -1,8 +1,16 @@
 /// OTP auth screen — request → verify, devCode display (sandbox/mock SMS),
 /// guest-mode note. On success the guest's local amal diary rides along
 /// (server merges by latest clientUpdatedAt).
+///
+/// Social sign-in (Task B5): Google/Apple buttons appear when
+/// GET /api/auth/providers says the provider is enabled on the server AND
+/// the local build has its client id (--dart-define). Same guest-entries
+/// migration + session path as OTP; Apple is iOS-only (entitlement).
 library;
 
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,6 +18,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/api_client.dart';
 import '../../design/design_tokens.dart';
+import '../../l10n/app_strings.dart';
+import '../../services/social_signin_service.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
 
@@ -28,6 +38,69 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   String? _devCode;
   String? _error;
   bool _codeSent = false;
+
+  // Social sign-in (B5).
+  bool _socialGoogle = false;
+  bool _socialApple = false;
+  bool _socialBusy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProviders();
+  }
+
+  /// Which social buttons to show: server-enabled AND locally configured.
+  /// Offline/failed fetch or `flutter test` ⇒ everything hidden (the OTP flow
+  /// is always available).
+  Future<void> _loadProviders() async {
+    if (!kIsWeb && Platform.environment['FLUTTER_TEST'] == 'true') return;
+    final service = SocialSignInService.instance;
+    try {
+      final providers = await ref.read(apiProvider).authProviders();
+      if (!mounted) return;
+      setState(() {
+        _socialGoogle = providers.google && service.googleAvailable;
+        _socialApple = providers.apple && service.appleAvailable;
+      });
+    } on ApiException {
+      // offline / server down — social stays hidden, OTP unaffected
+    }
+  }
+
+  Future<void> _signInSocial(SocialProvider provider) async {
+    if (_socialBusy) return;
+    setState(() {
+      _socialBusy = true;
+      _error = null;
+    });
+    try {
+      final service = SocialSignInService.instance;
+      final idToken = provider == SocialProvider.google
+          ? await service.googleIdToken()
+          : await service.appleIdToken();
+      final profile = ref.read(profileProvider);
+      await ref
+          .read(authProvider.notifier)
+          .signInWithSocial(
+            provider: provider.name,
+            idToken: idToken,
+            name: profile.name,
+            gender: profile.gender,
+          );
+      // The router redirect handles the gender-less account case
+      // (/complete-profile); everyone else lands home.
+      if (mounted) context.go('/');
+    } on SocialSignInCanceled {
+      // user closed the provider sheet — silently back to the login screen
+    } on ApiException catch (e) {
+      setState(() => _error = e.message);
+    } catch (e) {
+      setState(() => _error = S.tr(context.lang, 'auth_social_error'));
+    } finally {
+      if (mounted) setState(() => _socialBusy = false);
+    }
+  }
 
   @override
   void dispose() {
@@ -103,6 +176,44 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             ),
           ),
           const SizedBox(height: SLSpacing.s24),
+          if (_socialGoogle || _socialApple) ...[
+            if (_socialGoogle)
+              OutlinedButton.icon(
+                onPressed: _socialBusy
+                    ? null
+                    : () => _signInSocial(SocialProvider.google),
+                icon: const Icon(Icons.g_mobiledata_outlined),
+                label: Text(context.t('auth_google')),
+              ),
+            const SizedBox(height: SLSpacing.s12),
+            if (_socialApple)
+              OutlinedButton.icon(
+                onPressed: _socialBusy
+                    ? null
+                    : () => _signInSocial(SocialProvider.apple),
+                icon: const Icon(Icons.apple),
+                label: Text(context.t('auth_apple')),
+              ),
+            const SizedBox(height: SLSpacing.s16),
+            Row(
+              children: [
+                const Expanded(child: Divider()),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SLSpacing.s12,
+                  ),
+                  child: Text(
+                    context.t('auth_or'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                const Expanded(child: Divider()),
+              ],
+            ),
+            const SizedBox(height: SLSpacing.s16),
+          ],
           TextField(
             controller: _phone,
             enabled: !_codeSent,
