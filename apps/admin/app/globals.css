@@ -1,41 +1,289 @@
 @import "tailwindcss";
 
-/* Sunnah Life admin — tokens mirror packages/design-tokens/tokens.json */
+@custom-variant dark (&:is(.dark *));
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Sunnah Life admin — tokens mirror packages/design-tokens/tokens.json
+   (single source of truth; values verified against the web app's globals.css)
+   ───────────────────────────────────────────────────────────────────────────── */
+
 :root {
-  --bg: #f7f4ec;
+  /* light */
+  --background: #f7f4ec;
+  --foreground: #222222;
   --card: #ffffff;
-  --fg: #222222;
-  --muted: #666666;
+  --card-foreground: #222222;
+  --popover: #ffffff;
+  --popover-foreground: #222222;
   --primary: #1f4d3d;
-  --primary-fg: #f7f4ec;
+  --primary-foreground: #f7f4ec;
+  --primary-deep: #173a2e;
   --primary-soft: #eaf0ec;
   --secondary: #efe9dc;
-  --gold: #c99a3b;
-  --gold-soft: #f6ecd8;
+  --secondary-foreground: #1f4d3d;
+  --muted: #f1ede2;
+  --muted-foreground: #666666;
+  --accent: #c99a3b;
+  --accent-foreground: #3b2b0e;
+  --destructive: #c0392b;
+  --destructive-foreground: #ffffff;
   --border: #e4dccb;
+  --input: #e4dccb;
+  --ring: #1f4d3d;
   --success: #2e7d5b;
+  --success-foreground: #f7f4ec;
+  --warning: #b7791f;
+  --warning-foreground: #ffffff;
+  --gold: #c99a3b;
+  --gold-foreground: #3b2b0e;
+  --gold-soft: #f6ecd8;
   --alert: #c0392b;
   --alert-soft: #fce4e4;
+  --chart1: #1f4d3d;
+  --chart2: #c99a3b;
+  --chart3: #2e7d5b;
+  --chart4: #8a9a5b;
+  --chart5: #b7791f;
 }
+
 .dark {
-  --bg: #0e1613;
+  --background: #0e1613;
+  --foreground: #f1ede3;
   --card: #16211c;
-  --fg: #f1ede3;
-  --muted: #9faaa2;
+  --card-foreground: #f1ede3;
+  --popover: #16211c;
+  --popover-foreground: #f1ede3;
   --primary: #4c9b72;
-  --primary-fg: #0b140f;
+  --primary-foreground: #0b140f;
+  --primary-deep: #3a7a58;
   --primary-soft: #1a2b23;
   --secondary: #1c2a24;
-  --gold: #d9b25f;
-  --gold-soft: #2a2416;
+  --secondary-foreground: #d8e5dd;
+  --muted: #1a2620;
+  --muted-foreground: #9faaa2;
+  --accent: #d9b25f;
+  --accent-foreground: #241a05;
+  --destructive: #e06a5a;
+  --destructive-foreground: #1a0505;
   --border: #26382f;
+  --input: #26382f;
+  --ring: #4c9b72;
   --success: #4c9b72;
+  --success-foreground: #0b140f;
+  --warning: #d9b25f;
+  --warning-foreground: #241a05;
+  --gold: #d9b25f;
+  --gold-foreground: #241a05;
+  --gold-soft: #2a2416;
   --alert: #e06a5a;
   --alert-soft: #3a211d;
+  --chart1: #4c9b72;
+  --chart2: #d9b25f;
+  --chart3: #7fbf9f;
+  --chart4: #a3b845;
+  --chart5: #e0c184;
 }
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-deep: var(--primary-deep);
+  --color-primary-soft: var(--primary-soft);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-gold-soft: var(--gold-soft);
+  --color-alert: var(--alert);
+  --color-alert-soft: var(--alert-soft);
+  --color-chart1: var(--chart1);
+  --color-chart2: var(--chart2);
+  --color-chart3: var(--chart3);
+  --color-chart4: var(--chart4);
+  --color-chart5: var(--chart5);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+
+  --shadow-card: 0 1px 2px rgb(31 77 61 / 0.05), 0 4px 16px rgb(31 77 61 / 0.06);
+  --shadow-lifted: 0 2px 4px rgb(31 77 61 / 0.08), 0 12px 32px rgb(31 77 61 / 0.12);
+
+  --font-bn: var(--font-hind-siliguri), "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
+
+  --spacing: 0.25rem;
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
-  background: var(--bg);
-  color: var(--fg);
-  font-family: "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-bn);
   line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+/* thin scrollbars for dense data areas */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--primary) 35%, transparent) transparent;
+}
+.scroll-thin::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary) 30%, transparent);
+  border-radius: 999px;
+}
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* focus visibility (WCAG) */
+.focus-ring:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ── month-grid heatmap cells (token-driven) ─────────────────────────────── */
+.mg-cell {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  border: 1px solid transparent;
+  cursor: default;
+}
+.mg-jamaat {
+  background: var(--success);
+  color: var(--success-foreground);
+}
+.mg-alone {
+  background: color-mix(in srgb, var(--success) 22%, transparent);
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 45%, transparent);
+}
+.mg-qaza {
+  background: color-mix(in srgb, var(--warning) 24%, transparent);
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 50%, transparent);
+}
+.mg-done {
+  background: var(--success);
+  color: var(--success-foreground);
+}
+.mg-partial {
+  background: var(--gold-soft);
+  color: var(--gold-foreground);
+  border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+}
+.dark .mg-partial {
+  color: var(--gold);
+}
+.mg-missed {
+  background: var(--alert-soft);
+  color: var(--alert);
+  border-color: color-mix(in srgb, var(--alert) 35%, transparent);
+}
+.mg-future {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--border) 80%, transparent);
+  color: var(--muted-foreground);
+}
+.mg-na {
+  background: color-mix(in srgb, var(--muted-foreground) 6%, transparent);
+  color: transparent;
+}
+.mg-lockedcol {
+  opacity: 0.55;
+}
+
+/* today's column marker in the day header */
+.mg-today {
+  color: var(--gold-foreground);
+  background: var(--gold);
+}
+
+/* ── skeleton shimmer ─────────────────────────────────────────────────────── */
+@keyframes sl-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--muted-foreground) 12%, transparent);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--card) 65%, transparent),
+    transparent
+  );
+  animation: sl-shimmer 1.6s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
+}
+
+/* ── print (monthly Muhasaba report via browser PDF) ──────────────────────── */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #222222 !important;
+  }
+  .print-full {
+    position: static !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
 }

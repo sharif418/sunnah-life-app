@@ -233,3 +233,23 @@ Stage Summary:
 - TASK 3-b COMPLETE AND VERIFIED. Pushed as d7c77e3 with PROGRESS.md update.
 - Next: Task 3-c admin panel (apps/admin) — compose/CI hashFiles guards already await it; then Flutter F2/F3 (platform channels, polish) and delivery-order steps 4–9.
 - Disk discipline: keep an eye on df; gradle caches will rebuild on next android build (~3G) — clean again after.
+
+---
+Task ID: 6
+Agent: lead-architect (main session, round 4)
+Task: Recover + verify Task 3-c (Tarbiyah admin panel, apps/admin) which the crashed session auto-committed with a UUID message and 9 TypeScript errors; then push milestone to GitHub per user's standing rule.
+
+Work Log:
+- Tools recovered this round. Found main ahead 1: commit e3befda (UUID message) containing the FULL admin panel (49 files, 8726 insertions) — Task 3-c work from the crashed session.
+- Verified no PAT leak in tool-results/ (grep clean). `.env` still untracked — good.
+- Ran verification: lint 0, but `tsc --noEmit` failed with 9 errors.
+- FIXED all 9: (1) members/[id] UnlockDialog missing useMutation/useToast/useQueryClient imports; (2) exports monthGrid destructuring `res.user.name` — response is `{ grid }`, now resolves selected user name from users list; (3) month-grid `const toast = useToast()` → destructure `{ toast }`; (4) roleRank/isSupervisor/isFullAdmin widened to `string` (RoleGate `allow` passes plain strings; unknown role → rank -1).
+- Re-verified: lint 0 · typecheck 0 · `next build` 15 routes ✓ · runtime smoke: admin :3002 /login → 200 with Bengali title, / → 200; api :3001 /health all green.
+- INCIDENT + FIX: my pkill for the leftover admin server also killed the main dev server's next-server worker (port 3000 dead). Restarted `bun run dev` in background — / → 200 again. Lesson: never pkill "next-server" blindly; root app's dev worker matches it too.
+- Hygiene: `git rm -r --cached tool-results/` (gitignore line 83 already covers; files remain on disk, untracked now).
+- Amended e3befda with proper message + fixes + PROGRESS.md Task 3-c section, then pushed to origin.
+
+Stage Summary:
+- TASK 3-c COMPLETE AND VERIFIED. Admin panel on GitHub as "admin: Tarbiyah admin panel — 15 pages (Task 3-c)".
+- Milestone-push rule honored: 3-b snapshot pushed earlier (f047738); 3-c pushed now.
+- Next: Flutter chunks F2/F3 (platform channels — exact alarms, local notifications, home widget; then amal/polish), then Master Prompt delivery steps 4–9. Disk at 79% (2.0G free) — watch for gradle cache rebuilds.

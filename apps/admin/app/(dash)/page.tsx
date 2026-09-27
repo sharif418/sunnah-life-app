@@ -1,0 +1,372 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
+import {
+  ChevronRight,
+  ClipboardCheck,
+  FileCheck2,
+  ListTodo,
+  Radio,
+  TrendingUp,
+  UserRound,
+  Users,
+  UserRoundCheck,
+} from "lucide-react";
+import { api, type UsrahHealth } from "@/lib/api";
+import { useSession } from "@/lib/session";
+import { toBn, relativeBn, todayLineBn, bdToday } from "@/lib/bn";
+import { auditActionLabel, pctBn, ROLE_LABELS_BN } from "@/lib/labels";
+import { BothGendersBadge, FScopeBadge, GenderBadge, RoleBadge } from "@/components/badges";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CardSkeleton, TableSkeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/states";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+
+function StatCard({
+  label,
+  value,
+  icon: Icon,
+  hint,
+  href,
+}: {
+  label: string;
+  value: number | null;
+  icon: React.ComponentType<{ className?: string }>;
+  hint?: string;
+  href?: string;
+}) {
+  const body = (
+    <Card className="h-full transition-shadow duration-200 hover:shadow-lifted">
+      <CardContent className="flex items-center gap-4 pt-5">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
+          <Icon className="h-6 w-6" aria-hidden />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="text-2xl font-bold leading-tight text-foreground">
+            {value === null ? "…" : toBn(value)}
+          </p>
+          {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+  return href ? (
+    <Link href={href} className="focus-ring block rounded-lg" aria-label={`${label} দেখুন`}>
+      {body}
+    </Link>
+  ) : (
+    body
+  );
+}
+
+function HealthBar({ pct, label }: { pct: number; label: string }) {
+  const color = pct >= 70 ? "bg-success" : pct >= 40 ? "bg-gold" : "bg-alert";
+  return (
+    <div className="flex min-w-28 flex-col gap-1" aria-label={`${label}: ${pctBn(pct)}`}>
+      <div className="flex items-baseline justify-between text-xs">
+        <span className="text-muted-foreground">{label}</span>
+        <span className="font-bold tabular-nums text-foreground">{pctBn(pct)}</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-muted" role="presentation">
+        <div className={cn("h-full rounded-full", color)} style={{ width: `${Math.min(pct, 100)}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function UsrahHealthCard({ usrahs, fullAdmin }: { usrahs: UsrahHealth[] | undefined; fullAdmin: boolean }) {
+  const { data: usersData, isLoading: usersLoading } = useQuery({
+    queryKey: ["admin-users", ""],
+    queryFn: () => api.users(""),
+    enabled: usrahs !== undefined,
+  });
+
+  const [expanded, setExpanded] = React.useState<string | null>(null);
+
+  if (usrahs === undefined) return <TableSkeleton rows={3} cols={4} />;
+
+  return (
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
+        <div>
+          <CardTitle>উসরার স্বাস্থ্য তালিকা</CardTitle>
+          <CardDescription>
+            রিভিউ সম্পূর্ণতা · গড় আমল সম্পূর্ণতা · নিষ্ক্রিয় সদস্য — সারিতে ক্লিক করে সদস্য দেখুন
+          </CardDescription>
+        </div>
+        {fullAdmin ? <BothGendersBadge /> : null}
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {usrahs.length === 0 ? (
+          <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+            আপনার পরিসরে কোনো উসরা নেই।
+          </p>
+        ) : (
+          usrahs.map((u) => {
+            const members = (usersData?.users ?? []).filter((m) => m.usrahId === u.id);
+            const open = expanded === u.id;
+            return (
+              <div key={u.id} className="rounded-md border border-border bg-card">
+                <button
+                  className="focus-ring grid w-full grid-cols-1 items-center gap-3 rounded-md p-3.5 text-left transition-colors duration-200 hover:bg-primary-soft/40 sm:grid-cols-[1fr_auto_auto_auto]"
+                  onClick={() => setExpanded(open ? null : u.id)}
+                  aria-expanded={open}
+                >
+                  <span className="flex items-center gap-2">
+                    <ChevronRight
+                      className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-90")}
+                      aria-hidden
+                    />
+                    <span className="min-w-0">
+                      <span className="block truncate font-semibold text-foreground">{u.name}</span>
+                      <span className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <GenderBadge gender={u.gender} />
+                        <span>{toBn(u.members)} সদস্য</span>
+                      </span>
+                    </span>
+                  </span>
+                  <HealthBar pct={u.reviewPct} label="রিভিউ" />
+                  <HealthBar pct={u.avgCompletion} label="আমল" />
+                  <span className="flex items-center gap-2 justify-self-start sm:justify-self-end">
+                    {u.inactiveCount > 0 ? (
+                      <Badge variant="alert" aria-label={`${toBn(u.inactiveCount)} জন নিষ্ক্রিয়`}>
+                        {toBn(u.inactiveCount)} নিষ্ক্রিয়
+                      </Badge>
+                    ) : (
+                      <Badge variant="success">সব সক্রিয়</Badge>
+                    )}
+                  </span>
+                </button>
+                {open ? (
+                  <div className="border-t border-border p-3.5">
+                    {usersLoading ? (
+                      <TableSkeleton rows={3} cols={3} />
+                    ) : members.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">এই উসরার সদস্য তালিকা লোড করা যায়নি।</p>
+                    ) : (
+                      <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                        {members.map((m) => (
+                          <li key={m.id}>
+                            <Link
+                              href={`/members/${m.id}`}
+                              className="focus-ring flex min-h-11 items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2 text-sm transition-colors duration-200 hover:border-primary/40 hover:bg-primary-soft/50"
+                            >
+                              <span className="min-w-0 truncate font-medium">{m.name}</span>
+                              <RoleBadge role={m.role} />
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : null}
+              </div>
+            );
+          })
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function OverviewPage() {
+  const { user, fullAdmin } = useSession();
+
+  const overview = useQuery({
+    queryKey: ["admin-overview"],
+    queryFn: () => api.overview(),
+    enabled: !!user,
+  });
+  const queue = useQuery({
+    queryKey: ["review-queue"],
+    queryFn: () => api.reviewQueue(),
+    enabled: !!user,
+  });
+
+  const pending = (queue.data?.queue ?? []).filter((r) => r.status === "pending").length;
+  const overdue = (queue.data?.queue ?? []).filter((r) => r.status === "overdue").length;
+  const wsToday = bdToday();
+
+  return (
+    <div className="space-y-6">
+      <section className="flex flex-col gap-1" aria-label="শুভেচ্ছা">
+        <h2 className="text-xl font-bold sm:text-2xl">আসসালামু আলাইকুম, {user?.name}</h2>
+        <p className="text-sm text-muted-foreground">
+          {todayLineBn()} · {user ? ROLE_LABELS_BN[user.role] : ""} প্যানেল
+          {user?.role === "invigilator" && user.gender === "F" ? " — " : ""}
+        </p>
+        <div className="mt-1 flex flex-wrap items-center gap-2">
+          {fullAdmin ? (
+            <BothGendersBadge />
+          ) : user?.gender === "F" ? (
+            <FScopeBadge />
+          ) : (
+            <Badge variant="outline">পুরুষ পরিসরের তথ্য</Badge>
+          )}
+        </div>
+      </section>
+
+      {overview.isError ? (
+        <ErrorState error={overview.error} onRetry={() => overview.refetch()} />
+      ) : (
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="সারসংক্ষেপ">
+          <StatCard
+            label="পরিসরের সদস্য"
+            value={overview.data?.totals.users ?? null}
+            icon={UserRound}
+            hint="আপনার তত্ত্বাবধানের পরিসরে"
+          />
+          <StatCard label="দায়ী" value={overview.data?.totals.daees ?? null} icon={UserRoundCheck} hint="সক্রিয় দাওয়াত কর্মী" />
+          <StatCard label="উসরা" value={overview.data?.totals.usrahs ?? null} icon={Users} hint="তত্ত্বাবধানের উসরা" />
+          <StatCard
+            label="অপেক্ষমাণ রিভিউ"
+            value={overview.data?.totals.pendingReviews ?? null}
+            icon={ListTodo}
+            hint={overdue > 0 ? `বিলম্বিত: ${toBn(overdue)}টি` : "কোনো বিলম্বিত নেই"}
+            href="/reviews"
+          />
+        </section>
+      )}
+
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
+        {overview.isError ? (
+          <ErrorState error={overview.error} onRetry={() => overview.refetch()} />
+        ) : overview.isLoading ? (
+          <div className="space-y-3">
+            <div className="skeleton h-10 w-72" />
+            <div className="skeleton h-40" />
+          </div>
+        ) : (
+          <UsrahHealthCard usrahs={overview.data?.usrahs} fullAdmin={!!fullAdmin} />
+        )}
+
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ClipboardCheck className="h-[18px] w-[18px] text-primary" aria-hidden />
+                এই সপ্তাহের রিভিউ
+              </CardTitle>
+              <CardDescription>সপ্তাহ শুরু: {toBn(wsToday)} থেকে চলমান</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {queue.isLoading ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-9" />
+                  <div className="skeleton h-9" />
+                </div>
+              ) : queue.isError ? (
+                <ErrorState error={queue.error} onRetry={() => queue.refetch()} className="py-4" />
+              ) : queue.data && queue.data.queue.length > 0 ? (
+                <>
+                  <div className="flex items-center gap-3">
+                    <Badge variant={pending > 0 ? "warning" : "success"}>
+                      অপেক্ষমাণ {toBn(pending)}
+                    </Badge>
+                    <Badge variant={overdue > 0 ? "alert" : "muted"}>বিলম্বিত {toBn(overdue)}</Badge>
+                  </div>
+                  <ul className="space-y-1.5">
+                    {queue.data.queue.slice(0, 5).map((r) => (
+                      <li key={r.id} className="flex items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2 text-sm">
+                        <Link href={`/members/${r.userId}`} className="focus-ring min-w-0 truncate rounded font-medium hover:text-primary">
+                          {r.user?.name ?? r.userName ?? "সদস্য"}
+                        </Link>
+                        <Badge variant={r.status === "overdue" ? "alert" : r.status === "done" ? "success" : "warning"}>
+                          {r.status === "overdue" ? "বিলম্বিত" : r.status === "done" ? "সম্পন্ন" : "অপেক্ষমাণ"}
+                        </Badge>
+                      </li>
+                    ))}
+                  </ul>
+                  {queue.data.queue.length > 5 ? (
+                    <Link href="/reviews" className="focus-ring inline-block rounded text-sm font-medium text-primary hover:underline">
+                      সব {toBn(queue.data.queue.length)}টি রিভিউ দেখুন →
+                    </Link>
+                  ) : null}
+                </>
+              ) : (
+                <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                  এই সপ্তাহে কোনো রিভিউ বাকি নেই ✓
+                </p>
+              )}
+              <Link
+                href="/reviews"
+                className="focus-ring flex min-h-11 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition-colors duration-200 hover:bg-primary-deep"
+              >
+                রিভিউ কিউতে যান
+                <ChevronRight className="h-4 w-4" aria-hidden />
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="h-[18px] w-[18px] text-primary" aria-hidden />
+                সাম্প্রতিক কার্যক্রম
+              </CardTitle>
+              <CardDescription>
+                {fullAdmin ? "সব অডিট এন্ট্রি" : "আপনার সকল কার্যক্রমের অডিট রেকর্ড"}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {overview.isLoading ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-4 w-full" />
+                  <div className="skeleton h-4 w-4/5" />
+                  <div className="skeleton h-4 w-3/5" />
+                </div>
+              ) : overview.data && overview.data.recentAudit.length > 0 ? (
+                <ul className="space-y-2.5">
+                  {overview.data.recentAudit.slice(0, 6).map((a) => (
+                    <li key={a.id} className="flex items-start gap-2 text-sm">
+                      <Badge variant="muted" className="shrink-0">
+                        {auditActionLabel(a.action)}
+                      </Badge>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {a.actorName ?? "সিস্টেম"} · {relativeBn(a.createdAt)}
+                        </span>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+                  এখনো কোনো কার্যক্রম রেকর্ড হয়নি
+                </p>
+              )}
+              {fullAdmin ? (
+                <Link href="/audit" className="focus-ring mt-3 inline-block rounded text-sm font-medium text-primary hover:underline">
+                  সম্পূর্ণ অডিট লগ →
+                </Link>
+              ) : null}
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Link href="/assessments" className="focus-ring block rounded-lg">
+              <Card className="h-full transition-shadow duration-200 hover:shadow-lifted">
+                <CardContent className="flex items-center gap-3 pt-5">
+                  <FileCheck2 className="h-6 w-6 text-gold" aria-hidden />
+                  <span className="text-sm font-semibold">নতুন মূল্যায়ন</span>
+                </CardContent>
+              </Card>
+            </Link>
+            <Link href="/live" className="focus-ring block rounded-lg">
+              <Card className="h-full transition-shadow duration-200 hover:shadow-lifted">
+                <CardContent className="flex items-center gap-3 pt-5">
+                  <Radio className="h-6 w-6 text-gold" aria-hidden />
+                  <span className="text-sm font-semibold">লাইভ প্রোগ্রাম</span>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

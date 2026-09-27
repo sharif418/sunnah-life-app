@@ -63,3 +63,37 @@ Docker compose, Postgres RLS (SQLite here — replaced by the
 - Worker booted (`node dist/worker.js`): 4 repeatable schedulers registered (prayer-push-nightly, weekly-reviews-saturday, monthly-report-first, streaks-daily), delayed jobs visible, "Waiting for jobs…"
 
 **Sandbox services:** PG16 :5433 (15 users, 31 amal defs, 15 RLS policies seeded), Redis :6380, Meili :7700.
+
+## Milestone — Task 3-c COMPLETE: Tarbiyah Admin Panel (apps/admin)
+
+**Scope (from crashed session, recovered + verified this round):**
+- Complete Next.js 16 admin app (desktop-first, Bengali UI, TanStack Query/Table):
+  `/login` (demo accounts), dashboard overview, `users`, `members/[id]` (full profile +
+  month-grid heatmap + locked-day unlock dialog with audit reason), `usrah` (health),
+  `referrals` (closure tree), `reviews` (pending/complete weekly Muhasaba), `assessments`
+  (Farze Ain grading), `catalog` (amal definitions CRUD), `levels` (transitions),
+  `live` (broadcasts), `broadcast` (compose), `exports` (CSV hub: users, usrah health,
+  month grids, audit), `audit` (log viewer).
+- Shared libs: `lib/api.ts` (typed client, 40+ endpoints), `lib/session.tsx` (token
+  bootstrap + role gate), `lib/bn.ts` (Bengali dates/numbers/labels), `lib/csv.ts`
+  (Excel-safe CSV with BOM), `lib/demo-accounts.ts`, `lib/labels.ts`.
+- Components: app-shell (sidebar nav, role-aware), badges, month-grid heatmap
+  (print/PDF-ready), rating, review-dialog, providers (QueryClient + Theme +
+  Session + Toast).
+
+**Recovered this round (the crashed session committed with a UUID message and 9 TS errors):**
+- Fixed `members/[id]`: missing `useMutation`/`useToast`/`useQueryClient` imports in UnlockDialog.
+- Fixed `exports`: monthGrid response is `{ grid }` (was destructuring `res.user` — dropped
+  field; now resolves the selected user's name from the users list).
+- Fixed `month-grid`: `const { toast } = useToast()` (was calling the context value).
+- Widened `roleRank`/`isSupervisor`/`isFullAdmin` in `lib/labels.ts` to `string`
+  (RoleGate's `allow` callback passes plain strings; unknown roles now rank -1).
+
+**Verified (this round):**
+- `bun run lint` → 0 errors · `bun run typecheck` → 0 errors · `bun run build` → 15 routes compiled ✓
+- Runtime smoke: api :3001 `/health` all-green; admin :3002 `/login` → 200, `<title>সুন্নাহ লাইফ অ্যাডমিন</title>`, `/` → 200.
+- Hygiene: `tool-results/` untracked from index (was already on GitHub without any secrets — PAT grep clean).
+
+**Next:** Flutter chunks F2/F3 (platform channels: exact alarms, notifications, home-screen
+widget; then polish), then delivery steps 4–9 of the Master Prompt (Da'wah engine,
+content, Learn & Live, More, launch).
