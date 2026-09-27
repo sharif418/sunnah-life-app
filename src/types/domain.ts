@@ -331,7 +331,7 @@ export interface AdminOverview {
 export interface AuditEntry {
   id: string;
   actorId: string | null;
-  actorName?: string;
+  actorName?: string | null;
   action: string;
   targetType: string;
   targetId: string | null;

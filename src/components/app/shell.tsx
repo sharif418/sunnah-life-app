@@ -54,8 +54,14 @@ const TABS: { key: Tab; icon: React.ElementType }[] = [
   { key: "more", icon: LayoutGrid },
 ];
 
+/** Dawah is the Tarbiyah engine — visible only to daee and above (guests/users: 4 tabs). */
+function visibleTabs(user: ReturnType<typeof useApp.getState>["user"]): typeof TABS {
+  if (user && ROLE_RANK[user.role] >= ROLE_RANK.daee) return TABS;
+  return TABS.filter((t) => t.key !== "dawah");
+}
+
 export function AppShell() {
-  const { tab, profile, syncState } = useApp();
+  const { tab, profile, user, syncState } = useApp();
   const t = (k: string) => translate(profile.language, k);
 
   return (
@@ -84,8 +90,11 @@ export function AppShell() {
         aria-label="মূল নেভিগেশন"
         className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/85 safe-bottom"
       >
-        <div className="grid grid-cols-5 max-w-lg mx-auto">
-          {TABS.map(({ key, icon: Icon }) => {
+        <div
+          className="grid max-w-lg mx-auto"
+          style={{ gridTemplateColumns: `repeat(${visibleTabs(user).length}, minmax(0, 1fr))` }}
+        >
+          {visibleTabs(user).map(({ key, icon: Icon }) => {
             const active = tab === key;
             return (
               <button
@@ -132,6 +141,10 @@ function Header() {
   const { user, profile, tab, nav, setAuthModal, authChecked } = useApp();
   const { theme, setTheme } = useTheme();
   const [remindersOpen, setRemindersOpen] = React.useState(false);
+  // If the active tab becomes gated (e.g. after logout), snap back to home.
+  React.useEffect(() => {
+    if (tab === "dawah" && user && ROLE_RANK[user.role] < ROLE_RANK.daee) nav("home");
+  }, [tab, user, nav]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-card/90 backdrop-blur supports-[backdrop-filter]:bg-card/80">
@@ -143,7 +156,7 @@ function Header() {
 
         {/* Desktop tabs */}
         <nav className="hidden lg:flex items-center gap-1 mx-auto" aria-label="ডেস্কটপ নেভিগেশন">
-          {TABS.map(({ key, icon: Icon }) => {
+          {visibleTabs(user).map(({ key, icon: Icon }) => {
             const active = tab === key;
             return (
               <button

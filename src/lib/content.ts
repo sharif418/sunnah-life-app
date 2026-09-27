@@ -51,29 +51,49 @@ export interface FaqPack {
   items: { q: string; a: string }[];
 }
 
+// Promise-wrapped default-export module per pack; the JSON import shape is
+// stable ({ default: <pack> }), so a single cast keeps TS happy while the
+// per-key types below stay exact.
+type PackModule<P> = { default: P };
+
 const loaders = {
-  duas: () => import("../../content/duas.json") as Promise<{ default: DuaPack }>,
-  adhkar: () => import("../../content/adhkar.json") as Promise<{ default: AdhkarPack }>,
-  names99: () => import("../../content/names99.json") as Promise<{ default: Names99Pack }>,
-  islamicNames: () => import("../../content/islamic-names.json") as Promise<{ default: IslamicNamesPack }>,
-  imanBranches: () => import("../../content/iman-branches.json") as Promise<{ default: ImanBranchesPack }>,
-  sunnahs: () => import("../../content/sunnahs.json") as Promise<{ default: SunnahsPack }>,
-  articles: () => import("../../content/articles.json") as Promise<{ default: ArticlesPack }>,
-  courses: () => import("../../content/courses.json") as Promise<{ default: CoursesPack }>,
-  quizzes: () => import("../../content/quizzes.json") as Promise<{ default: QuizzesPack }>,
-  mosques: () => import("../../content/mosques.json") as Promise<{ default: MosquesPack }>,
-  faq: () => import("../../content/faq.json") as Promise<{ default: FaqPack }>,
+  duas: () => import("../../content/duas.json") as unknown as Promise<PackModule<DuaPack>>,
+  adhkar: () => import("../../content/adhkar.json") as unknown as Promise<PackModule<AdhkarPack>>,
+  names99: () => import("../../content/names99.json") as unknown as Promise<PackModule<Names99Pack>>,
+  islamicNames: () => import("../../content/islamic-names.json") as unknown as Promise<PackModule<IslamicNamesPack>>,
+  imanBranches: () => import("../../content/iman-branches.json") as unknown as Promise<PackModule<ImanBranchesPack>>,
+  sunnahs: () => import("../../content/sunnahs.json") as unknown as Promise<PackModule<SunnahsPack>>,
+  articles: () => import("../../content/articles.json") as unknown as Promise<PackModule<ArticlesPack>>,
+  courses: () => import("../../content/courses.json") as unknown as Promise<PackModule<CoursesPack>>,
+  quizzes: () => import("../../content/quizzes.json") as unknown as Promise<PackModule<QuizzesPack>>,
+  mosques: () => import("../../content/mosques.json") as unknown as Promise<PackModule<MosquesPack>>,
+  faq: () => import("../../content/faq.json") as unknown as Promise<PackModule<FaqPack>>,
 } as const;
 
-export type PackKey = keyof typeof loaders;
+// Exact pack type per key — the single source of truth for getPack's return.
+interface PackMap {
+  duas: DuaPack;
+  adhkar: AdhkarPack;
+  names99: Names99Pack;
+  islamicNames: IslamicNamesPack;
+  imanBranches: ImanBranchesPack;
+  sunnahs: SunnahsPack;
+  articles: ArticlesPack;
+  courses: CoursesPack;
+  quizzes: QuizzesPack;
+  mosques: MosquesPack;
+  faq: FaqPack;
+}
 
-const cache: Partial<Record<PackKey, unknown>> = {};
+export type PackKey = keyof PackMap;
 
-export async function getPack<K extends PackKey>(key: K): Promise<ReturnType<(typeof loaders)[K]>["default"]> {
-  if (cache[key]) return cache[key] as never;
+const cache: Partial<PackMap> = {};
+
+export async function getPack<K extends PackKey>(key: K): Promise<PackMap[K]> {
+  if (cache[key] !== undefined) return cache[key] as PackMap[K];
   const mod = await loaders[key]();
-  cache[key] = mod.default;
-  return mod.default;
+  cache[key] = mod.default as PackMap[K];
+  return mod.default as PackMap[K];
 }
 
 /** Rotating "daily sunnah" index derived from the day-of-year. */

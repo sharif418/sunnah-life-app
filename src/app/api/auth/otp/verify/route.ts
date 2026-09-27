@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         const inviter = await db.user.findUnique({ where: { memberCode: referredByCode.toUpperCase() } });
         referredById = inviter?.id ?? null;
       }
-      user = await db.user.create({
+      const created = await db.user.create({
         data: {
           phone: normalized,
           name: name?.trim() || "ব্যবহারকারী",
@@ -51,13 +51,14 @@ export async function POST(req: NextRequest) {
           referredById,
         },
       });
+      user = created;
       // build the referral closure (ancestor paths of inviter + self)
       if (referredById) {
         const inviterRows = await db.referralClosure.findMany({ where: { descendantId: referredById } });
         await db.referralClosure.createMany({
           data: [
-            ...inviterRows.map((r) => ({ ancestorId: r.ancestorId, descendantId: user.id, depth: r.depth + 1 })),
-            { ancestorId: referredById, descendantId: user.id, depth: 1 },
+            ...inviterRows.map((r) => ({ ancestorId: r.ancestorId, descendantId: created.id, depth: r.depth + 1 })),
+            { ancestorId: referredById, descendantId: created.id, depth: 1 },
           ],
         });
       }

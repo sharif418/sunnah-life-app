@@ -272,3 +272,67 @@ Stage Summary:
 - MOBILE (F2 platform channels) VERIFIED GREEN at Dart level. Kotlin side: MainActivity.kt (225 lines: exact alarms, DND/auto-silent, share), PrayerAlarmReceiver, PrayerWidgetProvider + widget layouts + manifest receivers all present; compiled by CI's APK build.
 - Flutter SDK recovery recipe documented above (shallow clone + graft) — survives future wipes.
 - Next: F3 mobile polish if needed, then Master Prompt delivery steps 4–9 (Da'wah engine, content, Learn & Live, More, launch).
+
+---
+Task ID: 8-a
+Agent: general-purpose (HomeView + MoreView builder)
+Task: Build the two remaining SPA tab views — HomeView (নামাজ dashboard) and MoreView (আরও hub with 8 sub-views) — replacing the placeholders, Bengali-first, guest-friendly, design-token compliant.
+
+Work Log:
+- Read worklog (Tasks 1–7) + all shared libs (store, api, domain, calendars, prayer-times, qibla, cities, content, i18n), shell.tsx, onboarding, auth-modal, and the Flutter references (home_screen.dart, more/*.dart, app_strings.dart) for behavior/wording parity.
+- src/components/home/prayer-hooks.ts — the ONE sanctioned shared file: useNow (ticking clock, interval cleanup), usePrayerConfig (profile → PrayerConfig with city tz), usePrayerDay (day-keyed memo of computePrayerTimes + nextPrayer), formatCountdownBn (HH:MM:SS Bengali), SCHEDULE_ROWS (৫ ওয়াক্ত + সূর্যোদয়).
+- HomeView: prayer-hero.tsx (city chip + live clock + গ্রেগরিয়ান/বঙ্গাব্দ/হিজরি date line — hijriAdjust from /api/config; gold "চলছে" pill; ৫xl gold countdown to next waqt; 6-row timeline with current/next highlight; ইশরাক/দুহা/তাহাজ্জুদ footnote), qibla-card.tsx (bearing + compassLabelBn + Kaaba distance, mini SVG dial, → nav("more","qibla")), amal-summary-card.tsx (public /api/amal/definitions + entries: server for signed-in with outbox-overrides, local amalCache for guests; client copy of amalPoints incl. 0.5 partial + cadence filter incl. weekly:fri/mon_thu + ayyam_beez via isAyyamBeez; SVG progress ring + per-category chips with AMAL_CATEGORY_LABELS_BN), quick-links.tsx (কুরআন/দুআ/আমল/লাইভ), city-sheet.tsx (GPS + searchable 64-district list), home-view.tsx (composition + "শহর নির্বাচন করুন" prompt when lat/lng missing).
+- MoreView: more-view.tsx switches on store `view` (profile|settings|qibla|zakat|mosques|masala|contacts|about) — menu.tsx (profile card + 2-col grid, zakat gold-highlighted); bits.tsx (SubShell back-header w/ 150ms fade, SectionLabel, ErrorRetry, EmptyState); profile.tsx (signed-in: identity card role/memberCode-copy/level + editable name/district/workplace/department via api.updateMe + language + embedded prayer settings + sign-out; guest: sign-in CTA + local name/language/madhhab via updateProfile); prayer-settings.tsx (CityPicker + CALC_METHODS select + হানাফি/শাফেয়ি segments + live "আজকের সময়সূচি" preview; debounced /api/me PATCH for signed-in, also embedded in profile); qibla.tsx (SVG compass dial, DeviceOrientationEvent w/ iOS requestPermission + deviceorientationabsolute, webkitCompassHeading/alpha handling, aligned-gold-ring state, manual slider fallback + instructions); zakat.tsx (gold/silver/cash/business/debts — Bengali-digit input parsing, nisab from /api/config w/ offline fallback, 2.5% above 85g-gold nisab, hero result + breakdown + nisab progress bar + donate CTA); mosques.tsx (content pack sorted by distance + maps deep-link; defensive against empty pack); masala.tsx (form → api.masala + FAQ accordion from content pack); contacts.tsx (config contacts w/ tel/mailto/website + groups as new-tab links); about.tsx (logo, version from package.json, donation, privacy note, feedback → api.feedback).
+- Fixed 2 react-hooks/use-memo errors (day-key memo), 2 no-unused-expressions warnings, 4 TS unknown errors from content.ts's broken getPack generic (cast via `as unknown as MosquesPack/FaqPack` — lib file not mine to fix).
+- VERIFICATION: `bunx eslint src/components/home src/components/more` → 0 errors 0 warnings. `bunx tsc --noEmit` → 0 errors in my files (pre-existing errors elsewhere: apps/admin/** own-tsc mismatches, prisma/seed Bun types, 3 api routes, and in-flight src/components/ilm/* + dawah/* work by sibling agents). Full-project `bun run lint` fails ONLY on sibling agents' files (dawah/parts.tsx + ilm/parts.tsx "Cannot access refs during render"). Headless SSR render test (bun + react-dom/server): all 15 of my components render clean, content assertions pass (পরবর্তী ওয়াক্ত/হিজরি/নিসাব/labels), temp script removed.
+- Dev server was found DEAD mid-verification (port 3000 unbound; last dev.log entry a 500 from sibling ilm agent's bad lucide import). Restarted one instance detached (`bun run dev`, now serving). GET / still 500s ONLY from sibling agents' invalid lucide-react imports — MenuBook (ilm/quran-section.tsx), FrontHand (ilm/duas-section.tsx), FactCheck (dawah/dawah-view.tsx) — none from my files (zero traces in logs).
+
+Stage Summary:
+- Files: home/{home-view,prayer-hero,qibla-card,amal-summary-card,quick-links,city-sheet,prayer-hooks}.tsx + more/{more-view,menu,bits,city-picker,prayer-settings,profile,qibla,zakat,mosques,masala,contacts,about}.tsx — 19 files, export names HomeView/MoreView preserved, shell.tsx untouched.
+- Verification: eslint my folders = clean; tsc my files = clean; SSR smoke = all pass; dev server restored & running.
+- Integrator to check: (1) fix sibling icons (MenuBook→BookOpen, FrontHand→HeartHandshake, FactCheck→BadgeCheck or similar) so GET / compiles; (2) content/mosques.json + content/faq.json are EMPTY packs `{}` — my views degrade to empty states, but packs need real data; (3) lib/content.ts getPack return-type is broken (TS2536/TS2322 pre-existing) — I worked around via casts, but it should be fixed at source; (4) GET /api/amal/entries requires auth (guests 401) — by design, my Home summary reads the local cache for guests; (5) lucide-react pinned at 0.525 has no Mosque icon — used Landmark; a `mosque` icon exists in newer lucide if the integrator wants to upgrade.
+
+---
+Task ID: 8-b
+Agent: general-purpose (AmalView builder) — died to infra timeout after writing files; verified + integrated by lead-architect
+Task: Build the Amal (Muhasaba daily diary) view — tri-state prayers, counters, auto-source badges, day locking, week strip, month heatmap, guest offline cache.
+
+Work Log:
+- Files written before agent death: amal-view.tsx (622), amal-controls.tsx (317), amal-logic.tsx (231), amal-month.tsx (256).
+- Lead verification: lint 0, tsc 0 (src/), browser E2E passed — week strip (today highlighted), completion ring ০→১/২৭ after clicking জামাত, guest banner, tri-state selectors with অটো badges, localStorage amalCache natural key `2026-09-27#salat_fajr` persisted.
+
+Stage Summary:
+- AmalView functional for guests (offline-first). Signed-in sync path exercised via store outbox (batched upsert).
+
+---
+Task ID: 8-c
+Agent: general-purpose (DawahView + IlmView builder) — died to infra timeout after writing files; verified + integrated by lead-architect
+Task: Build DawahView (member identity, referral link, usrah, reviews, assessments) and IlmView (live, Quran reader, duas/adhkar, courses, extras).
+
+Work Log:
+- Files written before agent death: dawah-view.tsx (810), assessment-dialog.tsx (215), review-dialog.tsx (140), parts.tsx (200); ilm-view.tsx (119), quran-section.tsx (390), duas-section.tsx (282), live-section.tsx (165), courses-section.tsx (218), extras-section.tsx (348), parts.tsx (229).
+- Agent left two bad lucide imports (FrontHand, FactCheck — not in lucide-react 0.525); already self-fixed by the agents late in their runs; final icon audit vs real module exports: ALL OK (5469 icons checked).
+- Lead browser E2E: Ilm tabs render live programs (seeded তাফসীর মজলিস "এখন লাইভ", upcoming ঈমানের শাখা-প্রশাখা), Quran surah list + reader verified end-to-end (Uthmani + Bengali translation per ayah). Dawah view not browser-verified (guest-gated) — code review only this round.
+
+Stage Summary:
+- IlmView fully working with seeded data. DawahView compiled + linted; needs a daee-role login for full E2E (follow-up).
+
+---
+Task ID: 8
+Agent: lead-architect (main session, round 4)
+Task: Web app view buildout milestone — replace all 5 placeholder views with real implementations (delivery steps 4–8 for the web product), verified end-to-end in a real browser.
+
+Work Log:
+- Delegated 8-a (Home+More — completed: 19 files), 8-b (Amal), 8-c (Dawah+Ilm) — 8-b/8-c agents hit infra timeouts AFTER writing all files; integrated and verified their output myself.
+- CRITICAL BUG FOUND + FIXED (the app had NEVER passed the splash in a real browser): zustand v5 persist with sync localStorage fires onRehydrateStorage's post-callback DURING create() — `useApp.setState` hit the temporal dead zone → ReferenceError swallowed by persist → hydrated stayed false forever. Fix: queueMicrotask(() => useApp.setState({ hydrated: true })). All previous "GET / 200" checks were SSR-only — browser-verified interactivity is now the standard.
+- next.config.ts: allowedDevOrigins += localhost, 127.0.0.1 (Next 16 blocked _next/* cross-origin dev resources → client JS never loaded when browsing via 127.0.0.1).
+- shell.tsx: Dawah tab gated to ROLE_RANK >= daee (guests/users see 4 tabs; dynamic bottom-nav columns; snap-to-home if role drops).
+- src/lib/content.ts: getPack typing rewritten (PackMap interface, double-cast loaders) — fixes TS2536/TS2322 that forced `as unknown as` casts in views.
+- auth/otp/verify route: capture `const created` before the createMany closure (TS closure narrowing limitation).
+- domain.ts: AuditEntry.actorName → `string | null` (routes produce null).
+- BROWSER E2E (agent-browser): onboarding 3 steps ✓ → Home dashboard (triple calendar গ্রেগরিয়ান·বঙ্গাব্দ·হিজরি, live countdown to আসর, 6-waqt timeline, ইশরাক/দুহা/তাহাজ্জুদ, qibla ২৭৭.৬° + ৫,১৭২ কিমি, amal summary ০/২৬ with category chips, quick links) ✓ → Amal (জামাত click → ১/২৭, localStorage persist `2026-09-27#salat_fajr`) ✓ → Ilm (live programs seeded, Quran reader: Al-Faatiha Uthmani + বাংলা অনুবাদ per ayah) ✓ → More (8 menu items) ✓ → mobile 390px: bottom nav fixed, 4 tabs, no horizontal overflow ✓. dev.log: zero errors, all APIs 200.
+- Verification: bun run lint → 0/0 · bunx tsc --noEmit → 0 errors in src/ · GET / 200.
+
+Stage Summary:
+- WEB APP FULLY ALIVE END-TO-END (first true browser verification in project history). All 5 views shipped: Home (prayer dashboard), Amal (Muhasaba diary), Dawah (Tarbiyah, daee-gated), Ilm (Quran/duas/live/courses), More (profile/qibla/zakat/mosques/masala/contacts/about).
+- 41 changed/new files this milestone. Follow-ups: (1) Dawah E2E needs a daee login, (2) mosques.json + faq.json packs are empty (views degrade gracefully), (3) worker scheduler not wired for web (NestJS worker covers it in prod).

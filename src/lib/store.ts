@@ -197,7 +197,9 @@ export const useApp = create<AppState>()(
       }),
       onRehydrateStorage: () => (state) => {
         state?.setSyncState(typeof navigator !== "undefined" && !navigator.onLine ? "offline" : "idle");
-        useApp.setState({ hydrated: true });
+        // zustand hydrates sync storages DURING create() — `useApp` is still in
+        // its temporal dead zone there. Defer the flag flip past module init.
+        queueMicrotask(() => useApp.setState({ hydrated: true }));
       },
     }
   )
