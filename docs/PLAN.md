@@ -261,3 +261,120 @@ production while the sandbox preview keeps running from the Next.js mirror.
 ---
 
 *বিসমিল্লাহির রাহমানির রাহীম। Begin.*
+
+---
+
+# Phase B — completion (post-audit)
+
+**Trigger:** independent audit of the delivered Phase A (≈60–70% of master
+prompt). This section plans the remaining work end to end. Order matters:
+repo integrity first (B0), single-backend consolidation second (B1) —
+everything else builds on those two. Agents work in waves; the lead commits
+and pushes after every wave.
+
+## B0 — Repository completeness (blocking everything)
+
+- `.gitignore` bug: bare `test` and `db/` rules silently excluded
+  `apps/mobile/lib/db/` (the Drift database `providers.dart` imports!),
+  `apps/mobile/test/` (38 tests) and `apps/api/test/` (34 Jest tests, incl.
+  RLS e2e). Fix: anchor the rules (`/db/` for the runtime SQLite dir only),
+  un-ignore the Flutter gradle wrapper (`gradlew`, `gradlew.bat`,
+  `gradle-wrapper.jar`) so CI can build the APK, then
+  `git ls-files --others --exclude-standard` → commit everything.
+- Proof: fresh `git clone` from origin into /tmp → `flutter pub get &&
+  flutter analyze && flutter test` (mobile) and `bun install && bun run test`
+  (api). Raw output pasted in the final report. Disk freed for this:
+  `~/.gradle` (CI builds remotely), `~/.bun` install cache, stale `apps/mobile/build`.
+
+## B1 — One backend (NestJS), web moved into `apps/web`
+
+- Move the root Next.js app → `apps/web` (own package.json; root keeps a thin
+  orchestrator whose `dev` script runs the web app on port 3000 and tees to
+  the root `dev.log`). Delete root `src/app/api/**`, root `prisma/`, `db/`,
+  and the `webdata` volume from `infra/docker-compose.yml`.
+- Web talks ONLY to NestJS: `NEXT_PUBLIC_API_BASE` (empty in sandbox →
+  same-origin `/api` + `XTransformPort=3001` query on every request, per
+  gateway rules), types from `packages/shared-types` (regenerated).
+- Whatever the web needed from the deleted mirror routes gets added to
+  NestJS under RLS (amal definitions for guests, config, masala, feedback,
+  live programs, quran packs…).
+- `RolesGuard` + `@Roles()` decorator on every admin/usrah/review/assessment
+  controller — RLS stays the last line of defence; authorization explicit at
+  the API layer too.
+- Proof: browser E2E against the live NestJS port with server log lines
+  showing the `/api/*` hits.
+
+## B2 — Push notifications (FCM HTTP v1)
+
+- `DeviceToken` model (already in schema) + registration endpoint; mobile
+  `firebase_messaging` integration, token upload, deep links
+  (`sunnahlife://` + `/.well-known/assetlinks` style web fallback).
+- NestJS `PushService`: FCM HTTP v1 adapter (service account via
+  `FCM_SERVICE_ACCOUNT_JSON`) + no-op dev adapter; gender-aware fan-out for
+  usrah broadcasts; prayer-push worker + weekly-review reminders route
+  through it.
+- `apps/mobile/android/app/google-services.example.json`, Firebase console
+  steps in `docs/RELEASE.md`; iOS APNs registration + capabilities in
+  AppDelegate/Runner entitlemments + `docs/IOS_BUILD.md`.
+
+## B3 — Monthly Muhasaba PDF report (the paper form, digital)
+
+- BullMQ processor for the existing report queue: header (name, DS code,
+  district, Bengali month), 31-column grid in amal-catalog order (✔/□ for
+  salat tristates, counts for count items), weekly + monthly tally rows,
+  that month's reviewer comments, signature lines — Bengali font bundled,
+  `pdfkit`-style rendering in `apps/api` (`ReportsModule`), upload to MinIO
+  (S3 service), listed in admin exports with download, manual trigger
+  endpoint (Full Admin).
+- Proof: generate for one seeded male + one seeded female da'ee;
+  `pdftotext` first page of each pasted in the report.
+
+## B4 — Ilm content & quizzes (real data, not shells)
+
+- `content/courses.json`: 2 courses × 5 Bengali lessons.
+- `content/quizzes.json`: 3 quizzes × 10 MCQs with explanations.
+- `content/mosques.json`: ≥20 Dhaka mosques with coordinates;
+  `content/faq.json`: ≥15 Bengali FAQs.
+- API: enrollment progress, quiz attempts with scoring, upcoming/recorded
+  lists, usrah questions (head assigns, members answer, RLS-scoped).
+- Live quiz over WebSocket (socket.io mini-service) with per-gender
+  leaderboard.
+
+## B5 — Social auth
+
+- Google Sign-In (Android + Web) and Apple Sign-In (mandatory for App
+  Store) → backend links to the same User by verified email; gender asked
+  at onboarding, locked afterwards (never taken from the IdP).
+
+## B6 — Level automation + full admin CRUD
+
+- Nightly worker evaluates `content/level-rules.json` → LevelTransition +
+  audit log + reminder, automatic; admin promote stays as a reason-required
+  override. Dawah tab shows live requirements checklist.
+- Admin API + UI: amal catalog CRUD (create/update/reorder/disable),
+  versioned assessment templates, usrah management (create, assign head +
+  invigilator, move members), audited role/gender changes (Full Admin only),
+  live program CRUD.
+
+## B7 — i18n (bn/en/ar + RTL) & accessibility
+
+- Mobile: ARB files + gen-l10n, hot-swap language switch, Arabic locale
+  under `Directionality(rtl:)`, audit for hard-coded L/R.
+- Web + admin: message catalogs, logical CSS properties, RTL when ar.
+- A11y: Semantics on interactive widgets, ≥44×44 targets, 1.3× text scale
+  without overflow, WCAG AA contrast table for both themes (documented in
+  `docs/AUDIT.md`).
+
+## B8 — CI proof, docs, audit
+
+- GitHub Actions: mobile job builds debug APK (+ release appbundle behind
+  secrets) and uploads artifacts — no local Gradle. Fix until green; run URL
+  + per-job results pasted.
+- `docs/IOS_BUILD.md` (remaining Xcode/APNs steps), `docs/RELEASE.md`
+  (Firebase + store release), `docs/DEPLOY_COOLIFY.md` rewritten as a
+  blind-followable DevOps runbook (services, env, volumes, pgBackRest,
+  Cloudflare, health checks, seed, rollback).
+- `docs/AUDIT.md`: master-prompt §4–9 requirement table —
+  Done/Partial/Not done + implementing files + proving command. Honest only.
+
+*Commit + push after every wave. Git is the safety net.*

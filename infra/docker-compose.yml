@@ -42,7 +42,6 @@ volumes:
   pgsocket: # postgres unix socket dir — shared with the pgBackRest one-shot containers
   miniodata: # MinIO objects (media, PDFs, versioned content packs)
   meili: # Meilisearch indexes (rebuildable from the database)
-  webdata: # web mirror SQLite database + seed marker
   caddy_data: # proxy profile — TLS state
   caddy_config: # proxy profile
 
@@ -280,33 +279,30 @@ services:
       start_period: 30s
     networks: [sunnah]
 
-  # ── Web — Next.js public site + PWA (repo root, infra/web.Dockerfile) ──────
-  # Mirror mode: standalone Next.js with its own seeded SQLite on /data, so
-  # `docker compose up` yields a fully working demo without other services.
+  # ── Web — Next.js public site + PWA (apps/web, infra/web.Dockerfile) ──────
+  # API-only mode: the web app has NO local database; it talks to the NestJS
+  # API via NEXT_PUBLIC_API_BASE (same compose network). Gender isolation and
+  # every data rule are enforced by Postgres RLS inside the api service.
   web:
     build:
       context: ..
       dockerfile: infra/web.Dockerfile
       args:
-        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-}
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-http://api:4000}
     image: sunnahlife/web:${STACK_TAG:-latest}
     restart: unless-stopped
     logging: *default-logging
     environment:
       NODE_ENV: production
-      DATABASE_URL: file:/data/sunnahlife.db
-      SEED_WEB_MIRROR: ${SEED_WEB_MIRROR:-true}
       PORT: 3000
-    volumes:
-      - webdata:/data
     ports:
       - "${WEB_PORT:-3000}:3000"
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/config"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
-      start_period: 60s # first boot = prisma db push + demo seed
+      start_period: 20s
     networks: [sunnah]
 
   # ── Admin panel — Next.js (apps/admin, infra/admin.Dockerfile) ────────────

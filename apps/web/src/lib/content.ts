@@ -1,8 +1,10 @@
 "use client";
 
-// Versioned content packs (the `packages/content` role) loaded client-side
-// as async chunks so the app works offline after first load.
+// Versioned content packs, fetched from the NestJS API (single backend —
+// GET /api/content/:pack). Cached in memory after the first load so a tab
+// only pays the network cost once per pack.
 
+import { apiUrl } from "@/lib/api-base";
 import type {
   ArticleItem,
   Course,
@@ -51,23 +53,44 @@ export interface FaqPack {
   items: { q: string; a: string }[];
 }
 
-// Promise-wrapped default-export module per pack; the JSON import shape is
-// stable ({ default: <pack> }), so a single cast keeps TS happy while the
-// per-key types below stay exact.
+// Promise-wrapped default-export module per pack; kept as an internal shape
+// so the per-key types below stay exact while the loader fetches JSON.
 type PackModule<P> = { default: P };
 
+/** Web pack key → API pack key (only the kebab-cased ones differ). */
+const API_KEYS = {
+  duas: "duas",
+  adhkar: "adhkar",
+  names99: "names99",
+  islamicNames: "islamic-names",
+  imanBranches: "iman-branches",
+  sunnahs: "sunnahs",
+  articles: "articles",
+  courses: "courses",
+  quizzes: "quizzes",
+  mosques: "mosques",
+  faq: "faq",
+} as const;
+
+async function fetchPack<P>(key: string): Promise<PackModule<P>> {
+  const res = await fetch(apiUrl(`/api/content/${key}`), { headers: { Accept: "application/json" } });
+  if (!res.ok) throw new Error(`কন্টেন্ট লোড করা যায়নি (${key}, ${res.status})`);
+  const json = (await res.json()) as { data: P };
+  return { default: json.data };
+}
+
 const loaders = {
-  duas: () => import("../../content/duas.json") as unknown as Promise<PackModule<DuaPack>>,
-  adhkar: () => import("../../content/adhkar.json") as unknown as Promise<PackModule<AdhkarPack>>,
-  names99: () => import("../../content/names99.json") as unknown as Promise<PackModule<Names99Pack>>,
-  islamicNames: () => import("../../content/islamic-names.json") as unknown as Promise<PackModule<IslamicNamesPack>>,
-  imanBranches: () => import("../../content/iman-branches.json") as unknown as Promise<PackModule<ImanBranchesPack>>,
-  sunnahs: () => import("../../content/sunnahs.json") as unknown as Promise<PackModule<SunnahsPack>>,
-  articles: () => import("../../content/articles.json") as unknown as Promise<PackModule<ArticlesPack>>,
-  courses: () => import("../../content/courses.json") as unknown as Promise<PackModule<CoursesPack>>,
-  quizzes: () => import("../../content/quizzes.json") as unknown as Promise<PackModule<QuizzesPack>>,
-  mosques: () => import("../../content/mosques.json") as unknown as Promise<PackModule<MosquesPack>>,
-  faq: () => import("../../content/faq.json") as unknown as Promise<PackModule<FaqPack>>,
+  duas: () => fetchPack<DuaPack>(API_KEYS.duas),
+  adhkar: () => fetchPack<AdhkarPack>(API_KEYS.adhkar),
+  names99: () => fetchPack<Names99Pack>(API_KEYS.names99),
+  islamicNames: () => fetchPack<IslamicNamesPack>(API_KEYS.islamicNames),
+  imanBranches: () => fetchPack<ImanBranchesPack>(API_KEYS.imanBranches),
+  sunnahs: () => fetchPack<SunnahsPack>(API_KEYS.sunnahs),
+  articles: () => fetchPack<ArticlesPack>(API_KEYS.articles),
+  courses: () => fetchPack<CoursesPack>(API_KEYS.courses),
+  quizzes: () => fetchPack<QuizzesPack>(API_KEYS.quizzes),
+  mosques: () => fetchPack<MosquesPack>(API_KEYS.mosques),
+  faq: () => fetchPack<FaqPack>(API_KEYS.faq),
 } as const;
 
 // Exact pack type per key — the single source of truth for getPack's return.
