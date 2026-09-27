@@ -1,7 +1,8 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // Level engine — muhibbus-sunnah promotion requirements, loaded from
-// content/level-rules.json. Used by /api/dawah and /api/admin/promote so both
-// always agree. Ported from the web workspace src/lib/server/levels.ts.
+// content/level-rules.json. Used by /api/dawah, /api/dawah/requirements and
+// POST /api/admin/promote so all three always agree, plus the nightly
+// "levels" worker job (auto-promotion) via LevelsService.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import type { Prisma } from "@prisma/client";
@@ -15,10 +16,28 @@ export interface LevelChecklistItem {
   label: string;
 }
 
+/** Machine-checkable facts the evaluation needs (queried once per user). */
+export interface LevelFacts {
+  /** Whole months spent in the current level. */
+  months: number;
+  /** A passed assessment exists (any template, result "passed"). */
+  assessmentPassed: boolean;
+  /** Downline (referral closure) members already at muhibbus_sunnah. */
+  referralsAtLevel: number;
+}
+
 export interface LevelRules {
   minMonths: number;
   requireAssessmentPassed: boolean;
   minReferralsAtLevel: number;
+  /**
+   * Whether the nightly "levels" job may auto-promote when every
+   * machine-checkable rule is met (B6). Set "autoPromote": false in
+   * level-rules.json to force admin-only promotion. The informational
+   * checklist items (iman/ibadat/…) NEVER block auto-promotion — they are
+   * invigilator-verified by design.
+   */
+  autoPromote: boolean;
   checklist: LevelChecklistItem[];
 }
 
@@ -26,6 +45,7 @@ export const DEFAULT_LEVEL_RULES: LevelRules = {
   minMonths: 4,
   requireAssessmentPassed: true,
   minReferralsAtLevel: 5,
+  autoPromote: true,
   checklist: [],
 };
 
@@ -80,6 +100,7 @@ export async function loadLevelRules(): Promise<LevelRules> {
         minMonths: numOr(node.minMonths, DEFAULT_LEVEL_RULES.minMonths),
         requireAssessmentPassed: node.requireAssessmentPassed !== false,
         minReferralsAtLevel: numOr(node.minReferralsAtLevel, DEFAULT_LEVEL_RULES.minReferralsAtLevel),
+        autoPromote: node.autoPromote !== false,
         checklist: parseChecklist(node.checklistBn ?? node.checklist),
       };
     }
@@ -102,38 +123,96 @@ export function monthsInLevelOf(user: Pick<User, "levelStartedAt">): number {
   return Math.floor(ms / (30.44 * 86_400_000));
 }
 
-/**
- * The muhibbus-sunnah promotion checklist for a user:
- * months in level, passed assessment, downline muhibbus-sunnah count,
- * plus informational checklist items from level-rules.json.
- */
-export async function computeRequirements(
-  tx: Prisma.TransactionClient,
-  user: User
-): Promise<LevelRequirement[]> {
-  const rules = await loadLevelRules();
-  const months = monthsInLevelOf(user);
-  const reqs: LevelRequirement[] = [];
+// ── Rich checklist (B6) ─────────────────────────────────────────────────────
 
-  reqs.push({
+/** One requirement row of the live checklist (GET /api/dawah/requirements). */
+export interface LevelCheckRow {
+  key: string;
+  labelBn: string;
+  /** Machine-evaluated progress (null for invigilator-verified items). */
+  current: number | null;
+  target: number | null;
+  met: boolean;
+  /** Whether this row is machine-checkable (drives auto-promotion). */
+  autoChecked: boolean;
+  detailBn: string;
+}
+
+export interface LevelChecklist {
+  rows: LevelCheckRow[];
+  /** Every machine-checkable rule is met. */
+  allMet: boolean;
+  /** Auto-promotion allowed at all (rules.autoPromote && allMet). */
+  autoEligible: boolean;
+}
+
+/**
+ * PURE checklist builder (unit-tested) — same facts feed the member-facing
+ * checklist, the admin promote validation and the nightly auto-promotion.
+ */
+export function buildLevelChecklist(rules: LevelRules, facts: LevelFacts): LevelChecklist {
+  const rows: LevelCheckRow[] = [];
+
+  rows.push({
     key: "min_months",
-    label: `এই স্তরে অন্তত ${toBn(rules.minMonths)} মাস অতিবাহিত করা`,
-    done: months >= rules.minMonths,
-    detail: `অতিবাহিত ${toBn(months)} মাস (প্রয়োজন ${toBn(rules.minMonths)})`,
+    labelBn: `এই স্তরে অন্তত ${toBn(rules.minMonths)} মাস অতিবাহিত করা`,
+    current: facts.months,
+    target: rules.minMonths,
+    met: facts.months >= rules.minMonths,
+    autoChecked: true,
+    detailBn: `অতিবাহিত ${toBn(facts.months)} মাস (প্রয়োজন ${toBn(rules.minMonths)})`,
   });
 
   if (rules.requireAssessmentPassed) {
-    const passed = await tx.assessment.findFirst({
-      where: { assesseeId: user.id, result: "passed" },
-      select: { id: true },
-    });
-    reqs.push({
+    rows.push({
       key: "assessment_passed",
-      label: "ফরযে আইন মূল্যায়নে উত্তীর্ণ হওয়া",
-      done: !!passed,
-      detail: passed ? "উত্তীর্ণ হয়েছেন" : "এখনো উত্তীর্ণ হননি",
+      labelBn: "ফরযে আইন মূল্যায়নে উত্তীর্ণ হওয়া",
+      current: facts.assessmentPassed ? 1 : 0,
+      target: 1,
+      met: facts.assessmentPassed,
+      autoChecked: true,
+      detailBn: facts.assessmentPassed ? "উত্তীর্ণ হয়েছেন" : "এখনো উত্তীর্ণ হননি",
     });
   }
+
+  rows.push({
+    key: "min_referrals",
+    labelBn: `অন্তত ${toBn(rules.minReferralsAtLevel)} জন মাদউ মুহিব্বুস সুন্নাহ স্তরে উন্নীত`,
+    current: facts.referralsAtLevel,
+    target: rules.minReferralsAtLevel,
+    met: facts.referralsAtLevel >= rules.minReferralsAtLevel,
+    autoChecked: true,
+    detailBn: `বর্তমানে ${toBn(facts.referralsAtLevel)} জন (প্রয়োজন ${toBn(rules.minReferralsAtLevel)})`,
+  });
+
+  for (const item of rules.checklist) {
+    rows.push({
+      key: `checklist_${item.key}`,
+      labelBn: item.label,
+      current: null,
+      target: null,
+      met: false,
+      autoChecked: false,
+      detailBn: "পরিদর্শক কর্তৃক যাচাই হবে",
+    });
+  }
+
+  const machine = rows.filter((r) => r.autoChecked);
+  const allMet = machine.every((r) => r.met);
+  return { rows, allMet, autoEligible: allMet && rules.autoPromote };
+}
+
+/** Query the three facts for a user inside an RLS transaction. */
+export async function gatherLevelFacts(
+  tx: Prisma.TransactionClient,
+  user: User
+): Promise<LevelFacts> {
+  const months = monthsInLevelOf(user);
+
+  const passed = await tx.assessment.findFirst({
+    where: { assesseeId: user.id, result: "passed" },
+    select: { id: true },
+  });
 
   const closures = await tx.referralClosure.findMany({
     where: { ancestorId: user.id },
@@ -143,23 +222,28 @@ export async function computeRequirements(
   const referralsAtLevel = downlineIds.length
     ? await tx.user.count({ where: { id: { in: downlineIds }, level: "muhibbus_sunnah" } })
     : 0;
-  reqs.push({
-    key: "min_referrals",
-    label: `অন্তত ${toBn(rules.minReferralsAtLevel)} জন মাদউ মুহিব্বুস সুন্নাহ স্তরে উন্নীত`,
-    done: referralsAtLevel >= rules.minReferralsAtLevel,
-    detail: `বর্তমানে ${toBn(referralsAtLevel)} জন (প্রয়োজন ${toBn(rules.minReferralsAtLevel)})`,
-  });
 
-  for (const item of rules.checklist) {
-    reqs.push({
-      key: `checklist_${item.key}`,
-      label: item.label,
-      done: false, // informational — verified manually by the invigilator/admin
-      detail: "পরিদর্শক কর্তৃক যাচাই হবে",
-    });
-  }
+  return { months, assessmentPassed: !!passed, referralsAtLevel };
+}
 
-  return reqs;
+/**
+ * The muhibbus-sunnah promotion checklist for a user (member-facing shape):
+ * months in level, passed assessment, downline muhibbus-sunnah count, plus
+ * informational checklist items from level-rules.json. Built on the same
+ * facts + builder as the live checklist and the nightly job.
+ */
+export async function computeRequirements(
+  tx: Prisma.TransactionClient,
+  user: User
+): Promise<LevelRequirement[]> {
+  const [rules, facts] = await Promise.all([loadLevelRules(), gatherLevelFacts(tx, user)]);
+  const { rows } = buildLevelChecklist(rules, facts);
+  return rows.map((r) => ({
+    key: r.key,
+    label: r.labelBn,
+    done: r.met,
+    detail: r.detailBn,
+  }));
 }
 
 /** Next rung of the tarbiyah ladder (used by /api/dawah). */

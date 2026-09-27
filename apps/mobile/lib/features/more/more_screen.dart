@@ -77,14 +77,14 @@ class MoreScreen extends ConsumerWidget {
                         ),
                         Text(
                           auth.signedIn
-                              ? '${auth.user!.role.labelBn}${auth.user!.memberCode != null ? ' · ${auth.user!.memberCode}' : ''}'
+                              ? '${context.t(auth.user!.role.labelKey)}${auth.user!.memberCode != null ? ' · ${auth.user!.memberCode}' : ''}'
                               : context.t('guest'),
                           style: theme.textTheme.bodySmall,
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right),
+                  const DirectionalIcon(Icons.chevron_right),
                 ],
               ),
             ),
@@ -127,7 +127,7 @@ class MoreScreen extends ConsumerWidget {
             const SizedBox(height: SLSpacing.s24),
             Center(
               child: Text(
-                'আস-সুন্নাহ ফাউন্ডেশন · দাওয়াতুস সুন্নাহ',
+                context.t('org_footer'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

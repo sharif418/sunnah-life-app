@@ -18,10 +18,10 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
   String _category = 'all';
 
   static const _cats = <String, (String, IconData)>{
-    'all': ('সব', Icons.all_inclusive_outlined),
-    'daily': ('দৈনন্দিন সুন্নাহ', Icons.wb_sunny_outlined),
-    'forgotten': ('বিস্মৃত সুন্নাহ', Icons.wb_twilight_outlined),
-    'salah': ('নামাজের সুন্নাহ', Icons.mosque_outlined),
+    'all': ('sunnah_cat_all', Icons.all_inclusive_outlined),
+    'daily': ('sunnah_cat_daily', Icons.wb_sunny_outlined),
+    'forgotten': ('sunnah_cat_forgotten', Icons.wb_twilight_outlined),
+    'salah': ('sunnah_cat_salah', Icons.mosque_outlined),
   };
 
   @override
@@ -67,7 +67,7 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                             size: 16,
                             color: theme.colorScheme.primary,
                           ),
-                          label: Text(_cats[c]!.$1),
+                          label: Text(context.t(_cats[c]!.$1)),
                           selected: _category == c,
                           onSelected: (_) => setState(() => _category = c),
                         ),

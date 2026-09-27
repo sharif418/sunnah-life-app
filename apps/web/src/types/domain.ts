@@ -232,6 +232,28 @@ export interface LevelRequirement {
   detail: string;
 }
 
+/** One row of the live next-level checklist (B6 — GET /api/dawah/requirements). */
+export interface LevelCheckRow {
+  key: string;
+  labelBn: string;
+  /** Machine-evaluated progress (null for invigilator-verified items). */
+  current: number | null;
+  target: number | null;
+  met: boolean;
+  /** Whether this row is machine-checkable (drives auto-promotion). */
+  autoChecked: boolean;
+  detailBn: string;
+}
+
+export interface DawahRequirements {
+  level: Level;
+  nextLevel: Level;
+  rulesApply: boolean;
+  allMet: boolean;
+  autoEligible: boolean;
+  requirements: LevelCheckRow[];
+}
+
 export interface AssessmentSummary {
   id: string;
   templateKey: string;

@@ -19,7 +19,26 @@ extension L10nX on BuildContext {
     ).read(profileProvider).language,
   );
   bool get isBn => lang == Lang.bn;
-  String t(String key) => S.tr(lang, key);
+  String t(String key) => S.tOf(this, lang, key);
+}
+
+/// Direction-aware icon: glyphs that imply reading direction (chevrons,
+/// arrows) mirror automatically under RTL. Prefer logical layout over this
+/// where possible.
+class DirectionalIcon extends StatelessWidget {
+  const DirectionalIcon(this.icon, {super.key, this.size, this.color});
+  final IconData icon;
+  final double? size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = Icon(icon, size: size, color: color);
+    if (Directionality.maybeOf(context) == TextDirection.rtl) {
+      return Transform.flip(flipX: true, child: child);
+    }
+    return child;
+  }
 }
 
 class AppCard extends StatelessWidget {

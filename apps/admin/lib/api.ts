@@ -345,6 +345,45 @@ export interface ReminderItem {
   createdAt: string;
 }
 
+/** B6 — level promotion history row (GET /api/admin/level-transitions). */
+export interface LevelTransitionItem {
+  id: string;
+  userId: string;
+  userName: string;
+  memberCode: string | null;
+  gender: Gender;
+  fromLevel: Level;
+  toLevel: Level;
+  method: "auto" | "admin";
+  reason: string | null;
+  actorId: string | null;
+  at: string;
+}
+
+/** B6 — admin view of one assessment template version. */
+export interface AdminTemplateItem {
+  id: string;
+  key: string;
+  version: number;
+  titleBn: string;
+  titleEn: string;
+  active: boolean;
+  sections: AssessmentSection[];
+  createdAt: string;
+}
+
+/** B6 — admin payload for live program create/edit. */
+export interface LiveProgramInput {
+  titleBn: string;
+  descBn?: string | null;
+  hostName?: string | null;
+  startsAt: string;
+  endsAt?: string | null;
+  youtubeId?: string | null;
+  gender?: Gender;
+  recordingUrl?: string | null;
+}
+
 export interface GoalItem {
   id: string;
   amalKey: string;
@@ -415,10 +454,16 @@ export const api = {
     gender?: Gender;
     usrahId?: string | null;
     category?: UserCategory;
+    reason?: string;
   }) =>
     call<{ user: User }>("/api/admin/users", { method: "PATCH", json: dto }),
-  promote: (userId: string, toLevel: Level) =>
-    call<{ user: User }>("/api/admin/promote", { method: "POST", json: { userId, toLevel } }),
+  promote: (userId: string, toLevel: Level, reason: string) =>
+    call<{ user: User }>("/api/admin/promote", {
+      method: "POST",
+      json: { userId, toLevel, reason },
+    }),
+  levelTransitions: () =>
+    call<{ transitions: LevelTransitionItem[] }>("/api/admin/level-transitions"),
   monthGrid: (userId: string, month: string) =>
     call<{ grid: MonthGrid }>(`/api/admin/month-grid?userId=${userId}&month=${month}`),
   broadcast: (dto: { usrahId?: string | null; gender?: Gender | null; body: string }) =>
@@ -441,6 +486,65 @@ export const api = {
       method: "POST",
       json: dto,
     }),
+  /** B6: full catalog incl. inactive. */
+  adminCatalog: () => call<{ definitions: AmalDefinition[] }>("/api/admin/amal-catalog"),
+  patchCatalog: (key: string, dto: Partial<Omit<AmalDefinition, "key">>) =>
+    call<{ definition: AmalDefinition }>(`/api/admin/amal-catalog/${encodeURIComponent(key)}`, {
+      method: "PATCH",
+      json: dto,
+    }),
+  reorderCatalog: (keys: string[]) =>
+    call<{ definitions: AmalDefinition[] }>("/api/admin/amal-catalog", {
+      method: "PATCH",
+      json: { keys },
+    }),
+
+  // B6: versioned assessment templates
+  adminTemplates: () => call<{ templates: AdminTemplateItem[] }>("/api/admin/assessment-templates"),
+  createTemplateVersion: (dto: {
+    key: string;
+    titleBn: string;
+    titleEn?: string;
+    sections: AssessmentSection[];
+    version?: number;
+  }) =>
+    call<{ template: AdminTemplateItem }>("/api/admin/assessment-templates", {
+      method: "POST",
+      json: dto as unknown as Record<string, unknown>,
+    }),
+  patchTemplate: (
+    id: string,
+    dto: { active?: boolean; titleBn?: string; titleEn?: string; sections?: AssessmentSection[] }
+  ) =>
+    call<{ template: AdminTemplateItem }>(`/api/admin/assessment-templates/${id}`, {
+      method: "PATCH",
+      json: dto as unknown as Record<string, unknown>,
+    }),
+
+  // B6: usrah management
+  createUsrah: (dto: { name: string; gender: Gender; district?: string }) =>
+    call<{ usrah: Usrah }>("/api/admin/usrah", { method: "POST", json: dto }),
+  patchUsrah: (
+    id: string,
+    dto: { name?: string; headUserId?: string | null; invigilatorUserId?: string | null; district?: string | null }
+  ) => call<{ usrah: Usrah }>(`/api/admin/usrah/${id}`, { method: "PATCH", json: dto }),
+  addUsrahMember: (usrahId: string, userId: string) =>
+    call<{ ok: boolean }>(`/api/admin/usrah/${usrahId}/members`, {
+      method: "POST",
+      json: { userId },
+    }),
+  removeUsrahMember: (usrahId: string, userId: string) =>
+    call<{ ok: boolean }>(`/api/admin/usrah/${usrahId}/members/${userId}`, {
+      method: "DELETE",
+    }),
+
+  // B6: live program CRUD
+  createLiveProgram: (dto: LiveProgramInput) =>
+    call<{ program: LiveProgramItem }>("/api/admin/live", { method: "POST", json: dto }),
+  patchLiveProgram: (id: string, dto: Partial<LiveProgramInput>) =>
+    call<{ program: LiveProgramItem }>(`/api/admin/live/${id}`, { method: "PATCH", json: dto }),
+  deleteLiveProgram: (id: string) =>
+    call<{ ok: boolean }>(`/api/admin/live/${id}`, { method: "DELETE" }),
   audit: () => call<{ entries: AuditEntry[] }>("/api/admin/audit"),
 
   // usrah

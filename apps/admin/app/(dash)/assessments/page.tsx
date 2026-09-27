@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { FileCheck2, ShieldCheck, Users2 } from "lucide-react";
+import { FileCheck2, Plus, ShieldCheck, Users2 } from "lucide-react";
 import { api, type AssessmentDetail } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { dateLabelBn, relativeBn, toBn } from "@/lib/bn";
@@ -440,7 +440,6 @@ function AssessmentHistory() {
 function TemplateViewer() {
   const templates = useQuery({ queryKey: ["assessment-templates"], queryFn: () => api.assessmentTemplates() });
   const [key, setKey] = React.useState<string>("");
-
   if (templates.isLoading) return <TableSkeleton rows={4} cols={2} />;
   if (templates.isError) return <ErrorState error={templates.error} onRetry={() => templates.refetch()} />;
 
@@ -512,6 +511,176 @@ function TemplateViewer() {
   );
 }
 
+// ── B6: versioned template management (full_admin) ─────────────────────
+
+function TemplateVersions() {
+  const { fullAdmin } = useSession();
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const all = useQuery({
+    queryKey: ["admin-templates"],
+    queryFn: () => api.adminTemplates(),
+    enabled: fullAdmin,
+  });
+
+  const [key, setKey] = React.useState("");
+  const [titleBn, setTitleBn] = React.useState("");
+  const [sectionsJson, setSectionsJson] = React.useState("");
+  const [creating, setCreating] = React.useState(false);
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-templates"] });
+    qc.invalidateQueries({ queryKey: ["assessment-templates"] });
+  };
+
+  const activate = useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) => api.patchTemplate(id, { active }),
+    onSuccess: () => {
+      toast("সংস্করণের অবস্থা পরিবর্তিত হয়েছে (অডিট লগড)", "success");
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  const create = useMutation({
+    mutationFn: async () => {
+      let sections: unknown;
+      try {
+        sections = JSON.parse(sectionsJson);
+      } catch {
+        throw new Error("বিভাগসমূহ (sections) সঠিক JSON নয়");
+      }
+      return api.createTemplateVersion({ key: key.trim(), titleBn: titleBn.trim(), sections: sections as never });
+    },
+    onSuccess: () => {
+      toast("নতুন সংস্করণ তৈরি হয়েছে — পর্যালোচনা শেষে সক্রিয় করুন", "success");
+      setCreating(false);
+      setKey("");
+      setTitleBn("");
+      setSectionsJson("");
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  if (!fullAdmin) {
+    return (
+      <Card>
+        <CardContent className="pt-6 text-center text-sm text-muted-foreground">
+          সংস্করণ ব্যবস্থাপনা শুধুমাত্র প্রধান অ্যাডমিনের জন্য।
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const templates = all.data?.templates ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm text-muted-foreground">
+          প্রতি কী-তে ঠিক একটি সক্রিয় সংস্করণ — সদস্যরা সেটিই দেখেন; সক্রিয় সংস্করণ সম্পাদনাযোগ্য নয়, নতুন সংস্করণ তৈরি করুন।
+        </p>
+        <Button size="sm" onClick={() => setCreating((c) => !c)}>
+          <Plus className="h-4 w-4" aria-hidden />
+          {creating ? "বাতিল" : "নতুন সংস্করণ"}
+        </Button>
+      </div>
+
+      {creating ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">নতুন সংস্করণ তৈরি</CardTitle>
+            <CardDescription>
+              একই কী দিলে পরবর্তী সংস্করণ নম্বর স্বয়ংক্রিয়ভাবে বসে এবং সংস্করণটি নিষ্ক্রিয় অবস্থায় শুরু হয়।
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="কী (key)" htmlFor="tmpl-key" hint="যেমন farze_ain_v1 — একই কী = নতুন সংস্করণ">
+                <Input id="tmpl-key" dir="ltr" value={key} onChange={(e) => setKey(e.target.value)} aria-label="টেমপ্লেট কী" />
+              </Field>
+              <Field label="বাংলা শিরোনাম" htmlFor="tmpl-title">
+                <Input id="tmpl-title" value={titleBn} onChange={(e) => setTitleBn(e.target.value)} aria-label="বাংলা শিরোনাম" />
+              </Field>
+            </div>
+            <Field
+              label="বিভাগসমূহ (JSON)"
+              htmlFor="tmpl-sections"
+              hint='[{"key":"iman","titleBn":"ঈমান","criteria":[{"key":"i1","titleBn":"…"}]}]'
+            >
+              <Textarea
+                id="tmpl-sections"
+                dir="ltr"
+                rows={8}
+                className="font-mono text-xs"
+                value={sectionsJson}
+                onChange={(e) => setSectionsJson(e.target.value)}
+                aria-label="বিভাগসমূহ JSON"
+              />
+            </Field>
+            <Button
+              onClick={() => create.mutate()}
+              loading={create.isPending}
+              disabled={!key.trim() || !titleBn.trim() || !sectionsJson.trim()}
+            >
+              তৈরি করুন
+            </Button>
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {all.isLoading ? (
+        <TableSkeleton rows={3} cols={4} />
+      ) : all.isError ? (
+        <ErrorState error={all.error} onRetry={() => all.refetch()} />
+      ) : templates.length === 0 ? (
+        <Card>
+          <CardContent className="pt-6 text-center text-sm text-muted-foreground">
+            কোনো টেমপ্লেট নেই — নতুন সংস্করণ তৈরি করুন।
+          </CardContent>
+        </Card>
+      ) : (
+        <ul className="space-y-2">
+          {templates.map((t) => (
+            <li
+              key={t.id}
+              className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-border p-3"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold">
+                  {t.titleBn}{" "}
+                  <span className="font-mono text-xs font-normal text-muted-foreground" dir="ltr">
+                    {t.key} · v{toBn(t.version)}
+                  </span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {toBn(t.sections.reduce((s, x) => s + x.criteria.length, 0))} নির্ণায়ক · {dateLabelBn(t.createdAt)}
+                </p>
+              </div>
+              <span className="flex items-center gap-2">
+                {t.active ? (
+                  <Badge variant="success">সক্রিয়</Badge>
+                ) : (
+                  <Badge variant="muted">নিষ্ক্রিয়</Badge>
+                )}
+                <Button
+                  size="sm"
+                  variant={t.active ? "outline" : "default"}
+                  disabled={activate.isPending}
+                  onClick={() => activate.mutate({ id: t.id, active: !t.active })}
+                >
+                  {t.active ? "নিষ্ক্রিয় করুন" : "সক্রিয় করুন"}
+                </Button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function AssessmentsPage() {
   return (
     <Tabs defaultValue="new" aria-label="মূল্যায়ন বিভাগ">
@@ -519,6 +688,7 @@ export default function AssessmentsPage() {
         <TabsTrigger value="new">নতুন মূল্যায়ন</TabsTrigger>
         <TabsTrigger value="history">ইতিহাস</TabsTrigger>
         <TabsTrigger value="template">টেমপ্লেট দেখুন</TabsTrigger>
+        <TabsTrigger value="versions">সংস্করণ ব্যবস্থাপনা</TabsTrigger>
       </TabsList>
       <TabsPanel value="new">
         <React.Suspense fallback={<Skeleton className="h-96" />}>
@@ -530,6 +700,9 @@ export default function AssessmentsPage() {
       </TabsPanel>
       <TabsPanel value="template">
         <TemplateViewer />
+      </TabsPanel>
+      <TabsPanel value="versions">
+        <TemplateVersions />
       </TabsPanel>
     </Tabs>
   );

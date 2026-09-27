@@ -104,15 +104,15 @@ class _DawahTabs extends ConsumerWidget {
     return DefaultTabController(
       length: 3,
       child: Column(
-        children: const [
+        children: [
           TabBar(
             tabs: [
-              Tab(text: 'দাওয়াত'),
-              Tab(text: 'উসরা'),
-              Tab(text: 'রিভিউ'),
+              Tab(text: context.t('tab_dawah')),
+              Tab(text: context.t('dawah_tab_usrah')),
+              Tab(text: context.t('dawah_tab_reviews')),
             ],
           ),
-          Expanded(
+          const Expanded(
             child: TabBarView(
               children: [_DawahOverviewTab(), _UsrahTab(), _ReviewsTab()],
             ),
@@ -223,7 +223,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                         icon: const Icon(Icons.share),
                         onPressed: () async {
                           final text =
-                              'আসসালামু আলাইকুম। সুন্নাহ লাইফ অ্যাপে আমার সাথে যুক্ত হোন: ${joinLink(overview.memberCode)}';
+                              '${context.t('dawah_share_message')} ${joinLink(overview.memberCode)}';
                           await Clipboard.setData(ClipboardData(text: text));
                           await SystemChannel.shareText(text);
                           if (context.mounted) {
@@ -254,7 +254,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                 ),
                 _StatCell(
                   label: context.t('dawah_my_level'),
-                  value: overview.level.labelBn,
+                  value: context.t(overview.level.labelKey),
                 ),
                 _StatCell(
                   label: context.t('dawah_months_in_level'),
@@ -293,7 +293,7 @@ class _DawahOverviewTab extends ConsumerWidget {
             ),
             const SizedBox(height: SLSpacing.s8),
             Text(
-              '${context.t('dawah_next_level')}: ${overview.nextLevel.labelBn}',
+              '${context.t('dawah_next_level')}: ${context.t(overview.nextLevel.labelKey)}',
               style: theme.textTheme.bodyMedium?.copyWith(
                 fontWeight: FontWeight.w600,
               ),
@@ -320,16 +320,17 @@ class _DawahOverviewTab extends ConsumerWidget {
                           start: SLSpacing.s12 + (node.depth - 1) * 24,
                           end: SLSpacing.s12,
                         ),
-                        leading: Icon(
-                          node.depth == 1
-                              ? Icons.person_outline
-                              : Icons.subdirectory_arrow_right,
-                          color: theme.colorScheme.primary,
-                          size: node.depth == 1 ? 24 : 18,
-                        ),
+                        leading: node.depth == 1
+                            ? const Icon(Icons.person_outline)
+                            // Mirrors under RTL so the tree keeps branching
+                            // inward from the leading edge.
+                            : const DirectionalIcon(
+                                Icons.subdirectory_arrow_right,
+                                size: 18,
+                              ),
                         title: Text(node.name),
                         subtitle: Text(
-                          '${node.memberCode ?? ''} · ${node.level.labelBn}',
+                          '${node.memberCode ?? ''} · ${context.t(node.level.labelKey)}',
                           style: theme.textTheme.bodySmall,
                         ),
                       ),
@@ -464,7 +465,7 @@ class _UsrahTab extends ConsumerWidget {
             if (usrah == null) ...[
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
-                message: 'আপনি এখনো কোনো উসরায় যুক্ত নন — অ্যাডমিন যুক্ত করলে এখানে দেখা যাবে',
+                message: context.t('dawah_no_usrah'),
                 icon: Icons.groups_outlined,
               ),
             ] else ...[
@@ -631,7 +632,7 @@ class _ReviewsTab extends ConsumerWidget {
             children: [
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
-                message: 'এখনো কোনো সাপ্তাহিক রিভিউ হয়নি',
+                message: context.t('dawah_no_reviews'),
                 icon: Icons.rate_review_outlined,
               ),
             ],
@@ -648,9 +649,9 @@ class _ReviewsTab extends ConsumerWidget {
               _ => theme.colorScheme.tertiary,
             };
             final statusLabel = switch (r.status) {
-              'done' => 'সম্পন্ন',
-              'overdue' => 'বিলম্বিত',
-              _ => 'অপেক্ষমাণ',
+              'done' => context.t('done'),
+              'overdue' => context.t('review_status_overdue'),
+              _ => context.t('review_status_pending'),
             };
             return AppCard(
               child: Column(
@@ -660,7 +661,7 @@ class _ReviewsTab extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          'সপ্তাহ: ${bn ? toBn(r.weekStart) : r.weekStart}',
+                          '${context.t('dawah_week')}: ${bn ? toBn(r.weekStart) : r.weekStart}',
                           style: theme.textTheme.bodyLarge?.copyWith(
                             fontWeight: FontWeight.w600,
                           ),

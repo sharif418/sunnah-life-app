@@ -18,7 +18,8 @@ import { QueuesService } from "./queues.service";
       { name: QUEUES.PRAYER_PUSH },
       { name: QUEUES.WEEKLY_REVIEWS },
       { name: QUEUES.MONTHLY_REPORT },
-      { name: QUEUES.STREAKS }
+      { name: QUEUES.STREAKS },
+      { name: QUEUES.LEVELS }
     ),
   ],
   providers: [QueuesService],

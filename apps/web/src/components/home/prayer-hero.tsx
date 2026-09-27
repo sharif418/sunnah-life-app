@@ -75,7 +75,7 @@ export function PrayerHero() {
       {/* ── কাউন্টডাউন ── */}
       <div className="bg-pattern-islamic px-4 pb-5 sm:px-6 sm:pb-6 pt-4">
         <div className="flex items-center justify-between gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1 text-xs font-bold text-gold-foreground">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1 text-xs font-bold text-gold-text-foreground">
             চলছে: {PRAYER_LABELS_BN[next.current]}
           </span>
           {next.key === "fajr" ? <MoonStar className="size-4 text-primary-foreground/70" /> : <Sun className="size-4 text-primary-foreground/70" />}
@@ -84,7 +84,7 @@ export function PrayerHero() {
           পরবর্তী ওয়াক্ত — <strong className="text-primary-foreground">{nextLabel}</strong>
         </p>
         <p
-          className="mt-1 text-5xl sm:text-6xl font-extrabold text-gold tabular-nums leading-tight"
+          className="mt-1 text-5xl sm:text-6xl font-extrabold text-gold-text tabular-nums leading-tight"
           aria-live="polite"
           aria-label={`পরবর্তী নামাজ ${nextLabel}, বাকি সময় ${countdown}`}
         >

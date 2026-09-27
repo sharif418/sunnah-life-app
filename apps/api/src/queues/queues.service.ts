@@ -16,7 +16,8 @@ export class QueuesService implements OnModuleInit {
     @InjectQueue(QUEUES.PRAYER_PUSH) private readonly prayerPush: Queue,
     @InjectQueue(QUEUES.WEEKLY_REVIEWS) private readonly weeklyReviews: Queue,
     @InjectQueue(QUEUES.MONTHLY_REPORT) private readonly monthlyReport: Queue,
-    @InjectQueue(QUEUES.STREAKS) private readonly streaks: Queue
+    @InjectQueue(QUEUES.STREAKS) private readonly streaks: Queue,
+    @InjectQueue(QUEUES.LEVELS) private readonly levels: Queue
   ) {}
 
   private queueByName(name: string): Queue | null {
@@ -25,6 +26,7 @@ export class QueuesService implements OnModuleInit {
       case QUEUES.WEEKLY_REVIEWS: return this.weeklyReviews;
       case QUEUES.MONTHLY_REPORT: return this.monthlyReport;
       case QUEUES.STREAKS: return this.streaks;
+      case QUEUES.LEVELS: return this.levels;
       default: return null;
     }
   }
@@ -59,7 +61,7 @@ export class QueuesService implements OnModuleInit {
   /** Queue stats for observability (used by worker boot log + health). */
   async stats(): Promise<Record<string, { waiting: number; active: number; delayed: number; failed: number }>> {
     const out: Record<string, { waiting: number; active: number; delayed: number; failed: number }> = {};
-    for (const q of [this.prayerPush, this.weeklyReviews, this.monthlyReport, this.streaks]) {
+    for (const q of [this.prayerPush, this.weeklyReviews, this.monthlyReport, this.streaks, this.levels]) {
       try {
         const counts = await q.getJobCounts("waiting", "active", "delayed", "failed");
         out[q.name] = {

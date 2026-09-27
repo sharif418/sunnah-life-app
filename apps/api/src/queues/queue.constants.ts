@@ -5,6 +5,7 @@ export const QUEUES = {
   WEEKLY_REVIEWS: "weekly-reviews",
   MONTHLY_REPORT: "monthly-report",
   STREAKS: "streaks",
+  LEVELS: "levels",
 } as const;
 
 export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
@@ -15,12 +16,14 @@ export type QueueName = (typeof QUEUES)[keyof typeof QUEUES];
  *   weekly-reviews  → Saturday 00:05 BD = Friday 18:05 UTC
  *   monthly-report  → 1st of month 00:05 BD = 18:05 UTC on the last day of prev month
  *   streaks         → daily 00:10 BD = 18:10 UTC
+ *   levels          → daily 00:30 BD = 18:30 UTC (B6 auto-promotion)
  */
 export const JOB_SCHEDULERS: { id: string; queue: QueueName; pattern: string; name: string }[] = [
   { id: "prayer-push-nightly", queue: QUEUES.PRAYER_PUSH, pattern: "5 18 * * *", name: "prayer-push-nightly" },
   { id: "weekly-reviews-saturday", queue: QUEUES.WEEKLY_REVIEWS, pattern: "5 18 * * 5", name: "weekly-reviews-saturday" },
   { id: "monthly-report-first", queue: QUEUES.MONTHLY_REPORT, pattern: "5 18 1 * *", name: "monthly-report-first" },
   { id: "streaks-daily", queue: QUEUES.STREAKS, pattern: "10 18 * * *", name: "streaks-daily" },
+  { id: "levels-nightly", queue: QUEUES.LEVELS, pattern: "30 18 * * *", name: "levels-nightly" },
 ];
 
 /** Parse a redis:// URL into ioredis connection options (for BullMQ). */

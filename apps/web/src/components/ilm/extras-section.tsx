@@ -128,7 +128,7 @@ function Names99View({ onBack }: { onBack: () => void }) {
             <p className="mt-1.5 text-sm font-bold">{n.translitBn}</p>
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{n.meaningBn}</p>
             {n.virtue ? (
-              <p className="mt-2 rounded-lg bg-gold-soft px-2.5 py-1.5 text-[11px] leading-relaxed text-gold-foreground">
+              <p className="mt-2 rounded-lg bg-gold-soft px-2.5 py-1.5 text-[11px] leading-relaxed text-gold-text-foreground">
                 {n.virtue}
               </p>
             ) : null}
@@ -202,7 +202,7 @@ function IslamicNamesView({ onBack }: { onBack: () => void }) {
               <span className="text-xs text-muted-foreground">{n.gender === "boy" ? "ছেলে" : "মেয়ে"}</span>
             </div>
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{n.meaningBn}</p>
-            {n.gender_note ? <p className="mt-1.5 text-[11px] leading-relaxed text-gold-foreground">{n.gender_note}</p> : null}
+            {n.gender_note ? <p className="mt-1.5 text-[11px] leading-relaxed text-gold-text-foreground">{n.gender_note}</p> : null}
           </Card>
         ))}
         {visible.length === 0 ? <p className="py-6 text-center text-sm text-muted-foreground">কোনো নাম মেলেনি</p> : null}

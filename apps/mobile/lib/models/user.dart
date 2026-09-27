@@ -48,12 +48,14 @@ extension RoleJson on Role {
     'full_admin' => Role.fullAdmin,
     _ => Role.user,
   };
-  String get labelBn => switch (this) {
-    Role.user => 'সাধারণ ব্যবহারকারী',
-    Role.daee => 'দায়ী',
-    Role.usrahHead => 'উসরা প্রধান',
-    Role.invigilator => 'পরিদর্শক',
-    Role.fullAdmin => 'প্রধান অ্যাডমিন',
+
+  /// ARB key for the localized role label (was hard-coded Bengali).
+  String get labelKey => switch (this) {
+    Role.user => 'role_user',
+    Role.daee => 'role_daee',
+    Role.usrahHead => 'role_usrah_head',
+    Role.invigilator => 'role_invigilator',
+    Role.fullAdmin => 'role_full_admin',
   };
 
   /// Da'wah engine access starts at daee (ROLE_RANK >= 1 in domain.ts).
@@ -79,11 +81,13 @@ extension LevelJson on Level {
     'farze_ain_2' => Level.farzeAin2,
     _ => Level.none,
   };
-  String get labelBn => switch (this) {
-    Level.none => 'শুরুর পর্যায়',
-    Level.muhibbusSunnah => 'মুহিব্বুস সুন্নাহ',
-    Level.farzeAin1 => 'ফরযে আইন — ক্যাটাগরি ১',
-    Level.farzeAin2 => 'ফরযে আইন — ক্যাটাগরি ২',
+
+  /// ARB key for the localized level label (was hard-coded Bengali).
+  String get labelKey => switch (this) {
+    Level.none => 'level_none',
+    Level.muhibbusSunnah => 'level_muhibbus_sunnah',
+    Level.farzeAin1 => 'level_farze_ain_1',
+    Level.farzeAin2 => 'level_farze_ain_2',
   };
 }
 
@@ -98,7 +102,10 @@ extension MadhhabJson on Madhhab {
   String get json => this == Madhhab.hanafi ? 'hanafi' : 'shafii';
   static Madhhab fromJson(String v) =>
       v == 'shafii' ? Madhhab.shafii : Madhhab.hanafi;
-  String get labelBn => this == Madhhab.hanafi ? 'হানাফি' : 'শাফেয়ি';
+
+  /// ARB key for the localized label (was hard-coded Bengali).
+  String get labelKey =>
+      this == Madhhab.hanafi ? 'madhhab_hanafi' : 'madhhab_shafii';
 }
 
 extension CalcMethodJson on CalcMethod {
@@ -118,13 +125,15 @@ extension CalcMethodJson on CalcMethod {
     'dubai' => CalcMethod.dubai,
     _ => CalcMethod.karachi,
   };
-  String get labelBn => switch (this) {
-    CalcMethod.karachi => 'করাচি (১৮°/১৮°)',
-    CalcMethod.mwl => 'মুসলিম ওয়ার্ল্ড লীগ',
-    CalcMethod.isna => 'ISNA (উত্তর আমেরিকা)',
-    CalcMethod.egypt => 'মিসরীয়',
-    CalcMethod.makkah => 'উম্মুল কুরা (মক্কা)',
-    CalcMethod.dubai => 'দুবাই',
+
+  /// ARB key for the localized label (was hard-coded Bengali).
+  String get labelKey => switch (this) {
+    CalcMethod.karachi => 'method_karachi',
+    CalcMethod.mwl => 'method_mwl',
+    CalcMethod.isna => 'method_isna',
+    CalcMethod.egypt => 'method_egypt',
+    CalcMethod.makkah => 'method_makkah',
+    CalcMethod.dubai => 'method_dubai',
   };
 }
 

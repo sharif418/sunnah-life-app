@@ -73,7 +73,7 @@ class MosquesScreen extends ConsumerWidget {
                           style: theme.textTheme.bodyLarge
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
-                        Text('কিমি', style: theme.textTheme.bodySmall),
+                        Text(context.t('unit_km'), style: theme.textTheme.bodySmall),
                       ],
                     ),
                   ],

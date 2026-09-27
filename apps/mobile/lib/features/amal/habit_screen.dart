@@ -95,15 +95,21 @@ class _HabitBuilderScreenState extends ConsumerState<HabitBuilderScreen> {
                 segments: [
                   ButtonSegment(
                     value: 7,
-                    label: Text(bn ? '${toBn(7)} দিন' : '7 days'),
+                    label: Text(
+                      '${bn ? toBn(7) : 7} ${context.t('amal_days')}',
+                    ),
                   ),
                   ButtonSegment(
                     value: 21,
-                    label: Text(bn ? '${toBn(21)} দিন' : '21 days'),
+                    label: Text(
+                      '${bn ? toBn(21) : 21} ${context.t('amal_days')}',
+                    ),
                   ),
                   ButtonSegment(
                     value: 40,
-                    label: Text(bn ? '${toBn(40)} দিন' : '40 days'),
+                    label: Text(
+                      '${bn ? toBn(40) : 40} ${context.t('amal_days')}',
+                    ),
                   ),
                 ],
                 selected: {_days},
@@ -243,31 +249,35 @@ class _DayDot extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final dayNum = int.parse(day.substring(8));
-    return Column(
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: done ? theme.colorScheme.primary : null,
-            border: Border.all(
-              color: isToday
-                  ? theme.colorScheme.primary
-                  : theme.colorScheme.outline,
-              width: isToday ? 2 : 1,
+    return Semantics(
+      label:
+          '${bengali ? toBn(dayNum) : dayNum}${done ? ' · ${context.t('amal_done')}' : ''}',
+      child: Column(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: done ? theme.colorScheme.primary : null,
+              border: Border.all(
+                color: isToday
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.outline,
+                width: isToday ? 2 : 1,
+              ),
+            ),
+            child: Center(
+              child: done
+                  ? const Icon(Icons.check, size: 18, color: Colors.white)
+                  : Text(
+                      bengali ? toBn(dayNum) : '$dayNum',
+                      style: theme.textTheme.bodySmall,
+                    ),
             ),
           ),
-          child: Center(
-            child: done
-                ? const Icon(Icons.check, size: 18, color: Colors.white)
-                : Text(
-                    bengali ? toBn(dayNum) : '$dayNum',
-                    style: theme.textTheme.bodySmall,
-                  ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

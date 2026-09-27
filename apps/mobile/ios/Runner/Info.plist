@@ -6,6 +6,12 @@
         <true/>
         <key>CFBundleDevelopmentRegion</key>
         <string>$(DEVELOPMENT_LANGUAGE)</string>
+        <key>CFBundleLocalizations</key>
+        <array>
+          <string>ar</string>
+          <string>bn</string>
+          <string>en</string>
+        </array>
         <key>CFBundleDisplayName</key>
         <string>Sunnah Life</string>
         <key>CFBundleExecutable</key>

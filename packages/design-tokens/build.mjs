@@ -300,7 +300,7 @@ writeFileSync(join(__dirname, "dist/flutter/design_tokens.dart"), dart);
 
 // ── 3) --check: globals.css parity guard ─────────────────────────────────────
 if (process.argv.includes("--check")) {
-  const css = readFileSync(join(__dirname, "../../src/app/globals.css"), "utf8").toLowerCase();
+  const css = readFileSync(join(__dirname, "../../apps/web/src/app/globals.css"), "utf8").toLowerCase();
   // globals.css implements the semantic light/dark roles; brand extras (deep variants)
   // are token-level conveniences only.
   const all = [...Object.values(L), ...Object.values(D)];

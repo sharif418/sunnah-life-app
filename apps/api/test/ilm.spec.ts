@@ -32,7 +32,7 @@ let adminToken: string;
 let maleMemberId: string;
 let femaleMemberId: string;
 let maleUsrahId: string;
-let femaleUsrahId: string;
+let femaleUsrahId: string; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 /** Full OTP sign-in → access token (mock SMS surfaces devCode). */
 async function signIn(phone: string): Promise<string> {

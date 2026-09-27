@@ -3,19 +3,22 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { Megaphone, Pin, TrendingDown, UserRound } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Megaphone, Pin, Plus, TrendingDown, UserMinus, UserPlus, UserRound, UsersRound } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { api, type UsrahMember } from "@/lib/api";
+import { api, type Gender, type User, type UsrahMember } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { relativeBn, toBn } from "@/lib/bn";
 import { ROLE_LABELS_BN } from "@/lib/labels";
 import { BothGendersBadge, CategoryBadge, FScopeBadge, GenderBadge, LevelBadge, RoleBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
+import { Field, Input, Select } from "@/components/ui/input";
 import { EmptyState, ErrorState } from "@/components/ui/states";
 import { TableSkeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
 function CompletionBar({ pct }: { pct: number }) {
@@ -224,6 +227,282 @@ function OwnUsrahView() {
   );
 }
 
+// ── B6: full_admin usrah management — create, assign head/invigilator, move members ─
+
+function UsrahManageSection() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const overview = useQuery({ queryKey: ["admin-overview"], queryFn: () => api.overview() });
+  const usersQuery = useQuery({ queryKey: ["admin-users", ""], queryFn: () => api.users("") });
+
+  const [name, setName] = React.useState("");
+  const [gender, setGender] = React.useState<Gender>("M");
+  const [district, setDistrict] = React.useState("");
+  const [creating, setCreating] = React.useState(false);
+
+  const [managing, setManaging] = React.useState<string | null>(null);
+  const [headId, setHeadId] = React.useState("");
+  const [invigilatorId, setInvigilatorId] = React.useState("");
+  const [memberId, setMemberId] = React.useState("");
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["admin-overview"] });
+    qc.invalidateQueries({ queryKey: ["admin-users", ""] });
+    qc.invalidateQueries({ queryKey: ["my-usrah"] });
+  };
+
+  const create = useMutation({
+    mutationFn: () => api.createUsrah({ name: name.trim(), gender, district: district.trim() || undefined }),
+    onSuccess: () => {
+      toast("উসরা তৈরি হয়েছে (অডিট লগড)", "success");
+      setName("");
+      setDistrict("");
+      setCreating(false);
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  const assign = useMutation({
+    mutationFn: (dto: { headUserId?: string | null; invigilatorUserId?: string | null }) =>
+      api.patchUsrah(managing!, dto),
+    onSuccess: () => {
+      toast("দায়িত্ব নির্ধারিত হয়েছে (অডিট লগড)", "success");
+      setHeadId("");
+      setInvigilatorId("");
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  const addMember = useMutation({
+    mutationFn: () => api.addUsrahMember(managing!, memberId),
+    onSuccess: () => {
+      toast("সদস্য যুক্ত/স্থানান্তরিত হয়েছে (অডিট লগড)", "success");
+      setMemberId("");
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  const removeMember = useMutation({
+    mutationFn: (userId: string) => api.removeUsrahMember(managing!, userId),
+    onSuccess: () => {
+      toast("সদস্য উসরা থেকে সরানো হয়েছে (অডিট লগড)", "success");
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  const usrahs = overview.data?.usrahs ?? [];
+  const users = usersQuery.data?.users ?? [];
+  const managed = usrahs.find((u) => u.id === managing) ?? null;
+  const managedMembers = managed ? users.filter((u) => u.usrahId === managed.id) : [];
+  // candidates: same gender, not already in THIS usrah (moving between usrahs is allowed)
+  const candidates = managed ? users.filter((u) => u.gender === managed.gender && u.usrahId !== managed.id) : [];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <UsersRound className="h-[18px] w-[18px] text-primary" aria-hidden />
+          উসরা ব্যবস্থাপনা
+        </CardTitle>
+        <CardDescription>
+          নতুন উসরা তৈরি, প্রধান ও পরিদর্শক নির্ধারণ, সদস্য যুক্ত/সরানো — প্রতিটি পরিবর্তন লিঙ্গ-যাচাইসহ অডিট লগে সংরক্ষিত
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        {creating ? (
+          <div className="grid gap-3 rounded-md border border-border p-3 sm:grid-cols-[1.5fr_1fr_1fr_auto]">
+            <Field label="উসরার নাম" htmlFor="new-usrah-name">
+              <Input
+                id="new-usrah-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="যেমন: উসরা আল-হুদা"
+                aria-label="উসরার নাম"
+              />
+            </Field>
+            <Field label="লিঙ্গ" htmlFor="new-usrah-gender">
+              <Select id="new-usrah-gender" value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
+                <option value="M">পুরুষ</option>
+                <option value="F">নারী</option>
+              </Select>
+            </Field>
+            <Field label="জেলা" htmlFor="new-usrah-district">
+              <Input
+                id="new-usrah-district"
+                value={district}
+                onChange={(e) => setDistrict(e.target.value)}
+                placeholder="dhaka"
+                aria-label="জেলা"
+              />
+            </Field>
+            <div className="flex items-end gap-2">
+              <Button onClick={() => create.mutate()} loading={create.isPending} disabled={!name.trim()}>
+                <Plus className="h-4 w-4" aria-hidden /> তৈরি করুন
+              </Button>
+              <Button variant="ghost" onClick={() => setCreating(false)}>
+                বাতিল
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <Button variant="outline" onClick={() => setCreating(true)}>
+            <Plus className="h-4 w-4" aria-hidden /> নতুন উসরা
+          </Button>
+        )}
+
+        {usrahs.length === 0 ? (
+          <EmptyState title="কোনো উসরা নেই" hint="উপরে নতুন উসরা তৈরি করুন।" />
+        ) : (
+          <div className="space-y-2">
+            {usrahs.map((u) => {
+              const members = users.filter((m) => m.usrahId === u.id);
+              const open = managing === u.id;
+              return (
+                <div key={u.id} className="rounded-md border border-border">
+                  <div className="flex flex-wrap items-center justify-between gap-2 p-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold">{u.name}</p>
+                      <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
+                        <GenderBadge gender={u.gender} /> · {toBn(members.length)} সদস্য
+                        {u.district ? ` · ${u.district}` : ""}
+                      </p>
+                    </div>
+                    <Button
+                      variant={open ? "secondary" : "outline"}
+                      size="sm"
+                      onClick={() => {
+                        setManaging(open ? null : u.id);
+                        setHeadId("");
+                        setInvigilatorId("");
+                        setMemberId("");
+                      }}
+                      aria-expanded={open}
+                    >
+                      {open ? "বন্ধ করুন" : "ব্যবস্থাপনা"}
+                    </Button>
+                  </div>
+                  {open ? (
+                    <div className="space-y-4 border-t border-border p-3">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Field
+                          label="উসরা প্রধান"
+                          htmlFor="usrah-head"
+                          hint="একই লিঙ্গের সদস্যই প্রধান হতে পারেন; একজন প্রধান একটিই উসরা চালান"
+                        >
+                          <Select id="usrah-head" value={headId} onChange={(e) => setHeadId(e.target.value)}>
+                            <option value="">— অপরিবর্তিত —</option>
+                            {members.map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.name} {m.memberCode ? `(${m.memberCode})` : ""}
+                              </option>
+                            ))}
+                          </Select>
+                        </Field>
+                        <Field label="পরিদর্শক" htmlFor="usrah-invigilator" hint="একই লিঙ্গের পরিদর্শক নির্বাচন করুন">
+                          <Select
+                            id="usrah-invigilator"
+                            value={invigilatorId}
+                            onChange={(e) => setInvigilatorId(e.target.value)}
+                          >
+                            <option value="">— অপরিবর্তিত —</option>
+                            {users
+                              .filter((m) => m.gender === u.gender)
+                              .map((m) => (
+                                <option key={m.id} value={m.id}>
+                                  {m.name} · {ROLE_LABELS_BN[m.role]}
+                                </option>
+                              ))}
+                          </Select>
+                        </Field>
+                      </div>
+                      {(headId || invigilatorId) && (
+                        <Button
+                          size="sm"
+                          loading={assign.isPending}
+                          onClick={() =>
+                            assign.mutate({
+                              ...(headId ? { headUserId: headId } : {}),
+                              ...(invigilatorId ? { invigilatorUserId: invigilatorId } : {}),
+                            })
+                          }
+                        >
+                          দায়িত্ব সংরক্ষণ করুন
+                        </Button>
+                      )}
+
+                      <div>
+                        <p className="mb-2 text-sm font-semibold">সদস্যবৃন্দ</p>
+                        {managedMembers.length ? (
+                          <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                            {managedMembers.map((m) => (
+                              <li
+                                key={m.id}
+                                className="flex items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2 text-sm"
+                              >
+                                <span className="min-w-0 truncate">{m.name}</span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  aria-label={`${m.name} উসরা থেকে সরান`}
+                                  disabled={removeMember.isPending}
+                                  onClick={() => removeMember.mutate(m.id)}
+                                >
+                                  <UserMinus className="h-4 w-4 text-alert" aria-hidden />
+                                </Button>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">এখনো কোনো সদস্য নেই।</p>
+                        )}
+                        <div className="mt-3 flex flex-wrap items-end gap-2">
+                          <div className="min-w-56 flex-1">
+                            <Field
+                              label="সদস্য যুক্ত / স্থানান্তর"
+                              htmlFor="usrah-add-member"
+                              hint="একই লিঙ্গের সদস্য — অন্য উসরার সদস্য হলে স্থানান্তর হবে"
+                            >
+                              <Select
+                                id="usrah-add-member"
+                                value={memberId}
+                                onChange={(e) => setMemberId(e.target.value)}
+                              >
+                                <option value="">নির্বাচন করুন…</option>
+                                {candidates.map((m) => (
+                                  <option key={m.id} value={m.id}>
+                                    {m.name} {m.usrahName ? `(${m.usrahName} থেকে)` : "(উসরাহীন)"}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={!memberId}
+                            loading={addMember.isPending}
+                            onClick={() => addMember.mutate()}
+                          >
+                            <UserPlus className="h-4 w-4" aria-hidden /> যুক্ত করুন
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function InvigilatorView() {
   const { user, fullAdmin } = useSession();
   const overview = useQuery({ queryKey: ["admin-overview"], queryFn: () => api.overview() });
@@ -337,8 +616,15 @@ function InvigilatorView() {
 }
 
 export default function UsrahPage() {
-  const { user } = useSession();
+  const { user, fullAdmin } = useSession();
   // Heads (and any supervisor inside a usrah) get the own-usrah member view;
-  // invigilators and full admins get the cross-usrah health dashboard.
-  return user?.usrahId ? <OwnUsrahView /> : <InvigilatorView />;
+  // invigilators get the cross-usrah health dashboard. full_admin additionally
+  // gets the management section (B6) on top.
+  if (user?.usrahId && !fullAdmin) return <OwnUsrahView />;
+  return (
+    <div className="space-y-6">
+      {fullAdmin ? <UsrahManageSection /> : null}
+      <InvigilatorView />
+    </div>
+  );
 }

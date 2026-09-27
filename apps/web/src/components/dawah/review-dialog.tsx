@@ -108,7 +108,7 @@ export function ReviewDialog({
                   aria-label={`${toBn(s)} তারা`}
                   className="tap-target flex size-11 items-center justify-center rounded-lg hover:bg-muted"
                 >
-                  <Star className={cn("size-6", s <= rating ? "fill-gold text-gold" : "text-muted-foreground/50")} />
+                  <Star className={cn("size-6", s <= rating ? "fill-gold text-gold-text-text" : "text-muted-foreground/50")} />
                 </button>
               ))}
             </div>

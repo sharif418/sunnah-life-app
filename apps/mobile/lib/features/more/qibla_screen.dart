@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/bn_digits.dart';
 import '../../core/qibla.dart';
 import '../../design/design_tokens.dart';
+import '../../l10n/app_strings.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
 
@@ -31,7 +32,8 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
     final profile = ref.watch(profileProvider);
     final bearing = qiblaBearing(profile.lat, profile.lng);
     final distance = distanceKm(profile.lat, profile.lng, kaabaLat, kaabaLng);
-    final compass = compassLabelBn(bearing);
+    final lang = context.lang;
+    final compass = S.tr(lang, compassKeyFor(bearing));
 
     return Scaffold(
       appBar: AppBar(
@@ -86,23 +88,27 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
           ),
           const SizedBox(height: SLSpacing.s4),
           Text(
-            '${context.t('qibla_distance')}: ${bn ? toBn(distance.round()) : distance.round()} কিমি',
+            '${context.t('qibla_distance')}: ${bn ? toBn(distance.round()) : distance.round()} ${context.t('unit_km')}',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: SLSpacing.s16),
           Text(
-            'ডায়াল ঘোরান — তীরটি যেন উপরে থাকে (${bn ? 'উত্তর' : 'N'} → ${bn ? toBn(0) : 0}°)',
+            '${context.t('qibla_dial_hint')} (${bn ? context.t('qibla_north') : 'N'} → ${bn ? toBn(0) : 0}°)',
             style: theme.textTheme.bodySmall,
           ),
-          Slider(
-            value: _dialRotation,
-            min: -180,
-            max: 180,
-            onChanged: (v) => setState(() => _dialRotation = v),
+          // A11y: give the manual dial control a screen-reader label.
+          Semantics(
+            label: context.t('qibla_dial'),
+            child: Slider(
+              value: _dialRotation,
+              min: -180,
+              max: 180,
+              onChanged: (v) => setState(() => _dialRotation = v),
+            ),
           ),
           Text(
-            'ডায়াল: ${bn ? toBn(_dialRotation.round().abs()) : _dialRotation.round().abs()}°',
+            '${context.t('qibla_dial')}: ${bn ? toBn(_dialRotation.round().abs()) : _dialRotation.round().abs()}°',
             textAlign: TextAlign.center,
             style: theme.textTheme.bodySmall,
           ),

@@ -153,7 +153,7 @@ class _IlmScreenState extends State<IlmScreen> {
                               borderRadius: SLRadius.brPill,
                             ),
                             child: Text(
-                              'নতুন',
+                              context.t('badge_new'),
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onPrimary,
                                 fontSize: 10,

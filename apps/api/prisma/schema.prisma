@@ -245,13 +245,19 @@ model WeeklyReview {
 }
 
 model AssessmentTemplate {
-  id          String   @id @default(cuid())
-  key         String   @unique // farze_ain_v1
-  version     Int      @default(1)
-  titleBn     String
-  titleEn     String
+  id           String   @id @default(cuid())
+  key          String // template family, e.g. farze_ain_v1 — versions share it
+  version      Int      @default(1)
+  titleBn      String
+  titleEn      String
   sectionsJson Json // [{key,titleBn,criteria:[{key,titleBn,hintBn}]}]
-  createdAt   DateTime @default(now())
+  // Versioned activation (B6): exactly one row per key should be active; the
+  // member-facing GET /api/assessments/templates serves only active versions.
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  @@unique([key, version])
+  @@index([key, active])
 }
 
 model Assessment {
@@ -275,8 +281,15 @@ model LevelTransition {
   userId       String
   fromLevel    String
   toLevel      String
+  // B6: provenance + justification. method "auto" = nightly levels job,
+  // "admin" = manual override via POST /api/admin/promote (reason required).
+  method       String   @default("admin") // auto | admin
+  reason       String?
+  actorId      String? // promoting admin (null for auto)
   at           DateTime @default(now())
   evidenceJson Json? // {assessmentId, monthsInLevel, referralsAtLevel}
+
+  @@index([userId])
 }
 
 // ─────────────────────────── Content & engagement ───────────────────────────

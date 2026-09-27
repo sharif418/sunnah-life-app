@@ -74,31 +74,6 @@ const Map<PrayerKey, String> prayerLabelsBn = {
   PrayerKey.tahajjud: 'তাহাজ্জুদ',
 };
 
-const Map<PrayerKey, String> prayerLabelsEn = {
-  PrayerKey.fajr: 'Fajr',
-  PrayerKey.sunrise: 'Sunrise',
-  PrayerKey.ishraq: 'Ishraq',
-  PrayerKey.duha: 'Duha',
-  PrayerKey.dhuhr: 'Dhuhr',
-  PrayerKey.asr: 'Asr',
-  PrayerKey.maghrib: 'Maghrib',
-  PrayerKey.sunset: 'Sunset',
-  PrayerKey.isha: 'Isha',
-  PrayerKey.tahajjud: 'Tahajjud',
-};
-
-const Map<PrayerKey, String> prayerLabelsAr = {
-  PrayerKey.fajr: 'الفجر',
-  PrayerKey.sunrise: 'الشروق',
-  PrayerKey.ishraq: 'الإشراق',
-  PrayerKey.duha: 'الضحى',
-  PrayerKey.dhuhr: 'الظهر',
-  PrayerKey.asr: 'العصر',
-  PrayerKey.maghrib: 'المغرب',
-  PrayerKey.sunset: 'الغروب',
-  PrayerKey.isha: 'العشاء',
-  PrayerKey.tahajjud: 'التهجد',
-};
 
 const List<PrayerKey> farzPrayers = [
   PrayerKey.fajr,

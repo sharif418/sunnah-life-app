@@ -196,7 +196,7 @@ class _TodayView extends ConsumerWidget {
                         ),
                         child: CompletionRing(
                           pct: byCat[cat] ?? 0,
-                          label: cat.labelBn,
+                          label: context.t(cat.labelKey),
                           bengali: bn,
                         ),
                       ),
@@ -210,7 +210,7 @@ class _TodayView extends ConsumerWidget {
 
         // Category sections
         for (final cat in groups.keys) ...[
-          SectionHeader(cat.labelBn, icon: _categoryIcon(cat)),
+          SectionHeader(context.t(cat.labelKey), icon: _categoryIcon(cat)),
           for (final def in groups[cat]!)
             _AmalRow(def: def, today: today, bn: bn),
           const SizedBox(height: SLSpacing.s4),
@@ -260,7 +260,7 @@ class _AmalRow extends ConsumerWidget {
         def.inputType == AmalInputType.quantity) {
       final target = def.targetFor(profile.category);
       subtitle =
-          'লক্ষ্য: ${bn ? toBn(target.toInt()) : target.toInt()} ${def.unit ?? ''}';
+          '${context.t('target_label')}: ${bn ? toBn(target.toInt()) : target.toInt()} ${def.unit ?? ''}';
     }
 
     Widget control;
@@ -279,6 +279,7 @@ class _AmalRow extends ConsumerWidget {
         control = AmalToggle(
           value: value == true,
           onChanged: (v) => notifier.write(def.key, today, v, 'manual'),
+          semanticsLabel: def.titleBn,
         );
       case AmalInputType.count:
         control = CountStepper(
@@ -328,7 +329,8 @@ class _AmalRow extends ConsumerWidget {
               ),
               if (entry?.source.startsWith('auto:') ?? false)
                 Tooltip(
-                  message: 'স্বয়ংক্রিয়ভাবে লেখা হয়েছে (${entry!.source})',
+                  message:
+                      '${context.t('amal_auto_logged')} (${entry!.source})',
                   child: Icon(
                     Icons.auto_awesome,
                     size: 16,
@@ -351,9 +353,9 @@ class _AmalRow extends ConsumerWidget {
 
   static String _cadenceLabel(String cadence, BuildContext context) =>
       switch (cadence) {
-        'weekly:fri' => 'শুক্রবার',
-        'weekly:mon_thu' => 'সোম ও বৃহস্পতিবার',
-        'monthly:ayyam_beez' => 'আইয়ামে বীজ (১৩–১৫)',
+        'weekly:fri' => context.t('cadence_weekly_fri'),
+        'weekly:mon_thu' => context.t('cadence_weekly_mon_thu'),
+        'monthly:ayyam_beez' => context.t('cadence_ayyam_beez'),
         _ => '',
       };
 }

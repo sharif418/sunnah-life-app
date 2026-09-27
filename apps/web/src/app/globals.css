@@ -45,6 +45,7 @@
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-gold: var(--gold);
+  --color-gold-text: var(--gold-text);
   --color-gold-foreground: var(--gold-foreground);
   --color-gold-soft: var(--gold-soft);
   --color-alert: var(--alert);
@@ -99,8 +100,9 @@
   --warning-foreground: #ffffff;
   --gold: #c99a3b;
   --gold-foreground: #3b2b0e;
+  --gold-text: #b7791f; /* WCAG AA text variant (goldDeep) */
   --gold-soft: #f6ecd8;
-  --alert: #c0392b;
+  --alert: #b93527;
   --alert-soft: #fce4e4;
 }
 
@@ -145,6 +147,7 @@
   --warning-foreground: #241a05;
   --gold: #d9b25f;
   --gold-foreground: #241a05;
+  --gold-text: #d9b25f; /* passes AA on dark bg */
   --gold-soft: #2a2416;
   --alert: #e06a5a;
   --alert-soft: #3a211d;

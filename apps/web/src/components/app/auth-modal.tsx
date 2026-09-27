@@ -148,7 +148,7 @@ export function AuthModal() {
 
         <div className="rounded-xl bg-muted/60 p-3">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-2">
-            <Sparkles className="size-3.5 text-gold" /> ডেমো অ্যাকাউন্ট (এক ট্যাপে সাইন ইন)
+            <Sparkles className="size-3.5 text-gold-text-text" /> ডেমো অ্যাকাউন্ট (এক ট্যাপে সাইন ইন)
           </div>
           <div className="grid gap-1.5">
             {DEMO_ACCOUNTS.map((acc) => (

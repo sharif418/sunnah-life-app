@@ -1,0 +1,11 @@
+# gen-l10n config — Bengali is the template (primary) language.
+# Output is a regular package folder (NOT synthetic) so the generated
+# AppLocalizations is committed and importable as
+# `package:sunnah_life/l10n/generated/app_localizations.dart`.
+arb-dir: lib/l10n
+template-arb-file: app_bn.arb
+output-localization-file: app_localizations.dart
+output-dir: lib/l10n/generated
+# AppLocalizations.of(context) stays nullable → callers fall back to the
+# locale-keyed lookup (works in tests/galleries without a Localizations tree).
+nullable-getter: true

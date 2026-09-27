@@ -7,13 +7,15 @@ import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
 import { ApiError } from "../common/api-error";
 import { computeRequirements, monthsInLevelOf, nextLevelOf } from "../shared/levels";
+import { LevelsService } from "../levels/levels.service";
 import type { AssessmentSummary, DownlineNode, Gender, Level, User } from "../shared/domain";
 
 @Injectable()
 export class DawahService {
   constructor(
     private readonly rls: RlsService,
-    private readonly guard: GuardService
+    private readonly guard: GuardService,
+    private readonly levels: LevelsService
   ) {}
 
   /** GET /api/dawah — the da'ee's own dawah dashboard (daee and above). */
@@ -95,6 +97,20 @@ export class DawahService {
       };
     });
   }
+
+  /**
+   * GET /api/dawah/requirements (B6) — the signed-in member's LIVE checklist
+   * for their next level: one row per rule with {current, target, met} progress
+   * chips plus the auto-promotion hint. Same evaluation engine (LevelsService)
+   * as the nightly job and the admin promote.
+   */
+  async requirements(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    if (!["daee", "usrah_head", "invigilator", "full_admin"].includes(user.role)) {
+      throw new ApiError(403, "এই অংশটি দায়ী ও তত্ত্বাবধায়কদের জন্য");
+    }
+    return this.levels.requirementsFor(user);
+  }
 }
 
 @ApiTags("dawah")
@@ -106,5 +122,11 @@ export class DawahController {
   @ApiOperation({ summary: "Dawah dashboard: member code, downline, level requirements" })
   overview(@Req() req: AuthedRequest) {
     return this.service.overview(currentUser(req));
+  }
+
+  @Get("requirements")
+  @ApiOperation({ summary: "Live next-level checklist (progress chips + auto hint)" })
+  requirements(@Req() req: AuthedRequest) {
+    return this.service.requirements(currentUser(req));
   }
 }

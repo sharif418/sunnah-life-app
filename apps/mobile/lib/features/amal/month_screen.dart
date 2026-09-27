@@ -9,9 +9,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../api/api_client.dart';
 import '../../core/amal_engine.dart';
 import '../../core/bn_digits.dart';
-import '../../core/calendars.dart';
 import '../../core/date_keys.dart';
 import '../../design/design_tokens.dart';
+import '../../l10n/app_strings.dart';
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
 import '../../state/providers.dart';
@@ -89,12 +89,13 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
                   IconButton(
                     tooltip: context.t('month_prev'),
                     onPressed: () => _shiftMonth(-1),
-                    icon: const Icon(Icons.chevron_left),
+                    // Mirrors under RTL (previous points "backwards").
+                    icon: const DirectionalIcon(Icons.chevron_left),
                   ),
                   Expanded(
                     child: Center(
                       child: Text(
-                        _monthLabel(bn),
+                        _monthLabel(context),
                         style: Theme.of(context).textTheme.titleMedium
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
@@ -103,7 +104,7 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
                   IconButton(
                     tooltip: context.t('month_next'),
                     onPressed: () => _shiftMonth(1),
-                    icon: const Icon(Icons.chevron_right),
+                    icon: const DirectionalIcon(Icons.chevron_right),
                   ),
                 ],
               ),
@@ -125,7 +126,7 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
                               ),
                               child: CompletionRing(
                                 pct: byCat[cat] ?? 0,
-                                label: cat.labelBn,
+                                label: context.t(cat.labelKey),
                                 bengali: bn,
                               ),
                             ),
@@ -159,28 +160,14 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
     );
   }
 
-  String _monthLabel(bool bn) {
+  String _monthLabel(BuildContext context) {
     final d = parseKey(_anchor);
-    final y = bn ? toBn(d.year) : '${d.year}';
-    final m = bn ? gregMonthsBn[d.month - 1] : _gregMonthsEn[d.month - 1];
+    final lang = context.lang;
+    final y = lang.isBengali ? toBn(d.year) : '${d.year}';
+    final m = S.tr(lang, 'month_${d.month}');
     return '$m $y';
   }
 }
-
-const List<String> _gregMonthsEn = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-];
 
 /// The reusable heatmap widget (public — also exercised by widget tests):
 /// day-number header row + one row per amal, horizontally scrollable, with a
@@ -268,6 +255,8 @@ class MonthHeatmap extends ConsumerWidget {
                 ),
                 locked: locked,
                 isToday: isToday,
+                semanticsLabel:
+                    '${bengali ? toBn(int.parse(day.substring(8))) : day.substring(8)} · ${def.titleBn}',
                 onTap: () => _openDay(context, ref, day),
               ),
             const SizedBox(height: 4),
@@ -375,7 +364,7 @@ class MonthHeatmap extends ConsumerWidget {
                 subtitle: entry == null
                     ? null
                     : Text(
-                        '${_valueLabel(entry.value, def)} · ${entry.source}',
+                        '${_valueLabel(context, entry.value, def)} · ${entry.source}',
                         style: theme.textTheme.bodySmall,
                       ),
                 trailing: _PointsDot(points: points),
@@ -395,16 +384,17 @@ class MonthHeatmap extends ConsumerWidget {
     );
   }
 
-  String _valueLabel(Object? value, AmalDefinition def) => switch (value) {
-    'jamaat' => 'জামাতে',
-    'alone' => 'একা',
-    'qaza' => 'কাযা',
-    true => 'হয়েছে',
-    false => 'হয়নি',
-    num n => '${bengali ? toBn(n) : n} ${def.unit ?? ''}',
-    String s => s,
-    _ => '—',
-  };
+  String _valueLabel(BuildContext context, Object? value, AmalDefinition def) =>
+      switch (value) {
+        'jamaat' => context.t('amal_jamaat'),
+        'alone' => context.t('amal_alone'),
+        'qaza' => context.t('amal_qaza'),
+        true => context.t('amal_done'),
+        false => context.t('amal_not_done'),
+        num n => '${bengali ? toBn(n) : n} ${def.unit ?? ''}',
+        String s => s,
+        _ => '—',
+      };
 
   Future<void> _requestUnlock(
     BuildContext context,
@@ -424,7 +414,11 @@ class MonthHeatmap extends ConsumerWidget {
     try {
       await ref
           .read(apiProvider)
-          .amalUnlock(user.id, day, reason: 'মোবাইল অ্যাপ থেকে অনুরোধ');
+          .amalUnlock(
+            user.id,
+            day,
+            reason: context.t('amal_unlock_reason'),
+          );
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.t('amal_unlock_requested'))),

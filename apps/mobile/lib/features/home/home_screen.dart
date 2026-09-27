@@ -125,7 +125,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: SLSpacing.s4),
             Text(
-              '${bn ? toBn(now.day) : now.day} ${bn ? gregMonthsBn[now.month - 1] : now.month} '
+              '${bn ? toBn(now.day) : now.day} ${S.tr(lang, 'month_${now.month}')} '
               '${bn ? toBn(now.year) : now.year} · ${bnDate.formatted} · ${hijri.formatted}',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -168,7 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             const SizedBox(height: SLSpacing.s24),
             Center(
               child: Text(
-                'সব হিসাব অফলাইনে আপনার ফোনেই হয় · ${city?.nameEn ?? ''} ${bn ? toBn(profile.lat.toStringAsFixed(2)) : profile.lat.toStringAsFixed(2)}°, ${bn ? toBn(profile.lng.toStringAsFixed(2)) : profile.lng.toStringAsFixed(2)}°',
+                '${context.t('prayer_offline_chip')} · ${city?.nameEn ?? ''} ${bn ? toBn(profile.lat.toStringAsFixed(2)) : profile.lat.toStringAsFixed(2)}°, ${bn ? toBn(profile.lng.toStringAsFixed(2)) : profile.lng.toStringAsFixed(2)}°',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -543,7 +543,10 @@ class _BellButton extends StatelessWidget {
     final theme = Theme.of(context);
     return Semantics(
       button: true,
-      label: on ? 'ঘণ্টি বন্ধ করুন' : 'ঘণ্টি চালু করুন',
+      toggled: on,
+      label: on
+          ? context.t('prayer_bell_disable')
+          : context.t('prayer_bell_enable'),
       child: InkWell(
         onTap: onToggle,
         customBorder: const CircleBorder(),
@@ -607,8 +610,5 @@ class _ExactAlarmCard extends StatelessWidget {
   }
 }
 
-String _prayerLabel(PrayerKey key, Lang lang) => switch (lang) {
-  Lang.bn => prayerLabelsBn[key]!,
-  Lang.ar => prayerLabelsAr[key]!,
-  Lang.en => prayerLabelsEn[key]!,
-};
+String _prayerLabel(PrayerKey key, Lang lang) =>
+    S.tr(lang, 'waqt_${key.name}');

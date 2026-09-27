@@ -41,6 +41,7 @@ import 'features/onboarding/gender_completion_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
 import 'features/shared/widgets.dart';
 import 'l10n/app_strings.dart';
+import 'l10n/generated/app_localizations.dart';
 import 'models/domain.dart';
 import 'services/push_service.dart';
 import 'state/amal_state.dart';
@@ -254,16 +255,19 @@ class SunnahLifeApp extends ConsumerWidget {
     };
     return MaterialApp.router(
       title: 'সুন্নাহ লাইফ',
+      onGenerateTitle: (context) =>
+          AppLocalizations.of(context)?.app_title ?? 'সুন্নাহ লাইফ',
       debugShowCheckedModeBanner: false,
       theme: buildSunnahLightTheme(),
       darkTheme: buildSunnahDarkTheme(),
       themeMode: themeMode,
-      // Manual locale model (no flutter_localizations): force directionality
-      // so Arabic gets full RTL and bn/en stay LTR.
-      builder: (context, child) => Directionality(
-        textDirection: lang.isRtl ? TextDirection.rtl : TextDirection.ltr,
-        child: child!,
-      ),
+      // bn/en/ar with the generated AppLocalizations as the single source
+      // (ARB files in lib/l10n, Bengali template). RTL comes from the locale
+      // itself — Arabic flips the whole tree, and the language switcher in
+      // profile rebuilds this immediately (no restart).
+      locale: lang.locale,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       routerConfig: ref.watch(routerProvider),
     );
   }
@@ -288,7 +292,11 @@ class BootstrapGate extends ConsumerWidget {
       error: (e, _) => Directionality(
         textDirection: TextDirection.ltr,
         child: MaterialApp(
-          home: Scaffold(body: Center(child: Text('শুরু করা যায়নি: $e'))),
+          home: Scaffold(
+            body: Center(
+              child: Text('${S.tr(Lang.bn, 'boot_failed')}: $e'),
+            ),
+          ),
         ),
       ),
       data: (_) => const SunnahLifeApp(),
@@ -317,7 +325,7 @@ class _SplashLogo extends StatelessWidget {
         ),
         const SizedBox(height: SLSpacing.s16),
         Text(
-          'সুন্নাহ লাইফ',
+          S.tr(Lang.bn, 'app_title'),
           style: GoogleFonts.hindSiliguri(
             fontSize: 24,
             fontWeight: FontWeight.w700,

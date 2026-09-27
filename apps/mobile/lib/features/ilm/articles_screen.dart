@@ -48,7 +48,8 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
               padding: const EdgeInsets.all(SLSpacing.s16),
               children: [
                 TextButton.icon(
-                  icon: const Icon(Icons.arrow_back),
+                  // Mirrors automatically under RTL (back = forward arrow).
+                  icon: const DirectionalIcon(Icons.arrow_back),
                   label: Text(context.t('back')),
                   onPressed: () => setState(() => _openId = null),
                 ),

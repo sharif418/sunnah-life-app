@@ -1,7 +1,19 @@
-import { Req, Body, Controller, Get, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Req, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
-import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
+import {
+  IsArray,
+  IsBoolean,
+  IsDateString,
+  IsIn,
+  IsInt,
+  IsNotEmpty,
+  IsObject,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from "class-validator";
 import { addDays } from "../shared/calendars";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
@@ -13,6 +25,7 @@ import type { AuthedRequest } from "../common/auth.guard";
 import { ApiError } from "../common/api-error";
 import { Roles } from "../common/roles.decorator";
 import { RolesGuard } from "../common/roles.guard";
+import { LevelsService, requireBengaliReason } from "../levels/levels.service";
 import {
   bdToday,
   completion7dForUsers,
@@ -22,13 +35,12 @@ import {
   ownUsrahIds,
   type AmalDefRow,
 } from "../shared/amal";
-import { computeRequirements } from "../shared/levels";
-import { LEVEL_LABELS_BN } from "../shared/domain";
 import type {
   AmalCadence,
   AmalCategory,
   AmalInputType,
   AmalValue,
+  AssessmentSection,
   AuditEntry,
   Gender,
   Level,
@@ -77,6 +89,13 @@ export class AdminUserPatchDto {
   @IsOptional()
   @IsIn(CATEGORIES as unknown as string[], { message: "ক্যাটাগরি ঠিক নয়" })
   category?: UserCategory;
+
+  /** REQUIRED (Bengali) whenever gender actually changes. */
+  @ApiProperty({ required: false, example: "ভুল তথ্য সংশোধন — সদস্য নিজে অনুরোধ করেছেন" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string;
 }
 
 export class PromoteDto {
@@ -87,6 +106,13 @@ export class PromoteDto {
   @ApiProperty({ enum: LEVELS })
   @IsIn(LEVELS as unknown as string[], { message: "স্তর ঠিক নয়" })
   toLevel!: Level;
+
+  /** REQUIRED (Bengali) — recorded on the LevelTransition + audit entry. */
+  @ApiProperty({ example: "তারবিয়াত পরিষদের সিদ্ধান্তে সকল শর্ত পূরণ হয়েছে" })
+  @IsString({ message: "উন্নয়নের কারণ লিখুন" })
+  @IsNotEmpty({ message: "উন্নয়নের কারণ লিখুন" })
+  @MaxLength(500)
+  reason!: string;
 }
 
 export class BroadcastDto {
@@ -166,12 +192,218 @@ export class AmalCatalogDto {
   active?: boolean;
 }
 
+export class AmalCatalogPatchDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  titleBn?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  titleEn?: string;
+
+  @ApiProperty({ required: false, enum: AMAL_CATEGORIES })
+  @IsOptional()
+  @IsIn(AMAL_CATEGORIES as unknown as string[], { message: "ক্যাটাগরি ঠিক নয়" })
+  category?: AmalCategory;
+
+  @ApiProperty({ required: false, enum: INPUT_TYPES })
+  @IsOptional()
+  @IsIn(INPUT_TYPES as unknown as string[], { message: "ইনপুট ধরন ঠিক নয়" })
+  inputType?: AmalInputType;
+
+  @ApiProperty({ required: false, enum: CADENCES })
+  @IsOptional()
+  @IsIn(CADENCES as unknown as string[], { message: "পর্যায়ক্রম ঠিক নয়" })
+  cadence?: AmalCadence;
+
+  @ApiProperty({ required: false, type: Object })
+  @IsOptional()
+  @IsObject()
+  target?: Record<string, number> | null;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  unit?: string | null;
+
+  @ApiProperty({ required: false, enum: LEVELS })
+  @IsOptional()
+  @IsIn(LEVELS as unknown as string[], { message: "স্তর ঠিক নয়" })
+  minLevel?: Level;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  sortOrder?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  autoSource?: string | null;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+}
+
+export class AmalCatalogReorderDto {
+  @ApiProperty({ type: [String], example: ["salat_fajr", "tilawat"] })
+  @IsArray()
+  @IsString({ each: true, message: "আমলের কী তালিকা দিন" })
+  keys!: string[];
+}
+
+export class TemplateCreateDto {
+  @ApiProperty({ example: "farze_ain_v1" })
+  @IsString({ message: "টেমপ্লেটের কী (key) দিন" })
+  @IsNotEmpty({ message: "টেমপ্লেটের কী (key) দিন" })
+  key!: string;
+
+  @ApiProperty({ required: false, example: 2 })
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  version?: number;
+
+  @ApiProperty({ example: "ফরযে আইন মূল্যায়ন (সংশোধিত)" })
+  @IsString({ message: "বাংলা শিরোনাম দিন" })
+  @IsNotEmpty({ message: "বাংলা শিরোনাম দিন" })
+  titleBn!: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  titleEn?: string;
+
+  @ApiProperty({ type: Object })
+  @IsObject({ message: "বিভাগসমূহ (sections) দিন" })
+  sections!: unknown;
+}
+
+export class TemplatePatchDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  titleBn?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  titleEn?: string;
+
+  @ApiProperty({ required: false, type: Object })
+  @IsOptional()
+  @IsObject()
+  sections?: unknown;
+}
+
+export class UsrahCreateDto {
+  @ApiProperty({ example: "উসরা আল-হুদা" })
+  @IsString({ message: "উসরার নাম দিন" })
+  @IsNotEmpty({ message: "উসরার নাম দিন" })
+  @MaxLength(120)
+  name!: string;
+
+  @ApiProperty({ enum: GENDERS })
+  @IsIn(GENDERS as unknown as string[], { message: "লিঙ্গ ঠিক নয়" })
+  gender!: Gender;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  district?: string;
+}
+
+export class UsrahPatchDto {
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  name?: string;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  headUserId?: string | null;
+
+  @ApiProperty({ required: false, nullable: true })
+  @IsOptional()
+  invigilatorUserId?: string | null;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  district?: string | null;
+}
+
+export class UsrahMemberDto {
+  @ApiProperty()
+  @IsString({ message: "ব্যবহারকারী নির্বাচন করা হয়নি" })
+  @IsNotEmpty({ message: "ব্যবহারকারী নির্বাচন করা হয়নি" })
+  userId!: string;
+}
+
+export class LiveProgramDto {
+  @ApiProperty({ example: "সাপ্তাহিক তাফসীর মজলিস" })
+  @IsString({ message: "শিরোনাম দিন" })
+  @IsNotEmpty({ message: "শিরোনাম দিন" })
+  @MaxLength(200)
+  titleBn!: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  descBn?: string | null;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  hostName?: string | null;
+
+  @ApiProperty({ example: "2025-07-04T14:00:00.000Z" })
+  @IsDateString({}, { message: "শুরুর সময় ঠিকভাবে দিন" })
+  startsAt!: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsDateString({}, { message: "শেষের সময় ঠিকভাবে দিন" })
+  endsAt?: string | null;
+
+  /** YouTube video id OR a full watch/embed URL (id is extracted). */
+  @ApiProperty({ required: false, example: "dQw4w9WgXcQ" })
+  @IsOptional()
+  @IsString()
+  youtubeId?: string | null;
+
+  @ApiProperty({ required: false, enum: GENDERS })
+  @IsOptional()
+  @IsIn(GENDERS as unknown as string[], { message: "লিঙ্গ ঠিক নয়" })
+  gender?: Gender;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  recordingUrl?: string | null;
+}
+
 @Injectable()
 export class AdminService {
   constructor(
     private readonly rls: RlsService,
     private readonly guard: GuardService,
-    private readonly push: PushService
+    private readonly push: PushService,
+    private readonly levels: LevelsService
   ) {}
 
   /** GET /api/admin/overview — role-scoped dashboard. */
@@ -332,10 +564,14 @@ export class AdminService {
       if (dto.gender !== undefined) {
         if (!GENDERS.includes(dto.gender as Gender)) throw new ApiError(400, "লিঙ্গ ঠিক নয়");
         if (dto.gender !== target.gender) {
+          // B6: gender changes are full_admin-only AND need a Bengali reason —
+          // the audit entry must explain why the protected attribute moved.
+          const reason = requireBengaliReason(dto.reason);
           await this.guard.audit(user.id, "change_gender", "user", target.id, {
             userId: target.id,
             from: target.gender,
             to: dto.gender,
+            reason,
           });
           data.gender = dto.gender;
         }
@@ -400,10 +636,12 @@ export class AdminService {
   }
 
   /**
-   * POST /api/admin/promote — full_admin promotes a user one level up. For the
-   * muhibbus-sunnah promotion the tarbiyah requirements are validated; anything
-   * unmet → 422 with the missing requirements in Bengali. Writes a
-   * LevelTransition, an audit entry and a reminder for the user.
+   * POST /api/admin/promote — full_admin promotes a user one level up
+   * (manual override; a Bengali reason is REQUIRED and lands on the
+   * LevelTransition + audit entry). For the muhibbus-sunnah promotion the
+   * tarbiyah requirements are validated; anything unmet → 422 with the
+   * missing requirements in Bengali. The nightly "levels" job runs the same
+   * evaluation with method "auto".
    */
   async promote(viewer: User | null, dto: PromoteDto) {
     const user = this.guard.requireUser(viewer);
@@ -411,62 +649,76 @@ export class AdminService {
     if (!dto.userId) throw new ApiError(400, "ব্যবহারকারী নির্বাচন করা হয়নি");
     const toLevel = dto.toLevel;
     if (!toLevel || !LEVELS.includes(toLevel)) throw new ApiError(400, "স্তর ঠিক নয়");
+    const reason = requireBengaliReason(dto.reason);
 
-    return this.rls.run(user, async (tx) => {
+    const result = await this.rls.run(user, async (tx) => {
       const target = await tx.user.findUnique({ where: { id: dto.userId } });
       if (!target) throw new ApiError(404, "ব্যবহারকারী পাওয়া যায়নি");
       if (target.level === toLevel) throw new ApiError(400, "ব্যবহারকারী ইতিমধ্যেই এই স্তরে আছেন");
 
-      const fromLevel = target.level;
       const domainUser = toDomainUser(target as never);
 
       // requirement validation applies to the muhibbus-sunnah promotion
       if (toLevel === "muhibbus_sunnah") {
-        const requirements = await computeRequirements(tx, domainUser);
-        const missing = requirements.filter((r) => !r.done);
+        const { checklist } = await this.levels.evaluate(tx, domainUser);
+        const missing = checklist.rows.filter((r) => r.autoChecked && !r.met);
         if (missing.length) {
-          throw new ApiError(422, `চাহিদা পূরণ হয়নি: ${missing.map((r) => r.label).join("; ")}`);
+          throw new ApiError(422, `চাহিদা পূরণ হয়নি: ${missing.map((r) => r.labelBn).join("; ")}`);
         }
       }
 
-      const now = new Date();
-      const updated = await tx.user.update({
-        where: { id: target.id },
-        data: { level: toLevel, levelStartedAt: now },
-      });
-
-      await tx.levelTransition.create({
-        data: {
-          userId: target.id,
-          fromLevel,
-          toLevel,
-          evidenceJson: {
-            requirements: (await computeRequirements(tx, toDomainUser(updated as never))).map((r) => ({
-              key: r.key,
-              done: r.done,
-            })),
-            promotedBy: user.id,
-          } as never,
+      const outcome = await this.levels.promoteInTx(tx, domainUser, {
+        toLevel,
+        method: "admin",
+        reason,
+        actorId: user.id,
+        evidence: {
+          promotedBy: user.id,
+          reason,
         },
       });
+      if (outcome.skipped) {
+        throw new ApiError(409, "এই স্তর থেকে ইতিমধ্যেই একটি উন্নয়ন রেকর্ড হয়েছে");
+      }
 
       await this.guard.audit(user.id, "promote_level", "user", target.id, {
         userId: target.id,
-        fromLevel,
+        fromLevel: outcome.fromLevel,
         toLevel,
+        method: "admin",
+        reason,
       });
 
+      const message = this.levels.promotionMessage(toLevel);
       await tx.reminder.create({
         data: {
           userId: target.id,
           kind: "review",
-          title: "আপনি নতুন স্তরে উন্নীত হয়েছেন",
-          body: `অভিনন্দন! আপনি এখন ${LEVEL_LABELS_BN[toLevel]} স্তরে আছেন।`,
+          title: message.title,
+          body: message.body,
+          link: "dawah",
         },
       });
 
-      return { user: toDomainUser(updated as never) };
+      return { user: outcome.user, message, targetId: target.id };
     });
+
+    // push fan-out AFTER the RLS transaction commits (never fails the promote)
+    try {
+      await this.push.send(
+        [result.targetId],
+        {
+          title: result.message.title,
+          body: result.message.body,
+          deepLink: DEEP_LINKS.dawah,
+        },
+        { actor: user }
+      );
+    } catch {
+      // push transport hiccup — the transition + reminder already landed
+    }
+
+    return { user: result.user };
   }
 
   /**
@@ -639,6 +891,543 @@ export class AdminService {
     return { definitions: rows.map(mapDefinition) };
   }
 
+  /** GET /api/admin/amal-catalog — full_admin: ALL definitions incl. inactive. */
+  async listCatalog(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const rows = (await this.rls.run(user, (tx) =>
+      tx.amalDefinition.findMany({ orderBy: [{ sortOrder: "asc" }, { key: "asc" }] })
+    )) as unknown as (AmalDefRow & { active: boolean })[];
+    return {
+      definitions: rows.map((r) => ({ ...mapDefinition(r), active: r.active })),
+    };
+  }
+
+  /** PATCH /api/admin/amal-catalog/:key — full_admin: partial update (audited). */
+  async patchCatalog(viewer: User | null, key: string, dto: AmalCatalogPatchDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const cleanKey = (key ?? "").trim();
+    if (!cleanKey) throw new ApiError(400, "আমলের কী (key) দিন");
+
+    const updated = await this.rls.run(user, async (tx) => {
+      const existing = await tx.amalDefinition.findUnique({ where: { key: cleanKey } });
+      if (!existing) throw new ApiError(404, "আমলটি পাওয়া যায়নি");
+
+      const data: Record<string, unknown> = {};
+      if (dto.titleBn !== undefined) {
+        const t = dto.titleBn.trim();
+        if (!t) throw new ApiError(400, "বাংলা শিরোনাম দিন");
+        data.titleBn = t;
+      }
+      if (dto.titleEn !== undefined) data.titleEn = dto.titleEn.trim();
+      if (dto.category !== undefined) {
+        if (!AMAL_CATEGORIES.includes(dto.category)) throw new ApiError(400, "ক্যাটাগরি ঠিক নয়");
+        data.category = dto.category;
+      }
+      if (dto.inputType !== undefined) {
+        if (!INPUT_TYPES.includes(dto.inputType)) throw new ApiError(400, "ইনপুট ধরন ঠিক নয়");
+        data.inputType = dto.inputType;
+      }
+      if (dto.cadence !== undefined) {
+        if (!CADENCES.includes(dto.cadence)) throw new ApiError(400, "পর্যায়ক্রম ঠিক নয়");
+        data.cadence = dto.cadence;
+      }
+      if (dto.target !== undefined) data.targetJson = dto.target as never;
+      if (dto.unit !== undefined) data.unit = dto.unit != null ? String(dto.unit) : null;
+      if (dto.minLevel !== undefined) {
+        if (!LEVELS.includes(dto.minLevel)) throw new ApiError(400, "স্তর ঠিক নয়");
+        data.minLevel = dto.minLevel;
+      }
+      if (dto.sortOrder !== undefined) {
+        if (!Number.isFinite(dto.sortOrder) || dto.sortOrder < 0) throw new ApiError(400, "ক্রম ঠিক নয়");
+        data.sortOrder = dto.sortOrder;
+      }
+      if (dto.autoSource !== undefined) data.autoSource = dto.autoSource != null ? String(dto.autoSource) : null;
+      if (dto.active !== undefined) data.active = dto.active;
+
+      if (!Object.keys(data).length) throw new ApiError(400, "কোনো পরিবর্তন দেওয়া হয়নি");
+
+      const row = await tx.amalDefinition.update({ where: { key: cleanKey }, data: data as never });
+      await this.guard.audit(user.id, "update_amal_definition", "amal_definition", row.id, {
+        key: cleanKey,
+        changes: data,
+      });
+      return row;
+    });
+
+    invalidateDefinitionCache();
+    return { definition: mapDefinition(updated as unknown as AmalDefRow) };
+  }
+
+  /**
+   * PATCH /api/admin/amal-catalog — full_admin: reorder. `keys` lists the
+   * definitions in the desired order; each gets sortOrder = its index.
+   * Keys not in the list keep their relative order after the listed ones.
+   */
+  async reorderCatalog(viewer: User | null, dto: AmalCatalogReorderDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const keys = [...new Set((dto.keys ?? []).map((k) => String(k).trim()).filter(Boolean))];
+    if (!keys.length) throw new ApiError(400, "আমলের কী তালিকা দিন");
+
+    await this.rls.run(user, async (tx) => {
+      const rows = await tx.amalDefinition.findMany({ select: { key: true } });
+      const known = new Set(rows.map((r) => r.key));
+      const unknown = keys.filter((k) => !known.has(k));
+      if (unknown.length) throw new ApiError(404, `আমল পাওয়া যায়নি: ${unknown.join(", ")}`);
+
+      await Promise.all(
+        keys.map((key, i) =>
+          tx.amalDefinition.update({ where: { key }, data: { sortOrder: i } })
+        )
+      );
+      await this.guard.audit(user.id, "reorder_amal_catalog", "amal_definition", null, {
+        keys,
+      });
+    });
+
+    invalidateDefinitionCache();
+    const rows = (await this.rls.run(user, (tx) =>
+      tx.amalDefinition.findMany({ orderBy: [{ sortOrder: "asc" }, { key: "asc" }] })
+    )) as unknown as (AmalDefRow & { active: boolean })[];
+    return { definitions: rows.map((r) => ({ ...mapDefinition(r), active: r.active })) };
+  }
+
+  // ── Versioned assessment templates (B6) ──────────────────────────────
+
+  /** GET /api/admin/assessment-templates — full_admin: ALL versions. */
+  async listTemplates(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const rows = (await this.rls.run(user, (tx) =>
+      tx.assessmentTemplate.findMany({ orderBy: [{ key: "asc" }, { version: "desc" }] })
+    )) as unknown as {
+      id: string; key: string; version: number; titleBn: string; titleEn: string;
+      sectionsJson: unknown; active: boolean; createdAt: Date;
+    }[];
+    return {
+      templates: rows.map((r) => ({
+        id: r.id,
+        key: r.key,
+        version: r.version,
+        titleBn: r.titleBn,
+        titleEn: r.titleEn,
+        active: r.active,
+        sections: sanitizeSections(r.sectionsJson),
+        createdAt: r.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  /**
+   * POST /api/admin/assessment-templates — full_admin: create a new version.
+   * A brand-new key is born ACTIVE; an extra version of an existing key starts
+   * INACTIVE (activate it with PATCH after review — activation is exclusive).
+   */
+  async createTemplate(viewer: User | null, dto: TemplateCreateDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const key = (dto.key ?? "").trim();
+    if (!key) throw new ApiError(400, "টেমপ্লেটের কী (key) দিন");
+    const titleBn = (dto.titleBn ?? "").trim();
+    if (!titleBn) throw new ApiError(400, "বাংলা শিরোনাম দিন");
+    const sections = sanitizeSections(dto.sections);
+    if (!sections.length) throw new ApiError(400, "অন্তত একটি বিভাগ (section) দিন");
+
+    const created = await this.rls.run(user, async (tx) => {
+      const family = await tx.assessmentTemplate.findMany({ where: { key } });
+      const version =
+        dto.version ?? (family.length ? Math.max(...family.map((t) => t.version)) + 1 : 1);
+      if (family.some((t) => t.version === version)) {
+        throw new ApiError(409, `এই সংস্করণটি আগেই আছে (${key} v${version})`);
+      }
+      const active = family.length === 0;
+
+      const row = await tx.assessmentTemplate.create({
+        data: {
+          key,
+          version,
+          titleBn,
+          titleEn: (dto.titleEn ?? "").trim() || key,
+          sectionsJson: sections as never,
+          active,
+        },
+      });
+      await this.guard.audit(user.id, "create_assessment_template", "assessment_template", row.id, {
+        key,
+        version,
+        active,
+      });
+      return row;
+    });
+
+    return {
+      template: {
+        id: created.id,
+        key: created.key,
+        version: created.version,
+        titleBn: created.titleBn,
+        titleEn: created.titleEn,
+        active: created.active,
+        sections,
+        createdAt: created.createdAt.toISOString(),
+      },
+    };
+  }
+
+  /**
+   * PATCH /api/admin/assessment-templates/:id — full_admin: activate/
+   * deactivate (exclusive per key) or edit title/sections of an INACTIVE
+   * version (active versions are immutable — create a new version instead).
+   */
+  async patchTemplate(viewer: User | null, id: string, dto: TemplatePatchDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const row = await tx.assessmentTemplate.findUnique({ where: { id } });
+      if (!row) throw new ApiError(404, "টেমপ্লেট পাওয়া যায়নি");
+
+      const data: Record<string, unknown> = {};
+      if (dto.titleBn !== undefined) {
+        const t = dto.titleBn.trim();
+        if (!t) throw new ApiError(400, "বাংলা শিরোনাম দিন");
+        data.titleBn = t;
+      }
+      if (dto.titleEn !== undefined) data.titleEn = dto.titleEn.trim() || row.key;
+      if (dto.sections !== undefined) {
+        const sections = sanitizeSections(dto.sections);
+        if (!sections.length) throw new ApiError(400, "অন্তত একটি বিভাগ (section) দিন");
+        data.sectionsJson = sections as never;
+      }
+
+      if (dto.active !== undefined && dto.active !== row.active) {
+        if (dto.active) {
+          // exclusive activation — deactivate the siblings of the same key
+          await tx.assessmentTemplate.updateMany({
+            where: { key: row.key, id: { not: row.id } },
+            data: { active: false },
+          });
+        } else {
+          const siblings = await tx.assessmentTemplate.count({
+            where: { key: row.key, active: true, id: { not: row.id } },
+          });
+          if (!siblings) throw new ApiError(400, "সক্রিয় সংস্করণ বাদ দেওয়া যাবে না — আগে অন্যটি সক্রিয় করুন");
+        }
+        data.active = dto.active;
+      }
+
+      if (Object.keys(data).some((k) => k !== "active") && row.active) {
+        throw new ApiError(400, "সক্রিয় সংস্করণ সম্পাদনা করা যাবে না — নতুন সংস্করণ তৈরি করুন");
+      }
+      if (!Object.keys(data).length) throw new ApiError(400, "কোনো পরিবর্তন দেওয়া হয়নি");
+
+      const updated = await tx.assessmentTemplate.update({ where: { id }, data: data as never });
+      await this.guard.audit(user.id, "update_assessment_template", "assessment_template", row.id, {
+        key: row.key,
+        version: row.version,
+        changes: data,
+      });
+      return {
+        template: {
+          id: updated.id,
+          key: updated.key,
+          version: updated.version,
+          titleBn: updated.titleBn,
+          titleEn: updated.titleEn,
+          active: updated.active,
+          sections: sanitizeSections(updated.sectionsJson),
+          createdAt: updated.createdAt.toISOString(),
+        },
+      };
+    });
+  }
+
+  // ── Usrah management (B6) ─────────────────────────────────────────────
+
+  /** POST /api/admin/usrah — full_admin: create (name + gender). */
+  async createUsrah(viewer: User | null, dto: UsrahCreateDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const name = (dto.name ?? "").trim();
+    if (!name) throw new ApiError(400, "উসরার নাম দিন");
+    if (!GENDERS.includes(dto.gender)) throw new ApiError(400, "লিঙ্গ ঠিক নয়");
+
+    return this.rls.run(user, async (tx) => {
+      const usrah = await tx.usrah.create({
+        data: {
+          name,
+          gender: dto.gender,
+          district: (dto.district ?? "").trim() || null,
+        },
+      });
+      await this.guard.audit(user.id, "create_usrah", "usrah", usrah.id, {
+        name,
+        gender: dto.gender,
+      });
+      return { usrah: { ...usrah, memberCount: 0 } };
+    });
+  }
+
+  /**
+   * PATCH /api/admin/usrah/:id — full_admin: rename and/or assign head +
+   * invigilator. Assignees must match the usrah's gender; a head cannot head
+   * a second usrah (unique headUserId).
+   */
+  async patchUsrah(viewer: User | null, id: string, dto: UsrahPatchDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const usrah = await tx.usrah.findUnique({ where: { id } });
+      if (!usrah) throw new ApiError(404, "উসরা পাওয়া যায়নি");
+
+      const data: Record<string, unknown> = {};
+      if (dto.name !== undefined) {
+        const n = dto.name.trim();
+        if (!n) throw new ApiError(400, "উসরার নাম দিন");
+        data.name = n;
+      }
+      if (dto.district !== undefined) data.district = dto.district?.trim() || null;
+
+      if (dto.headUserId !== undefined) {
+        if (dto.headUserId === null) {
+          data.headUserId = null;
+        } else {
+          const head = await tx.user.findUnique({ where: { id: dto.headUserId } });
+          if (!head) throw new ApiError(404, "উসরা প্রধান পাওয়া যায়নি");
+          if (head.gender !== usrah.gender) {
+            throw new ApiError(400, "উসরা প্রধানের লিঙ্গ উসরার লিঙ্গের সাথে মিলতে হবে");
+          }
+          const other = await tx.usrah.findFirst({
+            where: { headUserId: dto.headUserId, id: { not: usrah.id } },
+          });
+          if (other) throw new ApiError(400, "এই সদস্য ইতিমধ্যেই অন্য উসরার প্রধান");
+          data.headUserId = dto.headUserId;
+        }
+      }
+
+      if (dto.invigilatorUserId !== undefined) {
+        if (dto.invigilatorUserId === null) {
+          data.invigilatorUserId = null;
+        } else {
+          const inv = await tx.user.findUnique({ where: { id: dto.invigilatorUserId } });
+          if (!inv) throw new ApiError(404, "পরিদর্শক পাওয়া যায়নি");
+          if (inv.gender !== usrah.gender) {
+            throw new ApiError(400, "পরিদর্শকের লিঙ্গ উসরার লিঙ্গের সাথে মিলতে হবে");
+          }
+          data.invigilatorUserId = dto.invigilatorUserId;
+        }
+      }
+
+      if (!Object.keys(data).length) throw new ApiError(400, "কোনো পরিবর্তন দেওয়া হয়নি");
+
+      const updated = await tx.usrah.update({ where: { id }, data: data as never });
+      await this.guard.audit(user.id, "update_usrah", "usrah", id, { changes: data });
+      return { usrah: updated };
+    });
+  }
+
+  /**
+   * POST /api/admin/usrah/:id/members {userId} — full_admin: add or MOVE a
+   * member into the usrah (gender must match; RLS re-checks visibility of the
+   * user row). Every move is audited.
+   */
+  async addUsrahMember(viewer: User | null, id: string, dto: UsrahMemberDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    if (!dto.userId) throw new ApiError(400, "ব্যবহারকারী নির্বাচন করা হয়নি");
+
+    return this.rls.run(user, async (tx) => {
+      const usrah = await tx.usrah.findUnique({ where: { id } });
+      if (!usrah) throw new ApiError(404, "উসরা পাওয়া যায়নি");
+
+      const member = await tx.user.findUnique({ where: { id: dto.userId } });
+      if (!member) throw new ApiError(404, "ব্যবহারকারী পাওয়া যায়নি");
+      if (member.gender !== usrah.gender) {
+        throw new ApiError(400, "সদস্যের লিঙ্গ উসরার লিঙ্গের সাথে মিলতে হবে");
+      }
+      if (member.usrahId === usrah.id) {
+        throw new ApiError(400, "সদস্য ইতিমধ্যেই এই উসরায় আছেন");
+      }
+
+      await tx.user.update({ where: { id: member.id }, data: { usrahId: usrah.id } });
+      await this.guard.audit(user.id, "move_usrah_member", "usrah", usrah.id, {
+        userId: member.id,
+        fromUsrahId: member.usrahId ?? null,
+        toUsrahId: usrah.id,
+      });
+      return { ok: true, usrahId: usrah.id };
+    });
+  }
+
+  /** DELETE /api/admin/usrah/:id/members/:userId — full_admin: remove member. */
+  async removeUsrahMember(viewer: User | null, id: string, userId: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    if (!userId) throw new ApiError(400, "ব্যবহারকারী নির্বাচন করা হয়নি");
+
+    return this.rls.run(user, async (tx) => {
+      const usrah = await tx.usrah.findUnique({ where: { id } });
+      if (!usrah) throw new ApiError(404, "উসরা পাওয়া যায়নি");
+
+      const member = await tx.user.findUnique({ where: { id: userId } });
+      if (!member) throw new ApiError(404, "ব্যবহারকারী পাওয়া যায়নি");
+      if (member.usrahId !== usrah.id) {
+        throw new ApiError(400, "সদস্য এই উসরায় নেই");
+      }
+
+      await tx.user.update({ where: { id: member.id }, data: { usrahId: null } });
+      await this.guard.audit(user.id, "move_usrah_member", "usrah", usrah.id, {
+        userId: member.id,
+        fromUsrahId: usrah.id,
+        toUsrahId: null,
+      });
+      return { ok: true };
+    });
+  }
+
+  // ── Level transitions history (B6) ────────────────────────────────────
+
+  /**
+   * GET /api/admin/level-transitions — usrah_head+: promotion history,
+   * scoped by RLS (member sees own, head+ sees their usrah, full_admin sees
+   * all) with user names + Bengali level labels.
+   */
+  async levelTransitions(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    if (!this.guard.isSupervisor(user)) throw new ApiError(403, "অ্যাডমিন প্যানেল দেখার অনুমতি নেই");
+
+    return this.rls.run(user, async (tx) => {
+      const rows = await tx.levelTransition.findMany({
+        orderBy: { at: "desc" },
+        take: 100,
+      });
+      const userIds = [...new Set(rows.map((r) => r.userId))];
+      const users = userIds.length
+        ? await tx.user.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true, memberCode: true, gender: true } })
+        : [];
+      const byId = new Map(users.map((u) => [u.id, u]));
+
+      return {
+        transitions: rows
+          .filter((r) => byId.has(r.userId))
+          .map((r) => {
+            const u = byId.get(r.userId)!;
+            return {
+              id: r.id,
+              userId: r.userId,
+              userName: u.name,
+              memberCode: u.memberCode,
+              gender: u.gender as Gender,
+              fromLevel: r.fromLevel as Level,
+              toLevel: r.toLevel as Level,
+              method: r.method as "auto" | "admin",
+              reason: r.reason,
+              actorId: r.actorId,
+              at: r.at.toISOString(),
+            };
+          }),
+      };
+    });
+  }
+
+  // ── Live program CRUD (B6) ─────────────────────────────────────────────
+
+  /** POST /api/admin/live — full_admin: schedule a program (audited). */
+  async createLive(viewer: User | null, dto: LiveProgramDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const startsAt = new Date(dto.startsAt);
+      if (isNaN(startsAt.getTime())) throw new ApiError(400, "শুরুর সময় ঠিকভাবে দিন");
+      const endsAt = dto.endsAt ? new Date(dto.endsAt) : null;
+      if (endsAt && isNaN(endsAt.getTime())) throw new ApiError(400, "শেষের সময় ঠিকভাবে দিন");
+
+      const row = await tx.liveProgram.create({
+        data: {
+          titleBn: dto.titleBn.trim(),
+          descBn: dto.descBn?.trim() || null,
+          hostName: dto.hostName?.trim() || null,
+          startsAt,
+          endsAt,
+          youtubeId: extractYoutubeId(dto.youtubeId ?? null),
+          gender: dto.gender ?? "M",
+          status: startsAt.getTime() > Date.now() ? "upcoming" : "live",
+          recordingUrl: dto.recordingUrl?.trim() || null,
+        },
+      });
+      await this.guard.audit(user.id, "create_live_program", "live_program", row.id, {
+        titleBn: row.titleBn,
+        gender: row.gender,
+        startsAt: row.startsAt.toISOString(),
+      });
+      return { program: mapLiveProgram(row) };
+    });
+  }
+
+  /** PATCH /api/admin/live/:id — full_admin: update (audited, old→new). */
+  async patchLive(viewer: User | null, id: string, dto: LiveProgramDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const row = await tx.liveProgram.findUnique({ where: { id } });
+      if (!row) throw new ApiError(404, "প্রোগ্রাম পাওয়া যায়নি");
+
+      const data: Record<string, unknown> = {};
+      if (dto.titleBn !== undefined) {
+        const t = dto.titleBn.trim();
+        if (!t) throw new ApiError(400, "শিরোনাম দিন");
+        data.titleBn = t;
+      }
+      if (dto.descBn !== undefined) data.descBn = dto.descBn?.trim() || null;
+      if (dto.hostName !== undefined) data.hostName = dto.hostName?.trim() || null;
+      if (dto.startsAt !== undefined) {
+        const d = new Date(dto.startsAt);
+        if (isNaN(d.getTime())) throw new ApiError(400, "শুরুর সময় ঠিকভাবে দিন");
+        data.startsAt = d;
+      }
+      if (dto.endsAt !== undefined) {
+        const d = dto.endsAt ? new Date(dto.endsAt) : null;
+        if (d && isNaN(d.getTime())) throw new ApiError(400, "শেষের সময় ঠিকভাবে দিন");
+        data.endsAt = d;
+      }
+      if (dto.youtubeId !== undefined) data.youtubeId = extractYoutubeId(dto.youtubeId);
+      if (dto.gender !== undefined) {
+        if (!GENDERS.includes(dto.gender)) throw new ApiError(400, "লিঙ্গ ঠিক নয়");
+        data.gender = dto.gender;
+      }
+      if (dto.recordingUrl !== undefined) data.recordingUrl = dto.recordingUrl?.trim() || null;
+
+      if (!Object.keys(data).length) throw new ApiError(400, "কোনো পরিবর্তন দেওয়া হয়নি");
+
+      const updated = await tx.liveProgram.update({ where: { id }, data: data as never });
+      await this.guard.audit(user.id, "update_live_program", "live_program", id, {
+        changes: data,
+      });
+      return { program: mapLiveProgram(updated) };
+    });
+  }
+
+  /** DELETE /api/admin/live/:id — full_admin: remove (audited). */
+  async deleteLive(viewer: User | null, id: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    await this.rls.run(user, async (tx) => {
+      const row = await tx.liveProgram.findUnique({ where: { id } });
+      if (!row) throw new ApiError(404, "প্রোগ্রাম পাওয়া যায়নি");
+      await tx.liveProgram.delete({ where: { id } });
+      await this.guard.audit(user.id, "delete_live_program", "live_program", id, {
+        titleBn: row.titleBn,
+      });
+    });
+    return { ok: true };
+  }
+
   /** GET /api/admin/audit — full_admin: last 100 audit entries with actor names. */
   async audit(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -692,6 +1481,65 @@ async function nextMemberCode(tx: import("@prisma/client").Prisma.TransactionCli
   return `DS-${String(max + 1).padStart(6, "0")}`;
 }
 
+/** Sanitize a template body into typed sections (same rule as mapTemplate). */
+function sanitizeSections(raw: unknown): AssessmentSection[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .filter((s): s is Record<string, unknown> => !!s && typeof s === "object")
+    .map((s) => ({
+      key: String(s.key ?? "").trim(),
+      titleBn: String(s.titleBn ?? "").trim(),
+      criteria: Array.isArray(s.criteria)
+        ? (s.criteria as unknown[])
+            .filter((c): c is Record<string, unknown> => !!c && typeof c === "object")
+            .map((c) => ({
+              key: String(c.key ?? "").trim(),
+              titleBn: String(c.titleBn ?? "").trim(),
+              ...(c.hintBn != null && String(c.hintBn).trim() ? { hintBn: String(c.hintBn) } : {}),
+            }))
+            .filter((c) => c.key && c.titleBn)
+        : [],
+    }))
+    .filter((s) => s.key && s.titleBn && s.criteria.length > 0);
+}
+
+/** Accept a bare YouTube id OR a watch/youtu.be/short URL — returns the id. */
+function extractYoutubeId(input: string | null | undefined): string | null {
+  const raw = (input ?? "").trim();
+  if (!raw) return null;
+  if (/^[A-Za-z0-9_-]{11}$/.test(raw)) return raw;
+  const m =
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/.exec(raw);
+  return m ? m[1] : null;
+}
+
+/** Map a LiveProgram row to the member-facing shape (same fields as /api/live). */
+function mapLiveProgram(row: {
+  id: string;
+  titleBn: string;
+  descBn: string | null;
+  hostName: string | null;
+  startsAt: Date;
+  endsAt: Date | null;
+  youtubeId: string | null;
+  gender: string;
+  status: string;
+  recordingUrl: string | null;
+}) {
+  return {
+    id: row.id,
+    titleBn: row.titleBn,
+    descBn: row.descBn,
+    hostName: row.hostName,
+    startsAt: row.startsAt.toISOString(),
+    endsAt: row.endsAt?.toISOString() ?? null,
+    youtubeId: row.youtubeId,
+    gender: row.gender as Gender,
+    status: row.status as "upcoming" | "live" | "past",
+    recordingUrl: row.recordingUrl,
+  };
+}
+
 @ApiTags("admin")
 @Controller("admin")
 @UseGuards(RolesGuard)
@@ -714,7 +1562,7 @@ export class AdminController {
   }
 
   @Patch("users")
-  @ApiOperation({ summary: "full_admin: change role/gender/usrah/category (audited)" })
+  @ApiOperation({ summary: "full_admin: change role/gender/usrah/category (audited; gender needs reason)" })
   @Roles("full_admin")
   patchUser(@Body() dto: AdminUserPatchDto, @Req() req: AuthedRequest) {
     return this.service.patchUser(currentUser(req), dto);
@@ -730,8 +1578,14 @@ export class AdminController {
     return this.service.monthGrid(currentUser(req), userId, month);
   }
 
+  @Get("level-transitions")
+  @ApiOperation({ summary: "Level promotion history (RLS-scoped: own/usrah/all)" })
+  levelTransitions(@Req() req: AuthedRequest) {
+    return this.service.levelTransitions(currentUser(req));
+  }
+
   @Post("promote")
-  @ApiOperation({ summary: "full_admin: promote a level (validates requirements)" })
+  @ApiOperation({ summary: "full_admin: promote a level (reason required, validates requirements)" })
   @Roles("full_admin")
   promote(@Body() dto: PromoteDto, @Req() req: AuthedRequest) {
     return this.service.promote(currentUser(req), dto);
@@ -743,11 +1597,106 @@ export class AdminController {
     return this.service.broadcast(currentUser(req), dto);
   }
 
+  @Get("amal-catalog")
+  @ApiOperation({ summary: "full_admin: whole amal catalog incl. inactive" })
+  @Roles("full_admin")
+  listCatalog(@Req() req: AuthedRequest) {
+    return this.service.listCatalog(currentUser(req));
+  }
+
   @Post("amal-catalog")
   @ApiOperation({ summary: "full_admin: upsert an amal definition by key" })
   @Roles("full_admin")
   upsertCatalog(@Body() dto: AmalCatalogDto, @Req() req: AuthedRequest) {
     return this.service.upsertCatalog(currentUser(req), dto);
+  }
+
+  @Patch("amal-catalog")
+  @ApiOperation({ summary: "full_admin: reorder the catalog (array of keys)" })
+  @Roles("full_admin")
+  reorderCatalog(@Body() dto: AmalCatalogReorderDto, @Req() req: AuthedRequest) {
+    return this.service.reorderCatalog(currentUser(req), dto);
+  }
+
+  @Patch("amal-catalog/:key")
+  @ApiOperation({ summary: "full_admin: partial update of one definition" })
+  @Roles("full_admin")
+  patchCatalog(@Param("key") key: string, @Body() dto: AmalCatalogPatchDto, @Req() req: AuthedRequest) {
+    return this.service.patchCatalog(currentUser(req), key, dto);
+  }
+
+  @Get("assessment-templates")
+  @ApiOperation({ summary: "full_admin: all template versions (active flag included)" })
+  @Roles("full_admin")
+  listTemplates(@Req() req: AuthedRequest) {
+    return this.service.listTemplates(currentUser(req));
+  }
+
+  @Post("assessment-templates")
+  @ApiOperation({ summary: "full_admin: create a new template version" })
+  @Roles("full_admin")
+  createTemplate(@Body() dto: TemplateCreateDto, @Req() req: AuthedRequest) {
+    return this.service.createTemplate(currentUser(req), dto);
+  }
+
+  @Patch("assessment-templates/:id")
+  @ApiOperation({ summary: "full_admin: activate/deactivate or edit an inactive version" })
+  @Roles("full_admin")
+  patchTemplate(@Param("id") id: string, @Body() dto: TemplatePatchDto, @Req() req: AuthedRequest) {
+    return this.service.patchTemplate(currentUser(req), id, dto);
+  }
+
+  @Post("usrah")
+  @ApiOperation({ summary: "full_admin: create an usrah (name + gender)" })
+  @Roles("full_admin")
+  createUsrah(@Body() dto: UsrahCreateDto, @Req() req: AuthedRequest) {
+    return this.service.createUsrah(currentUser(req), dto);
+  }
+
+  @Patch("usrah/:id")
+  @ApiOperation({ summary: "full_admin: rename / assign head + invigilator (gender-validated)" })
+  @Roles("full_admin")
+  patchUsrah(@Param("id") id: string, @Body() dto: UsrahPatchDto, @Req() req: AuthedRequest) {
+    return this.service.patchUsrah(currentUser(req), id, dto);
+  }
+
+  @Post("usrah/:id/members")
+  @ApiOperation({ summary: "full_admin: add/move a member into the usrah (audited)" })
+  @Roles("full_admin")
+  addUsrahMember(@Param("id") id: string, @Body() dto: UsrahMemberDto, @Req() req: AuthedRequest) {
+    return this.service.addUsrahMember(currentUser(req), id, dto);
+  }
+
+  @Delete("usrah/:id/members/:userId")
+  @ApiOperation({ summary: "full_admin: remove a member from the usrah (audited)" })
+  @Roles("full_admin")
+  removeUsrahMember(
+    @Param("id") id: string,
+    @Param("userId") userId: string,
+    @Req() req: AuthedRequest
+  ) {
+    return this.service.removeUsrahMember(currentUser(req), id, userId);
+  }
+
+  @Post("live")
+  @ApiOperation({ summary: "full_admin: schedule a live program (gender visibility)" })
+  @Roles("full_admin")
+  createLive(@Body() dto: LiveProgramDto, @Req() req: AuthedRequest) {
+    return this.service.createLive(currentUser(req), dto);
+  }
+
+  @Patch("live/:id")
+  @ApiOperation({ summary: "full_admin: update a live program (audited)" })
+  @Roles("full_admin")
+  patchLive(@Param("id") id: string, @Body() dto: LiveProgramDto, @Req() req: AuthedRequest) {
+    return this.service.patchLive(currentUser(req), id, dto);
+  }
+
+  @Delete("live/:id")
+  @ApiOperation({ summary: "full_admin: delete a live program (audited)" })
+  @Roles("full_admin")
+  deleteLive(@Param("id") id: string, @Req() req: AuthedRequest) {
+    return this.service.deleteLive(currentUser(req), id);
   }
 
   @Get("audit")

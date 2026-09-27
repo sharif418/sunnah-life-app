@@ -2,12 +2,13 @@
 
 // আমল ক্যাটালগ এডিটর (full_admin) — DB-configurable AmalDefinition editor.
 // The catalog drives the Muhasaba diary on every client; edits are audit-safe:
-// upsert by key via /api/admin/amal-catalog.
+// upsert by key via /api/admin/amal-catalog, partial PATCH by key, and
+// reorder (up/down) via PATCH /api/admin/amal-catalog {keys}.
 
 import * as React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { ListChecks, Pencil, Plus } from "lucide-react";
+import { ArrowDown, ArrowUp, ListChecks, Pencil, Plus, Power } from "lucide-react";
 import { api, type AmalCadence, type AmalCategory, type AmalDefinition, type AmalInputType, type Level } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { toBn } from "@/lib/bn";
@@ -140,6 +141,7 @@ function CatalogDialog({
     },
     onSuccess: () => {
       toast("ক্যাটালগ সংরক্ষণ করা হয়েছে", "success");
+      qc.invalidateQueries({ queryKey: ["admin-catalog"] });
       qc.invalidateQueries({ queryKey: ["definitions"] });
       onClose();
     },
@@ -294,9 +296,46 @@ function CatalogDialog({
 
 export default function CatalogPage() {
   const { user, fullAdmin } = useSession();
-  const defs = useQuery({ queryKey: ["definitions"], queryFn: () => api.definitions(), enabled: !!user });
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  // B6: the ADMIN catalog — every definition incl. inactive, current sortOrder.
+  const defs = useQuery({
+    queryKey: ["admin-catalog"],
+    queryFn: () => api.adminCatalog(),
+    enabled: !!user && fullAdmin,
+  });
   const [editing, setEditing] = React.useState<AmalDefinition | null>(null);
   const [creating, setCreating] = React.useState(false);
+
+  const rows = defs.data?.definitions ?? [];
+
+  const reorder = useMutation({
+    mutationFn: (keys: string[]) => api.reorderCatalog(keys),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-catalog"] });
+      qc.invalidateQueries({ queryKey: ["definitions"] });
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  const move = (index: number, delta: -1 | 1) => {
+    const target = index + delta;
+    if (target < 0 || target >= rows.length) return;
+    const keys = rows.map((r) => r.key);
+    [keys[index], keys[target]] = [keys[target], keys[index]];
+    reorder.mutate(keys);
+  };
+
+  const toggleActive = useMutation({
+    mutationFn: ({ key, active }: { key: string; active: boolean }) =>
+      api.patchCatalog(key, { active }),
+    onSuccess: () => {
+      toast("অবস্থা পরিবর্তিত হয়েছে (অডিট লগড)", "success");
+      qc.invalidateQueries({ queryKey: ["admin-catalog"] });
+      qc.invalidateQueries({ queryKey: ["definitions"] });
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
 
   const columns = React.useMemo<ColumnDef<AmalDefinition, unknown>[]>(
     () => [
@@ -361,6 +400,41 @@ export default function CatalogPage() {
         },
       },
       {
+        id: "reorder",
+        header: "",
+        cell: (c) => {
+          const i = c.row.index;
+          return (
+            <span className="flex items-center gap-0.5">
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`${c.row.original.titleBn} উপরে সরান`}
+                disabled={reorder.isPending || i === 0}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  move(i, -1);
+                }}
+              >
+                <ArrowUp className="h-4 w-4" aria-hidden />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label={`${c.row.original.titleBn} নিচে সরান`}
+                disabled={reorder.isPending || i === rows.length - 1}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  move(i, 1);
+                }}
+              >
+                <ArrowDown className="h-4 w-4" aria-hidden />
+              </Button>
+            </span>
+          );
+        },
+      },
+      {
         accessorKey: "active",
         header: "অবস্থা",
         cell: (c) =>
@@ -371,24 +445,41 @@ export default function CatalogPage() {
           ),
       },
       {
-        id: "edit",
+        id: "actions",
         header: "",
         cell: (c) => (
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label={`${c.row.original.titleBn} সম্পাদনা`}
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditing(c.row.original);
-            }}
-          >
-            <Pencil className="h-4 w-4" aria-hidden />
-          </Button>
+          <span className="flex items-center gap-0.5">
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`${c.row.original.titleBn} ${c.row.original.active !== false ? "নিষ্ক্রিয়" : "সচল"} করুন`}
+              disabled={toggleActive.isPending}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleActive.mutate({
+                  key: c.row.original.key,
+                  active: c.row.original.active === false,
+                });
+              }}
+            >
+              <Power className="h-4 w-4" aria-hidden />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              aria-label={`${c.row.original.titleBn} সম্পাদনা`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setEditing(c.row.original);
+              }}
+            >
+              <Pencil className="h-4 w-4" aria-hidden />
+            </Button>
+          </span>
         ),
       },
     ],
-    [],
+    [rows.length, reorder.isPending, toggleActive.isPending],
   );
 
   return (
@@ -415,16 +506,19 @@ export default function CatalogPage() {
         <CardContent>
           <DataTable
             columns={columns}
-            data={defs.data?.definitions}
+            data={rows}
             loading={defs.isLoading}
             error={defs.error}
             onRetry={() => defs.refetch()}
             emptyTitle="কোনো আমল সংজ্ঞা নেই"
-            emptyHint="ক্যাটালগ খালি — সিড চালান বা নতুন আমল যোগ করুন।"
+            emptyHint="ক্যাটালগ খালি — নতুন আমল যোগ করুন (খালি থাকলে কনটেন্ট প্যাক থেকে স্বয়ংক্রিয়ভাবে আসবে)।"
             csvFilename="amal-catalog.csv"
-            csvHeaders={["কী", "শিরোনাম (বাংলা)", "শিরোনাম (ইংরেজি)", "বিভাগ", "ইনপুট", "নিয়মিতা", "ক্রম"]}
-            csvRow={(d) => [d.key, d.titleBn, d.titleEn, d.category, d.inputType, d.cadence, d.sortOrder]}
+            csvHeaders={["কী", "শিরোনাম (বাংলা)", "শিরোনাম (ইংরেজি)", "বিভাগ", "ইনপুট", "নিয়মিতা", "ক্রম", "সচল"]}
+            csvRow={(d) => [d.key, d.titleBn, d.titleEn, d.category, d.inputType, d.cadence, d.sortOrder, d.active === false ? "না" : "হ্যাঁ"]}
           />
+          <p className="mt-2 text-xs text-muted-foreground">
+            উপরে/নিচে তীর চিহ্নে ক্রম বদলান — পরিবর্তন অডিট লগে সংরক্ষিত হয় এবং সব ব্যবহারকারীর ডায়েরিতে প্রযোজ্য।
+          </p>
         </CardContent>
       </Card>
       {editing ? <CatalogDialog initial={editing} onClose={() => setEditing(null)} /> : null}

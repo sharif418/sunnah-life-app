@@ -1,6 +1,23 @@
-/// Bengali-first string table (bn / en / ar) — no hardcoded UI text anywhere.
-/// Usage: `context.t('key')` or `S.tr(lang, 'key')`.
+/// Bengali-first localization adapter over the GENERATED AppLocalizations.
+///
+/// Source of truth: the ARB files in `lib/l10n/` (`app_bn.arb` is the
+/// template). `flutter gen-l10n` (see `l10n.yaml`) emits the committed
+/// classes in `lib/l10n/generated/`. Because Bengali is the template
+/// language, any key missing from `app_en.arb`/`app_ar.arb` already inherits
+/// the Bengali value inside the generated classes — the historical
+/// "Bengali fallback" is preserved by construction.
+///
+/// This file keeps the historical call-sites working:
+///   · `context.t('key')`  — extension in features/shared/widgets.dart
+///   · `S.tr(lang, 'key')` — context-free lookups (router labels, tests)
+/// Both route through the generated getters via [_translate]. The getter
+/// names are the ARB keys verbatim (gen-l10n keeps snake_case), so the map
+/// below is identity-generated and pinned by tests.
 library;
+
+import 'package:flutter/widgets.dart';
+
+import 'generated/app_localizations.dart';
 
 enum Lang { bn, en, ar }
 
@@ -17,6 +34,7 @@ extension LangX on Lang {
     Lang.en => 'English',
     Lang.ar => 'العربية',
   };
+  Locale get locale => Locale(code);
   static Lang fromCode(String? code) => switch (code) {
     'en' => Lang.en,
     'ar' => Lang.ar,
@@ -27,804 +45,346 @@ extension LangX on Lang {
 class S {
   const S._();
 
-  static const Map<String, Map<Lang, String>> _table = kStringTable;
+  /// Translate [key] for [lang] — resolves through the generated
+  /// AppLocalizations for that locale.
+  static String tr(Lang lang, String key) =>
+      _translate(lookupAppLocalizations(lang.locale), key);
 
-  /// Translate a key; Bengali is the fallback for missing keys.
-  static String tr(Lang lang, String key) {
-    final entry = _table[key];
-    if (entry == null) return key;
-    return entry[lang] ?? entry[Lang.bn] ?? key;
+  /// Context-aware lookup: uses the widget tree's AppLocalizations when the
+  /// MaterialApp wires the delegate, falling back to the profile locale's
+  /// lookup otherwise (tests, component gallery).
+  static String tOf(BuildContext context, Lang lang, String key) {
+    final l = AppLocalizations.of(context);
+    return l == null ? tr(lang, key) : _translate(l, key);
   }
 }
 
-/// The full string table — public so the completeness test can iterate it.
-const Map<String, Map<Lang, String>> kStringTable = {
-  // ── Common ──
-  'ok': {Lang.bn: 'ঠিক আছে', Lang.en: 'OK', Lang.ar: 'حسنًا'},
-  'cancel': {Lang.bn: 'বাতিল', Lang.en: 'Cancel', Lang.ar: 'إلغاء'},
-  'save': {Lang.bn: 'সংরক্ষণ', Lang.en: 'Save', Lang.ar: 'حفظ'},
-  'retry': {
-    Lang.bn: 'আবার চেষ্টা করুন',
-    Lang.en: 'Retry',
-    Lang.ar: 'أعد المحاولة',
-  },
-  'next': {Lang.bn: 'পরবর্তী', Lang.en: 'Next', Lang.ar: 'التالي'},
-  'back': {Lang.bn: 'পেছনে', Lang.en: 'Back', Lang.ar: 'رجوع'},
-  'done': {Lang.bn: 'সম্পন্ন', Lang.en: 'Done', Lang.ar: 'تم'},
-  'search': {Lang.bn: 'খুঁজুন', Lang.en: 'Search', Lang.ar: 'بحث'},
-  'share': {Lang.bn: 'শেয়ার', Lang.en: 'Share', Lang.ar: 'مشاركة'},
-  'copy': {Lang.bn: 'কপি', Lang.en: 'Copy', Lang.ar: 'نسخ'},
-  'copied': {Lang.bn: 'কপি হয়েছে', Lang.en: 'Copied', Lang.ar: 'تم النسخ'},
-  'see_all': {Lang.bn: 'সব দেখুন', Lang.en: 'See all', Lang.ar: 'عرض الكل'},
-  'loading': {
-    Lang.bn: 'লোড হচ্ছে…',
-    Lang.en: 'Loading…',
-    Lang.ar: 'جار التحميل…',
-  },
-  'empty_generic': {
-    Lang.bn: 'এখনো কিছু নেই',
-    Lang.en: 'Nothing here yet',
-    Lang.ar: 'لا يوجد شيء بعد',
-  },
-  'error_generic': {
-    Lang.bn: 'কিছু একটা সমস্যা হয়েছে',
-    Lang.en: 'Something went wrong',
-    Lang.ar: 'حدث خطأ ما',
-  },
-  'offline': {
-    Lang.bn: 'অফলাইন — পরিবর্তনগুলো সেভ থাকবে, নেট এলে সিঙ্ক হবে',
-    Lang.en: 'Offline — changes are saved and will sync later',
-    Lang.ar: 'غير متصل — ستُحفظ التغييرات وتُزامن لاحقًا',
-  },
-  'offline_short': {Lang.bn: 'অফলাইন', Lang.en: 'Offline', Lang.ar: 'غير متصل'},
-  'online': {Lang.bn: 'অনলাইন', Lang.en: 'Online', Lang.ar: 'متصل'},
-  'guest': {Lang.bn: 'গেস্ট', Lang.en: 'Guest', Lang.ar: 'زائر'},
-  'version': {Lang.bn: 'সংস্করণ', Lang.en: 'Version', Lang.ar: 'إصدار'},
-
-  // ── Nav tabs ──
-  'tab_home': {Lang.bn: 'হোম', Lang.en: 'Home', Lang.ar: 'الرئيسية'},
-  'tab_amal': {Lang.bn: 'আমল', Lang.en: 'Amal', Lang.ar: 'الأعمال'},
-  'tab_dawah': {Lang.bn: 'দাওয়াত', Lang.en: "Da'wah", Lang.ar: 'الدعوة'},
-  'tab_ilm': {Lang.bn: 'ইলম', Lang.en: 'Ilm', Lang.ar: 'العلم'},
-  'tab_more': {Lang.bn: 'আরও', Lang.en: 'More', Lang.ar: 'المزيد'},
-
-  // ── Onboarding ──
-  'onb_title': {
-    Lang.bn: 'সুন্নাহ লাইফে স্বাগতম',
-    Lang.en: 'Welcome to Sunnah Life',
-    Lang.ar: 'مرحبًا بك في سنّة لايف',
-  },
-  'onb_step1_title': {
-    Lang.bn: 'ভাষা নির্বাচন করুন',
-    Lang.en: 'Choose your language',
-    Lang.ar: 'اختر لغتك',
-  },
-  'onb_step2_title': {
-    Lang.bn: 'আপনার পরিচয়',
-    Lang.en: 'About you',
-    Lang.ar: 'عنك',
-  },
-  'onb_name': {Lang.bn: 'নাম', Lang.en: 'Name', Lang.ar: 'الاسم'},
-  'onb_name_hint': {
-    Lang.bn: 'যেমন: আব্দুল্লাহ',
-    Lang.en: 'e.g. Abdullah',
-    Lang.ar: 'مثال: عبدالله',
-  },
-  'onb_gender': {Lang.bn: 'লিঙ্গ', Lang.en: 'Gender', Lang.ar: 'الجنس'},
-  'onb_male': {
-    Lang.bn: 'ভাই (পুরুষ)',
-    Lang.en: 'Brother (Male)',
-    Lang.ar: 'أخ (ذكر)',
-  },
-  'onb_female': {
-    Lang.bn: 'বোন (নারী)',
-    Lang.en: 'Sister (Female)',
-    Lang.ar: 'أخت (أنثى)',
-  },
-  'onb_female_privacy': {
-    Lang.bn:
-        'বোনদের প্রতি আমাদের অঙ্গীকার: আপনার নাম, আমল ও পরিচয় কেবল মহিলা পরিদর্শক ও '
-        'মহিলা উসরা প্রধান দেখতে পারবেন। ছেলে পরিদর্শক বা অ্যাডমিন-ও মহিলা সদস্যের তথ্য '
-        'দেখার সুযোগ পাবেন না — এটি ডেটাবেস স্তরেই নিশ্চিত করা হয়েছে।',
-    Lang.en:
-        'Our pledge to sisters: your name, amal and identity are visible only to female '
-        'supervisors and female usrah heads. Male supervisors and admins can never see female '
-        'member data — enforced in the database itself.',
-    Lang.ar:
-        'تعهدنا لأخواتنا: اسمك وأعمالك وبياناتك لا تراها إلا المشرفات ورئيسات الحلقات من النساء، '
-        'ولا يمكن للمشرفين أو المسؤولين من الرجال رؤية بيانات العضوات — وهذا مضمون في قاعدة البيانات نفسها.',
-  },
-  'onb_step3_title': {
-    Lang.bn: 'অবস্থান ও মাযহাব',
-    Lang.en: 'Location & madhhab',
-    Lang.ar: 'الموقع والمذهب',
-  },
-  'onb_city': {Lang.bn: 'শহর', Lang.en: 'City', Lang.ar: 'المدينة'},
-  'onb_city_search': {
-    Lang.bn: 'শহরের নাম লিখুন…',
-    Lang.en: 'Type a city name…',
-    Lang.ar: 'اكتب اسم المدينة…',
-  },
-  'onb_madhhab': {
-    Lang.bn: 'মাযহাব (আসর)',
-    Lang.en: 'Madhhab (Asr)',
-    Lang.ar: 'المذهب (العصر)',
-  },
-  'onb_method': {
-    Lang.bn: 'হিসাব পদ্ধতি',
-    Lang.en: 'Calculation method',
-    Lang.ar: 'طريقة الحساب',
-  },
-  'onb_custom_location': {
-    Lang.bn: 'নিজের অক্ষাংশ-দ্রাঘিমাংশ',
-    Lang.en: 'Custom latitude/longitude',
-    Lang.ar: 'إحداثيات مخصصة',
-  },
-  'onb_lat': {Lang.bn: 'অক্ষাংশ', Lang.en: 'Latitude', Lang.ar: 'خط العرض'},
-  'onb_lng': {Lang.bn: 'দ্রাঘিমাংশ', Lang.en: 'Longitude', Lang.ar: 'خط الطول'},
-  'onb_start': {
-    Lang.bn: 'শুরু করুন — গেস্ট হিসেবে',
-    Lang.en: 'Start as guest',
-    Lang.ar: 'ابدأ كزائر',
-  },
-  'onb_signin': {
-    Lang.bn: 'সাইন ইন',
-    Lang.en: 'Sign in',
-    Lang.ar: 'تسجيل الدخول',
-  },
-
-  // ── Auth ──
-  'auth_title': {
-    Lang.bn: 'ফোন দিয়ে সাইন ইন',
-    Lang.en: 'Sign in with phone',
-    Lang.ar: 'الدخول بالهاتف',
-  },
-  'auth_phone': {
-    Lang.bn: 'মোবাইল নম্বর',
-    Lang.en: 'Phone number',
-    Lang.ar: 'رقم الهاتف',
-  },
-  'auth_phone_hint': {
-    Lang.bn: '০১XXXXXXXXX',
-    Lang.en: '01XXXXXXXXX',
-    Lang.ar: '٠١XXXXXXXXX',
-  },
-  'auth_request_otp': {
-    Lang.bn: 'কোড পাঠান',
-    Lang.en: 'Send code',
-    Lang.ar: 'أرسل الرمز',
-  },
-  'auth_otp': {
-    Lang.bn: 'ভেরিফিকেশন কোড',
-    Lang.en: 'Verification code',
-    Lang.ar: 'رمز التحقق',
-  },
-  'auth_verify': {Lang.bn: 'যাচাই করুন', Lang.en: 'Verify', Lang.ar: 'تحقق'},
-  'auth_dev_code': {
-    Lang.bn: 'ডেভ কোড',
-    Lang.en: 'Dev code',
-    Lang.ar: 'رمز التطوير',
-  },
-  'auth_signout': {
-    Lang.bn: 'সাইন আউট',
-    Lang.en: 'Sign out',
-    Lang.ar: 'تسجيل الخروج',
-  },
-  'auth_guest_note': {
-    Lang.bn: 'গেস্ট হিসেবে থাকলে আমল শুধু এই ফোনে সেভ থাকবে। সাইন ইন করলে সব একসাথে চলে আসবে।',
-    Lang.en: 'As a guest your amal stays on this phone only. Sign in and everything carries over.',
-    Lang.ar:
-        'كزائر تبقى أعمالك على هذا الهاتف فقط. عند الدخول تُنقل جميع بياناتك.',
-  },
-  'auth_invalid_phone': {
-    Lang.bn: 'সঠিক মোবাইল নম্বর দিন',
-    Lang.en: 'Enter a valid phone number',
-    Lang.ar: 'أدخل رقم هاتف صحيحًا',
-  },
-  // Social sign-in (Task B5) — Bengali-first copy.
-  'auth_google': {
-    Lang.bn: 'Google দিয়ে সাইন ইন',
-    Lang.en: 'Sign in with Google',
-    Lang.ar: 'الدخول عبر Google',
-  },
-  'auth_apple': {
-    Lang.bn: 'Apple দিয়ে সাইন ইন',
-    Lang.en: 'Sign in with Apple',
-    Lang.ar: 'الدخول عبر Apple',
-  },
-  'auth_or': {Lang.bn: 'অথবা', Lang.en: 'or', Lang.ar: 'أو'},
-  'auth_social_error': {
-    Lang.bn: 'সাইন-ইন ব্যর্থ হয়েছে — আবার চেষ্টা করুন',
-    Lang.en: 'Sign-in failed — try again',
-    Lang.ar: 'فشل تسجيل الدخول — حاول مجددًا',
-  },
-
-  // ── Gender + name completion (social sign-in accounts) ──
-  'complete_profile_title': {
-    Lang.bn: 'প্রোফাইল সম্পূর্ণ করুন',
-    Lang.en: 'Complete your profile',
-    Lang.ar: 'أكمل ملفك الشخصي',
-  },
-  'complete_profile_note': {
-    Lang.bn:
-        'অ্যাকাউন্ট চালু করতে নাম ও লিঙ্গ দিন। লিঙ্গ একবার দেওয়ার পর আর পরিবর্তন করা যায় না।',
-    Lang.en:
-        'Add your name and gender to activate the account. Gender cannot be changed once set.',
-    Lang.ar: 'أدخل اسمك وجنسك لتفعيل الحساب. لا يمكن تغيير الجنس بعد تحديده.',
-  },
-
-  // ── Home / prayer ──
-  'prayer_next': {
-    Lang.bn: 'পরবর্তী ওয়াক্ত',
-    Lang.en: 'Next prayer',
-    Lang.ar: 'الصلاة التالية',
-  },
-  'prayer_remaining': {
-    Lang.bn: 'বাকি',
-    Lang.en: 'remaining',
-    Lang.ar: 'المتبقي',
-  },
-  'prayer_schedule': {
-    Lang.bn: 'আজকের সময়সূচি',
-    Lang.en: "Today's schedule",
-    Lang.ar: 'مواعيد اليوم',
-  },
-  'prayer_current': {Lang.bn: 'চলছে', Lang.en: 'Current', Lang.ar: 'الحالية'},
-  'prayer_forbidden_times': {
-    Lang.bn: 'নিষিদ্ধ সময় — নামাজ পড়া নিষেধ',
-    Lang.en: 'Forbidden times — no prayer',
-    Lang.ar: 'أوقات النهي عن الصلاة',
-  },
-  'prayer_forbidden_sunrise': {
-    Lang.bn: 'সূর্যোদয় ওঠা-নামার সময়',
-    Lang.en: 'While the sun rises/sets',
-    Lang.ar: 'أثناء شروق الشمس',
-  },
-  'prayer_forbidden_zawal': {
-    Lang.bn: 'যাওয়াল — সূর্য মাথার উপর',
-    Lang.en: 'Zawal — sun at zenith',
-    Lang.ar: 'الزوال — الشمس في كبد السماء',
-  },
-  'prayer_forbidden_sunset': {
-    Lang.bn: 'সূর্যাস্তের সময়',
-    Lang.en: 'While the sun sets',
-    Lang.ar: 'أثناء غروب الشمس',
-  },
-  'prayer_bell_hint': {
-    Lang.bn: 'ঘণ্টি চাপুন — এই ওয়াক্তের আগে নোটিফিকেশন',
-    Lang.en: 'Tap the bell to be notified',
-    Lang.ar: 'اضغط الجرس للتنبيه',
-  },
-  'prayer_bell_on': {
-    Lang.bn: 'ঘণ্টি চালু আছে',
-    Lang.en: 'Bell on',
-    Lang.ar: 'الجرس مفعّل',
-  },
-  'prayer_prompt_title': {
-    Lang.bn: 'আপনার নামাজ হয়েছে?',
-    Lang.en: 'Did you pray?',
-    Lang.ar: 'هل صليت؟',
-  },
-  'prayer_prompt_done_jamaat': {
-    Lang.bn: 'জামাতে হয়েছে',
-    Lang.en: 'Prayed in jamaat',
-    Lang.ar: 'صليت في جماعة',
-  },
-  'prayer_post_salat': {
-    Lang.bn: 'নামাজের পরের আমল লিখে ফেলুন — ২০ মিনিট আগেই জিজ্ঞেস করেছিলাম',
-    Lang.en: 'Log your prayer — we asked 20 minutes after the waqt began',
-    Lang.ar: 'سجّل صلاتك — سألناك بعد ٢٠ دقيقة من دخول الوقت',
-  },
-
-  // ── Amal ──
-  'amal_today': {Lang.bn: 'আজকের আমল', Lang.en: 'Today', Lang.ar: 'اليوم'},
-  'amal_month': {
-    Lang.bn: 'মাসের গ্রিড',
-    Lang.en: 'Month grid',
-    Lang.ar: 'شبكة الشهر',
-  },
-  'amal_jamaat': {Lang.bn: 'জামাতে', Lang.en: 'Jamaat', Lang.ar: 'جماعة'},
-  'amal_alone': {Lang.bn: 'একা', Lang.en: 'Alone', Lang.ar: 'منفردًا'},
-  'amal_qaza': {Lang.bn: 'কাযা', Lang.en: 'Qaza', Lang.ar: 'قضاء'},
-  'amal_locked': {Lang.bn: 'লক', Lang.en: 'Locked', Lang.ar: 'مقفل'},
-  'amal_locked_msg': {
-    Lang.bn: 'এই দিনের আমল লক হয়ে গেছে — পরের দিন ইশরাকের পর দিন বন্ধ হয়।',
-    Lang.en: 'This day is locked — days close after the next day\'s Ishraq.',
-    Lang.ar: 'هذا اليوم مقفل — تُغلق الأيام بعد إشراق اليوم التالي.',
-  },
-  'amal_unlock_request': {
-    Lang.bn: 'আনলক চাই',
-    Lang.en: 'Request unlock',
-    Lang.ar: 'طلب فتح',
-  },
-  'amal_unlock_requested': {
-    Lang.bn: 'উসরা প্রধানকে আনলকের অনুরোধ পাঠানো হয়েছে',
-    Lang.en: 'Unlock request sent to your usrah head',
-    Lang.ar: 'أُرسل طلب الفتح لرئيس حلقتك',
-  },
-  'amal_streak': {
-    Lang.bn: 'ধারাবাহিকতা',
-    Lang.en: 'Streak',
-    Lang.ar: 'التتابع',
-  },
-  'amal_days': {Lang.bn: 'দিন', Lang.en: 'days', Lang.ar: 'أيام'},
-  'amal_sync_pending': {
-    Lang.bn: 'টি পরিবর্তন সিঙ্ক বাকি',
-    Lang.en: 'changes pending sync',
-    Lang.ar: 'تغييرات بانتظار المزامنة',
-  },
-  'amal_synced': {
-    Lang.bn: 'সব সিঙ্ক হয়েছে',
-    Lang.en: 'All synced',
-    Lang.ar: 'تمت المزامنة',
-  },
-  'amal_completion': {
-    Lang.bn: 'সম্পন্নতা',
-    Lang.en: 'Completion',
-    Lang.ar: 'الإنجاز',
-  },
-  'amal_habit_builder': {
-    Lang.bn: 'অভ্যাস গড়ার চ্যালেঞ্জ',
-    Lang.en: 'Habit builder',
-    Lang.ar: 'بناء العادات',
-  },
-  'amal_habit_builder_desc': {
-    Lang.bn: '৭ দিন ধরে প্রতিদিন একটি আমল — স্ট্রিক ধরে রাখুন',
-    Lang.en: 'One amal every day for 7 days — keep the streak',
-    Lang.ar: 'عمل واحد كل يوم لمدة أسبوع — حافظ على التتابع',
-  },
-  'amal_self_test': {
-    Lang.bn: 'ইমান ও তাকওয়া সেলফ-টেস্ট',
-    Lang.en: 'Iman & Taqwa self-test',
-    Lang.ar: 'اختبار الإيمان والتقوى',
-  },
-  'amal_no_defs': {
-    Lang.bn: 'আমল ক্যাটালগ খালি — সাইন ইন করলে সম্পূর্ণ তালিকা আসবে',
-    Lang.en: 'Amal catalog is empty — sign in for the full list',
-    Lang.ar: 'قائمة الأعمال فارغة — سجّل الدخول للقائمة الكاملة',
-  },
-  'amal_target_reached': {
-    Lang.bn: 'লক্ষ্য পূরণ',
-    Lang.en: 'Target reached',
-    Lang.ar: 'تم تحقيق الهدف',
-  },
-  'amal_locked_icon': {
-    Lang.bn: '🔒 লক',
-    Lang.en: '🔒 Locked',
-    Lang.ar: '🔒 مقفل',
-  },
-
-  // ── Dawah ──
-  'dawah_member_code': {
-    Lang.bn: 'আমার মেম্বার কোড',
-    Lang.en: 'My member code',
-    Lang.ar: 'رمز العضوية',
-  },
-  'dawah_referral': {
-    Lang.bn: 'রেফারেল লিংক',
-    Lang.en: 'Referral link',
-    Lang.ar: 'رابط الإحالة',
-  },
-  'dawah_madu': {Lang.bn: 'আমার মাদউ', Lang.en: 'My madu', Lang.ar: 'مدعوّيّ'},
-  'dawah_invited': {
-    Lang.bn: 'মোট দাওয়াত দিয়েছি',
-    Lang.en: 'Total invited',
-    Lang.ar: 'إجمالي المدعوين',
-  },
-  'dawah_usrah': {Lang.bn: 'আমার উসরা', Lang.en: 'My usrah', Lang.ar: 'حلقتي'},
-  'dawah_usrah_head': {
-    Lang.bn: 'উসরা প্রধান',
-    Lang.en: 'Usrah head',
-    Lang.ar: 'رئيس الحلقة',
-  },
-  'dawah_members': {Lang.bn: 'সদস্য', Lang.en: 'Members', Lang.ar: 'الأعضاء'},
-  'dawah_announcements': {
-    Lang.bn: 'ঘোষণা ও প্রশ্ন',
-    Lang.en: 'Announcements',
-    Lang.ar: 'الإعلانات',
-  },
-  'dawah_reviews': {
-    Lang.bn: 'সাপ্তাহিক রিভিউ ইতিহাস',
-    Lang.en: 'Weekly review history',
-    Lang.ar: 'سجل المراجعات',
-  },
-  'dawah_my_level': {
-    Lang.bn: 'আমার স্তর',
-    Lang.en: 'My level',
-    Lang.ar: 'مستواي',
-  },
-  'dawah_months_in_level': {
-    Lang.bn: 'এই স্তরে মাস',
-    Lang.en: 'Months in level',
-    Lang.ar: 'أشهر في المستوى',
-  },
-  'dawah_requirements': {
-    Lang.bn: 'উন্নতির শর্তাবলি',
-    Lang.en: 'Requirements',
-    Lang.ar: 'الشروط',
-  },
-  'dawah_next_level': {
-    Lang.bn: 'পরবর্তী স্তর',
-    Lang.en: 'Next level',
-    Lang.ar: 'المستوى التالي',
-  },
-  'dawah_assessments': {
-    Lang.bn: 'মূল্যায়নের ইতিহাস',
-    Lang.en: 'Assessment history',
-    Lang.ar: 'سجل التقييمات',
-  },
-  'dawah_level_none_next': {
-    Lang.bn:
-        'দায়ী হিসেবে নিজেকে গড়ে তুলুন — মেম্বার কোড শেয়ার করে দাওয়াত দিন',
-    Lang.en: 'Grow as a daee — share your member code',
-    Lang.ar: 'انمِ نفسك داعيًا — شارك رمز عضويتك',
-  },
-
-  // ── Ilm ──
-  'ilm_quran': {Lang.bn: 'আল-কুরআন', Lang.en: 'Quran', Lang.ar: 'القرآن'},
-  'ilm_adhkar': {Lang.bn: 'আযকার', Lang.en: 'Adhkar', Lang.ar: 'الأذكار'},
-  'ilm_duas': {
-    Lang.bn: 'দোয়া ভাণ্ডার',
-    Lang.en: 'Du\'a library',
-    Lang.ar: 'مستودع الأدعية',
-  },
-  'ilm_names99': {
-    Lang.bn: 'আল্লাহর ৯৯ নাম',
-    Lang.en: '99 Names of Allah',
-    Lang.ar: 'أسماء الله الحسنى',
-  },
-  'ilm_baby_names': {
-    Lang.bn: 'ইসলামিক নাম',
-    Lang.en: 'Islamic baby names',
-    Lang.ar: 'أسماء إسلامية',
-  },
-  'ilm_iman_branches': {
-    Lang.bn: 'ঈমানের ৭০ শাখা',
-    Lang.en: '70 branches of Iman',
-    Lang.ar: 'سبعون شعبة من الإيمان',
-  },
-  'ilm_sunnahs': {
-    Lang.bn: 'সুন্নাহ ও বিস্মৃত সুন্নাহ',
-    Lang.en: 'Sunnahs & forgotten sunnahs',
-    Lang.ar: 'السنن المهجورة',
-  },
-  'ilm_articles': {Lang.bn: 'আর্টিকেল', Lang.en: 'Articles', Lang.ar: 'مقالات'},
-  'quran_reader': {
-    Lang.bn: 'কুরআন পড়ুন',
-    Lang.en: 'Read Quran',
-    Lang.ar: 'اقرأ القرآن',
-  },
-  'quran_translation_toggle': {
-    Lang.bn: 'বাংলা অনুবাদ',
-    Lang.en: 'Bengali translation',
-    Lang.ar: 'الترجمة البنغالية',
-  },
-  'quran_bookmark': {
-    Lang.bn: 'বুকমার্ক',
-    Lang.en: 'Bookmark',
-    Lang.ar: 'علامة',
-  },
-  'quran_resume': {
-    Lang.bn: 'শেষ পড়া থেকে শুরু করুন',
-    Lang.en: 'Resume last read',
-    Lang.ar: 'أكمل من حيث توقفت',
-  },
-  'quran_tilawat_logged': {
-    Lang.bn: 'তিলাওয়াত আমলনামায় যোগ হয়েছে',
-    Lang.en: 'Tilawat added to your diary',
-    Lang.ar: 'أُضيف التلاوة إلى سجلك',
-  },
-  'adhkar_morning': {
-    Lang.bn: 'সকালের আযকার',
-    Lang.en: 'Morning adhkar',
-    Lang.ar: 'أذكار الصباح',
-  },
-  'adhkar_evening': {
-    Lang.bn: 'সন্ধ্যার আযকার',
-    Lang.en: 'Evening adhkar',
-    Lang.ar: 'أذكار المساء',
-  },
-  'adhkar_complete': {
-    Lang.bn: 'সেট সম্পূর্ণ — আমলনামায় টিক দেওয়া হলো',
-    Lang.en: 'Set complete — diary ticked',
-    Lang.ar: 'أكملت المجموعة — سُجلت في سجلك',
-  },
-  'adhkar_tap_count': {
-    Lang.bn: 'গণনার জন্য চাপুন',
-    Lang.en: 'Tap to count',
-    Lang.ar: 'اضغط للعد',
-  },
-  'names_boy': {Lang.bn: 'ছেলে', Lang.en: 'Boy', Lang.ar: 'ولد'},
-  'names_girl': {Lang.bn: 'মেয়ে', Lang.en: 'Girl', Lang.ar: 'بنت'},
-  'quiz_start': {Lang.bn: 'শুরু করুন', Lang.en: 'Start', Lang.ar: 'ابدأ'},
-  'quiz_result': {Lang.bn: 'ফলাফল', Lang.en: 'Result', Lang.ar: 'النتيجة'},
-  'quiz_correct': {Lang.bn: 'সঠিক!', Lang.en: 'Correct!', Lang.ar: 'صحيح!'},
-  'quiz_wrong': {Lang.bn: 'ভুল', Lang.en: 'Wrong', Lang.ar: 'خطأ'},
-  'quiz_retry': {
-    Lang.bn: 'আবার দিন',
-    Lang.en: 'Try again',
-    Lang.ar: 'أعد المحاولة',
-  },
-
-  // ── More ──
-  'more_zakat': {
-    Lang.bn: 'যাকাত ক্যালকুলেটর',
-    Lang.en: 'Zakat calculator',
-    Lang.ar: 'حاسبة الزكاة',
-  },
-  'more_qibla': {
-    Lang.bn: 'কিবলা কম্পাস',
-    Lang.en: 'Qibla compass',
-    Lang.ar: 'بوصلة القبلة',
-  },
-  'more_mosque': {
-    Lang.bn: 'আমার মসজিদ',
-    Lang.en: 'My mosque',
-    Lang.ar: 'مسجدي',
-  },
-  'more_masala': {
-    Lang.bn: 'মাসআলা জিজ্ঞাসা',
-    Lang.en: 'Ask a masala',
-    Lang.ar: 'اسأل مسألة',
-  },
-  'more_live': {
-    Lang.bn: 'লাইভ প্রোগ্রাম',
-    Lang.en: 'Live programs',
-    Lang.ar: 'برامج مباشرة',
-  },
-  'more_faq': {
-    Lang.bn: 'জিজ্ঞাসা (FAQ)',
-    Lang.en: 'FAQ',
-    Lang.ar: 'الأسئلة الشائعة',
-  },
-  'more_about': {
-    Lang.bn: 'আমাদের সম্পর্কে',
-    Lang.en: 'About',
-    Lang.ar: 'عن التطبيق',
-  },
-  'more_feedback': {
-    Lang.bn: 'মতামত দিন',
-    Lang.en: 'Feedback',
-    Lang.ar: 'ملاحظاتك',
-  },
-  'more_profile': {
-    Lang.bn: 'প্রোফাইল',
-    Lang.en: 'Profile',
-    Lang.ar: 'الملف الشخصي',
-  },
-  'zakat_gold': {
-    Lang.bn: 'স্বর্ণ (গ্রাম)',
-    Lang.en: 'Gold (grams)',
-    Lang.ar: 'الذهب (غرام)',
-  },
-  'zakat_silver': {
-    Lang.bn: 'রূপা (গ্রাম)',
-    Lang.en: 'Silver (grams)',
-    Lang.ar: 'الفضة (غرام)',
-  },
-  'zakat_cash': {
-    Lang.bn: 'নগদ ও ব্যাংক',
-    Lang.en: 'Cash & bank',
-    Lang.ar: 'النقد والبنك',
-  },
-  'zakat_investments': {
-    Lang.bn: 'ব্যবসা ও বিনিয়োগ',
-    Lang.en: 'Business & investments',
-    Lang.ar: 'الأعمال والاستثمارات',
-  },
-  'zakat_debts': {
-    Lang.bn: 'ঋণ (বাদ যাবে)',
-    Lang.en: 'Debts (deducted)',
-    Lang.ar: 'الديون (تُخصم)',
-  },
-  'zakat_nisab': {
-    Lang.bn: 'নিসাব (৮৫ গ্রাম স্বর্ণ)',
-    Lang.en: 'Nisab (85g gold)',
-    Lang.ar: 'النصاب (٨٥غ ذهب)',
-  },
-  'zakat_payable': {
-    Lang.bn: 'যাকাত দিতে হবে',
-    Lang.en: 'Zakat payable',
-    Lang.ar: 'الزكاة الواجبة',
-  },
-  'zakat_below_nisab': {
-    Lang.bn: 'নিসাব পরিমাণ সম্পদ নেই — যাকাত ফরজ নয়',
-    Lang.en: 'Below nisab — zakat is not due',
-    Lang.ar: 'أقل من النصاب — لا زكاة',
-  },
-  'zakat_donate': {Lang.bn: 'দান করুন', Lang.en: 'Donate', Lang.ar: 'تبرع'},
-  'qibla_distance': {
-    Lang.bn: 'কাবা থেকে দূরত্ব',
-    Lang.en: 'Distance from Kaaba',
-    Lang.ar: 'المسافة من الكعبة',
-  },
-  'qibla_note': {
-    Lang.bn: 'ফোন সমতলে ধরে উত্তর দিক ঠিক করে নিন, তারপর তীরের দিকে মুখ করুন',
-    Lang.en: 'Hold the phone flat, align north, then face the arrow',
-    Lang.ar: 'أمسك الهاتف أفقيًا ووجّه الشمال ثم استدر نحو السهم',
-  },
-  'masala_question': {
-    Lang.bn: 'আপনার প্রশ্ন লিখুন',
-    Lang.en: 'Your question',
-    Lang.ar: 'اكتب سؤالك',
-  },
-  'masala_your_name': {
-    Lang.bn: 'আপনার নাম',
-    Lang.en: 'Your name',
-    Lang.ar: 'اسمك',
-  },
-  'masala_sent': {
-    Lang.bn: 'প্রশ্ন পাঠানো হয়েছে — মুফতি সাহেব উত্তর দিলে জানানো হবে',
-    Lang.en: 'Question sent — you will be notified of the answer',
-    Lang.ar: 'أُرسل السؤال — سيتم إخطارك بالجواب',
-  },
-  'feedback_sent': {
-    Lang.bn: 'ধন্যবাদ! মতামত পাঠানো হয়েছে',
-    Lang.en: 'Thanks! Feedback sent',
-    Lang.ar: 'شكرًا! أُرسلت ملاحظاتك',
-  },
-  'live_now': {Lang.bn: 'এখন লাইভ', Lang.en: 'Live now', Lang.ar: 'مباشر الآن'},
-  'live_upcoming': {Lang.bn: 'আসছে', Lang.en: 'Upcoming', Lang.ar: 'قادم'},
-  'live_past': {Lang.bn: 'সমাপ্ত', Lang.en: 'Past', Lang.ar: 'انتهى'},
-  'live_notify': {
-    Lang.bn: 'মনে করিয়ে দিন',
-    Lang.en: 'Remind me',
-    Lang.ar: 'ذكّرني',
-  },
-  'profile_theme': {Lang.bn: 'থিম', Lang.en: 'Theme', Lang.ar: 'السمة'},
-  'profile_theme_light': {Lang.bn: 'লাইট', Lang.en: 'Light', Lang.ar: 'فاتح'},
-  'profile_theme_dark': {Lang.bn: 'ডার্ক', Lang.en: 'Dark', Lang.ar: 'داكن'},
-  'profile_theme_system': {
-    Lang.bn: 'সিস্টেম',
-    Lang.en: 'System',
-    Lang.ar: 'النظام',
-  },
-  'profile_language': {Lang.bn: 'ভাষা', Lang.en: 'Language', Lang.ar: 'اللغة'},
-  'profile_category': {
-    Lang.bn: 'ক্যাটাগরি',
-    Lang.en: 'Category',
-    Lang.ar: 'الفئة',
-  },
-  'profile_category_general': {
-    Lang.bn: 'সাধারণ',
-    Lang.en: 'General',
-    Lang.ar: 'عام',
-  },
-  'profile_category_hafez': {
-    Lang.bn: 'হাফেজ',
-    Lang.en: 'Hafez',
-    Lang.ar: 'حافظ',
-  },
-  'profile_category_alim': {Lang.bn: 'আলেম', Lang.en: 'Alim', Lang.ar: 'عالم'},
-  'profile_female_privacy_title': {
-    Lang.bn: 'বোনদের গোপনীয়তার নিশ্চয়তা',
-    Lang.en: 'Sisters\' privacy guarantee',
-    Lang.ar: 'ضمان خصوصية الأخوات',
-  },
-  'app_about': {
-    Lang.bn:
-        'সুন্নাহ লাইফ — আস-সুন্নাহ ফাউন্ডেশনের দাওয়াতুস সুন্নাহ বিভাগের পক্ষ থেকে। '
-        'নামাজ, আমল, ইলম আর তারবিয়াত — সব এক অ্যাপে।',
-    Lang.en:
-        'Sunnah Life — from the Dawatus Sunnah department of As-Sunnah Foundation. '
-        'Prayer, amal, ilm and tarbiyah in one app.',
-    Lang.ar: 'سنّة لايف — من قسم دعوة السنة بمؤسسة السنة. الصلاة والأعمال والعلم والتربية في تطبيق واحد.',
-  },
-
-  // ── Additional screen keys ──
-  'today_vs': {Lang.bn: 'আজ', Lang.en: 'Today', Lang.ar: 'اليوم'},
-  'today_progress': {
-    Lang.bn: 'আজকের অগ্রগতি',
-    Lang.en: "Today's progress",
-    Lang.ar: 'تقدم اليوم',
-  },
-  'month_prev': {
-    Lang.bn: 'আগের মাস',
-    Lang.en: 'Previous month',
-    Lang.ar: 'الشهر السابق',
-  },
-  'month_next': {
-    Lang.bn: 'পরের মাস',
-    Lang.en: 'Next month',
-    Lang.ar: 'الشهر التالي',
-  },
-  'day_detail': {
-    Lang.bn: 'দিনের বিবরণ',
-    Lang.en: 'Day detail',
-    Lang.ar: 'تفاصيل اليوم',
-  },
-  'habit_pick': {
-    Lang.bn: 'আমল বাছুন',
-    Lang.en: 'Pick an amal',
-    Lang.ar: 'اختر عملًا',
-  },
-  'tilawat_session': {
-    Lang.bn: 'তিলাওয়াত সেশন',
-    Lang.en: 'Recitation session',
-    Lang.ar: 'جلسة تلاوة',
-  },
-  'tilawat_minutes': {
-    Lang.bn: 'মিনিট পড়েছেন',
-    Lang.en: 'minutes read',
-    Lang.ar: 'دقيقة قراءة',
-  },
-  'tilawat_pages': {
-    Lang.bn: 'পৃষ্ঠা হিসেবে লিখুন',
-    Lang.en: 'Log as pages',
-    Lang.ar: 'سجّل كصفحات',
-  },
-  'dawah_gate_title': {
-    Lang.bn: 'দাওয়াত কেন্দ্র',
-    Lang.en: "Da'wah hub",
-    Lang.ar: 'مركز الدعوة',
-  },
-  'dawah_signin_needed': {
-    Lang.bn: 'দাওয়াত কেন্দ্র ব্যবহার করতে সাইন ইন করুন — দায়ী, উসরা প্রধান ও পরিদর্শকদের জন্য।',
-    Lang.en: "Sign in to use the Da'wah hub — for daees, usrah heads and invigilators.",
-    Lang.ar:
-        'سجّل الدخول لاستخدام مركز الدعوة — للدعاة ورؤساء الحلقات والمشرفين.',
-  },
-  'dawah_role_needed': {
-    Lang.bn: 'এই অংশটি দায়ী ও তত্ত্বাবধায়কদের জন্য। আপনার একাউন্টে এখনো দায়ীর ভূমিকা নেই।',
-    Lang.en: 'This section is for daees and supervisors. Your account does not have the role yet.',
-    Lang.ar: 'هذا القسم للدعاة والمشرفين. حسابك لا يملك هذه الصلاحية بعد.',
-  },
-  'quran_surahs': {Lang.bn: 'সূরা', Lang.en: 'Surahs', Lang.ar: 'السور'},
-  'quran_ayahs': {Lang.bn: 'আয়াত', Lang.en: 'ayahs', Lang.ar: 'آية'},
-  'quran_bismillah': {
-    Lang.bn: 'বিসমিল্লাহির রাহমানির রাহীম',
-    Lang.en: 'Bismillah',
-    Lang.ar: 'بسم الله الرحمن الرحيم',
-  },
-  'more_share_app': {
-    Lang.bn: 'অ্যাপ শেয়ার করুন',
-    Lang.en: 'Share app',
-    Lang.ar: 'شارك التطبيق',
-  },
-  'more_share_text': {
-    Lang.bn: 'সুন্নাহ লাইফ — নামাজের সময়, আমলনামা, কুরআন আর তারবিয়াত এক অ্যাপে। https://sunnahlife.app',
-    Lang.en: 'Sunnah Life — prayer times, amal diary, Quran and tarbiyah in one app. https://sunnahlife.app',
-    Lang.ar: 'سنّة لايف — مواقيت الصلاة وسجل الأعمال والقرآن والتربية في تطبيق واحد. https://sunnahlife.app',
-  },
-  'send': {Lang.bn: 'পাঠান', Lang.en: 'Send', Lang.ar: 'إرسال'},
-  'not_available_offline': {
-    Lang.bn: 'এই অংশে ইন্টারনেট লাগবে — অনুগ্রহ করে সংযোগ দিন',
-    Lang.en: 'This section needs internet — please connect',
-    Lang.ar: 'هذا القسم يحتاج اتصالًا بالإنترنت',
-  },
-  'categories': {
-    Lang.bn: 'ক্যাটাগরি',
-    Lang.en: 'Categories',
-    Lang.ar: 'الفئات',
-  },
-  'exact_alarm_title': {
-    Lang.bn: 'নামাজের নিখুঁত অ্যালার্ম',
-    Lang.en: 'Exact prayer alarms',
-    Lang.ar: 'منبّهات الصلاة الدقيقة',
-  },
-  'exact_alarm_desc': {
-    Lang.bn: 'ফোন ঘুমিয়ে থাকলেও ঠিক সময়ে ঘণ্টি বাজাতে অনুমতি দিন।',
-    Lang.en: 'Allow alarms to ring exactly on time even when the phone dozes.',
-    Lang.ar: 'اسمح للمنبّه بالرنين في وقته بالضبط حتى أثناء سكون الهاتف.',
-  },
-  'exact_alarm_grant': {
-    Lang.bn: 'অনুমতি দিন',
-    Lang.en: 'Grant',
-    Lang.ar: 'السماح',
-  },
-  'hijri_adjust': {
-    Lang.bn: 'হিজরি সমন্বয় (দিন)',
-    Lang.en: 'Hijri adjust (days)',
-    Lang.ar: 'تعديل الهجري (أيام)',
-  },
-  'prayer_please_login': {
-    Lang.bn: 'অ্যাকাউন্টে সেভ হবে',
-    Lang.en: 'Will be saved to your account',
-    Lang.ar: 'سيُحفظ في حسابك',
-  },
-  'all_set': {
-    Lang.bn: 'সব ঠিক আছে',
-    Lang.en: 'All set',
-    Lang.ar: 'كل شيء جاهز',
-  },
+// ─── BEGIN GENERATED KEY MAP (tool/make_arbs.py --keymap) ───────────────────
+String _translate(AppLocalizations l, String key) => switch (key) {
+  'ok' => l.ok,
+  'cancel' => l.cancel,
+  'save' => l.save,
+  'retry' => l.retry,
+  'next' => l.next,
+  'back' => l.back,
+  'done' => l.done,
+  'search' => l.search,
+  'share' => l.share,
+  'copy' => l.copy,
+  'copied' => l.copied,
+  'see_all' => l.see_all,
+  'loading' => l.loading,
+  'empty_generic' => l.empty_generic,
+  'error_generic' => l.error_generic,
+  'offline' => l.offline,
+  'offline_short' => l.offline_short,
+  'online' => l.online,
+  'guest' => l.guest,
+  'version' => l.version,
+  'tab_home' => l.tab_home,
+  'tab_amal' => l.tab_amal,
+  'tab_dawah' => l.tab_dawah,
+  'tab_ilm' => l.tab_ilm,
+  'tab_more' => l.tab_more,
+  'onb_title' => l.onb_title,
+  'onb_step1_title' => l.onb_step1_title,
+  'onb_step2_title' => l.onb_step2_title,
+  'onb_name' => l.onb_name,
+  'onb_name_hint' => l.onb_name_hint,
+  'onb_gender' => l.onb_gender,
+  'onb_male' => l.onb_male,
+  'onb_female' => l.onb_female,
+  'onb_female_privacy' => l.onb_female_privacy,
+  'onb_step3_title' => l.onb_step3_title,
+  'onb_city' => l.onb_city,
+  'onb_city_search' => l.onb_city_search,
+  'onb_madhhab' => l.onb_madhhab,
+  'onb_method' => l.onb_method,
+  'onb_custom_location' => l.onb_custom_location,
+  'onb_lat' => l.onb_lat,
+  'onb_lng' => l.onb_lng,
+  'onb_start' => l.onb_start,
+  'onb_signin' => l.onb_signin,
+  'auth_title' => l.auth_title,
+  'auth_phone' => l.auth_phone,
+  'auth_phone_hint' => l.auth_phone_hint,
+  'auth_request_otp' => l.auth_request_otp,
+  'auth_otp' => l.auth_otp,
+  'auth_verify' => l.auth_verify,
+  'auth_dev_code' => l.auth_dev_code,
+  'auth_signout' => l.auth_signout,
+  'auth_guest_note' => l.auth_guest_note,
+  'auth_invalid_phone' => l.auth_invalid_phone,
+  'auth_google' => l.auth_google,
+  'auth_apple' => l.auth_apple,
+  'auth_or' => l.auth_or,
+  'auth_social_error' => l.auth_social_error,
+  'complete_profile_title' => l.complete_profile_title,
+  'complete_profile_note' => l.complete_profile_note,
+  'prayer_next' => l.prayer_next,
+  'prayer_remaining' => l.prayer_remaining,
+  'prayer_schedule' => l.prayer_schedule,
+  'prayer_current' => l.prayer_current,
+  'prayer_forbidden_times' => l.prayer_forbidden_times,
+  'prayer_forbidden_sunrise' => l.prayer_forbidden_sunrise,
+  'prayer_forbidden_zawal' => l.prayer_forbidden_zawal,
+  'prayer_forbidden_sunset' => l.prayer_forbidden_sunset,
+  'prayer_bell_hint' => l.prayer_bell_hint,
+  'prayer_bell_on' => l.prayer_bell_on,
+  'prayer_prompt_title' => l.prayer_prompt_title,
+  'prayer_prompt_done_jamaat' => l.prayer_prompt_done_jamaat,
+  'prayer_post_salat' => l.prayer_post_salat,
+  'amal_today' => l.amal_today,
+  'amal_month' => l.amal_month,
+  'amal_jamaat' => l.amal_jamaat,
+  'amal_alone' => l.amal_alone,
+  'amal_qaza' => l.amal_qaza,
+  'amal_locked' => l.amal_locked,
+  'amal_locked_msg' => l.amal_locked_msg,
+  'amal_unlock_request' => l.amal_unlock_request,
+  'amal_unlock_requested' => l.amal_unlock_requested,
+  'amal_streak' => l.amal_streak,
+  'amal_days' => l.amal_days,
+  'amal_sync_pending' => l.amal_sync_pending,
+  'amal_synced' => l.amal_synced,
+  'amal_completion' => l.amal_completion,
+  'amal_habit_builder' => l.amal_habit_builder,
+  'amal_habit_builder_desc' => l.amal_habit_builder_desc,
+  'amal_self_test' => l.amal_self_test,
+  'amal_no_defs' => l.amal_no_defs,
+  'amal_target_reached' => l.amal_target_reached,
+  'amal_locked_icon' => l.amal_locked_icon,
+  'dawah_member_code' => l.dawah_member_code,
+  'dawah_referral' => l.dawah_referral,
+  'dawah_madu' => l.dawah_madu,
+  'dawah_invited' => l.dawah_invited,
+  'dawah_usrah' => l.dawah_usrah,
+  'dawah_usrah_head' => l.dawah_usrah_head,
+  'dawah_members' => l.dawah_members,
+  'dawah_announcements' => l.dawah_announcements,
+  'dawah_reviews' => l.dawah_reviews,
+  'dawah_my_level' => l.dawah_my_level,
+  'dawah_months_in_level' => l.dawah_months_in_level,
+  'dawah_requirements' => l.dawah_requirements,
+  'dawah_next_level' => l.dawah_next_level,
+  'dawah_assessments' => l.dawah_assessments,
+  'dawah_level_none_next' => l.dawah_level_none_next,
+  'ilm_quran' => l.ilm_quran,
+  'ilm_adhkar' => l.ilm_adhkar,
+  'ilm_duas' => l.ilm_duas,
+  'ilm_names99' => l.ilm_names99,
+  'ilm_baby_names' => l.ilm_baby_names,
+  'ilm_iman_branches' => l.ilm_iman_branches,
+  'ilm_sunnahs' => l.ilm_sunnahs,
+  'ilm_articles' => l.ilm_articles,
+  'quran_reader' => l.quran_reader,
+  'quran_translation_toggle' => l.quran_translation_toggle,
+  'quran_bookmark' => l.quran_bookmark,
+  'quran_resume' => l.quran_resume,
+  'quran_tilawat_logged' => l.quran_tilawat_logged,
+  'adhkar_morning' => l.adhkar_morning,
+  'adhkar_evening' => l.adhkar_evening,
+  'adhkar_complete' => l.adhkar_complete,
+  'adhkar_tap_count' => l.adhkar_tap_count,
+  'names_boy' => l.names_boy,
+  'names_girl' => l.names_girl,
+  'quiz_start' => l.quiz_start,
+  'quiz_result' => l.quiz_result,
+  'quiz_correct' => l.quiz_correct,
+  'quiz_wrong' => l.quiz_wrong,
+  'quiz_retry' => l.quiz_retry,
+  'more_zakat' => l.more_zakat,
+  'more_qibla' => l.more_qibla,
+  'more_mosque' => l.more_mosque,
+  'more_masala' => l.more_masala,
+  'more_live' => l.more_live,
+  'more_faq' => l.more_faq,
+  'more_about' => l.more_about,
+  'more_feedback' => l.more_feedback,
+  'more_profile' => l.more_profile,
+  'zakat_gold' => l.zakat_gold,
+  'zakat_silver' => l.zakat_silver,
+  'zakat_cash' => l.zakat_cash,
+  'zakat_investments' => l.zakat_investments,
+  'zakat_debts' => l.zakat_debts,
+  'zakat_nisab' => l.zakat_nisab,
+  'zakat_payable' => l.zakat_payable,
+  'zakat_below_nisab' => l.zakat_below_nisab,
+  'zakat_donate' => l.zakat_donate,
+  'qibla_distance' => l.qibla_distance,
+  'qibla_note' => l.qibla_note,
+  'masala_question' => l.masala_question,
+  'masala_your_name' => l.masala_your_name,
+  'masala_sent' => l.masala_sent,
+  'feedback_sent' => l.feedback_sent,
+  'live_now' => l.live_now,
+  'live_upcoming' => l.live_upcoming,
+  'live_past' => l.live_past,
+  'live_notify' => l.live_notify,
+  'profile_theme' => l.profile_theme,
+  'profile_theme_light' => l.profile_theme_light,
+  'profile_theme_dark' => l.profile_theme_dark,
+  'profile_theme_system' => l.profile_theme_system,
+  'profile_language' => l.profile_language,
+  'profile_category' => l.profile_category,
+  'profile_category_general' => l.profile_category_general,
+  'profile_category_hafez' => l.profile_category_hafez,
+  'profile_category_alim' => l.profile_category_alim,
+  'profile_female_privacy_title' => l.profile_female_privacy_title,
+  'app_about' => l.app_about,
+  'today_vs' => l.today_vs,
+  'today_progress' => l.today_progress,
+  'month_prev' => l.month_prev,
+  'month_next' => l.month_next,
+  'day_detail' => l.day_detail,
+  'habit_pick' => l.habit_pick,
+  'tilawat_session' => l.tilawat_session,
+  'tilawat_minutes' => l.tilawat_minutes,
+  'tilawat_pages' => l.tilawat_pages,
+  'dawah_gate_title' => l.dawah_gate_title,
+  'dawah_signin_needed' => l.dawah_signin_needed,
+  'dawah_role_needed' => l.dawah_role_needed,
+  'quran_surahs' => l.quran_surahs,
+  'quran_ayahs' => l.quran_ayahs,
+  'quran_bismillah' => l.quran_bismillah,
+  'more_share_app' => l.more_share_app,
+  'more_share_text' => l.more_share_text,
+  'send' => l.send,
+  'not_available_offline' => l.not_available_offline,
+  'categories' => l.categories,
+  'exact_alarm_title' => l.exact_alarm_title,
+  'exact_alarm_desc' => l.exact_alarm_desc,
+  'exact_alarm_grant' => l.exact_alarm_grant,
+  'hijri_adjust' => l.hijri_adjust,
+  'prayer_please_login' => l.prayer_please_login,
+  'all_set' => l.all_set,
+  'app_title' => l.app_title,
+  'boot_failed' => l.boot_failed,
+  'org_footer' => l.org_footer,
+  'onb_org' => l.onb_org,
+  'onb_bismillah_start' => l.onb_bismillah_start,
+  'onb_bd_defaults' => l.onb_bd_defaults,
+  'lang_desc_bn' => l.lang_desc_bn,
+  'lang_desc_en' => l.lang_desc_en,
+  'lang_desc_ar' => l.lang_desc_ar,
+  'country_bd' => l.country_bd,
+  'country_abroad' => l.country_abroad,
+  'country_intl' => l.country_intl,
+  'city_picker_title' => l.city_picker_title,
+  'city_no_match' => l.city_no_match,
+  'waqt_fajr' => l.waqt_fajr,
+  'waqt_sunrise' => l.waqt_sunrise,
+  'waqt_ishraq' => l.waqt_ishraq,
+  'waqt_duha' => l.waqt_duha,
+  'waqt_dhuhr' => l.waqt_dhuhr,
+  'waqt_asr' => l.waqt_asr,
+  'waqt_maghrib' => l.waqt_maghrib,
+  'waqt_sunset' => l.waqt_sunset,
+  'waqt_isha' => l.waqt_isha,
+  'waqt_tahajjud' => l.waqt_tahajjud,
+  'month_1' => l.month_1,
+  'month_2' => l.month_2,
+  'month_3' => l.month_3,
+  'month_4' => l.month_4,
+  'month_5' => l.month_5,
+  'month_6' => l.month_6,
+  'month_7' => l.month_7,
+  'month_8' => l.month_8,
+  'month_9' => l.month_9,
+  'month_10' => l.month_10,
+  'month_11' => l.month_11,
+  'month_12' => l.month_12,
+  'prayer_offline_chip' => l.prayer_offline_chip,
+  'prayer_bell_enable' => l.prayer_bell_enable,
+  'prayer_bell_disable' => l.prayer_bell_disable,
+  'role_user' => l.role_user,
+  'role_daee' => l.role_daee,
+  'role_usrah_head' => l.role_usrah_head,
+  'role_invigilator' => l.role_invigilator,
+  'role_full_admin' => l.role_full_admin,
+  'level_none' => l.level_none,
+  'level_muhibbus_sunnah' => l.level_muhibbus_sunnah,
+  'level_farze_ain_1' => l.level_farze_ain_1,
+  'level_farze_ain_2' => l.level_farze_ain_2,
+  'madhhab_hanafi' => l.madhhab_hanafi,
+  'madhhab_shafii' => l.madhhab_shafii,
+  'method_karachi' => l.method_karachi,
+  'method_mwl' => l.method_mwl,
+  'method_isna' => l.method_isna,
+  'method_egypt' => l.method_egypt,
+  'method_makkah' => l.method_makkah,
+  'method_dubai' => l.method_dubai,
+  'cat_salah' => l.cat_salah,
+  'cat_quran' => l.cat_quran,
+  'cat_dhikr' => l.cat_dhikr,
+  'cat_akhlaq' => l.cat_akhlaq,
+  'cat_dawat' => l.cat_dawat,
+  'cat_lifestyle' => l.cat_lifestyle,
+  'cat_sunnah' => l.cat_sunnah,
+  'cat_personal' => l.cat_personal,
+  'target_label' => l.target_label,
+  'amal_done' => l.amal_done,
+  'amal_not_done' => l.amal_not_done,
+  'amal_auto_logged' => l.amal_auto_logged,
+  'amal_unlock_reason' => l.amal_unlock_reason,
+  'cadence_weekly_fri' => l.cadence_weekly_fri,
+  'cadence_weekly_mon_thu' => l.cadence_weekly_mon_thu,
+  'cadence_ayyam_beez' => l.cadence_ayyam_beez,
+  'tilawat_target_pages' => l.tilawat_target_pages,
+  'tilawat_target_general' => l.tilawat_target_general,
+  'tilawat_target_hafez' => l.tilawat_target_hafez,
+  'tilawat_target_alim' => l.tilawat_target_alim,
+  'dawah_tab_usrah' => l.dawah_tab_usrah,
+  'dawah_tab_reviews' => l.dawah_tab_reviews,
+  'dawah_share_message' => l.dawah_share_message,
+  'dawah_no_usrah' => l.dawah_no_usrah,
+  'dawah_no_reviews' => l.dawah_no_reviews,
+  'dawah_week' => l.dawah_week,
+  'review_status_overdue' => l.review_status_overdue,
+  'review_status_pending' => l.review_status_pending,
+  'badge_new' => l.badge_new,
+  'quran_juz' => l.quran_juz,
+  'sunnah_cat_all' => l.sunnah_cat_all,
+  'sunnah_cat_daily' => l.sunnah_cat_daily,
+  'sunnah_cat_forgotten' => l.sunnah_cat_forgotten,
+  'sunnah_cat_salah' => l.sunnah_cat_salah,
+  'iman_branch_heart' => l.iman_branch_heart,
+  'iman_branch_tongue' => l.iman_branch_tongue,
+  'iman_branch_body' => l.iman_branch_body,
+  'quiz_minutes' => l.quiz_minutes,
+  'quiz_questions' => l.quiz_questions,
+  'quiz_great' => l.quiz_great,
+  'quiz_needs_more' => l.quiz_needs_more,
+  'unit_km' => l.unit_km,
+  'feedback_hint' => l.feedback_hint,
+  'live_sisters_only' => l.live_sisters_only,
+  'live_host' => l.live_host,
+  'live_will_remind' => l.live_will_remind,
+  'qibla_north' => l.qibla_north,
+  'qibla_dial_hint' => l.qibla_dial_hint,
+  'qibla_dial' => l.qibla_dial,
+  'masala_note' => l.masala_note,
+  'masala_phone' => l.masala_phone,
+  'masala_offline' => l.masala_offline,
+  'profile_app_section' => l.profile_app_section,
+  'hijri_increase' => l.hijri_increase,
+  'hijri_decrease' => l.hijri_decrease,
+  'gender_admin_only' => l.gender_admin_only,
+  'increase' => l.increase,
+  'decrease' => l.decrease,
+  'onb_setup' => l.onb_setup,
+  'compass_n' => l.compass_n,
+  'compass_ne' => l.compass_ne,
+  'compass_e' => l.compass_e,
+  'compass_se' => l.compass_se,
+  'compass_s' => l.compass_s,
+  'compass_sw' => l.compass_sw,
+  'compass_w' => l.compass_w,
+  'compass_nw' => l.compass_nw,
+  'zakat_percent_note' => l.zakat_percent_note,
+  'zakat_net' => l.zakat_net,
+  'zakat_donation_link' => l.zakat_donation_link,
+  'live_programs_count' => l.live_programs_count,
+  _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
+// ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

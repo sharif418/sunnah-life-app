@@ -78,7 +78,7 @@ export function ZakatView() {
           className="rounded-2xl bg-primary text-primary-foreground bg-pattern-islamic p-5 shadow-lifted"
         >
           <p className="text-sm text-primary-foreground/80">যাকাত দিতে হবে</p>
-          <p className="mt-1 text-4xl font-extrabold text-gold tabular-nums leading-tight">
+          <p className="mt-1 text-4xl font-extrabold text-gold-text tabular-nums leading-tight">
             {moneyBn(zakat)}
           </p>
           <p className="mt-1.5 text-xs leading-relaxed text-primary-foreground/75">

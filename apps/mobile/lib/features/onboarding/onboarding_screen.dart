@@ -98,13 +98,13 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'সুন্নাহ লাইফ',
+                          context.t('app_title'),
                           style: theme.textTheme.headlineMedium?.copyWith(
                             color: SLColors.lightPrimaryForeground,
                           ),
                         ),
                         Text(
-                          'আস-সুন্নাহ ফাউন্ডেশন — দাওয়াতুস সুন্নাহ',
+                          context.t('onb_org'),
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: SLColors.lightPrimaryForeground
                                 .withValues(alpha: 0.75),
@@ -132,7 +132,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: SLSpacing.s8),
                 Text(
-                  '${context.isBn ? toBn(_step + 1) : _step + 1} / ${context.isBn ? toBn(3) : 3} — সেটআপ',
+                  '${context.isBn ? toBn(_step + 1) : _step + 1} / ${context.isBn ? toBn(3) : 3} — ${context.t('onb_setup')}',
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: SLColors.lightPrimaryForeground.withValues(alpha: 0.7),
                   ),
@@ -182,7 +182,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       child: Text(
                         _step < 2
                             ? context.t('next')
-                            : 'বিসমিল্লাহ — শুরু করুন',
+                            : context.t('onb_bismillah_start'),
                       ),
                     ),
                   ),
@@ -209,9 +209,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             selected: current == l.code,
             title: l.labelNative,
             subtitle: switch (l) {
-              Lang.bn => 'বাংলাদেশের প্রধান ভাষা',
-              Lang.en => 'For international users',
-              Lang.ar => 'بالدعم الكامل للاتجاه من اليمين إلى اليسار',
+              Lang.bn => context.t('lang_desc_bn'),
+              Lang.en => context.t('lang_desc_en'),
+              Lang.ar => context.t('lang_desc_ar'),
             },
             onTap: () =>
                 ref.read(profileProvider.notifier).update(language: l.code),
@@ -297,7 +297,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       _OptionTile(
         icon: Icons.location_on_outlined,
         title: city?.nameBn ?? profile.city,
-        subtitle: city == null || !city.isBd ? 'বিদেশ' : 'বাংলাদেশ',
+        subtitle: city == null || !city.isBd
+            ? context.t('country_abroad')
+            : context.t('country_bd'),
         onTap: () async {
           final picked = await showCityPicker(context);
           if (picked != null) {
@@ -329,11 +331,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   segments: [
                     ButtonSegment(
                       value: Madhhab.hanafi,
-                      label: Text(Madhhab.hanafi.labelBn),
+                      label: Text(context.t(Madhhab.hanafi.labelKey)),
                     ),
                     ButtonSegment(
                       value: Madhhab.shafii,
-                      label: Text(Madhhab.shafii.labelBn),
+                      label: Text(context.t(Madhhab.shafii.labelKey)),
                     ),
                   ],
                   selected: {profile.madhhab},
@@ -354,7 +356,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         decoration: const InputDecoration(isDense: true),
         items: [
           for (final m in CalcMethod.values)
-            DropdownMenuItem(value: m, child: Text(m.labelBn)),
+            DropdownMenuItem(value: m, child: Text(context.t(m.labelKey))),
         ],
         onChanged: (m) {
           if (m != null) {
@@ -364,7 +366,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
       const SizedBox(height: SLSpacing.s12),
       Text(
-        'বাংলাদেশের জন্য ডিফল্ট: করাচি পদ্ধতি ও হানাফি আসর। সব হিসাব আপনার ফোনেই হয় — ইন্টারনেট ছাড়াও কাজ করবে।',
+        context.t('onb_bd_defaults'),
         style: theme.textTheme.bodySmall?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),

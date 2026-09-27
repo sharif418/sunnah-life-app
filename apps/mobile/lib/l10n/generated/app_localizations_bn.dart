@@ -1,0 +1,1005 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations.dart';
+
+// ignore_for_file: type=lint
+
+/// The translations for Bengali Bangla (`bn`).
+class AppLocalizationsBn extends AppLocalizations {
+  AppLocalizationsBn([String locale = 'bn']) : super(locale);
+
+  @override
+  String get ok => 'ঠিক আছে';
+
+  @override
+  String get cancel => 'বাতিল';
+
+  @override
+  String get save => 'সংরক্ষণ';
+
+  @override
+  String get retry => 'আবার চেষ্টা করুন';
+
+  @override
+  String get next => 'পরবর্তী';
+
+  @override
+  String get back => 'পেছনে';
+
+  @override
+  String get done => 'সম্পন্ন';
+
+  @override
+  String get search => 'খুঁজুন';
+
+  @override
+  String get share => 'শেয়ার';
+
+  @override
+  String get copy => 'কপি';
+
+  @override
+  String get copied => 'কপি হয়েছে';
+
+  @override
+  String get see_all => 'সব দেখুন';
+
+  @override
+  String get loading => 'লোড হচ্ছে…';
+
+  @override
+  String get empty_generic => 'এখনো কিছু নেই';
+
+  @override
+  String get error_generic => 'কিছু একটা সমস্যা হয়েছে';
+
+  @override
+  String get offline => 'অফলাইন — পরিবর্তনগুলো সেভ থাকবে, নেট এলে সিঙ্ক হবে';
+
+  @override
+  String get offline_short => 'অফলাইন';
+
+  @override
+  String get online => 'অনলাইন';
+
+  @override
+  String get guest => 'গেস্ট';
+
+  @override
+  String get version => 'সংস্করণ';
+
+  @override
+  String get tab_home => 'হোম';
+
+  @override
+  String get tab_amal => 'আমল';
+
+  @override
+  String get tab_dawah => 'দাওয়াত';
+
+  @override
+  String get tab_ilm => 'ইলম';
+
+  @override
+  String get tab_more => 'আরও';
+
+  @override
+  String get onb_title => 'সুন্নাহ লাইফে স্বাগতম';
+
+  @override
+  String get onb_step1_title => 'ভাষা নির্বাচন করুন';
+
+  @override
+  String get onb_step2_title => 'আপনার পরিচয়';
+
+  @override
+  String get onb_name => 'নাম';
+
+  @override
+  String get onb_name_hint => 'যেমন: আব্দুল্লাহ';
+
+  @override
+  String get onb_gender => 'লিঙ্গ';
+
+  @override
+  String get onb_male => 'ভাই (পুরুষ)';
+
+  @override
+  String get onb_female => 'বোন (নারী)';
+
+  @override
+  String get onb_female_privacy =>
+      'বোনদের প্রতি আমাদের অঙ্গীকার: আপনার নাম, আমল ও পরিচয় কেবল মহিলা পরিদর্শক ও মহিলা উসরা প্রধান দেখতে পারবেন। ছেলে পরিদর্শক বা অ্যাডমিন-ও মহিলা সদস্যের তথ্য দেখার সুযোগ পাবেন না — এটি ডেটাবেস স্তরেই নিশ্চিত করা হয়েছে।';
+
+  @override
+  String get onb_step3_title => 'অবস্থান ও মাযহাব';
+
+  @override
+  String get onb_city => 'শহর';
+
+  @override
+  String get onb_city_search => 'শহরের নাম লিখুন…';
+
+  @override
+  String get onb_madhhab => 'মাযহাব (আসর)';
+
+  @override
+  String get onb_method => 'হিসাব পদ্ধতি';
+
+  @override
+  String get onb_custom_location => 'নিজের অক্ষাংশ-দ্রাঘিমাংশ';
+
+  @override
+  String get onb_lat => 'অক্ষাংশ';
+
+  @override
+  String get onb_lng => 'দ্রাঘিমাংশ';
+
+  @override
+  String get onb_start => 'শুরু করুন — গেস্ট হিসেবে';
+
+  @override
+  String get onb_signin => 'সাইন ইন';
+
+  @override
+  String get auth_title => 'ফোন দিয়ে সাইন ইন';
+
+  @override
+  String get auth_phone => 'মোবাইল নম্বর';
+
+  @override
+  String get auth_phone_hint => '০১XXXXXXXXX';
+
+  @override
+  String get auth_request_otp => 'কোড পাঠান';
+
+  @override
+  String get auth_otp => 'ভেরিফিকেশন কোড';
+
+  @override
+  String get auth_verify => 'যাচাই করুন';
+
+  @override
+  String get auth_dev_code => 'ডেভ কোড';
+
+  @override
+  String get auth_signout => 'সাইন আউট';
+
+  @override
+  String get auth_guest_note =>
+      'গেস্ট হিসেবে থাকলে আমল শুধু এই ফোনে সেভ থাকবে। সাইন ইন করলে সব একসাথে চলে আসবে।';
+
+  @override
+  String get auth_invalid_phone => 'সঠিক মোবাইল নম্বর দিন';
+
+  @override
+  String get auth_google => 'Google দিয়ে সাইন ইন';
+
+  @override
+  String get auth_apple => 'Apple দিয়ে সাইন ইন';
+
+  @override
+  String get auth_or => 'অথবা';
+
+  @override
+  String get auth_social_error => 'সাইন-ইন ব্যর্থ হয়েছে — আবার চেষ্টা করুন';
+
+  @override
+  String get complete_profile_title => 'প্রোফাইল সম্পূর্ণ করুন';
+
+  @override
+  String get complete_profile_note =>
+      'অ্যাকাউন্ট চালু করতে নাম ও লিঙ্গ দিন। লিঙ্গ একবার দেওয়ার পর আর পরিবর্তন করা যায় না।';
+
+  @override
+  String get prayer_next => 'পরবর্তী ওয়াক্ত';
+
+  @override
+  String get prayer_remaining => 'বাকি';
+
+  @override
+  String get prayer_schedule => 'আজকের সময়সূচি';
+
+  @override
+  String get prayer_current => 'চলছে';
+
+  @override
+  String get prayer_forbidden_times => 'নিষিদ্ধ সময় — নামাজ পড়া নিষেধ';
+
+  @override
+  String get prayer_forbidden_sunrise => 'সূর্যোদয় ওঠা-নামার সময়';
+
+  @override
+  String get prayer_forbidden_zawal => 'যাওয়াল — সূর্য মাথার উপর';
+
+  @override
+  String get prayer_forbidden_sunset => 'সূর্যাস্তের সময়';
+
+  @override
+  String get prayer_bell_hint => 'ঘণ্টি চাপুন — এই ওয়াক্তের আগে নোটিফিকেশন';
+
+  @override
+  String get prayer_bell_on => 'ঘণ্টি চালু আছে';
+
+  @override
+  String get prayer_prompt_title => 'আপনার নামাজ হয়েছে?';
+
+  @override
+  String get prayer_prompt_done_jamaat => 'জামাতে হয়েছে';
+
+  @override
+  String get prayer_post_salat =>
+      'নামাজের পরের আমল লিখে ফেলুন — ২০ মিনিট আগেই জিজ্ঞেস করেছিলাম';
+
+  @override
+  String get amal_today => 'আজকের আমল';
+
+  @override
+  String get amal_month => 'মাসের গ্রিড';
+
+  @override
+  String get amal_jamaat => 'জামাতে';
+
+  @override
+  String get amal_alone => 'একা';
+
+  @override
+  String get amal_qaza => 'কাযা';
+
+  @override
+  String get amal_locked => 'লক';
+
+  @override
+  String get amal_locked_msg =>
+      'এই দিনের আমল লক হয়ে গেছে — পরের দিন ইশরাকের পর দিন বন্ধ হয়।';
+
+  @override
+  String get amal_unlock_request => 'আনলক চাই';
+
+  @override
+  String get amal_unlock_requested =>
+      'উসরা প্রধানকে আনলকের অনুরোধ পাঠানো হয়েছে';
+
+  @override
+  String get amal_streak => 'ধারাবাহিকতা';
+
+  @override
+  String get amal_days => 'দিন';
+
+  @override
+  String get amal_sync_pending => 'টি পরিবর্তন সিঙ্ক বাকি';
+
+  @override
+  String get amal_synced => 'সব সিঙ্ক হয়েছে';
+
+  @override
+  String get amal_completion => 'সম্পন্নতা';
+
+  @override
+  String get amal_habit_builder => 'অভ্যাস গড়ার চ্যালেঞ্জ';
+
+  @override
+  String get amal_habit_builder_desc =>
+      '৭ দিন ধরে প্রতিদিন একটি আমল — স্ট্রিক ধরে রাখুন';
+
+  @override
+  String get amal_self_test => 'ইমান ও তাকওয়া সেলফ-টেস্ট';
+
+  @override
+  String get amal_no_defs =>
+      'আমল ক্যাটালগ খালি — সাইন ইন করলে সম্পূর্ণ তালিকা আসবে';
+
+  @override
+  String get amal_target_reached => 'লক্ষ্য পূরণ';
+
+  @override
+  String get amal_locked_icon => '🔒 লক';
+
+  @override
+  String get dawah_member_code => 'আমার মেম্বার কোড';
+
+  @override
+  String get dawah_referral => 'রেফারেল লিংক';
+
+  @override
+  String get dawah_madu => 'আমার মাদউ';
+
+  @override
+  String get dawah_invited => 'মোট দাওয়াত দিয়েছি';
+
+  @override
+  String get dawah_usrah => 'আমার উসরা';
+
+  @override
+  String get dawah_usrah_head => 'উসরা প্রধান';
+
+  @override
+  String get dawah_members => 'সদস্য';
+
+  @override
+  String get dawah_announcements => 'ঘোষণা ও প্রশ্ন';
+
+  @override
+  String get dawah_reviews => 'সাপ্তাহিক রিভিউ ইতিহাস';
+
+  @override
+  String get dawah_my_level => 'আমার স্তর';
+
+  @override
+  String get dawah_months_in_level => 'এই স্তরে মাস';
+
+  @override
+  String get dawah_requirements => 'উন্নতির শর্তাবলি';
+
+  @override
+  String get dawah_next_level => 'পরবর্তী স্তর';
+
+  @override
+  String get dawah_assessments => 'মূল্যায়নের ইতিহাস';
+
+  @override
+  String get dawah_level_none_next =>
+      'দায়ী হিসেবে নিজেকে গড়ে তুলুন — মেম্বার কোড শেয়ার করে দাওয়াত দিন';
+
+  @override
+  String get ilm_quran => 'আল-কুরআন';
+
+  @override
+  String get ilm_adhkar => 'আযকার';
+
+  @override
+  String get ilm_duas => 'দোয়া ভাণ্ডার';
+
+  @override
+  String get ilm_names99 => 'আল্লাহর ৯৯ নাম';
+
+  @override
+  String get ilm_baby_names => 'ইসলামিক নাম';
+
+  @override
+  String get ilm_iman_branches => 'ঈমানের ৭০ শাখা';
+
+  @override
+  String get ilm_sunnahs => 'সুন্নাহ ও বিস্মৃত সুন্নাহ';
+
+  @override
+  String get ilm_articles => 'আর্টিকেল';
+
+  @override
+  String get quran_reader => 'কুরআন পড়ুন';
+
+  @override
+  String get quran_translation_toggle => 'বাংলা অনুবাদ';
+
+  @override
+  String get quran_bookmark => 'বুকমার্ক';
+
+  @override
+  String get quran_resume => 'শেষ পড়া থেকে শুরু করুন';
+
+  @override
+  String get quran_tilawat_logged => 'তিলাওয়াত আমলনামায় যোগ হয়েছে';
+
+  @override
+  String get adhkar_morning => 'সকালের আযকার';
+
+  @override
+  String get adhkar_evening => 'সন্ধ্যার আযকার';
+
+  @override
+  String get adhkar_complete => 'সেট সম্পূর্ণ — আমলনামায় টিক দেওয়া হলো';
+
+  @override
+  String get adhkar_tap_count => 'গণনার জন্য চাপুন';
+
+  @override
+  String get names_boy => 'ছেলে';
+
+  @override
+  String get names_girl => 'মেয়ে';
+
+  @override
+  String get quiz_start => 'শুরু করুন';
+
+  @override
+  String get quiz_result => 'ফলাফল';
+
+  @override
+  String get quiz_correct => 'সঠিক!';
+
+  @override
+  String get quiz_wrong => 'ভুল';
+
+  @override
+  String get quiz_retry => 'আবার দিন';
+
+  @override
+  String get more_zakat => 'যাকাত ক্যালকুলেটর';
+
+  @override
+  String get more_qibla => 'কিবলা কম্পাস';
+
+  @override
+  String get more_mosque => 'আমার মসজিদ';
+
+  @override
+  String get more_masala => 'মাসআলা জিজ্ঞাসা';
+
+  @override
+  String get more_live => 'লাইভ প্রোগ্রাম';
+
+  @override
+  String get more_faq => 'জিজ্ঞাসা (FAQ)';
+
+  @override
+  String get more_about => 'আমাদের সম্পর্কে';
+
+  @override
+  String get more_feedback => 'মতামত দিন';
+
+  @override
+  String get more_profile => 'প্রোফাইল';
+
+  @override
+  String get zakat_gold => 'স্বর্ণ (গ্রাম)';
+
+  @override
+  String get zakat_silver => 'রূপা (গ্রাম)';
+
+  @override
+  String get zakat_cash => 'নগদ ও ব্যাংক';
+
+  @override
+  String get zakat_investments => 'ব্যবসা ও বিনিয়োগ';
+
+  @override
+  String get zakat_debts => 'ঋণ (বাদ যাবে)';
+
+  @override
+  String get zakat_nisab => 'নিসাব (৮৫ গ্রাম স্বর্ণ)';
+
+  @override
+  String get zakat_payable => 'যাকাত দিতে হবে';
+
+  @override
+  String get zakat_below_nisab => 'নিসাব পরিমাণ সম্পদ নেই — যাকাত ফরজ নয়';
+
+  @override
+  String get zakat_donate => 'দান করুন';
+
+  @override
+  String get qibla_distance => 'কাবা থেকে দূরত্ব';
+
+  @override
+  String get qibla_note =>
+      'ফোন সমতলে ধরে উত্তর দিক ঠিক করে নিন, তারপর তীরের দিকে মুখ করুন';
+
+  @override
+  String get masala_question => 'আপনার প্রশ্ন লিখুন';
+
+  @override
+  String get masala_your_name => 'আপনার নাম';
+
+  @override
+  String get masala_sent =>
+      'প্রশ্ন পাঠানো হয়েছে — মুফতি সাহেব উত্তর দিলে জানানো হবে';
+
+  @override
+  String get feedback_sent => 'ধন্যবাদ! মতামত পাঠানো হয়েছে';
+
+  @override
+  String get live_now => 'এখন লাইভ';
+
+  @override
+  String get live_upcoming => 'আসছে';
+
+  @override
+  String get live_past => 'সমাপ্ত';
+
+  @override
+  String get live_notify => 'মনে করিয়ে দিন';
+
+  @override
+  String get profile_theme => 'থিম';
+
+  @override
+  String get profile_theme_light => 'লাইট';
+
+  @override
+  String get profile_theme_dark => 'ডার্ক';
+
+  @override
+  String get profile_theme_system => 'সিস্টেম';
+
+  @override
+  String get profile_language => 'ভাষা';
+
+  @override
+  String get profile_category => 'ক্যাটাগরি';
+
+  @override
+  String get profile_category_general => 'সাধারণ';
+
+  @override
+  String get profile_category_hafez => 'হাফেজ';
+
+  @override
+  String get profile_category_alim => 'আলেম';
+
+  @override
+  String get profile_female_privacy_title => 'বোনদের গোপনীয়তার নিশ্চয়তা';
+
+  @override
+  String get app_about =>
+      'সুন্নাহ লাইফ — আস-সুন্নাহ ফাউন্ডেশনের দাওয়াতুস সুন্নাহ বিভাগের পক্ষ থেকে। নামাজ, আমল, ইলম আর তারবিয়াত — সব এক অ্যাপে।';
+
+  @override
+  String get today_vs => 'আজ';
+
+  @override
+  String get today_progress => 'আজকের অগ্রগতি';
+
+  @override
+  String get month_prev => 'আগের মাস';
+
+  @override
+  String get month_next => 'পরের মাস';
+
+  @override
+  String get day_detail => 'দিনের বিবরণ';
+
+  @override
+  String get habit_pick => 'আমল বাছুন';
+
+  @override
+  String get tilawat_session => 'তিলাওয়াত সেশন';
+
+  @override
+  String get tilawat_minutes => 'মিনিট পড়েছেন';
+
+  @override
+  String get tilawat_pages => 'পৃষ্ঠা হিসেবে লিখুন';
+
+  @override
+  String get dawah_gate_title => 'দাওয়াত কেন্দ্র';
+
+  @override
+  String get dawah_signin_needed =>
+      'দাওয়াত কেন্দ্র ব্যবহার করতে সাইন ইন করুন — দায়ী, উসরা প্রধান ও পরিদর্শকদের জন্য।';
+
+  @override
+  String get dawah_role_needed =>
+      'এই অংশটি দায়ী ও তত্ত্বাবধায়কদের জন্য। আপনার একাউন্টে এখনো দায়ীর ভূমিকা নেই।';
+
+  @override
+  String get quran_surahs => 'সূরা';
+
+  @override
+  String get quran_ayahs => 'আয়াত';
+
+  @override
+  String get quran_bismillah => 'বিসমিল্লাহির রাহমানির রাহীম';
+
+  @override
+  String get more_share_app => 'অ্যাপ শেয়ার করুন';
+
+  @override
+  String get more_share_text =>
+      'সুন্নাহ লাইফ — নামাজের সময়, আমলনামা, কুরআন আর তারবিয়াত এক অ্যাপে। https://sunnahlife.app';
+
+  @override
+  String get send => 'পাঠান';
+
+  @override
+  String get not_available_offline =>
+      'এই অংশে ইন্টারনেট লাগবে — অনুগ্রহ করে সংযোগ দিন';
+
+  @override
+  String get categories => 'ক্যাটাগরি';
+
+  @override
+  String get exact_alarm_title => 'নামাজের নিখুঁত অ্যালার্ম';
+
+  @override
+  String get exact_alarm_desc =>
+      'ফোন ঘুমিয়ে থাকলেও ঠিক সময়ে ঘণ্টি বাজাতে অনুমতি দিন।';
+
+  @override
+  String get exact_alarm_grant => 'অনুমতি দিন';
+
+  @override
+  String get hijri_adjust => 'হিজরি সমন্বয় (দিন)';
+
+  @override
+  String get prayer_please_login => 'অ্যাকাউন্টে সেভ হবে';
+
+  @override
+  String get all_set => 'সব ঠিক আছে';
+
+  @override
+  String get app_title => 'সুন্নাহ লাইফ';
+
+  @override
+  String get boot_failed => 'শুরু করা যায়নি';
+
+  @override
+  String get org_footer => 'আস-সুন্নাহ ফাউন্ডেশন · দাওয়াতুস সুন্নাহ';
+
+  @override
+  String get onb_org => 'আস-সুন্নাহ ফাউন্ডেশন — দাওয়াতুস সুন্নাহ';
+
+  @override
+  String get onb_bismillah_start => 'বিসমিল্লাহ — শুরু করুন';
+
+  @override
+  String get onb_bd_defaults =>
+      'বাংলাদেশের জন্য ডিফল্ট: করাচি পদ্ধতি ও হানাফি আসর। সব হিসাব আপনার ফোনেই হয় — ইন্টারনেট ছাড়াও কাজ করবে।';
+
+  @override
+  String get lang_desc_bn => 'বাংলাদেশের প্রধান ভাষা';
+
+  @override
+  String get lang_desc_en => 'ইংরেজি';
+
+  @override
+  String get lang_desc_ar => 'আরবি — ডান থেকে বাম';
+
+  @override
+  String get country_bd => 'বাংলাদেশ';
+
+  @override
+  String get country_abroad => 'বিদেশ';
+
+  @override
+  String get country_intl => 'আন্তর্জাতিক';
+
+  @override
+  String get city_picker_title => 'শহর নির্বাচন করুন';
+
+  @override
+  String get city_no_match =>
+      'কোনো শহর মেলেনি — বানান দেখে নিন বা মূল তালিকা থেকে বাছুন';
+
+  @override
+  String get waqt_fajr => 'ফজর';
+
+  @override
+  String get waqt_sunrise => 'সূর্যোদয়';
+
+  @override
+  String get waqt_ishraq => 'ইশরাক';
+
+  @override
+  String get waqt_duha => 'দুহা';
+
+  @override
+  String get waqt_dhuhr => 'যোহর';
+
+  @override
+  String get waqt_asr => 'আসর';
+
+  @override
+  String get waqt_maghrib => 'মাগরিব';
+
+  @override
+  String get waqt_sunset => 'সূর্যাস্ত';
+
+  @override
+  String get waqt_isha => 'এশা';
+
+  @override
+  String get waqt_tahajjud => 'তাহাজ্জুদ';
+
+  @override
+  String get month_1 => 'জানুয়ারি';
+
+  @override
+  String get month_2 => 'ফেব্রুয়ারি';
+
+  @override
+  String get month_3 => 'মার্চ';
+
+  @override
+  String get month_4 => 'এপ্রিল';
+
+  @override
+  String get month_5 => 'মে';
+
+  @override
+  String get month_6 => 'জুন';
+
+  @override
+  String get month_7 => 'জুলাই';
+
+  @override
+  String get month_8 => 'আগস্ট';
+
+  @override
+  String get month_9 => 'সেপ্টেম্বর';
+
+  @override
+  String get month_10 => 'অক্টোবর';
+
+  @override
+  String get month_11 => 'নভেম্বর';
+
+  @override
+  String get month_12 => 'ডিসেম্বর';
+
+  @override
+  String get prayer_offline_chip => 'সব হিসাব অফলাইনে আপনার ফোনেই হয়';
+
+  @override
+  String get prayer_bell_enable => 'ঘণ্টি চালু করুন';
+
+  @override
+  String get prayer_bell_disable => 'ঘণ্টি বন্ধ করুন';
+
+  @override
+  String get role_user => 'সাধারণ ব্যবহারকারী';
+
+  @override
+  String get role_daee => 'দায়ী';
+
+  @override
+  String get role_usrah_head => 'উসরা প্রধান';
+
+  @override
+  String get role_invigilator => 'পরিদর্শক';
+
+  @override
+  String get role_full_admin => 'প্রধান অ্যাডমিন';
+
+  @override
+  String get level_none => 'শুরুর পর্যায়';
+
+  @override
+  String get level_muhibbus_sunnah => 'মুহিব্বুস সুন্নাহ';
+
+  @override
+  String get level_farze_ain_1 => 'ফরযে আইন — ক্যাটাগরি ১';
+
+  @override
+  String get level_farze_ain_2 => 'ফরযে আইন — ক্যাটাগরি ২';
+
+  @override
+  String get madhhab_hanafi => 'হানাফি';
+
+  @override
+  String get madhhab_shafii => 'শাফেয়ি';
+
+  @override
+  String get method_karachi => 'করাচি (১৮°/১৮°)';
+
+  @override
+  String get method_mwl => 'মুসলিম ওয়ার্ল্ড লীগ';
+
+  @override
+  String get method_isna => 'ISNA (উত্তর আমেরিকা)';
+
+  @override
+  String get method_egypt => 'মিসরীয়';
+
+  @override
+  String get method_makkah => 'উম্মুল কুরা (মক্কা)';
+
+  @override
+  String get method_dubai => 'দুবাই';
+
+  @override
+  String get cat_salah => 'নামাজ';
+
+  @override
+  String get cat_quran => 'কুরআন';
+
+  @override
+  String get cat_dhikr => 'যিকর ও দোয়া';
+
+  @override
+  String get cat_akhlaq => 'আখলাক';
+
+  @override
+  String get cat_dawat => 'দাওয়াত';
+
+  @override
+  String get cat_lifestyle => 'জীবনাচরণ';
+
+  @override
+  String get cat_sunnah => 'সাপ্তাহিক ও মাসিক সুন্নাহ';
+
+  @override
+  String get cat_personal => 'ব্যক্তিগত লক্ষ্য';
+
+  @override
+  String get target_label => 'লক্ষ্য';
+
+  @override
+  String get amal_done => 'হয়েছে';
+
+  @override
+  String get amal_not_done => 'হয়নি';
+
+  @override
+  String get amal_auto_logged => 'স্বয়ংক্রিয়ভাবে লেখা হয়েছে';
+
+  @override
+  String get amal_unlock_reason => 'মোবাইল অ্যাপ থেকে অনুরোধ';
+
+  @override
+  String get cadence_weekly_fri => 'শুক্রবার';
+
+  @override
+  String get cadence_weekly_mon_thu => 'সোম ও বৃহস্পতিবার';
+
+  @override
+  String get cadence_ayyam_beez => 'আইয়ামে বীজ (১৩–১৫)';
+
+  @override
+  String get tilawat_target_pages => 'পৃষ্ঠা';
+
+  @override
+  String get tilawat_target_general => 'তিলাওয়াত: ১ পৃষ্ঠা';
+
+  @override
+  String get tilawat_target_hafez => 'তিলাওয়াত: ১ পারা';
+
+  @override
+  String get tilawat_target_alim => 'তিলাওয়াত: ১০ পৃষ্ঠা';
+
+  @override
+  String get dawah_tab_usrah => 'উসরা';
+
+  @override
+  String get dawah_tab_reviews => 'রিভিউ';
+
+  @override
+  String get dawah_share_message =>
+      'আসসালামু আলাইকুম। সুন্নাহ লাইফ অ্যাপে আমার সাথে যুক্ত হোন:';
+
+  @override
+  String get dawah_no_usrah =>
+      'আপনি এখনো কোনো উসরায় যুক্ত নন — অ্যাডমিন যুক্ত করলে এখানে দেখা যাবে';
+
+  @override
+  String get dawah_no_reviews => 'এখনো কোনো সাপ্তাহিক রিভিউ হয়নি';
+
+  @override
+  String get dawah_week => 'সপ্তাহ';
+
+  @override
+  String get review_status_overdue => 'বিলম্বিত';
+
+  @override
+  String get review_status_pending => 'অপেক্ষমাণ';
+
+  @override
+  String get badge_new => 'নতুন';
+
+  @override
+  String get quran_juz => 'জুয়';
+
+  @override
+  String get sunnah_cat_all => 'সব';
+
+  @override
+  String get sunnah_cat_daily => 'দৈনন্দিন সুন্নাহ';
+
+  @override
+  String get sunnah_cat_forgotten => 'বিস্মৃত সুন্নাহ';
+
+  @override
+  String get sunnah_cat_salah => 'নামাজের সুন্নাহ';
+
+  @override
+  String get iman_branch_heart => 'অন্তরের ঈমান';
+
+  @override
+  String get iman_branch_tongue => 'জবানের ঈমান';
+
+  @override
+  String get iman_branch_body => 'দেহের ঈমান';
+
+  @override
+  String get quiz_minutes => 'মিনিট';
+
+  @override
+  String get quiz_questions => 'প্রশ্ন';
+
+  @override
+  String get quiz_great => 'আলহামদুলিল্লাহ — দুর্দান্ত!';
+
+  @override
+  String get quiz_needs_more => 'আরও একটু পড়া দরকার — আবার চেষ্টা করুন';
+
+  @override
+  String get unit_km => 'কিমি';
+
+  @override
+  String get feedback_hint => 'আপনার মতামত লিখুন…';
+
+  @override
+  String get live_sisters_only => 'শুধু বোনদের সেশন';
+
+  @override
+  String get live_host => 'উপস্থাপক';
+
+  @override
+  String get live_will_remind => 'মনে করিয়ে দেওয়া হবে ইনশাআল্লাহ';
+
+  @override
+  String get qibla_north => 'উত্তর';
+
+  @override
+  String get qibla_dial_hint => 'ডায়াল ঘোরান — তীরটি যেন উপরে থাকে';
+
+  @override
+  String get qibla_dial => 'ডায়াল';
+
+  @override
+  String get masala_note =>
+      'দ্বীনি মাসআলা লিখে জানান — মুফতি সাহেব ইনশাআল্লাহ উত্তর দিবেন।';
+
+  @override
+  String get masala_phone => 'মোবাইল (ঐচ্ছিক)';
+
+  @override
+  String get masala_offline => 'অফলাইনে পাঠানো যাবে না — ইন্টারনেট সংযোগ দরকার';
+
+  @override
+  String get profile_app_section => 'অ্যাপ';
+
+  @override
+  String get hijri_increase => 'হিজরি সমন্বয় বাড়ান';
+
+  @override
+  String get hijri_decrease => 'হিজরি সমন্বয় কমান';
+
+  @override
+  String get gender_admin_only => 'শুধু অ্যাডমিন পরিবর্তন করতে পারেন';
+
+  @override
+  String get increase => 'বাড়ান';
+
+  @override
+  String get decrease => 'কমান';
+
+  @override
+  String get onb_setup => 'সেটআপ';
+
+  @override
+  String get compass_n => 'উত্তর';
+
+  @override
+  String get compass_ne => 'উত্তর-পূর্ব';
+
+  @override
+  String get compass_e => 'পূর্ব';
+
+  @override
+  String get compass_se => 'দক্ষিণ-পূর্ব';
+
+  @override
+  String get compass_s => 'দক্ষিণ';
+
+  @override
+  String get compass_sw => 'দক্ষিণ-পশ্চিম';
+
+  @override
+  String get compass_w => 'পশ্চিম';
+
+  @override
+  String get compass_nw => 'উত্তর-পশ্চিম';
+
+  @override
+  String get zakat_percent_note => 'সম্পদের ২.৫%';
+
+  @override
+  String get zakat_net => 'নেট';
+
+  @override
+  String get zakat_donation_link => 'দানের লিংক';
+
+  @override
+  String get live_programs_count => 'টি প্রোগ্রাম';
+}

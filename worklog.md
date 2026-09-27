@@ -431,3 +431,34 @@ Work Log:
 
 Stage Summary:
 - Social auth is code-complete and statically verified; enabling live requires GOOGLE_CLIENT_ID/APPLE_SERVICES_ID env + restart (documented in RELEASE.md §social-login).
+
+---
+Task ID: B6
+Agent: B6 (general-purpose subagent — died to infra timeout after writing all files; verified + integrated by lead-architect)
+Task: Level automation (nightly rules worker → LevelTransition + audit + reminder), Dawah live requirements checklist, full admin CRUD (catalog, versioned templates, usrah mgmt, audited role/gender, live programs) + admin UI wiring.
+
+Work Log:
+- LevelsService (src/levels/) — rule evaluation shared by the nightly processor + GET /api/dawah/requirements; levels.processor.ts + "levels-nightly" repeatable job (00:30 BD) auto-promotes, writes LevelTransition (method:auto) + AuditLog + Reminder + push; idempotent. Migration 20260928160000_level_transitions APPLIED (prisma migrate status clean).
+- Admin promote now REQUIRES a reason; records method:"admin" + actor.
+- Admin CRUD: amal catalog PATCH /api/admin/amal-catalog/:key (titleBn/points/active) + PATCH reorder (keys array) — catalog now DB-backed (AmalDefinition table, 31 rows seeded); versioned AssessmentTemplate (create new version, activate); POST /api/admin/usrah + PATCH (head/invigilator assignment, gender-validated) + member move endpoints; PATCH /api/admin/users audited with reason (gender Full-Admin-only); live program CRUD.
+- Web Dawah view: স্তরের প্রয়োজনীয়তা live checklist section (progress chips).
+- Admin UI: catalog (update/disable/reorder), templates, usrah mgmt, levels (history + promote-with-reason), live CRUD pages wired.
+- LEAD FIXES: levels.spec getResponse() typing; ilm.spec unused var.
+- Lead live verification: dawah/requirements returns live checklist (min_months 4/4 met, assessment_passed met, …); usrah create 201 (উসরা আল-ইখলাস); catalog update 200 + reorder 200 + audit entries recorded (update_amal_definition, reorder_amal_catalog, create_usrah, usrah move); audited usrahId move + restore 200; worker log shows levels queue + levels-nightly registered. jest 133/133 (9 suites), lint 0, tsc 0.
+
+Stage Summary:
+- Level progression is automated nightly (rules from level-rules.json) with admin override requiring a reason; the admin API now covers catalog CRUD/reorder, versioned templates, usrah management, audited role/gender changes, live program CRUD — all wired into the admin UI.
+
+---
+Task ID: B7
+Agent: B7 (general-purpose subagent — died to infra timeout after writing most files; completed + verified by lead-architect)
+Task: bn/en/ar with real RTL (ARB + gen-l10n on mobile, catalogs + logical CSS on web/admin) + accessibility pass with WCAG AA contrast table.
+
+Work Log:
+- Mobile: full ARB migration (lib/l10n/app_bn.arb TEMPLATE + app_en.arb + app_ar.arb; committed generated/ output via l10n.yaml, nullable getter w/ Bengali fallback); app swept to AppLocalizations (~25 screens); Arabic locale → RTL Directionality; hard-coded L/R audited; hot-swap via persisted store; flutter analyze 0 issues, flutter test 65/65.
+- Web: full trilingual catalog in i18n.ts (77 keys × bn/en/ar); shell sets dir="rtl" for ar; globals.css [dir=rtl] rules; logical-CSS sweep (ms/me/ps/pe/start/end); language switch hot-swaps.
+- A11Y (lead-completed): contrast script over tokens.json → docs/A11Y_CONTRAST.md — 14 pairs, both themes, ALL PASS after fixes: gold TEXT now uses --gold-text (#B7791F light = 3.31:1 ≥3:1 large, #D9B25F dark = 9.23:1) with 23 text-gold usages swept; alert light #C0392B→#B93527 (4.49→4.82:1); tokens.json + globals.css + build.mjs --check path fixed (root→apps/web) → "70 color values verified". tap-target (44px) on bottom nav; focus-visible ring; aria-labels on icon buttons; Flutter Semantics + scale-safe layouts.
+- Browser verification: Arabic onboarding → dir="rtl" on shell; bottom nav renders الرئيسية/الأعمال/العلم/المزيد (Arabic labels live).
+
+Stage Summary:
+- bn/en/ar shipped on mobile (ARB+gen-l10n, RTL) and web (catalog + RTL + logical CSS); WCAG AA contrast table documented with the two failures FIXED (gold-text, alert) and parity-check green. Honest gaps: admin keeps bn-only (RTL-ready logical classes), a few onboarding step-2 strings fall back to Bengali in the Arabic locale.

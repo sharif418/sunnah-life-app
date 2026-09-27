@@ -89,7 +89,7 @@ class LiveScreen extends ConsumerWidget {
                                   borderRadius: SLRadius.brPill,
                                 ),
                                 child: Text(
-                                  'শুধু বোনদের সেশন',
+                                  context.t('live_sisters_only'),
                                   style: theme.textTheme.bodySmall?.copyWith(
                                       color: theme.colorScheme.tertiary),
                                 ),
@@ -101,7 +101,8 @@ class LiveScreen extends ConsumerWidget {
                             style: theme.textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w700)),
                         if (p.hostName?.isNotEmpty ?? false)
-                          Text('উপস্থাপক: ${p.hostName}',
+                          Text(
+                              '${context.t('live_host')}: ${p.hostName}',
                               style: theme.textTheme.bodySmall),
                         if (showTime)
                           Text(
@@ -126,7 +127,7 @@ class LiveScreen extends ConsumerWidget {
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(SnackBar(
                                       content: Text(
-                                          'মনে করিয়ে দেওয়া হবে ইনশাআল্লাহ'),
+                                          context.t('live_will_remind')),
                                     ));
                                   }
                                 } on ApiException catch (e) {
@@ -163,7 +164,7 @@ class LiveScreen extends ConsumerWidget {
                   programs.where((p) => p.status == 'past').toList()),
               Center(
                 child: Text(
-                  '${bn ? toBn(programs.length) : programs.length}টি প্রোগ্রাম',
+                  '${bn ? toBn(programs.length) : programs.length} ${context.t('live_programs_count')}',
                   style: theme.textTheme.bodySmall,
                 ),
               ),

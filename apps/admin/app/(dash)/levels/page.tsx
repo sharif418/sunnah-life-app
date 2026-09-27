@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, Check, Clock, GraduationCap, Users } from "lucide-react";
+import { ArrowUpRight, Check, Clock, GraduationCap, History, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
-import { toBn } from "@/lib/bn";
+import { relativeBn, toBn } from "@/lib/bn";
 import { LEVEL_LABELS_BN, LEVEL_ORDER, isFullAdmin } from "@/lib/labels";
+import { GenderBadge, LevelBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ErrorState } from "@/components/ui/states";
@@ -54,6 +55,64 @@ const REQUIREMENT_LABELS: { key: string; label: string; detail: string }[] = [
     detail: "ঈমান · ইলম · ইবাদত · আখলাক · সিফাত · ত্যাগ — প্রতিটি বিভাগের চেকলিস্ট পরিদর্শক কর্তৃক পূরণ।",
   },
 ];
+
+function TransitionHistory() {
+  const transitions = useQuery({
+    queryKey: ["level-transitions"],
+    queryFn: () => api.levelTransitions(),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <History className="h-[18px] w-[18px] text-primary" aria-hidden />
+          উন্নয়নের ইতিহাস (LevelTransition)
+        </CardTitle>
+        <CardDescription>
+          প্রতিটি স্তর-উন্নয়নের রেকর্ড — কে, কখন, কোন স্তর থেকে কোন স্তরে, কারণসহ · রাত ১২:৩০-এর
+          স্বয়ংক্রিয় মূল্যায়নও এখানেই লেখা হয় (স্বয়ংক্রিয়)
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        {transitions.isLoading ? (
+          <TableSkeleton rows={4} cols={4} />
+        ) : transitions.isError ? (
+          <ErrorState error={transitions.error} onRetry={() => transitions.refetch()} />
+        ) : (transitions.data?.transitions ?? []).length === 0 ? (
+          <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+            এখনো কোনো উন্নয়ন রেকর্ড হয়নি
+          </p>
+        ) : (
+          <ul className="scroll-thin max-h-[28rem] divide-y divide-border overflow-y-auto">
+            {transitions.data!.transitions.map((t) => (
+              <li key={t.id} className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2.5">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-semibold">{t.userName}</span>
+                  <span className="block text-[11px] text-muted-foreground">
+                    {t.memberCode ?? "—"} · {relativeBn(t.at)}
+                  </span>
+                </span>
+                <GenderBadge gender={t.gender} />
+                <span className="flex items-center gap-1.5 text-xs">
+                  <LevelBadge level={t.fromLevel} />
+                  <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+                  <LevelBadge level={t.toLevel} />
+                </span>
+                <Badge variant={t.method === "auto" ? "solid" : "outline"}>
+                  {t.method === "auto" ? "স্বয়ংক্রিয়" : "অ্যাডমিন"}
+                </Badge>
+                {t.reason ? (
+                  <span className="w-full text-xs leading-relaxed text-muted-foreground">কারণ: {t.reason}</span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function LevelsPage() {
   const { user, fullAdmin } = useSession();
@@ -185,6 +244,8 @@ export default function LevelsPage() {
         <TableSkeleton rows={3} cols={3} />
       ) : null}
       {users.isError ? <ErrorState error={users.error} onRetry={() => users.refetch()} /> : null}
+
+      <TransitionHistory />
     </div>
   );
 }

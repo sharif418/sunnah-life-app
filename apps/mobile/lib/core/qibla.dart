@@ -35,6 +35,32 @@ double distanceKm(double lat1, double lng1, double lat2, double lng2) {
   return r * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 }
 
+/// Compass-point ARB key nearest to a bearing (bn/en/ar localized — the old
+/// Bengali-only label is now `S.tr(lang, compassKeyFor(bearing))`).
+String compassKeyFor(double bearing) {
+  final points = <double, String>{
+    0: 'compass_n',
+    45: 'compass_ne',
+    90: 'compass_e',
+    135: 'compass_se',
+    180: 'compass_s',
+    225: 'compass_sw',
+    270: 'compass_w',
+    315: 'compass_nw',
+  };
+  var best = points.keys.first;
+  var bestDiff = 360.0;
+  for (final angle in points.keys) {
+    final raw = (bearing - angle).abs();
+    final diff = math.min(raw, 360 - raw);
+    if (diff < bestDiff) {
+      bestDiff = diff;
+      best = angle;
+    }
+  }
+  return points[best]!;
+}
+
 /// Compass-point label (Bengali) nearest to a bearing.
 String compassLabelBn(double bearing) {
   final points = <double, String>{

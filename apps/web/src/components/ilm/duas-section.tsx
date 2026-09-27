@@ -148,7 +148,7 @@ function DuaCard({ dua, highlighted }: { dua: DuaItem; highlighted: boolean }) {
           {dua.reference}
         </p>
         {dua.virtue ? (
-          <p className="mt-2 rounded-lg bg-gold-soft px-3 py-2 text-xs leading-relaxed text-gold-foreground">
+          <p className="mt-2 rounded-lg bg-gold-soft px-3 py-2 text-xs leading-relaxed text-gold-text-foreground">
             <Sparkles className="me-1 inline size-3" />
             {dua.virtue}
           </p>

@@ -1,9 +1,10 @@
 import { Module } from "@nestjs/common";
 import { PushModule } from "../push/push.module";
+import { LevelsModule } from "../levels/levels.module";
 import { AdminController, AdminService } from "./admin.controller";
 
 @Module({
-  imports: [PushModule], // broadcast fans out through PushService (B2)
+  imports: [PushModule, LevelsModule], // PushModule: broadcast/promote fan-out (B2); LevelsModule: promote + transitions (B6)
   controllers: [AdminController],
   providers: [AdminService],
 })

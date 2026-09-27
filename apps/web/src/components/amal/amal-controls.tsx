@@ -309,8 +309,8 @@ export function CompletionRing({ pct, size = 72 }: { pct: number; size?: number 
 export function StreakBadge({ days }: { days: number }) {
   if (days <= 0) return null;
   return (
-    <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-gold/30 bg-gold-soft px-3 text-xs font-bold text-gold-foreground">
-      <Flame className="size-4 text-gold" />
+    <span className="inline-flex h-8 items-center gap-1.5 rounded-full border border-gold/30 bg-gold-soft px-3 text-xs font-bold text-gold-text-foreground">
+      <Flame className="size-4 text-gold-text-text" />
       {toBn(days)} দিন ধারাবাহিক
     </span>
   );

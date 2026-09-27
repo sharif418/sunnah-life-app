@@ -14,13 +14,21 @@ import { Module } from "@nestjs/common";
 import { QueueModule } from "./queue.module";
 import { PushModule } from "../push/push.module";
 import { ReportsModule } from "../reports/reports.module";
+import { LevelsModule } from "../levels/levels.module";
 import { PrayerPushProcessor } from "./processors/prayer-push.processor";
 import { StreaksProcessor } from "./processors/streaks.processor";
 import { WeeklyReviewsProcessor } from "./processors/weekly-reviews.processor";
 import { MonthlyReportProcessor } from "./processors/monthly-report.processor";
+import { LevelsProcessor } from "./processors/levels.processor";
 
 @Module({
-  imports: [QueueModule, PushModule, ReportsModule], // PushModule: processors deliver via PushService; ReportsModule: monthly PDF service
-  providers: [PrayerPushProcessor, StreaksProcessor, WeeklyReviewsProcessor, MonthlyReportProcessor],
+  imports: [QueueModule, PushModule, ReportsModule, LevelsModule], // PushModule: processors deliver via PushService; ReportsModule: monthly PDF service; LevelsModule: nightly auto-promotion engine (B6)
+  providers: [
+    PrayerPushProcessor,
+    StreaksProcessor,
+    WeeklyReviewsProcessor,
+    MonthlyReportProcessor,
+    LevelsProcessor,
+  ],
 })
 export class WorkerProcessorsModule {}

@@ -68,7 +68,7 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
                       ],
                       const SizedBox(height: SLSpacing.s8),
                       Text(
-                        '${bn ? toBn(quiz.questions.length) : quiz.questions.length} প্রশ্ন · ${bn ? toBn(quiz.minutes) : quiz.minutes} ${bn ? 'মিনিট' : 'min'}',
+                        '${bn ? toBn(quiz.questions.length) : quiz.questions.length} ${context.t('quiz_questions')} · ${bn ? toBn(quiz.minutes) : quiz.minutes} ${context.t('quiz_minutes')}',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -148,8 +148,8 @@ class _QuizRunnerState extends State<_QuizRunner> {
                 const SizedBox(height: SLSpacing.s8),
                 Text(
                   pct >= 70
-                      ? 'আলহামদুলিল্লাহ — দুর্দান্ত!'
-                      : 'আরও একটু পড়া দরকার — আবার চেষ্টা করুন',
+                      ? context.t('quiz_great')
+                      : context.t('quiz_needs_more'),
                   style: theme.textTheme.bodyLarge,
                 ),
                 const SizedBox(height: SLSpacing.s24),
@@ -224,6 +224,7 @@ class _QuizRunnerState extends State<_QuizRunner> {
             FilledButton(
               onPressed: _next,
               child: Text(
+                // Direction-agnostic arrow (mirrors automatically in RTL).
                 '${correct ? context.t('quiz_correct') : context.t('quiz_wrong')} →',
               ),
             ),

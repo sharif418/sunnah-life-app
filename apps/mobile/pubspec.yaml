@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
 
   # State + navigation
@@ -31,7 +33,8 @@ dependencies:
   google_fonts: ^6.2.1
   shared_preferences: ^2.3.4
   http: ^1.2.2
-  intl: ^0.19.0
+  # Bumped 0.19 → 0.20: flutter_localizations (SDK) pins intl ^0.20.3.
+  intl: ^0.20.3
   path_provider: ^2.1.5
   # Pin the Android implementation to the pre-jnigen 2.2.x line: 2.3.x pulls
   # package:jni, whose Gradle plugin compiles native CMake code and forces a
@@ -53,6 +56,8 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  # gen-l10n: ARB → lib/l10n/generated (committed, non-synthetic).
+  generate: true
   assets:
     - assets/content/
     - assets/google_fonts/

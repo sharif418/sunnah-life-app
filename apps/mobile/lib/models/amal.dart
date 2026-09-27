@@ -32,15 +32,17 @@ extension AmalCategoryJson on AmalCategory {
     'personal' => AmalCategory.personal,
     _ => AmalCategory.salah,
   };
-  String get labelBn => switch (this) {
-    AmalCategory.salah => 'নামাজ',
-    AmalCategory.quran => 'কুরআন',
-    AmalCategory.dhikr => 'যিকর ও দোয়া',
-    AmalCategory.akhlaq => 'আখলাক',
-    AmalCategory.dawat => 'দাওয়াত',
-    AmalCategory.lifestyle => 'জীবনাচরণ',
-    AmalCategory.sunnah => 'সাপ্তাহিক ও মাসিক সুন্নাহ',
-    AmalCategory.personal => 'ব্যক্তিগত লক্ষ্য',
+
+  /// ARB key for the localized category label (was hard-coded Bengali).
+  String get labelKey => switch (this) {
+    AmalCategory.salah => 'cat_salah',
+    AmalCategory.quran => 'cat_quran',
+    AmalCategory.dhikr => 'cat_dhikr',
+    AmalCategory.akhlaq => 'cat_akhlaq',
+    AmalCategory.dawat => 'cat_dawat',
+    AmalCategory.lifestyle => 'cat_lifestyle',
+    AmalCategory.sunnah => 'cat_sunnah',
+    AmalCategory.personal => 'cat_personal',
   };
 }
 

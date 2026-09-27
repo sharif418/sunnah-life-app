@@ -71,7 +71,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                 ),
                 const SizedBox(height: SLSpacing.s12),
                 Text(
-                  'সুন্নাহ লাইফ',
+                  context.t('app_title'),
                   style: theme.textTheme.headlineMedium,
                 ),
                 const SizedBox(height: SLSpacing.s4),
@@ -150,8 +150,8 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                   TextField(
                     controller: _feedback,
                     maxLines: 4,
-                    decoration: const InputDecoration(
-                      hintText: 'আপনার মতামত লিখুন…',
+                    decoration: InputDecoration(
+                      hintText: context.t('feedback_hint'),
                       border: InputBorder.none,
                     ),
                   ),

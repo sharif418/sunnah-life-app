@@ -1,4 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { promises as fs } from "fs";
+import path from "path";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
@@ -11,6 +13,7 @@ import {
   mapEntry,
   ownUsrahIds,
   completion7dForUsers,
+  invalidateDefinitionCache,
   type AmalDefRow,
 } from "../shared/amal";
 import { decideEntry, MAX_BATCH, type IncomingEntry } from "../shared/conflict";
@@ -28,11 +31,69 @@ export class AmalService {
     private readonly guard: GuardService
   ) {}
 
-  /** GET /api/amal/definitions — active catalog (public: guests keep a local diary). */
+  /**
+   * GET /api/amal/definitions — active catalog (public: guests keep a local
+   * diary). The AmalDefinition table IS the storage (admin-configurable per
+   * PLAN.md §9); if it is empty (fresh install / wiped catalog) it is seeded
+   * once from the content pack (amal-catalog.json, 31 items) so the pack
+   * remains the fallback of record.
+   */
   async definitions(): Promise<{ definitions: ReturnType<typeof mapDefinition>[] }> {
-    return this.rls.run(null, async (tx) => {
-      const rows = await loadActiveDefinitions(tx);
-      return { definitions: rows.map(mapDefinition) };
+    let rows = await this.rls.run(null, (tx) => loadActiveDefinitions(tx));
+    if (!rows.length) {
+      rows = await this.seedDefinitionsFromPack();
+    }
+    return { definitions: rows.map(mapDefinition) };
+  }
+
+  /** Seed the (empty) AmalDefinition table from the content pack (B6). */
+  private async seedDefinitionsFromPack(): Promise<AmalDefRow[]> {
+    return this.rls.system(async (tx) => {
+      // re-check under the write context (another request may have seeded)
+      const existing = await tx.amalDefinition.findMany({
+        where: { active: true },
+        orderBy: [{ sortOrder: "asc" }, { key: "asc" }],
+      });
+      if (existing.length) return existing as unknown as AmalDefRow[];
+
+      let pack: { definitions?: unknown[] } = {};
+      try {
+        const contentDir =
+          process.env.CONTENT_DIR || path.resolve(process.cwd(), "..", "..", "packages", "content");
+        pack = JSON.parse(
+          await fs.readFile(path.join(contentDir, "amal-catalog.json"), "utf8")
+        );
+      } catch {
+        return [];
+      }
+      const items = (pack.definitions ?? []).filter(
+        (d): d is Record<string, unknown> => !!d && typeof d === "object"
+      );
+      if (!items.length) return [];
+
+      await tx.amalDefinition.createMany({
+        data: items.map((d) => ({
+          key: String(d.key ?? "").trim(),
+          titleBn: String(d.titleBn ?? ""),
+          titleEn: String(d.titleEn ?? ""),
+          category: String(d.category ?? "sunnah"),
+          inputType: String(d.inputType ?? "tristate"),
+          cadence: String(d.cadence ?? "daily"),
+          targetJson: (d.targetJson ?? undefined) as object | undefined,
+          unit: d.unit != null ? String(d.unit) : null,
+          minLevel: String(d.minLevel ?? "none"),
+          sortOrder: Number.isFinite(Number(d.sortOrder)) ? Number(d.sortOrder) : 0,
+          autoSource: d.autoSource != null ? String(d.autoSource) : null,
+          active: true,
+        }))
+        .filter((d) => d.key && d.titleBn) as never[],
+      });
+
+      invalidateDefinitionCache();
+      return (await tx.amalDefinition.findMany({
+        where: { active: true },
+        orderBy: [{ sortOrder: "asc" }, { key: "asc" }],
+      })) as unknown as AmalDefRow[];
     });
   }
 

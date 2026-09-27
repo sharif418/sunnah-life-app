@@ -28,6 +28,7 @@ import type {
   Course,
   CourseSummary,
   DawahOverview,
+  DawahRequirements,
   EnrollmentItem,
   QuizAttemptItem,
   UsrahQuestionItem,
@@ -163,6 +164,8 @@ export const api = {
 
   // dawah engine
   dawahOverview: () => req<DawahOverview>(route("/dawah")),
+  /** B6: live next-level checklist (progress chips + auto hint). */
+  dawahRequirements: () => req<DawahRequirements>(route("/dawah/requirements")),
   usrah: () => req<{ usrah: (Usrah & { members: UsrahMember[] }) | null; announcements: Announcement[] }>(route("/usrah")),
   reviews: () => req<{ reviews: WeeklyReview[] }>(route("/reviews")),
   reviewsQueue: () => req<{ queue: (WeeklyReview & { user: UsrahMember })[] }>(route("/reviews", { scope: "queue" })),

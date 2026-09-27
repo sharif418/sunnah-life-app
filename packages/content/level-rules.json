@@ -3,6 +3,7 @@
     "minMonths": 4,
     "requireAssessmentPassed": true,
     "minReferralsAtLevel": 5,
+    "autoPromote": true,
     "checklistBn": [
       {
         "key": "iman",

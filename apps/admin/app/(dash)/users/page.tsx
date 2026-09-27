@@ -21,7 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Dialog } from "@/components/ui/dialog";
-import { Field, Input, Select } from "@/components/ui/input";
+import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 
 const SAVED_FILTER_KEY = "sl_admin_users_filter_v1";
@@ -71,6 +71,13 @@ function EditUserDialog({
     onError: (err: Error) => toast(err.message, "error"),
   });
 
+  const [reason, setReason] = React.useState("");
+  const [syncedGenderFor, setSyncedGenderFor] = React.useState<string | null>(user?.id ?? null);
+  if ((user?.id ?? null) !== syncedGenderFor) {
+    setSyncedGenderFor(user?.id ?? null);
+    setReason("");
+  }
+
   const save = () => {
     if (!user) return;
     const same =
@@ -82,12 +89,17 @@ function EditUserDialog({
       toast("কোনো পরিবর্তন হয়নি", "info");
       return;
     }
+    if (gender !== user.gender && !reason.trim()) {
+      toast("লিঙ্গ পরিবর্তনের কারণ লিখুন (বাংলায়)", "error");
+      return;
+    }
     patch.mutate({
       userId: user.id,
       role,
       gender,
       usrahId: usrahId || null,
       category,
+      ...(gender !== user.gender ? { reason: reason.trim() } : {}),
     });
   };
 
@@ -165,10 +177,22 @@ function EditUserDialog({
           </Field>
 
           {genderChanged ? (
-            <p className="rounded-md border border-alert/40 bg-alert-soft/70 p-3 text-sm text-alert">
-              ⚠ লিঙ্গ পরিবর্তন করলে সদস্যের উসরা ও পরিদর্শক-পরিসর বদলে যেতে পারে — প্রয়োজনে উসরাও
-              আবার নির্বাচন করুন।
-            </p>
+            <div className="space-y-2">
+              <p className="rounded-md border border-alert/40 bg-alert-soft/70 p-3 text-sm text-alert">
+                ⚠ লিঙ্গ পরিবর্তন করলে সদস্যের উসরা ও পরিদর্শক-পরিসর বদলে যেতে পারে — প্রয়োজনে উসরাও
+                আবার নির্বাচন করুন। কারণসহ অডিট লগে লিপিবদ্ধ হবে।
+              </p>
+              <Field label="পরিবর্তনের কারণ (বাংলায়)" htmlFor="edit-gender-reason" hint="অডিট লগে সংরক্ষিত হবে">
+                <Textarea
+                  id="edit-gender-reason"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  rows={2}
+                  placeholder="যেমন: ভুল তথ্য সংশোধন — সদস্য নিজে অনুরোধ করেছেন"
+                  aria-label="লিঙ্গ পরিবর্তনের কারণ"
+                />
+              </Field>
+            </div>
           ) : null}
 
           <Field label="উসরা" htmlFor="edit-usrah">
@@ -207,6 +231,7 @@ function PromoteDialog({ user, onClose }: { user: User | null; onClose: () => vo
   const { toast } = useToast();
   const qc = useQueryClient();
   const [toLevel, setToLevel] = React.useState<Level>("muhibbus_sunnah");
+  const [reason, setReason] = React.useState("");
 
   // Default the picker to the user's NEXT level — render-phase adjustment.
   const [syncedLevelFor, setSyncedLevelFor] = React.useState<string | null>(user?.id ?? null);
@@ -214,18 +239,28 @@ function PromoteDialog({ user, onClose }: { user: User | null; onClose: () => vo
     setSyncedLevelFor(user?.id ?? null);
     const idx = LEVEL_ORDER.indexOf(user!.level);
     setToLevel(LEVEL_ORDER[Math.min(idx + 1, LEVEL_ORDER.length - 1)]);
+    setReason("");
   }
 
   const promote = useMutation({
-    mutationFn: () => api.promote(user!.id, toLevel),
+    mutationFn: () => api.promote(user!.id, toLevel, reason.trim()),
     onSuccess: (res) => {
       toast(`${res.user.name} — ${LEVEL_LABELS_BN[res.user.level]} স্তরে উন্নীত হয়েছেন`, "success");
       qc.invalidateQueries({ queryKey: ["admin-users"] });
+      qc.invalidateQueries({ queryKey: ["level-transitions"] });
       qc.invalidateQueries({ queryKey: ["audit-log"] });
       onClose();
     },
     onError: (err: Error) => toast(err.message, "error"),
   });
+
+  const submit = () => {
+    if (!reason.trim()) {
+      toast("উন্নয়নের কারণ বাংলায় লিখুন", "error");
+      return;
+    }
+    promote.mutate();
+  };
 
   return (
     <Dialog
@@ -238,7 +273,7 @@ function PromoteDialog({ user, onClose }: { user: User | null; onClose: () => vo
           <Button variant="outline" onClick={onClose} disabled={promote.isPending}>
             বাতিল
           </Button>
-          <Button onClick={() => promote.mutate()} loading={promote.isPending}>
+          <Button onClick={submit} loading={promote.isPending}>
             <TrendingUp className="h-4 w-4" aria-hidden />
             উন্নয়ন করুন
           </Button>
@@ -262,9 +297,24 @@ function PromoteDialog({ user, onClose }: { user: User | null; onClose: () => vo
               ))}
             </Select>
           </Field>
+          <Field
+            label="উন্নয়নের কারণ (বাংলায়)"
+            htmlFor="promote-reason"
+            hint="LevelTransition ও অডিট লগে সংরক্ষিত হবে"
+          >
+            <Textarea
+              id="promote-reason"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              rows={2}
+              placeholder="যেমন: তারবিয়াত পরিষদের সিদ্ধান্তে সকল শর্ত পূরণ হয়েছে"
+              aria-label="উন্নয়নের কারণ"
+            />
+          </Field>
           <p className="rounded-md border border-gold/40 bg-gold-soft/70 p-3 text-xs leading-relaxed">
-            উন্নয়নের প্রমাণ (শর্তের অবস্থা, অগ্রসর কর্তৃক) LevelTransition টেবিলে সংরক্ষিত হয় এবং
-            সদস্য একটি অভিনন্দন রিমাইন্ডার পান।
+            উন্নয়নের কারণ LevelTransition টেবিলে (method: admin, উন্নয়নকারীসহ) সংরক্ষিত হয় এবং
+            সদস্য একটি অভিনন্দন রিমাইন্ডার ও পুশ পান। মুহিব্বুস সুন্নাহ উন্নয়নে শর্ত যাচাই সার্ভার
+            করে — অপূর্ণ শর্ত থাকলে ৪২২-এ বাকি শর্তগুলো দেখানো হবে।
           </p>
         </div>
       ) : null}

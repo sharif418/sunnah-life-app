@@ -180,7 +180,7 @@ export function StatusPill({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold",
         tone === "primary" && "bg-primary-soft text-primary",
-        tone === "gold" && "bg-gold-soft text-gold-foreground",
+        tone === "gold" && "bg-gold-soft text-gold-text-foreground",
         tone === "alert" && "bg-alert-soft text-alert",
         tone === "warning" && "bg-gold-soft text-warning",
         tone === "muted" && "bg-muted text-muted-foreground"

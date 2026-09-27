@@ -12,6 +12,7 @@ import '../../design/design_tokens.dart';
 import '../../core/bn_digits.dart';
 import '../../core/amal_engine.dart';
 import '../../models/domain.dart';
+import '../shared/widgets.dart';
 
 /// জামাতে / একা / কাযা — the salat tristate chip row (44dp targets).
 class TriStateChips extends StatelessWidget {
@@ -130,10 +131,15 @@ class AmalToggle extends StatelessWidget {
     required this.value,
     required this.onChanged,
     this.enabled = true,
+    this.semanticsLabel,
   });
   final bool value;
   final ValueChanged<bool> onChanged;
   final bool enabled;
+
+  /// What this toggle controls (usually the amal title) — announced by
+  /// screen readers instead of a bare "switch".
+  final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +147,7 @@ class AmalToggle extends StatelessWidget {
     return Semantics(
       toggled: value,
       button: true,
+      label: semanticsLabel,
       child: Switch(
         value: value,
         onChanged: enabled
@@ -184,7 +191,11 @@ class CountStepper extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _step(Icons.remove, () => onChanged((value - 1).clamp(0, 1 << 30))),
+        _step(
+          context,
+          Icons.remove,
+          () => onChanged((value - 1).clamp(0, 1 << 30)),
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s8),
           child: Column(
@@ -209,7 +220,11 @@ class CountStepper extends StatelessWidget {
             ],
           ),
         ),
-        _step(Icons.add, () => onChanged((value + 1).clamp(0, 1 << 30))),
+        _step(
+          context,
+          Icons.add,
+          () => onChanged((value + 1).clamp(0, 1 << 30)),
+        ),
         if (quickCount > 0) ...[
           const SizedBox(width: SLSpacing.s8),
           OutlinedButton(
@@ -226,27 +241,27 @@ class CountStepper extends StatelessWidget {
     );
   }
 
-  Widget _step(IconData icon, VoidCallback onTap) {
-    return Builder(
-      builder: (context) {
-        final theme = Theme.of(context);
-        return Semantics(
-          button: true,
-          child: InkWell(
-            onTap: enabled ? onTap : null,
-            customBorder: const CircleBorder(),
-            child: Container(
-              width: SLSpacing.minTapTarget,
-              height: SLSpacing.minTapTarget,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.primaryContainer,
-              ),
-              child: Icon(icon, color: theme.colorScheme.primary),
-            ),
+  Widget _step(BuildContext context, IconData icon, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final increase = icon == Icons.add;
+    return Semantics(
+      button: true,
+      label: increase
+          ? context.t('increase')
+          : context.t('decrease'),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: SLSpacing.minTapTarget,
+          height: SLSpacing.minTapTarget,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: theme.colorScheme.primaryContainer,
           ),
-        );
-      },
+          child: Icon(icon, color: theme.colorScheme.primary),
+        ),
+      ),
     );
   }
 }
@@ -313,6 +328,7 @@ class _QuantityInputState extends State<QuantityInput> {
       mainAxisSize: MainAxisSize.min,
       children: [
         _btn(
+          context,
           Icons.remove,
           () => widget.onChanged(math.max(0, widget.value - 0.5)),
         ),
@@ -335,7 +351,7 @@ class _QuantityInputState extends State<QuantityInput> {
             ),
           ),
         ),
-        _btn(Icons.add, () => widget.onChanged(widget.value + 0.5)),
+        _btn(context, Icons.add, () => widget.onChanged(widget.value + 0.5)),
         const SizedBox(width: SLSpacing.s4),
         if (reached)
           Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 20),
@@ -343,27 +359,27 @@ class _QuantityInputState extends State<QuantityInput> {
     );
   }
 
-  Widget _btn(IconData icon, VoidCallback onTap) {
-    return Builder(
-      builder: (context) {
-        final theme = Theme.of(context);
-        return Semantics(
-          button: true,
-          child: InkWell(
-            onTap: widget.enabled ? onTap : null,
-            customBorder: const CircleBorder(),
-            child: Container(
-              width: SLSpacing.minTapTarget,
-              height: SLSpacing.minTapTarget,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: theme.colorScheme.primaryContainer,
-              ),
-              child: Icon(icon, color: theme.colorScheme.primary),
-            ),
+  Widget _btn(BuildContext context, IconData icon, VoidCallback onTap) {
+    final theme = Theme.of(context);
+    final increase = icon == Icons.add;
+    return Semantics(
+      button: true,
+      label: increase
+          ? context.t('increase')
+          : context.t('decrease'),
+      child: InkWell(
+        onTap: widget.enabled ? onTap : null,
+        customBorder: const CircleBorder(),
+        child: Container(
+          width: SLSpacing.minTapTarget,
+          height: SLSpacing.minTapTarget,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: theme.colorScheme.primaryContainer,
           ),
-        );
-      },
+          child: Icon(icon, color: theme.colorScheme.primary),
+        ),
+      ),
     );
   }
 }
@@ -382,12 +398,17 @@ class HeatmapCell extends StatelessWidget {
     this.isToday = false,
     this.locked = false,
     this.bengali = true,
+    this.semanticsLabel,
   });
   final double points; // 0 | 0.5 | 1
   final VoidCallback? onTap;
   final bool isToday;
   final bool locked;
   final bool bengali;
+
+  /// Screen-reader description (day + amal) — cells are 22px, well below the
+  /// 44px target, so the semantics node carries the meaning instead.
+  final String? semanticsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -402,6 +423,7 @@ class HeatmapCell extends StatelessWidget {
     }
     return Semantics(
       button: onTap != null,
+      label: semanticsLabel,
       child: GestureDetector(
         onTap: onTap,
         child: Container(

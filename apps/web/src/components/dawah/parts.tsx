@@ -122,7 +122,7 @@ export function LevelBadge({ level, className }: { level: Level; className?: str
 
 export function RoleBadge({ role }: { role: Role }) {
   return (
-    <span className="inline-flex rounded-full bg-gold-soft px-2.5 py-0.5 text-xs font-semibold text-gold-foreground">
+    <span className="inline-flex rounded-full bg-gold-soft px-2.5 py-0.5 text-xs font-semibold text-gold-text-foreground">
       {ROLE_LABELS_BN[role] ?? role}
     </span>
   );
@@ -192,7 +192,7 @@ export function InitialsAvatar({ name, className }: { name: string; className?: 
 export function ReviewStatusPill({ status }: { status: "pending" | "done" | "overdue" }) {
   const map = {
     done: { label: "সম্পন্ন", cls: "bg-primary-soft text-primary" },
-    pending: { label: "অপেক্ষমাণ", cls: "bg-gold-soft text-gold-foreground" },
+    pending: { label: "অপেক্ষমাণ", cls: "bg-gold-soft text-gold-text-foreground" },
     overdue: { label: "বিলম্বিত", cls: "bg-alert-soft text-alert" },
   } as const;
   const s = map[status];

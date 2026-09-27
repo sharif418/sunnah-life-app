@@ -77,10 +77,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   user == null
                       ? context.t('guest')
                       : [
-                          user.role.labelBn,
+                          context.t(user.role.labelKey),
                           if (user.memberCode != null) user.memberCode!,
-                            user.level.labelBn,
-                          ].join(' · '),
+                          context.t(user.level.labelKey),
+                        ].join(' · '),
                   style: theme.textTheme.bodySmall,
                 ),
                 if (user == null) ...[
@@ -125,7 +125,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                   title: Text(context.t('onb_gender')),
                   subtitle: Text(
-                    '${profile.gender == Gender.f ? context.t('onb_female') : context.t('onb_male')} — শুধু অ্যাডমিন পরিবর্তন করতে পারেন',
+                    '${profile.gender == Gender.f ? context.t('onb_female') : context.t('onb_male')} — ${context.t('gender_admin_only')}',
                   ),
                 ),
                 ListTile(
@@ -171,14 +171,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ListTile(
                   leading: const Icon(Icons.balance_outlined),
                   title: Text(context.t('onb_madhhab')),
-                  subtitle: Text(profile.madhhab.labelBn),
+                  subtitle: Text(context.t(profile.madhhab.labelKey)),
                   trailing: const Icon(Icons.edit_outlined, size: 18),
                   onTap: () => _pickMadhhab(context),
                 ),
                 ListTile(
                   leading: const Icon(Icons.calculate_outlined),
                   title: Text(context.t('onb_method')),
-                  subtitle: Text(profile.method.labelBn),
+                  subtitle: Text(context.t(profile.method.labelKey)),
                   trailing: const Icon(Icons.edit_outlined, size: 18),
                   onTap: () => _pickMethod(context),
                 ),
@@ -191,12 +191,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
+                        tooltip: context.t('hijri_decrease'),
                         icon: const Icon(Icons.remove_circle_outline),
                         onPressed: () => notifier.update(
                             hijriAdjust:
                                 (profile.hijriAdjust - 1).clamp(-2, 2)),
                       ),
                       IconButton(
+                        tooltip: context.t('hijri_increase'),
                         icon: const Icon(Icons.add_circle_outline),
                         onPressed: () => notifier.update(
                             hijriAdjust:
@@ -211,7 +213,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: SLSpacing.s16),
 
           // App settings
-          SectionHeader('অ্যাপ', icon: Icons.settings_outlined),
+          SectionHeader(context.t('profile_app_section'),
+              icon: Icons.settings_outlined),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
@@ -349,9 +352,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   UserCategory.alim => context.t('profile_category_alim'),
                 }),
                 subtitle: Text(switch (c) {
-                  UserCategory.general => 'তিলাওয়াত: ১ পৃষ্ঠা',
-                  UserCategory.hafez => 'তিলাওয়াত: ১ পারা',
-                  UserCategory.alim => 'তিলাওয়াত: ১০ পৃষ্ঠা',
+                  UserCategory.general => context.t('tilawat_target_general'),
+                  UserCategory.hafez => context.t('tilawat_target_hafez'),
+                  UserCategory.alim => context.t('tilawat_target_alim'),
                 }),
                 selected:
                     c == ref.read(profileProvider).category,
@@ -375,7 +378,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             for (final m in Madhhab.values)
               ListTile(
-                title: Text(m.labelBn),
+                title: Text(context.t(m.labelKey)),
                 selected: m == ref.read(profileProvider).madhhab,
                 onTap: () => Navigator.pop(context, m),
               ),
@@ -397,7 +400,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           children: [
             for (final m in CalcMethod.values)
               ListTile(
-                title: Text(m.labelBn),
+                title: Text(context.t(m.labelKey)),
                 selected: m == ref.read(profileProvider).method,
                 onTap: () => Navigator.pop(context, m),
               ),

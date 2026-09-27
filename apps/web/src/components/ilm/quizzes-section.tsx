@@ -189,7 +189,7 @@ function QuizPlay({ quiz, onExit }: { quiz: Quiz; onExit: () => void }) {
       {done ? (
         <Card className="rounded-xl p-6 text-center shadow-card">
           <div className="mx-auto flex size-20 items-center justify-center rounded-full bg-primary-soft">
-            {score >= Math.ceil(total * 0.8) ? <Trophy className="size-9 text-gold-foreground" /> : <Award className="size-9 text-primary" />}
+            {score >= Math.ceil(total * 0.8) ? <Trophy className="size-9 text-gold-text-foreground" /> : <Award className="size-9 text-primary" />}
           </div>
           <p className="mt-4 text-3xl font-extrabold tabular-nums">
             {toBn(score)}/{toBn(total)}

@@ -155,7 +155,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 const SizedBox(height: SLSpacing.s4),
                 Text(
                   eligible
-                      ? 'সম্পদের ২.৫% (নেট ৳${money(net)})'
+                      ? '${context.t('zakat_percent_note')} (${context.t('zakat_net')} ৳${money(net)})'
                       : context.t('zakat_below_nisab'),
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall,
@@ -184,7 +184,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
           const SizedBox(height: SLSpacing.s8),
           Center(
             child: Text(
-              'দানের লিংক: $donationUrl',
+              '${context.t('zakat_donation_link')}: $donationUrl',
               style: theme.textTheme.bodySmall?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),

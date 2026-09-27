@@ -319,7 +319,7 @@ export function LiveQuizSection() {
       {phase === "ended" ? (
         <Card className="rounded-xl p-5 shadow-card">
           <div className="text-center">
-            <Crown className="mx-auto size-8 text-gold-foreground" />
+            <Crown className="mx-auto size-8 text-gold-text-foreground" />
             <p className="mt-2 text-sm font-semibold">কুইজ শেষ — চূড়ান্ত ফলাফল</p>
           </div>
           <div className="mt-3 space-y-1.5">
@@ -349,7 +349,7 @@ export function LiveQuizSection() {
       {phase !== "ended" && scoreboard.length > 0 ? (
         <div>
           <h3 className="mb-2 flex items-center gap-1.5 text-sm font-bold">
-            <Crown className="size-4 text-gold-foreground" /> লিডারবোর্ড
+            <Crown className="size-4 text-gold-text-foreground" /> লিডারবোর্ড
           </h3>
           <div className="space-y-1.5">
             {scoreboard.map((row, i) => (
@@ -373,7 +373,7 @@ function ScoreRowView({ rank, row }: { rank: number; row: ScoreRow }) {
       <span
         className={cn(
           "flex size-7 shrink-0 items-center justify-center rounded-full text-xs font-bold",
-          rank === 1 ? "bg-gold-soft text-gold-foreground" : "bg-muted text-muted-foreground"
+          rank === 1 ? "bg-gold-soft text-gold-text-foreground" : "bg-muted text-muted-foreground"
         )}
       >
         {toBn(rank)}
@@ -415,7 +415,7 @@ function HostPanel({
   return (
     <Card className="rounded-xl border-gold/30 p-4 shadow-card">
       <div className="flex items-center gap-2">
-        <Crown className="size-4 text-gold-foreground" />
+        <Crown className="size-4 text-gold-text-foreground" />
         <h3 className="text-sm font-bold">উসরা প্রধান — কুইজ নিয়ন্ত্রণ</h3>
       </div>
       {phase === "lobby" ? (

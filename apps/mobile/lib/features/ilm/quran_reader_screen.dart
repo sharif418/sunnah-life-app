@@ -328,7 +328,7 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                           const Spacer(),
                           if (ayah.juz != null)
                             Text(
-                              'জুয ${bn ? toBn(ayah.juz!) : ayah.juz}',
+                              '${context.t('quran_juz')} ${bn ? toBn(ayah.juz!) : ayah.juz}',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),

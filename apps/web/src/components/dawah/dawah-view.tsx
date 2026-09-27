@@ -19,6 +19,7 @@ import {
   Megaphone,
   Network,
   Share2,
+  Sparkles,
   Star,
   UserCheck,
   UserPlus,
@@ -32,6 +33,8 @@ import type {
   AssessmentDetail,
   AssessmentTemplate,
   DawahOverview,
+  DawahRequirements,
+  Level,
   User,
   Usrah,
   UsrahMember,
@@ -229,6 +232,7 @@ export function DawahView() {
 function OverviewTab({ user }: { user: User }) {
   const overviewAsync = useAsync(() => api.dawahOverview());
   const assessmentsAsync = useAsync(() => api.assessments());
+  const requirementsAsync = useAsync(() => api.dawahRequirements());
 
   if (overviewAsync.loading) return <SkeletonRows count={5} />;
   if (overviewAsync.error || !overviewAsync.data)
@@ -327,29 +331,13 @@ function OverviewTab({ user }: { user: User }) {
         <StatCell label="এই সপ্তাহে নতুন" value={toBn(weekNew)} />
       </div>
 
-      {/* ৪. স্তরের শর্ত */}
-      <SectionHeader icon={ListChecks} title="স্তরের শর্তাবলি" />
-      <Card className="rounded-xl p-4 shadow-card">
-        <ul className="space-y-2.5">
-          {overview.requirements.map((r) => (
-            <li key={r.key} className="flex items-start gap-2.5">
-              {r.done ? (
-                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
-              ) : (
-                <span className="mt-1 size-3.5 shrink-0 rounded-full border-2 border-muted-foreground/40" />
-              )}
-              <div className="min-w-0">
-                <p className={cn("text-sm leading-snug", r.done ? "font-semibold" : "font-medium")}>{r.label}</p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{r.detail}</p>
-              </div>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-3 border-t border-border pt-3 text-sm">
-          <span className="text-muted-foreground">পরবর্তী স্তর: </span>
-          <span className="font-bold text-primary">{LEVEL_LABELS_BN[overview.nextLevel] ?? overview.nextLevel}</span>
-        </p>
-      </Card>
+      {/* ৪. স্তরের প্রয়োজনীয়তা (লাইভ চেকলিস্ট — B6) */}
+      <SectionHeader icon={ListChecks} title="স্তরের প্রয়োজনীয়তা" />
+      <LevelRequirementsCard
+        asyncData={requirementsAsync}
+        fallbackRows={overview.requirements}
+        nextLevel={overview.nextLevel}
+      />
 
       {/* ৫. মাদউ ট্রি */}
       <SectionHeader icon={Users} title="আমার মাদউ" />
@@ -402,6 +390,145 @@ function StatCell({ label, value }: { label: string; value: string }) {
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-0.5 text-xl font-extrabold text-primary">{value}</p>
     </div>
+  );
+}
+
+// ── স্তরের প্রয়োজনীয়তা — লাইভ চেকলিস্ট (B6: GET /api/dawah/requirements) ───────
+
+function LevelRequirementsCard({
+  asyncData,
+  fallbackRows,
+  nextLevel,
+}: {
+  asyncData: { data: DawahRequirements | null; loading: boolean; error: string | null };
+  fallbackRows: DawahOverview["requirements"];
+  nextLevel: Level;
+}) {
+  const live = asyncData.data;
+
+  // লাইভ চেকলিস্ট আসার আগে স্কেলিটন
+  if (!live && asyncData.loading) {
+    return (
+      <Card className="rounded-xl p-4 shadow-card">
+        <div className="space-y-3" aria-busy="true" aria-label="স্তরের প্রয়োজনীয়তা লোড হচ্ছে">
+          <SkeletonRows count={3} />
+        </div>
+      </Card>
+    );
+  }
+
+  // নতুন এন্ডপয়েন্ট অনুপলব্ধ হলে ওভারভিউয়ের রেসপন্সই চেকলিস্ট (একই ইঞ্জিন)
+  if (!live) {
+    return (
+      <Card className="rounded-xl p-4 shadow-card">
+        {asyncData.error ? (
+          <p className="mb-3 text-xs text-muted-foreground">লাইভ চেকলিস্ট আনা যায়নি — সর্বশেষ তথ্য দেখানো হচ্ছে</p>
+        ) : null}
+        <ul className="space-y-2.5">
+          {fallbackRows.map((r) => (
+            <li key={r.key} className="flex items-start gap-2.5">
+              {r.done ? (
+                <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+              ) : (
+                <span className="mt-1 size-3.5 shrink-0 rounded-full border-2 border-muted-foreground/40" />
+              )}
+              <div className="min-w-0">
+                <p className={cn("text-sm leading-snug", r.done ? "font-semibold" : "font-medium")}>{r.label}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{r.detail}</p>
+              </div>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-3 border-t border-border pt-3 text-sm">
+          <span className="text-muted-foreground">পরবর্তী স্তর: </span>
+          <span className="font-bold text-primary">{LEVEL_LABELS_BN[nextLevel] ?? nextLevel}</span>
+        </p>
+      </Card>
+    );
+  }
+
+  const machine = live.requirements.filter((r) => r.autoChecked);
+  const manual = live.requirements.filter((r) => !r.autoChecked);
+  const doneCount = machine.filter((r) => r.met).length;
+
+  return (
+    <Card className="rounded-xl p-4 shadow-card">
+      {live.rulesApply ? (
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div className="flex gap-1">
+            {machine.map((r) => (
+              <span
+                key={r.key}
+                title={r.labelBn}
+                className={cn(
+                  "size-2.5 rounded-full",
+                  r.met ? "bg-primary" : "bg-muted-foreground/25"
+                )}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-semibold text-primary">
+            {toBn(doneCount)}/{toBn(machine.length)} পূরণ
+          </span>
+        </div>
+      ) : null}
+
+      <ul className="space-y-2.5">
+        {live.requirements.map((r) => (
+          <li key={r.key} className="flex items-start gap-2.5">
+            {r.met ? (
+              <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+            ) : (
+              <span className="mt-1 size-3.5 shrink-0 rounded-full border-2 border-muted-foreground/40" />
+            )}
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <p className={cn("text-sm leading-snug", r.met ? "font-semibold" : "font-medium")}>{r.labelBn}</p>
+                {r.autoChecked ? null : (
+                  <span className="rounded-full bg-gold/15 px-1.5 py-0.5 text-[10px] font-bold text-gold-text-text">
+                    পরিদর্শক যাচাই
+                  </span>
+                )}
+              </div>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                {r.current !== null && r.target !== null && r.target > 1 ? (
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums",
+                      r.met ? "bg-primary-soft text-primary" : "bg-muted text-muted-foreground"
+                    )}
+                  >
+                    {toBn(Math.min(r.current, r.target))}/{toBn(r.target)}
+                  </span>
+                ) : null}
+                <span className="text-xs text-muted-foreground">{r.detailBn}</span>
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      {live.rulesApply ? (
+        <p className="mt-3 rounded-xl bg-primary-soft/60 p-2.5 text-xs leading-relaxed text-foreground/80">
+          {live.autoEligible ? (
+            <>
+              <Sparkles className="me-1 inline size-3.5 text-primary" aria-hidden />
+              সবগুলো শর্ত পূরণ হয়েছে — পরবর্তী রাত ১২:৩০-এ <strong>স্বয়ংক্রিয় উন্নতি</strong> হবে ইনশাআল্লাহ।
+            </>
+          ) : (
+            <>
+              বাকি শর্তগুলো পূরণ হলে প্রতি রাতে স্বয়ংক্রিয়ভাবে স্তর উন্নয়ন হয়{" "}
+              {manual.length ? "— সবুজ ব্যাজের শর্তগুলো পরিদর্শক যাচাই করেন" : ""}।
+            </>
+          )}
+        </p>
+      ) : null}
+
+      <p className="mt-3 border-t border-border pt-3 text-sm">
+        <span className="text-muted-foreground">পরবর্তী স্তর: </span>
+        <span className="font-bold text-primary">{LEVEL_LABELS_BN[live.nextLevel] ?? live.nextLevel}</span>
+      </p>
+    </Card>
   );
 }
 
@@ -524,7 +651,7 @@ function UsrahTab({
                     (m.completion7d ?? 0) >= 70
                       ? "bg-primary-soft text-primary"
                       : (m.completion7d ?? 0) >= 40
-                        ? "bg-gold-soft text-gold-foreground"
+                        ? "bg-gold-soft text-gold-text-foreground"
                         : "bg-alert-soft text-alert"
                   )}
                   title="৭ দিনের আমল সম্পন্নতা"
@@ -557,7 +684,7 @@ function UsrahTab({
           {announcements.map((a) => (
             <Card key={a.id} className="rounded-xl p-3.5 shadow-card">
               <div className="flex items-center gap-2">
-                {a.pinned ? <Star className="size-3.5 shrink-0 fill-gold text-gold" /> : null}
+                {a.pinned ? <Star className="size-3.5 shrink-0 fill-gold text-gold-text-text" /> : null}
                 <p className="min-w-0 flex-1 truncate text-xs font-semibold">{a.authorName ?? "উসরা"}</p>
                 <p className="shrink-0 text-xs text-muted-foreground">{toBn(a.createdAt.slice(0, 10))}</p>
               </div>
@@ -737,7 +864,7 @@ function ReflectionCard({
               aria-label={`${toBn(s)} তারা`}
               className="tap-target flex size-10 items-center justify-center rounded-lg hover:bg-muted"
             >
-              <Star className={cn("size-5", s <= rating ? "fill-gold text-gold" : "text-muted-foreground/50")} />
+              <Star className={cn("size-5", s <= rating ? "fill-gold text-gold-text-text" : "text-muted-foreground/50")} />
             </button>
           ))}
         </div>
@@ -801,7 +928,7 @@ function ReviewCard({ review }: { review: WeeklyReview }) {
       {review.rating ? (
         <div className="mt-1.5 flex gap-0.5">
           {[1, 2, 3, 4, 5].map((s) => (
-            <Star key={s} className={cn("size-3.5", s <= (review.rating ?? 0) ? "fill-gold text-gold" : "text-muted-foreground/40")} />
+            <Star key={s} className={cn("size-3.5", s <= (review.rating ?? 0) ? "fill-gold text-gold-text-text" : "text-muted-foreground/40")} />
           ))}
         </div>
       ) : null}

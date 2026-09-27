@@ -88,7 +88,7 @@ Future<bool> showTilawatSheet(
               ],
             ),
             Text(
-              'লক্ষ্য: ${context.isBn ? toBn(target.toInt()) : target.toInt()} পৃষ্ঠা',
+              '${context.t('target_label')}: ${context.isBn ? toBn(target.toInt()) : target.toInt()} ${context.t('tilawat_target_pages')}',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodySmall,
             ),

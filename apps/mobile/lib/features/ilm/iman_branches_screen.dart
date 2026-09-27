@@ -12,9 +12,9 @@ class ImanBranchesScreen extends StatelessWidget {
   const ImanBranchesScreen({super.key});
 
   static const _groupLabels = <String, (String, IconData)>{
-    'heart': ('অন্তরের ঈমান', Icons.favorite_outline),
-    'tongue': ('জবানের ঈমান', Icons.record_voice_over_outlined),
-    'body': ('দেহের ঈমান', Icons.accessibility_new_outlined),
+    'heart': ('iman_branch_heart', Icons.favorite_outline),
+    'tongue': ('iman_branch_tongue', Icons.record_voice_over_outlined),
+    'body': ('iman_branch_body', Icons.accessibility_new_outlined),
   };
 
   @override
@@ -44,7 +44,7 @@ class ImanBranchesScreen extends StatelessWidget {
               for (final g in _groupLabels.keys) ...[
                 if (branches.any((b) => b.group == g)) ...[
                   SectionHeader(
-                    '${_groupLabels[g]!.$1} (${bn ? toBn(branches.where((b) => b.group == g).length) : branches.where((b) => b.group == g).length})',
+                    '${context.t(_groupLabels[g]!.$1)} (${bn ? toBn(branches.where((b) => b.group == g).length) : branches.where((b) => b.group == g).length})',
                     icon: _groupLabels[g]!.$2,
                   ),
                   for (final b in branches.where((b) => b.group == g))

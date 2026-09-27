@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 
 import '../../core/cities.dart';
 import '../../design/design_tokens.dart';
+import '../../l10n/app_strings.dart';
+import 'widgets.dart';
 
 /// Opens the city picker and returns the chosen [CityEntry], or null.
 Future<CityEntry?> showCityPicker(BuildContext context) {
@@ -44,12 +46,13 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
               .toList();
 
     Widget tile(CityEntry c) {
+      final lang = context.lang;
       return SizedBox(
         height: SLSpacing.minTapTarget + 8,
         child: ListTile(
           title: Text(c.nameBn, style: theme.textTheme.bodyLarge),
           subtitle: Text(
-            '${c.nameEn} — ${c.isBd ? 'বাংলাদেশ' : 'বিদেশ'} · UTC${c.tz >= 0 ? '+' : ''}${c.tz}',
+            '${c.nameEn} — ${c.isBd ? S.tr(lang, 'country_bd') : S.tr(lang, 'country_abroad')} · UTC${c.tz >= 0 ? '+' : ''}${c.tz}',
             style: theme.textTheme.bodySmall,
           ),
           dense: true,
@@ -65,13 +68,16 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
         padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s16),
         child: Column(
           children: [
-            Text('শহর নির্বাচন করুন', style: theme.textTheme.titleMedium),
+            Text(
+              context.t('city_picker_title'),
+              style: theme.textTheme.titleMedium,
+            ),
             const SizedBox(height: SLSpacing.s12),
             TextField(
               onChanged: (v) => setState(() => _query = v),
-              decoration: const InputDecoration(
-                hintText: 'শহরের নাম লিখুন…',
-                prefixIcon: Icon(Icons.search),
+              decoration: InputDecoration(
+                hintText: context.t('onb_city_search'),
+                prefixIcon: const Icon(Icons.search),
                 isDense: true,
               ),
             ),
@@ -87,7 +93,7 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
                         horizontal: SLSpacing.s4,
                       ),
                       child: Text(
-                        'বাংলাদেশ',
+                        context.t('country_bd'),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.primary,
@@ -103,7 +109,7 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
                         horizontal: SLSpacing.s4,
                       ),
                       child: Text(
-                        'আন্তর্জাতিক',
+                        context.t('country_intl'),
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.primary,
@@ -117,7 +123,7 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
                     Padding(
                       padding: const EdgeInsets.all(SLSpacing.s32),
                       child: Text(
-                        'কোনো শহর মেলেনি — বানান দেখে নিন বা মূল তালিকা থেকে বাছুন',
+                        context.t('city_no_match'),
                         textAlign: TextAlign.center,
                         style: theme.textTheme.bodyMedium,
                       ),

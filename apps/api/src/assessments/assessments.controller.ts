@@ -23,6 +23,7 @@ type TemplateRow = {
   titleBn: string;
   titleEn: string;
   sectionsJson: unknown;
+  active?: boolean;
 };
 
 export function mapTemplate(row: TemplateRow): AssessmentTemplate {
@@ -129,10 +130,10 @@ export class AssessmentsService {
     private readonly guard: GuardService
   ) {}
 
-  /** GET /api/assessments/templates — public template catalog. */
+  /** GET /api/assessments/templates — the ACTIVE version of each template family. */
   async templates() {
     const rows = (await this.rls.system((tx) =>
-      tx.assessmentTemplate.findMany({ orderBy: { key: "asc" } })
+      tx.assessmentTemplate.findMany({ where: { active: true }, orderBy: { key: "asc" } })
     )) as unknown as TemplateRow[];
     return { templates: rows.map(mapTemplate) };
   }
@@ -150,10 +151,17 @@ export class AssessmentsService {
       if (!rows.length) return { assessments: [] };
 
       const templateKeys = [...new Set(rows.map((r) => r.templateKey))];
+      // prefer the ACTIVE version of each family; historical assessments of
+      // since-deactivated versions fall back to any remaining row of that key
       const templateRows = (await tx.assessmentTemplate.findMany({
         where: { key: { in: templateKeys } },
+        orderBy: [{ key: "asc" }, { active: "desc" }, { version: "desc" }],
       })) as unknown as TemplateRow[];
-      const templates = new Map(templateRows.map((t) => [t.key, mapTemplate(t)]));
+      const activeOrLast = new Map<string, TemplateRow>();
+      for (const t of templateRows) {
+        if (!activeOrLast.has(t.key)) activeOrLast.set(t.key, t);
+      }
+      const templates = new Map([...activeOrLast].map(([key, t]) => [key, mapTemplate(t)]));
       const fallback = (key: string): AssessmentTemplate => ({
         key,
         version: 1,
@@ -200,8 +208,9 @@ export class AssessmentsService {
     const target = await this.guard.assertCanAccess(user, assesseeId);
 
     return this.rls.run(user, async (tx) => {
-      const templateRow = (await tx.assessmentTemplate.findUnique({
-        where: { key: templateKey },
+      const templateRow = (await tx.assessmentTemplate.findFirst({
+        where: { key: templateKey, active: true },
+        orderBy: { version: "desc" },
       })) as unknown as TemplateRow | null;
       if (!templateRow) throw new ApiError(400, "টেমপ্লেট পাওয়া যায়নি");
       const template = mapTemplate(templateRow);

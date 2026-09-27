@@ -92,7 +92,7 @@ class _MasalaScreenState extends ConsumerState<MasalaScreen> {
                 padding: const EdgeInsets.all(SLSpacing.s16),
                 children: [
                   Text(
-                    'দ্বীনি মাসআলা লিখে জানান — মুফতি সাহেব ইনশাআল্লাহ উত্তর দিবেন।',
+                    context.t('masala_note'),
                     style: theme.textTheme.bodyMedium,
                   ),
                   const SizedBox(height: SLSpacing.s16),
@@ -109,8 +109,8 @@ class _MasalaScreenState extends ConsumerState<MasalaScreen> {
                   TextFormField(
                     controller: _phone,
                     keyboardType: TextInputType.phone,
-                    decoration: const InputDecoration(
-                      labelText: 'মোবাইল (ঐচ্ছিক)',
+                    decoration: InputDecoration(
+                      labelText: context.t('masala_phone'),
                       isDense: true,
                     ),
                   ),
@@ -141,7 +141,7 @@ class _MasalaScreenState extends ConsumerState<MasalaScreen> {
                   const SizedBox(height: SLSpacing.s8),
                   Center(
                     child: Text(
-                      'অফলাইনে পাঠানো যাবে না — ইন্টারনেট সংযোগ দরকার',
+                      context.t('masala_offline'),
                       style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant),
                     ),
