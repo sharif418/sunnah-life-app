@@ -1,12 +1,13 @@
 import { Req, Body, Controller, Get, Patch, Post, Query } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
-import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, Matches, MaxLength } from "class-validator";
+import { IsIn, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength } from "class-validator";
 import { addDays } from "../shared/calendars";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
 import { toDomainUser } from "../common/mappers";
-import { AuthedRequest, currentUser } from "../common/auth.guard";
+import { currentUser } from "../common/auth.guard";
+import type { AuthedRequest } from "../common/auth.guard";
 import { ApiError } from "../common/api-error";
 import {
   bdToday,

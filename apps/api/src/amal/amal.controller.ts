@@ -1,10 +1,11 @@
-import { Req, Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Req, Body, Controller, Get, Post, Query } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { IsDateString, IsOptional, IsString, Matches } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { AmalService } from "./amal.service";
 import { AmalEntriesSyncDto, UnlockDto } from "../auth/dto/auth.dto";
-import { AuthedRequest, currentUser } from "../common/auth.guard";
+import { currentUser } from "../common/auth.guard";
+import type { AuthedRequest } from "../common/auth.guard";
 
 export class EntriesQueryDto {
   @ApiProperty({ example: "2025-06-01" })

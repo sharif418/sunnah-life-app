@@ -5,7 +5,8 @@ import { IsIn, IsLatitude, IsLongitude, IsOptional, IsString, MaxLength } from "
 import { ApiProperty } from "@nestjs/swagger";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
-import { AuthedRequest, currentUser } from "../common/auth.guard";
+import { currentUser } from "../common/auth.guard";
+import type { AuthedRequest } from "../common/auth.guard";
 import { toDomainUser } from "../common/mappers";
 import { ApiError } from "../common/api-error";
 

@@ -1,9 +1,10 @@
-import { Req, Controller, Get, Query, UseGuards } from "@nestjs/common";
+import { Req, Controller, Get, Query } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
-import { AuthedRequest, currentUser } from "../common/auth.guard";
+import { currentUser } from "../common/auth.guard";
+import type { AuthedRequest } from "../common/auth.guard";
 
 /**
  * TEST-ONLY RLS probe. Enabled only when the request carries the

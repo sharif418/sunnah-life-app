@@ -18,12 +18,13 @@ const outDir = resolve(here, "../dist");
 await mkdir(outDir, { recursive: true });
 
 // 1) openapi.json — boot the app context and reuse its swagger document.
-//    We import the compiled NestModule pieces exactly as main.ts does.
-const require = createRequire(resolve(here, "../../../apps/api"));
+//    (createRequire needs a FILE anchor — package.json — so that "@nestjs/core"
+//    and "./dist/…" resolve against apps/api itself.)
+const require = createRequire(resolve(here, "../../../apps/api/package.json"));
 const { NestFactory } = require("@nestjs/core");
 const { SwaggerModule, DocumentBuilder } = require("@nestjs/swagger");
-const { AppModule } = require("../../../apps/api/dist/app.module.js");
-const { version } = require("../../../apps/api/package.json");
+const { AppModule } = require("./dist/app.module.js");
+const { version } = require("./package.json");
 
 const app = await NestFactory.create(AppModule, { logger: false });
 const config = new DocumentBuilder()
@@ -42,15 +43,10 @@ await app.close();
 await writeFile(resolve(outDir, "openapi.json"), JSON.stringify(document, null, 2));
 console.log(`✓ dist/openapi.json (${Object.keys(document.paths ?? {}).length} paths)`);
 
-// 2) schema.d.ts via openapi-typescript (uses the package's CLI from
-//    apps/api's node_modules if installed, otherwise documents the command).
-try {
-  const { execSync } = require("node:child_process");
-  execSync(
-    `bunx --bun openapi-typescript ${resolve(outDir, "openapi.json")} -o ${resolve(outDir, "schema.d.ts")}`,
-    { stdio: "inherit", cwd: resolve(here, "../../api") }
-  );
-  console.log("✓ dist/schema.d.ts");
-} catch {
-  console.log("ℹ openapi-typescript not installed here — run `bun install` in apps/api, then: bunx openapi-typescript packages/shared-types/dist/openapi.json -o packages/shared-types/dist/schema.d.ts");
-}
+// 2) schema.d.ts via openapi-typescript (installed here as a devDependency).
+const { execSync } = require("node:child_process");
+execSync(
+  `bun x openapi-typescript ${resolve(outDir, "openapi.json")} -o ${resolve(outDir, "schema.d.ts")}`,
+  { stdio: "inherit", cwd: resolve(here, "..") },
+);
+console.log("✓ dist/schema.d.ts");

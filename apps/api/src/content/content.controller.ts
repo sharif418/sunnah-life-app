@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Get, Param } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable, Logger } from "@nestjs/common";
 import { loadPack, loadQuran, PACK_KEYS, packDocuments, type PackKey } from "../shared/quran";

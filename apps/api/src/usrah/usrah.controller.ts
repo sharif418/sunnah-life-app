@@ -3,7 +3,8 @@ import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
-import { AuthedRequest, currentUser } from "../common/auth.guard";
+import { currentUser } from "../common/auth.guard";
+import type { AuthedRequest } from "../common/auth.guard";
 import { completion7dForUsers } from "../shared/amal";
 import type { Announcement, Gender, Level, User, UserCategory, Usrah, UsrahMember } from "../shared/domain";
 

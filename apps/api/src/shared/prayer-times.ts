@@ -5,7 +5,7 @@
 // night-middle high-latitude adjustment with polar NaN guards.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CalcMethodKey, Madhhab, PrayerConfig, PrayerKey, PrayerTimes } from "./domain";
+import type { CalcMethodKey, PrayerConfig, PrayerKey, PrayerTimes } from "./domain";
 
 const DEG = Math.PI / 180;
 const sin = (d: number) => Math.sin(d * DEG);

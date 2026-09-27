@@ -1,0 +1,1560 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/auth/otp/request": {
+      "post": {
+        "operationId": "AuthController_requestOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Send a phone OTP (mock provider returns devCode)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/otp/verify": {
+      "post": {
+        "operationId": "AuthController_verifyOtp",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OtpVerifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Verify OTP → sign in / register + guest data merge",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Rotate the refresh token (family revoke on reuse)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Sign out (revoke refresh family)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Liveness/readiness probe",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/metrics": {
+      "get": {
+        "operationId": "HealthController_metrics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Prometheus metrics",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/config": {
+      "get": {
+        "operationId": "ConfigApiController_getConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Public app configuration",
+        "tags": [
+          "config"
+        ]
+      }
+    },
+    "/api/quran/surahs": {
+      "get": {
+        "operationId": "ContentController_surahs",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Qur'an surah index (114)",
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/quran/surah/{number}": {
+      "get": {
+        "operationId": "ContentController_surah",
+        "parameters": [
+          {
+            "name": "number",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Surah with Uthmani text + Bengali translation",
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/content/{pack}": {
+      "get": {
+        "operationId": "ContentController_pack",
+        "parameters": [
+          {
+            "name": "pack",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Content pack: duas, adhkar, names99, courses, …",
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/amal/definitions": {
+      "get": {
+        "operationId": "AmalController_definitions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Active amal catalog (public)",
+        "tags": [
+          "amal"
+        ]
+      }
+    },
+    "/api/amal/entries": {
+      "get": {
+        "operationId": "AmalController_entries",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2025-06-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2025-06-15",
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Amal diary entries for a date range",
+        "tags": [
+          "amal"
+        ]
+      },
+      "post": {
+        "operationId": "AmalController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmalEntriesSyncDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Batch sync amal entries (locking + conflict rules)",
+        "tags": [
+          "amal"
+        ]
+      }
+    },
+    "/api/amal/unlock": {
+      "post": {
+        "operationId": "AmalController_unlock",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnlockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Unlock a locked diary day (usrah_head+)",
+        "tags": [
+          "amal"
+        ]
+      }
+    },
+    "/api/goals": {
+      "get": {
+        "operationId": "GoalsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Own active personal goals",
+        "tags": [
+          "amal"
+        ]
+      },
+      "post": {
+        "operationId": "GoalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoalCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Create a personal goal (max 14 active)",
+        "tags": [
+          "amal"
+        ]
+      },
+      "delete": {
+        "operationId": "GoalsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete one of my goals",
+        "tags": [
+          "amal"
+        ]
+      }
+    },
+    "/api/dawah": {
+      "get": {
+        "operationId": "DawahController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Dawah dashboard: member code, downline, level requirements",
+        "tags": [
+          "dawah"
+        ]
+      }
+    },
+    "/api/usrah": {
+      "get": {
+        "operationId": "UsrahController_myUsrah",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Own usrah: members (7-day completion) + announcements",
+        "tags": [
+          "usrah"
+        ]
+      }
+    },
+    "/api/reviews": {
+      "get": {
+        "operationId": "ReviewsController_list",
+        "parameters": [
+          {
+            "name": "scope",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Own reviews, or ?scope=queue (supervisor)",
+        "tags": [
+          "reviews"
+        ]
+      },
+      "post": {
+        "operationId": "ReviewsController_submit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewSubmitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Submit a weekly review (auto-summary server-side)",
+        "tags": [
+          "reviews"
+        ]
+      }
+    },
+    "/api/assessments/templates": {
+      "get": {
+        "operationId": "AssessmentsController_templates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Assessment template catalog (public)",
+        "tags": [
+          "assessments"
+        ]
+      }
+    },
+    "/api/assessments": {
+      "get": {
+        "operationId": "AssessmentsController_list",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Assessment history (own or guard-scoped ?userId)",
+        "tags": [
+          "assessments"
+        ]
+      },
+      "post": {
+        "operationId": "AssessmentsController_submit",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssessmentSubmitDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Record a signed assessment (majority-per-section rule)",
+        "tags": [
+          "assessments"
+        ]
+      }
+    },
+    "/api/admin/overview": {
+      "get": {
+        "operationId": "AdminController_overview",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Role-scoped admin overview (usrah health)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "operationId": "AdminController_users",
+        "parameters": [
+          {
+            "name": "q",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Scoped user search",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminController_patchUser",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUserPatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: change role/gender/usrah/category (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/month-grid": {
+      "get": {
+        "operationId": "AdminController_monthGrid",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "31-column month heatmap data (guard-checked)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/promote": {
+      "post": {
+        "operationId": "AdminController_promote",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PromoteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: promote a level (validates requirements)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/broadcast": {
+      "post": {
+        "operationId": "AdminController_broadcast",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BroadcastDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "usrah_head+: announcement + reminder fan-out",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/amal-catalog": {
+      "post": {
+        "operationId": "AdminController_upsertCatalog",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmalCatalogDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: upsert an amal definition by key",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/audit": {
+      "get": {
+        "operationId": "AdminController_audit",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: last 100 audit entries",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/masala": {
+      "post": {
+        "operationId": "MasalaController_masala",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MasalaDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Ask a fiqh question (guests allowed)",
+        "tags": [
+          "masala"
+        ]
+      }
+    },
+    "/api/feedback": {
+      "post": {
+        "operationId": "FeedbackController_feedback",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Send app feedback (guests allowed)",
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/enroll": {
+      "post": {
+        "operationId": "EnrollController_enroll",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Enroll in a course (idempotent)",
+        "tags": [
+          "enroll"
+        ]
+      },
+      "patch": {
+        "operationId": "EnrollController_progress",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnrollProgressDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Save course progress JSON",
+        "tags": [
+          "enroll"
+        ]
+      }
+    },
+    "/api/quiz-attempt": {
+      "post": {
+        "operationId": "QuizAttemptController_attempt",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuizAttemptDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Record a quiz attempt (login)",
+        "tags": [
+          "quiz-attempt"
+        ]
+      }
+    },
+    "/api/reminders": {
+      "get": {
+        "operationId": "RemindersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Own reminders",
+        "tags": [
+          "reminders"
+        ]
+      },
+      "patch": {
+        "operationId": "RemindersController_read",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReadReminderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Mark a reminder read",
+        "tags": [
+          "reminders"
+        ]
+      }
+    },
+    "/api/join": {
+      "get": {
+        "operationId": "JoinController_join",
+        "parameters": [
+          {
+            "name": "code",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "DS-000123",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Referral landing info (?code=DS-XXXXXX)",
+        "tags": [
+          "join"
+        ]
+      }
+    },
+    "/api/live": {
+      "get": {
+        "operationId": "LiveController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Live programs (gender-scoped for F sessions)",
+        "tags": [
+          "live"
+        ]
+      },
+      "post": {
+        "operationId": "LiveController_notify",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NotifyLiveDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "\"Notify me\" for a program",
+        "tags": [
+          "live"
+        ]
+      }
+    },
+    "/api/me": {
+      "get": {
+        "operationId": "MeController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Current user profile (null when anonymous)",
+        "tags": [
+          "me"
+        ]
+      },
+      "patch": {
+        "operationId": "MeController_updateMe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MePatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update own profile (allowlisted fields)",
+        "tags": [
+          "me"
+        ]
+      }
+    },
+    "/api/test/rls-raw": {
+      "get": {
+        "operationId": "RlsRawTestController_raw",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "TEST-ONLY: raw unfiltered query under RLS context",
+        "tags": [
+          "test"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Sunnah Life API",
+    "description": "দাওয়াতুস সুন্নাহ তারবিয়াত প্ল্যাটফর্ম — auth (OTP + JWT), muhasaba diary, usrah & dawah engine, weekly reviews, assessments, admin console. Every data route is enforced by PostgreSQL Row-Level Security (gender / usrah / downline scoping); auth via `Authorization: Bearer <accessToken>` or the HttpOnly sl_access cookie.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      },
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sl_access"
+      }
+    },
+    "schemas": {
+      "OtpRequestDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "01000000004"
+          }
+        },
+        "required": [
+          "phone"
+        ]
+      },
+      "GuestEntryDto": {
+        "type": "object",
+        "properties": {
+          "amalKey": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "example": "2025-06-15"
+          },
+          "value": {
+            "type": "object",
+            "example": "jamaat"
+          },
+          "clientUpdatedAt": {
+            "type": "string",
+            "example": "2025-06-15T10:00:00.000Z"
+          },
+          "source": {
+            "type": "string",
+            "example": "manual"
+          }
+        },
+        "required": [
+          "amalKey",
+          "date",
+          "value",
+          "clientUpdatedAt"
+        ]
+      },
+      "OtpVerifyDto": {
+        "type": "object",
+        "properties": {
+          "phone": {
+            "type": "string",
+            "example": "01000000004"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          },
+          "name": {
+            "type": "string",
+            "example": "রাফিউল ইসলাম"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ]
+          },
+          "referredByCode": {
+            "type": "string",
+            "example": "DS-000004"
+          },
+          "guestEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuestEntryDto"
+            }
+          }
+        },
+        "required": [
+          "phone",
+          "code"
+        ]
+      },
+      "RefreshDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "LogoutDto": {
+        "type": "object",
+        "properties": {
+          "refreshToken": {
+            "type": "string"
+          }
+        }
+      },
+      "AmalEntriesSyncDto": {
+        "type": "object",
+        "properties": {
+          "entries": {
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "entries"
+        ]
+      },
+      "UnlockDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "example": "2025-06-10"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "date"
+        ]
+      },
+      "GoalCreateDto": {
+        "type": "object",
+        "properties": {
+          "amalKey": {
+            "type": "string",
+            "example": "tahajjud"
+          },
+          "title": {
+            "type": "string",
+            "example": "তাহাজ্জুদ নিয়মিত করা"
+          },
+          "note": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "example": "2025-06-01"
+          }
+        },
+        "required": [
+          "amalKey",
+          "title",
+          "startDate"
+        ]
+      },
+      "ReviewSubmitDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "weekStart": {
+            "type": "string",
+            "example": "2025-06-14"
+          },
+          "comment": {
+            "type": "string"
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "nextGoals": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId",
+          "weekStart",
+          "rating"
+        ]
+      },
+      "AssessmentSubmitDto": {
+        "type": "object",
+        "properties": {
+          "assesseeId": {
+            "type": "string"
+          },
+          "templateKey": {
+            "type": "string",
+            "example": "farze_ain_v1"
+          },
+          "participantCategory": {
+            "type": "number",
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "scores": {
+            "type": "object"
+          },
+          "overallComment": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "assesseeId",
+          "templateKey",
+          "scores"
+        ]
+      },
+      "AdminUserPatchDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "daee",
+              "usrah_head",
+              "invigilator",
+              "full_admin"
+            ]
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ]
+          },
+          "usrahId": {
+            "type": "string",
+            "nullable": true
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "general",
+              "hafez",
+              "alim"
+            ]
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "PromoteDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "toLevel": {
+            "type": "string",
+            "enum": [
+              "none",
+              "muhibbus_sunnah",
+              "farze_ain_1",
+              "farze_ain_2"
+            ]
+          }
+        },
+        "required": [
+          "userId",
+          "toLevel"
+        ]
+      },
+      "BroadcastDto": {
+        "type": "object",
+        "properties": {
+          "usrahId": {
+            "type": "string",
+            "nullable": true
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ],
+            "nullable": true
+          },
+          "body": {
+            "type": "string",
+            "example": "আগামী শুক্রবার মজলিস ইনশাআল্লাহ"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "AmalCatalogDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "tilawat"
+          },
+          "titleBn": {
+            "type": "string"
+          },
+          "titleEn": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "salah",
+              "quran",
+              "dhikr",
+              "akhlaq",
+              "dawat",
+              "lifestyle",
+              "sunnah",
+              "personal"
+            ]
+          },
+          "inputType": {
+            "type": "string",
+            "enum": [
+              "tristate",
+              "boolean",
+              "count",
+              "quantity",
+              "text"
+            ]
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "daily",
+              "weekly:any",
+              "weekly:fri",
+              "weekly:mon_thu",
+              "monthly:ayyam_beez"
+            ]
+          },
+          "target": {
+            "type": "object"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "minLevel": {
+            "type": "string",
+            "enum": [
+              "none",
+              "muhibbus_sunnah",
+              "farze_ain_1",
+              "farze_ain_2"
+            ]
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "autoSource": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "key"
+        ]
+      },
+      "MasalaDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "তানভীর হোসেন"
+          },
+          "phone": {
+            "type": "string",
+            "example": "01000000007"
+          },
+          "question": {
+            "type": "string",
+            "example": "মাসনূন আযকার কি সব একসাথে পড়া যায়?"
+          }
+        },
+        "required": [
+          "name",
+          "question"
+        ]
+      },
+      "FeedbackDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "EnrollDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "example": "course-tawheed-101"
+          }
+        },
+        "required": [
+          "courseId"
+        ]
+      },
+      "EnrollProgressDto": {
+        "type": "object",
+        "properties": {
+          "courseId": {
+            "type": "string",
+            "example": "course-tawheed-101"
+          },
+          "progressJson": {
+            "type": "string",
+            "example": "{\"lessonIndex\":2,\"completed\":[1,2]}"
+          }
+        },
+        "required": [
+          "courseId",
+          "progressJson"
+        ]
+      },
+      "QuizAttemptDto": {
+        "type": "object",
+        "properties": {
+          "quizId": {
+            "type": "string",
+            "example": "quiz-fiqh-basics"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0
+          },
+          "total": {
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "quizId",
+          "score",
+          "total"
+        ]
+      },
+      "ReadReminderDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "NotifyLiveDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "MePatchDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "রাফিউল ইসলাম"
+          },
+          "language": {
+            "type": "string",
+            "enum": [
+              "bn",
+              "en",
+              "ar"
+            ]
+          },
+          "madhhab": {
+            "type": "string",
+            "enum": [
+              "hanafi",
+              "shafii"
+            ]
+          },
+          "calcMethod": {
+            "type": "string",
+            "enum": [
+              "karachi",
+              "mwl",
+              "isna",
+              "egypt",
+              "makkah",
+              "dubai"
+            ]
+          },
+          "lat": {
+            "type": "number"
+          },
+          "lng": {
+            "type": "number"
+          },
+          "city": {
+            "type": "string",
+            "example": "ঢাকা"
+          },
+          "district": {
+            "type": "string",
+            "example": "dhaka"
+          },
+          "workplace": {
+            "type": "string"
+          },
+          "department": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "general",
+              "hafez",
+              "alim"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
