@@ -132,8 +132,9 @@ jobs:
 
   # ───────────────────────────────────────────────────────────────────────────
   web:
-    name: Web — lint · production build (repo root)
+    name: Web — lint · production build (apps/web)
     runs-on: ubuntu-latest
+    if: hashFiles('apps/web/package.json') != ''
     steps:
       - uses: actions/checkout@v4
 
@@ -142,17 +143,19 @@ jobs:
           cache: true
 
       # NOTE: `next build` is intentionally NOT run in the build sandbox (2
-      # vCPU / 4 GB) — here on CI it gets a proper runner.
+      # vCPU / 4 GB) — here on CI it gets a proper runner. The web app has NO
+      # local database (single NestJS backend, NEXT_PUBLIC_API_BASE build arg).
       - name: Install dependencies
+        working-directory: apps/web
         run: bun install --frozen-lockfile || bun install
 
       - name: Lint (eslint)
+        working-directory: apps/web
         run: bun run lint
 
       - name: Production build (next build, standalone)
+        working-directory: apps/web
         run: bun run build
-        env:
-          DATABASE_URL: file:/tmp/ci-build.db
 
   # ───────────────────────────────────────────────────────────────────────────
   admin:
@@ -179,8 +182,6 @@ jobs:
         working-directory: apps/admin
         run: |
           if grep -q '"build":' package.json; then bun run build; else echo 'no build script — skipping'; fi
-        env:
-          DATABASE_URL: file:/tmp/ci-build.db
 
   # ───────────────────────────────────────────────────────────────────────────
   mobile:
@@ -237,3 +238,124 @@ jobs:
           path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 7
           if-no-files-found: warn
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # Release bundle — Android App Bundle (.aab), signed with the store key.
+  # Runs only when the ANDROID_KEYSTORE_BASE64 secret family exists (Phase B:
+  # release artifacts gated behind secrets; debug APK above is always built).
+  release-bundle:
+    name: Flutter — release App Bundle (secrets-gated)
+    runs-on: ubuntu-latest
+    if: hashFiles('apps/mobile/pubspec.yaml') != ''
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('apps/mobile/android/**/*.gradle*', 'apps/mobile/android/**/gradle-wrapper.properties') }}
+          restore-keys: gradle-${{ runner.os }}-
+
+      - name: Pub get
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      # The signing material is injected from secrets — see docs/RELEASE.md §3.
+      # Without the secrets the step fails loudly with instructions.
+      - name: Decode signing key (skips when secrets absent)
+        id: keystore
+        working-directory: apps/mobile/android
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::ANDROID_KEYSTORE_BASE64 not set — skipping the signed bundle (debug APK artifact covers CI proof)."
+            exit 0
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
+          cat > key.properties <<PROPS
+          storeFile=upload-keystore.jks
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          storePassword=$ANDROID_STORE_PASSWORD
+          PROPS
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+
+      - name: Build release App Bundle
+        if: steps.keystore.outputs.skip != 'true'
+        working-directory: apps/mobile
+        run: flutter build appbundle --release
+
+      - name: Upload release bundle
+        if: steps.keystore.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mobile-release-aab
+          path: apps/mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 14
+          if-no-files-found: error
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # CI report — writes .github/ci-status.md back to the branch so the build
+  # results are machine-readable without actions:read API access (the sandbox
+  # PAT cannot read the Actions API). [skip ci] prevents a report loop.
+  # Remove this job once a PAT with actions:read is available.
+  report:
+    name: CI status file
+    runs-on: ubuntu-latest
+    needs: [tokens, api, web, admin, mobile, release-bundle]
+    if: always()
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write .github/ci-status.md
+        run: |
+          mkdir -p .github
+          {
+            echo "# CI status — run ${{ github.run_id }}"
+            echo ""
+            echo "- **Commit:** ${{ github.sha }}"
+            echo "- **Started:** ${{ github.event.head_commit.timestamp }}"
+            echo "- **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo ""
+            echo "| Job | Result |"
+            echo "|---|---|"
+            echo "| tokens | ${{ needs.tokens.result }} |"
+            echo "| api | ${{ needs.api.result }} |"
+            echo "| web | ${{ needs.web.result }} |"
+            echo "| admin | ${{ needs.admin.result }} |"
+            echo "| mobile (debug APK) | ${{ needs.mobile.result }} |"
+            echo "| release-bundle (aab) | ${{ needs.release-bundle.result }} |"
+          } > .github/ci-status.md
+          cat .github/ci-status.md
+
+      - name: Commit status file
+        run: |
+          git config user.name "ci-reporter"
+          git config user.email "ci-reporter@users.noreply.github.com"
+          git add .github/ci-status.md
+          if git diff --cached --quiet; then
+            echo "no status change"
+          else
+            git commit -m "ci: status for run ${{ github.run_id }} [skip ci]"
+            git push
+          fi

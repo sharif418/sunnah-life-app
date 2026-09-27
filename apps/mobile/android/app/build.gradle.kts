@@ -54,9 +54,25 @@ android {
 
     buildTypes {
         release {
-            // Debug signing so `flutter run --release` works locally; the
-            // store signature is injected by the CI release pipeline.
-            signingConfig = signingConfigs.getByName("debug")
+            // Release signing from android/key.properties when present
+            // (CI injects it from secrets — see docs/RELEASE.md §3); falls
+            // back to debug signing so local `flutter run --release` works.
+            val keystoreProperties = java.util.Properties()
+            val keystorePropertiesFile = rootProject.file("key.properties")
+            val hasReleaseKeystore = keystorePropertiesFile.exists()
+            if (hasReleaseKeystore) {
+                keystoreProperties.load(keystorePropertiesFile.inputStream())
+            }
+            if (hasReleaseKeystore) {
+                signingConfig = signingConfigs.create("release") {
+                    keyAlias = keystoreProperties["keyAlias"] as String
+                    keyPassword = keystoreProperties["keyPassword"] as String
+                    storeFile = file(keystoreProperties["storeFile"] as String)
+                    storePassword = keystoreProperties["storePassword"] as String
+                }
+            } else {
+                signingConfig = signingConfigs.getByName("debug")
+            }
         }
     }
 }
