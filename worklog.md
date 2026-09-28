@@ -1036,3 +1036,17 @@ Stage Summary:
 - 226/226 mobile (was 184 at the C-W3f baseline; +30 from C-W3g's hijri_donation_test, +12 from C-W3h: +4 in deep_links_test.dart [join-link parsing group], +8 in the new referral_test.dart [4 store, 2 ApiClient wire, 2 AuthNotifier end-to-end]).
 - Web: no test infra exists for the new page (no test script in apps/web/package.json) — typecheck + lint + the live dev-server smoke above are the proof.
 - Honest edges: (a) THE INSTALL-BOUNDARY GAP (documented in RELEASE.md §8.3 + code comments): a guest who taps the link in a browser where the app is NOT installed gets the web landing; the code persists in the BROWSER's localStorage ('sl_join_code') which the MOBILE app cannot read — the code only reaches the app when a tap actually OPENS the app (custom scheme or verified App Link). The landing's 'অ্যাপে খুলুন' button is that bridge after install. (b) App-Links verification itself needs the owner's real upload-key SHA-256 (placeholder committed; RELEASE.md §8.1) and the iOS TEAMID (placeholder; §8.2) — until then Android shows the disambiguation chooser (the deep link still works through it) and iOS Universal Links don't auto-open (the sunnahlife:// scheme + the landing still work). (c) Debug-signed CI artifacts (internal-test-*) are debug-key-signed → App Links only verify for release-signed installs (expected, documented). (d) Real-device cold-start link behavior (app_links platform channels) is static-verified only — the CI release-apk job + the owner's phone checklist are the on-device proof.
+
+---
+Task ID: C-W3-CLOSE
+Agent: lead-architect (main session)
+Task: Wave 3 (Part B) close-out — final CI proof + AUDIT rows.
+
+Work Log:
+- Final full-state run 36483692875 (cc33a87, includes every W3a..W3h commit + the AUDIT update): ALL TEN jobs success — workspace, tokens, web (production build incl. the new /join routes + .well-known handlers), api, docker (compose smoke), release-apk (split-per-ABI + 40 MB gate), release-bundle, admin, mobile (analyze 0 + 226 tests + debug APK), report.
+- Artifacts on the final run: internal-test-arm64-v8a 13.39 MB zipped (25.5 MB APK), internal-test-armeabi-v7a 12.86 MB, mobile-debug-apk 88.68 MB. THE OWNER'S DEVICE-TEST PATH: repo Actions → run 36483692875 → download internal-test-arm64-v8a → unzip → install (allow installs from the browser/files app when prompted).
+- docs/AUDIT.md: Wave 3 section appended — nine items with honest Proven-by rows (CI-compiled vs device-proven explicitly separated), the Dart 3.13.4 hazard row, and the owner/device-pending edge list.
+- Run lineage note: cancel-in-progress canceled superseded runs (36474467226, 36474170536, 36474139014, 36483375077, 36483532842) — only completed runs are counted as proof anywhere: 36463164137 (W3b), 36474538959 (W3a+d+i incl. release job first-green + sizes), 36480221052 (W3c+e+f), 36483692875 (full Wave 3 state).
+
+Stage Summary:
+- Wave 3 (Part B) COMPLETE: all nine items (a–i) implemented, unit/widget/golden-tested (226/226, analyze 0, web+admin typecheck/lint clean, dev-server smoke for /join + .well-known), CI-proven end-to-end on the final run, AUDIT updated honestly. The owner can install a release build from CI artifacts right now; the device-test checklist (Wave 5 item) will turn the Ready-for-device rows into Done.
