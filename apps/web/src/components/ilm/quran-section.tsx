@@ -165,6 +165,7 @@ function SurahReader({ number: surahNumber }: { number: number }) {
   const [lastReadAyah, setLastReadAyah] = React.useState<number | null>(null);
   const [limit, setLimit] = React.useState(CHUNK);
   const [tilawatOpen, setTilawatOpen] = React.useState(false);
+  const [tilawatMinutes, setTilawatMinutes] = React.useState(0);
   const sessionStart = React.useRef(Date.now());
   const sessionLogged = React.useRef(false);
 
@@ -194,9 +195,13 @@ function SurahReader({ number: surahNumber }: { number: number }) {
   };
 
   const maybePromptTilawat = () => {
-    // ref read at event time, not during render (react-hooks/refs)
-    const sessionMinutes = Math.max(0, Math.floor((Date.now() - sessionStart.current) / 60000));
-    if (!sessionLogged.current && sessionMinutes >= 1) setTilawatOpen(true);
+    // refs read at EVENT time (react-hooks/refs) — the minutes snapshot is
+    // captured when the dialog opens, never during render
+    const minutes = Math.max(0, Math.floor((Date.now() - sessionStart.current) / 60000));
+    if (!sessionLogged.current && minutes >= 1) {
+      setTilawatMinutes(minutes);
+      setTilawatOpen(true);
+    }
   };
 
   return (
@@ -307,7 +312,7 @@ function SurahReader({ number: surahNumber }: { number: number }) {
           if (!open) sessionLogged.current = true;
           setTilawatOpen(open);
         }}
-        minutes={sessionMinutes}
+        minutes={tilawatMinutes}
         surahLabel={surah.nameBn}
         onLogged={() => {
           sessionStart.current = Date.now();
