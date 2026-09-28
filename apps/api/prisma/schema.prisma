@@ -340,6 +340,15 @@ model AuditLog {
   createdAt  DateTime @default(now())
 }
 
+// Phase C/W1b: ONE editable app configuration — /api/config reads it (with a
+// short cache), the admin CMS (PATCH /api/admin/config) writes it, and
+// seed:reference upserts the defaults from packages/content/app-config.json.
+model AppConfigRow {
+  key        String   @id // singleton: "app"
+  valueJson  Json
+  updatedAt  DateTime @updatedAt
+}
+
 model MasalaQuestion {
   id        String   @id @default(cuid())
   userId    String?

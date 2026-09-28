@@ -16,6 +16,8 @@ import {
 } from "class-validator";
 import { addDays } from "../shared/calendars";
 import { RlsService } from "../common/rls.service";
+import { PrismaService } from "../common/prisma.service";
+import { invalidateAppConfigCache, mergeConfig } from "../config/config.controller";
 import { GuardService } from "../common/guard.service";
 import { PushService } from "../push/push.service";
 import { DEEP_LINKS } from "../push/deep-links";
@@ -96,6 +98,51 @@ export class AdminUserPatchDto {
   @IsString()
   @MaxLength(500)
   reason?: string;
+}
+
+/** PATCH /api/admin/config — partial AppConfig update (CMS). */
+export class AppConfigAdminDto {
+  @ApiProperty({ required: false, example: "https://as-sunnah.org/donation" })
+  @IsOptional()
+  @IsString()
+  donationUrl?: string;
+
+  @ApiProperty({ required: false, example: "sunnahlife.app" })
+  @IsOptional()
+  @IsString()
+  domain?: string;
+
+  @ApiProperty({ required: false, example: -1, description: "Hijri ±adjust (−2..2)" })
+  @IsOptional()
+  @IsInt()
+  hijriAdjust?: number;
+
+  @ApiProperty({ required: false, type: Object })
+  @IsOptional()
+  nisab?: { goldPerGramBdt?: number; silverPerGramBdt?: number };
+
+  @ApiProperty({ required: false, type: [Object] })
+  @IsOptional()
+  contacts?: unknown[];
+
+  @ApiProperty({ required: false, type: [Object] })
+  @IsOptional()
+  groups?: unknown[];
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  audioBase?: string;
+
+  @ApiProperty({ required: false, description: "gender-scoped leaderboard (scholars' decision pending)" })
+  @IsOptional()
+  @IsBoolean()
+  leaderboardEnabled?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsBoolean()
+  detoxEnabled?: boolean;
 }
 
 export class PromoteDto {
@@ -409,7 +456,8 @@ export class AdminService {
     private readonly rls: RlsService,
     private readonly guard: GuardService,
     private readonly push: PushService,
-    private readonly levels: LevelsService
+    private readonly levels: LevelsService,
+    private readonly prisma: PrismaService
   ) {}
 
   /** GET /api/admin/overview — role-scoped dashboard. */
@@ -1446,6 +1494,59 @@ export class AdminService {
     return { ok: true };
   }
 
+  /**
+   * GET /api/admin/config — full_admin: the live app configuration
+   * (GET /api/config's source after merging with defaults).
+   */
+  async appConfig(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const row = await this.prisma.appConfigRow.findUnique({ where: { key: "app" } });
+    return mergeConfig(row?.valueJson);
+  }
+
+  /**
+   * PATCH /api/admin/config — full_admin CMS write. Merges over the stored
+   * value (partial update), runs the same validation as the public read
+   * path (mergeConfig), invalidates the public cache and audits the diff.
+   */
+  async updateAppConfig(viewer: User | null, dto: AppConfigAdminDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    const row = await this.prisma.appConfigRow.findUnique({ where: { key: "app" } });
+    const before = mergeConfig(row?.valueJson);
+    const after = mergeConfig({ ...before, ...(dto as unknown as Record<string, unknown>) });
+
+    await this.prisma.appConfigRow.upsert({
+      where: { key: "app" },
+      create: { key: "app", valueJson: after as never },
+      update: { valueJson: after as never },
+    });
+    invalidateAppConfigCache();
+
+    // audit the changed top-level keys only (contacts/groups diffs are long).
+    // Canonical stringify (sorted keys) so key ORDER differences don't read
+    // as value changes (the optional contact fields have no fixed order).
+    const canon = (v: unknown): string =>
+      JSON.stringify(v, (_k, val) =>
+        val && typeof val === "object" && !Array.isArray(val)
+          ? Object.keys(val as Record<string, unknown>).sort().reduce<Record<string, unknown>>((acc, kk) => {
+              (acc as Record<string, unknown>)[kk] = (val as Record<string, unknown>)[kk];
+              return acc;
+            }, {})
+          : val
+      );
+    const changed = Object.keys(after).filter(
+      (k) =>
+        canon((before as unknown as Record<string, unknown>)[k]) !==
+        canon((after as unknown as Record<string, unknown>)[k])
+    );
+    await this.guard.audit(user.id, "update_app_config", "app_config", "app", { changed });
+
+    return after;
+  }
+
   /** GET /api/admin/audit — full_admin: last 100 audit entries with actor names. */
   async audit(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -1715,6 +1816,20 @@ export class AdminController {
   @Roles("full_admin")
   deleteLive(@Param("id") id: string, @Req() req: AuthedRequest) {
     return this.service.deleteLive(currentUser(req), id);
+  }
+
+  @Get("config")
+  @ApiOperation({ summary: "full_admin: the live app configuration (CMS)" })
+  @Roles("full_admin")
+  appConfig(@Req() req: AuthedRequest) {
+    return this.service.appConfig(currentUser(req));
+  }
+
+  @Patch("config")
+  @ApiOperation({ summary: "full_admin: update the app configuration (audited)" })
+  @Roles("full_admin")
+  updateAppConfig(@Body() dto: AppConfigAdminDto, @Req() req: AuthedRequest) {
+    return this.service.updateAppConfig(currentUser(req), dto);
   }
 
   @Get("audit")

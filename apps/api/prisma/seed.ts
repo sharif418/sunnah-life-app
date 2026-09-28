@@ -203,6 +203,19 @@ async function main() {
   const allCriteria = tmpl.sections.flatMap((s) => s.criteria.map((c) => ({ section: s.key, key: c.key })));
   console.log(`  AssessmentTemplate: ${tmpl.key} (${allCriteria.length} criteria)`);
 
+  // ── 2b) App configuration (idempotent UPSERT — admin edits win) ───────────
+  // Phase C/W1b: packages/content/app-config.json seeds the editable config;
+  // a row the admin CMS already wrote is PRESERVED (never overwritten on boot).
+  const packCfg = JSON.parse(
+    await fs.readFile(path.join(CONTENT_DIR, "app-config.json"), "utf8")
+  );
+  await db.appConfigRow.upsert({
+    where: { key: "app" },
+    create: { key: "app", valueJson: packCfg },
+    update: {}, // keep admin edits
+  });
+  console.log(`  AppConfigRow: seeded (5 contacts, ${packCfg.groups?.length ?? 0} groups)`);
+
   // ── 3) Users ──────────────────────────────────────────────────────────────
   const NOW = new Date();
   const d = (days: number, hours = 0) => new Date(NOW.getTime() - (days * 86400 + hours * 3600) * 1000);

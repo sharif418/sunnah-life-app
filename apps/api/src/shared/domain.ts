@@ -517,6 +517,8 @@ export interface MosqueInfo {
 export interface AppConfig {
   donationUrl: string;
   domain: string;
+  /** ± days applied to the Umm al-Qura Hijri date (admin-set, per community
+   *  moon sighting). The mobile date bar and web header must apply this. */
   hijriAdjust: number;
   nisab: { goldPerGramBdt: number; silverPerGramBdt: number };
   contacts: {
@@ -529,4 +531,8 @@ export interface AppConfig {
   }[];
   groups: { titleBn: string; url: string; descBn?: string }[];
   audioBase: string;
+  /** Gender-scoped amal leaderboard is gated on the scholars' decision. */
+  leaderboardEnabled: boolean;
+  /** Social-media-detox reminders (Android UsageStats, Guard-module seed). */
+  detoxEnabled: boolean;
 }

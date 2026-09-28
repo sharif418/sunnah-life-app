@@ -44,6 +44,45 @@ class AuthProviders {
   );
 }
 
+class ConfigContact {
+  const ConfigContact({
+    required this.org,
+    required this.descBn,
+    this.phone,
+    this.email,
+    this.website,
+    this.address,
+  });
+  final String org;
+  final String descBn;
+  final String? phone;
+  final String? email;
+  final String? website;
+  final String? address;
+
+  factory ConfigContact.fromJson(Map<String, dynamic> j) => ConfigContact(
+    org: j['org'] as String? ?? '',
+    descBn: j['descBn'] as String? ?? '',
+    phone: j['phone'] as String?,
+    email: j['email'] as String?,
+    website: j['website'] as String?,
+    address: j['address'] as String?,
+  );
+}
+
+class ConfigGroup {
+  const ConfigGroup({required this.titleBn, required this.url, this.descBn});
+  final String titleBn;
+  final String url;
+  final String? descBn;
+
+  factory ConfigGroup.fromJson(Map<String, dynamic> j) => ConfigGroup(
+    titleBn: j['titleBn'] as String? ?? '',
+    url: j['url'] as String? ?? '',
+    descBn: j['descBn'] as String?,
+  );
+}
+
 class AppConfig {
   const AppConfig({
     required this.donationUrl,
@@ -51,12 +90,27 @@ class AppConfig {
     required this.hijriAdjust,
     required this.goldPerGramBdt,
     required this.silverPerGramBdt,
+    this.contacts = const [],
+    this.groups = const [],
+    this.audioBase = '',
+    this.leaderboardEnabled = false,
+    this.detoxEnabled = false,
   });
   final String donationUrl;
   final String domain;
   final int hijriAdjust;
   final double goldPerGramBdt;
   final double silverPerGramBdt;
+  /// The five institutions (admin-editable) — the floating Contact panel.
+  final List<ConfigContact> contacts;
+  /// App-user group links (admin-editable) — the More tab section.
+  final List<ConfigGroup> groups;
+  /// Recitation audio base (per-ayah streaming, W3a).
+  final String audioBase;
+  /// Gender-scoped leaderboard — gated on the scholars' decision.
+  final bool leaderboardEnabled;
+  /// Social-media-detox reminders (Guard-module seed).
+  final bool detoxEnabled;
 
   factory AppConfig.fromJson(Map<String, dynamic> j) {
     final nisab = (j['nisab'] as Map<String, dynamic>?) ?? const {};
@@ -66,6 +120,17 @@ class AppConfig {
       hijriAdjust: (j['hijriAdjust'] as num?)?.toInt() ?? 0,
       goldPerGramBdt: (nisab['goldPerGramBdt'] as num?)?.toDouble() ?? 0,
       silverPerGramBdt: (nisab['silverPerGramBdt'] as num?)?.toDouble() ?? 0,
+      contacts: ((j['contacts'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((e) => ConfigContact.fromJson(e.cast<String, dynamic>()))
+          .toList(growable: false),
+      groups: ((j['groups'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((e) => ConfigGroup.fromJson(e.cast<String, dynamic>()))
+          .toList(growable: false),
+      audioBase: j['audioBase'] as String? ?? '',
+      leaderboardEnabled: j['leaderboardEnabled'] as bool? ?? false,
+      detoxEnabled: j['detoxEnabled'] as bool? ?? false,
     );
   }
 }
