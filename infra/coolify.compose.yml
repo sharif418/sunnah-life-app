@@ -16,6 +16,8 @@
 #   admin → https://<admin-domain>:3000
 #   api   → https://<api-domain>:4000
 # Every ${VAR} below is set in the Coolify environment of this resource.
+# Build contexts are relative to the REPOSITORY ROOT: Coolify runs compose
+# with --project-directory set to the checkout root.
 # ─────────────────────────────────────────────────────────────────────────────
 
 x-logging: &default-logging
@@ -27,7 +29,7 @@ x-logging: &default-logging
 services:
   postgres:
     build:
-      context: ./postgres
+      context: ./infra/postgres
       dockerfile: Dockerfile
     restart: unless-stopped
     logging: *default-logging
@@ -91,7 +93,7 @@ services:
 
   api:
     build:
-      context: ..
+      context: .
       dockerfile: infra/api.Dockerfile
     restart: unless-stopped
     logging: *default-logging
@@ -150,7 +152,7 @@ services:
 
   worker:
     build:
-      context: ..
+      context: .
       dockerfile: infra/api.Dockerfile
     restart: unless-stopped
     logging: *default-logging
@@ -184,7 +186,7 @@ services:
 
   web:
     build:
-      context: ..
+      context: .
       dockerfile: infra/web.Dockerfile
       args:
         NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?set NEXT_PUBLIC_API_BASE}
@@ -203,7 +205,7 @@ services:
 
   admin:
     build:
-      context: ../apps/admin
+      context: ./apps/admin
       dockerfile: ../../infra/admin.Dockerfile
       args:
         NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?set NEXT_PUBLIC_API_BASE}
