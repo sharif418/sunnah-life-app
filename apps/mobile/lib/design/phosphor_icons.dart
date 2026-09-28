@@ -9,7 +9,7 @@
 ///
 /// Instead of dropping the Phosphor look, the three font files the new
 /// chrome needs (Regular / Fill / Bold) are vendored into assets/fonts with
-/// the upstream MIT license (assets/fonts/PHOSPHOR-LICENSE.txt), and the
+/// the upstream MIT license (assets/fonts/phosphor-license.txt), and the
 /// glyph table below is hand-written for exactly the icons the NEW
 /// components use — plain `IconData` values (no subclassing). Code points
 /// are stable across Phosphor styles by design.
