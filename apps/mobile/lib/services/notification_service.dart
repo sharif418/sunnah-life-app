@@ -181,9 +181,3 @@ class NotificationService {
 
   Future<void> cancelAll() => _plugin.cancelAll();
 }
-
-/// Notification IDs (stable, so re-scheduling replaces, never duplicates).
-abstract final class Nid {
-  static const int waqtBellBase = 1000; // + PrayerKey.index
-  static const int postPrayerBase = 2000; // + PrayerKey.index
-}

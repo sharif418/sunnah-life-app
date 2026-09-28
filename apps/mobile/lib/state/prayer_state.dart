@@ -9,11 +9,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../core/bell_schedule.dart';
 import '../core/bn_digits.dart';
 import '../core/date_keys.dart';
 import '../core/prayer_engine.dart';
-import '../services/notification_service.dart';
 import '../services/platform_channels.dart';
+import '../services/prayer_bell_scheduler.dart';
 import 'providers.dart';
 
 class PrayerNow {
@@ -57,11 +58,24 @@ class PrayerNow {
 
 class PrayerNotifier extends Notifier<PrayerNow?> {
   Timer? _ticker;
-  String? _scheduledFor;
+
+  /// The dateKey the bell window was last refreshed for — the rolling
+  /// re-arm trigger as the day rolls over (profile-change reschedules come
+  /// through the profile listener below).
+  String? _lastScheduleDay;
 
   @override
   PrayerNow? build() {
     ref.onDispose(() => _ticker?.cancel());
+    // City / method / madhhab changes shift every computed time — cancel +
+    // re-arm the whole window (name/theme changes must NOT thrash alarms).
+    ref.listen(profileProvider, (prev, next) {
+      if (prev == null) return;
+      if (_bellConfigOf(prev).scheduleKey !=
+          _bellConfigOf(next).scheduleKey) {
+        unawaited(refreshBells());
+      }
+    });
     _scheduleTick();
     return computeNow();
   }
@@ -110,85 +124,39 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
   void _onStateChanged() {
     final s = state;
     if (s == null) return;
-    if (_scheduledFor != s.dateKey) {
-      _scheduledFor = s.dateKey;
-      _scheduleDayAlarms(s);
+    if (_lastScheduleDay != s.dateKey) {
+      _lastScheduleDay = s.dateKey;
+      unawaited(refreshBells());
     }
     _updateWidget(s);
   }
 
-  /// Schedule the day's notifications once per date:
-  ///  · bell 10 min before each enabled waqt (zoned schedules)
-  ///  · post-prayer prompt 20 min after each farz waqt begins
-  ///  · exact alarm for the next farz prayer via the platform channel.
-  Future<void> _scheduleDayAlarms(PrayerNow s) async {
+  PrayerBellConfig _bellConfigOf(ProfileState profile) => PrayerBellConfig(
+    lat: profile.lat,
+    lng: profile.lng,
+    tz: profile.tz,
+    method: profile.method,
+    madhhab: profile.madhhab,
+  );
+
+  /// (Re)arm the rolling 3-day bell window with the CURRENT profile.
+  /// Called on app start, day rollover, profile change, bell toggle,
+  /// per-waqt minute change and app resume.
+  Future<void> refreshBells() async {
     try {
-      await NotificationService.instance.init();
-    } catch (e) {
-      debugPrint('notification init failed: $e');
-      return;
-    }
-    final now = DateTime.now();
-    final bells = await _enabledBells();
-    for (final key in farzPrayers) {
-      final minutes = s.times.byKey(key);
-      final waqtAt = _dateTimeAt(s.dateKey, minutes, now);
-
-      if (bells.contains(key.name) && waqtAt.isAfter(now)) {
-        final bellAt = waqtAt.subtract(const Duration(minutes: 10));
-        if (bellAt.isAfter(now)) {
-          await NotificationService.instance.zoned(
-            id: Nid.waqtBellBase + key.index,
-            title: '${prayerLabelsBn[key]} — ওয়াক্ত হচ্ছে',
-            body:
-                '১০ মিনিট পরে ${prayerLabelsBn[key]}-এর সময় হবে — প্রস্তুত হোন',
-            when: bellAt,
-          );
-        }
-      }
-      final promptAt = waqtAt.add(const Duration(minutes: 20));
-      if (promptAt.isAfter(now)) {
-        await NotificationService.instance.zoned(
-          id: Nid.postPrayerBase + key.index,
-          title: '${prayerLabelsBn[key]} — জামাতে / একা / কাযা?',
-          body: 'নামাজ হয়ে গেলে আমলনামায় লিখে ফেলুন',
-          when: promptAt,
-        );
-      }
-    }
-    // Exact alarm for the upcoming farz prayer (Kotlin AlarmManager).
-    final nextAt = _dateTimeAt(s.dateKey, s.times.byKey(s.nextKey), now);
-    if (nextAt.isAfter(now)) {
-      await PrayerChannel.scheduleExactAlarm(
-        id: 900 + s.nextKey.index,
-        epochMillis: nextAt.millisecondsSinceEpoch,
-        title: '${prayerLabelsBn[s.nextKey]} — ওয়াক্ত',
-        body: '${prayerLabelsBn[s.nextKey]}-এর সময় হয়েছে',
+      final profile = ref.read(profileProvider);
+      await PrayerBellScheduler.refresh(
+        PrayerBellConfig(
+          lat: profile.lat,
+          lng: profile.lng,
+          tz: profile.tz,
+          method: profile.method,
+          madhhab: profile.madhhab,
+        ),
       );
+    } catch (e) {
+      debugPrint('bell window refresh failed: $e');
     }
-  }
-
-  /// The local "wall clock" DateTime for a minutes-from-midnight value on
-  /// [day] — the device clock is assumed to be in the city timezone (the
-  /// standard case; the manual tz in the profile also shifts notifications).
-  DateTime _dateTimeAt(String day, double minutes, DateTime now) {
-    final d = parseKey(day);
-    return DateTime(
-      d.year,
-      d.month,
-      d.day,
-      minutes ~/ 60,
-      (minutes % 60).round(),
-    );
-  }
-
-  Future<Set<String>> _enabledBells() async {
-    final prefs = await SharedPreferences.getInstance();
-    final keys = prefs.getKeys().where((k) => k.startsWith('bell_'));
-    return keys
-        .where((k) => prefs.getString(k) == '1')
-        .map((k) => k.substring(5))
-        .toSet();
   }
 
   /// Toggle a waqt bell; reschedules immediately.
@@ -196,12 +164,32 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('bell_${key.name}', enabled ? '1' : '0');
     if (!enabled) {
-      await NotificationService.instance.cancel(Nid.waqtBellBase + key.index);
+      await PrayerBellScheduler.disableBell(key);
     } else {
-      _scheduledFor = null; // force reschedule
-      _onStateChanged();
+      // Days already armed under the old prefs are skipped by refresh —
+      // force a clean re-arm so the new bell is scheduled right away.
+      PrayerBellScheduler.forceReschedule();
+      await refreshBells();
     }
     return enabled;
+  }
+
+  /// Persist per-waqt lead/lag minutes and re-arm this waqt's alarms
+  /// (called by the Home bell-timing sheet).
+  Future<void> updateBellMinutes(
+    PrayerKey key, {
+    int? bellMinutes,
+    int? postMinutes,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (bellMinutes != null) {
+      await prefs.setInt(bellMinutesPrefKey(key), bellMinutes);
+    }
+    if (postMinutes != null) {
+      await prefs.setInt(postPrayerMinutesPrefKey(key), postMinutes);
+    }
+    PrayerBellScheduler.forceReschedule();
+    await refreshBells();
   }
 
   void _updateWidget(PrayerNow s) {

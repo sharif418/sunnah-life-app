@@ -50,6 +50,7 @@ import 'l10n/generated/app_localizations.dart';
 import 'models/domain.dart';
 import 'services/push_service.dart';
 import 'state/amal_state.dart';
+import 'state/prayer_state.dart';
 import 'state/providers.dart';
 
 /// Single-flight bootstrap: read the persisted guest profile before the
@@ -291,11 +292,38 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class SunnahLifeApp extends ConsumerWidget {
+class SunnahLifeApp extends ConsumerStatefulWidget {
   const SunnahLifeApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SunnahLifeApp> createState() => _SunnahLifeAppState();
+}
+
+class _SunnahLifeAppState extends ConsumerState<SunnahLifeApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Back from the background (possibly after days): the rolling bell
+    // window may have gone stale — re-arm it (idempotent per day).
+    if (state == AppLifecycleState.resumed) {
+      ref.read(prayerProvider.notifier).refreshBells();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(profileProvider);
     final lang = LangX.fromCode(profile.language);
     final themeMode = switch (profile.themeMode) {
