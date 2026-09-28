@@ -526,6 +526,9 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'autosilent_minutes_suffix' => l.autosilent_minutes_suffix,
   'autosilent_waqts_title' => l.autosilent_waqts_title,
   'autosilent_reboot_note' => l.autosilent_reboot_note,
+  'more_donate' => l.more_donate,
+  'donation_open_failed' => l.donation_open_failed,
+  'referral_by' => l.referral_by,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

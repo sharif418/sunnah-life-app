@@ -464,5 +464,8 @@
   "autosilent_minutes_label": "مدة الصمت",
   "autosilent_minutes_suffix": "دقيقة صامتة",
   "autosilent_waqts_title": "أي أوقات الصلاة",
-  "autosilent_reboot_note": "بعد إعادة تشغيل الهاتف، يُعاد تفعيل الجدولة بفتح التطبيق مرة واحدة."
+  "autosilent_reboot_note": "بعد إعادة تشغيل الهاتف، يُعاد تفعيل الجدولة بفتح التطبيق مرة واحدة.",
+  "more_donate": "تبرّع",
+  "donation_open_failed": "تعذّر فتح الرابط",
+  "referral_by": "المُحيل"
 }

@@ -1447,4 +1447,13 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get autosilent_reboot_note =>
       'ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।';
+
+  @override
+  String get more_donate => 'দান করুন';
+
+  @override
+  String get donation_open_failed => 'লিংক খোলা যায়নি';
+
+  @override
+  String get referral_by => 'রেফার করেছেন';
 }

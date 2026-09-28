@@ -1,13 +1,16 @@
-/// আরও — the More hub: zakat, qibla, mosques, masala, live, about, profile.
+/// আরও — the More hub: donate, zakat, qibla, mosques, masala, live,
+/// about, profile.
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/external_urls.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../state/providers.dart';
+import '../../state/remote_state.dart' show configProvider;
 import '../shared/widgets.dart';
 
 class MoreScreen extends ConsumerWidget {
@@ -18,15 +21,64 @@ class MoreScreen extends ConsumerWidget {
     final theme = Theme.of(context);
     final auth = ref.watch(authProvider);
 
-    final entries = <(IconData, String, String)>[
-      (Icons.calculate_outlined, context.t('more_zakat'), '/more/zakat'),
-      (Icons.explore_outlined, context.t('more_qibla'), '/more/qibla'),
-      (Icons.do_not_disturb_on_outlined,
-          context.t('more_autosilent'), '/more/autosilent'),
-      (Icons.mosque_outlined, context.t('more_mosque'), '/more/mosques'),
-      (Icons.help_outline, context.t('more_masala'), '/more/masala'),
-      (Icons.podcasts_outlined, context.t('more_live'), '/more/live'),
-      (Icons.info_outline, context.t('more_about'), '/more/about'),
+    // C-W3g: the donation tile opens the admin-configured donation URL in
+    // the in-app browser (Chrome Custom Tabs). Hidden when the config has
+    // no usable http(s) URL — a dead tile is worse than no tile.
+    final donationUrl = ref.watch(configProvider).maybeWhen(
+      data: (c) => c.donationUrl,
+      orElse: () => '',
+    );
+    final canDonate = isLaunchableHttpUrl(donationUrl);
+
+    final entries = <({IconData icon, String title, VoidCallback onTap})>[
+      if (canDonate)
+        (
+          icon: Icons.volunteer_activism_outlined,
+          title: context.t('more_donate'),
+          onTap: () async {
+            final opened = await openInAppBrowser(donationUrl);
+            if (!opened && context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(context.t('donation_open_failed'))),
+              );
+            }
+          },
+        ),
+      (
+        icon: Icons.calculate_outlined,
+        title: context.t('more_zakat'),
+        onTap: () => context.push('/more/zakat'),
+      ),
+      (
+        icon: Icons.explore_outlined,
+        title: context.t('more_qibla'),
+        onTap: () => context.push('/more/qibla'),
+      ),
+      (
+        icon: Icons.do_not_disturb_on_outlined,
+        title: context.t('more_autosilent'),
+        onTap: () => context.push('/more/autosilent'),
+      ),
+      (
+        icon: Icons.mosque_outlined,
+        title: context.t('more_mosque'),
+        onTap: () => context.push('/more/mosques'),
+      ),
+      (
+        icon: Icons.help_outline,
+        title: context.t('more_masala'),
+        onTap: () => context.push('/more/masala'),
+      ),
+      (
+        icon: Icons.podcasts_outlined,
+        title: context.t('more_live'),
+        onTap: () => context.push('/more/live'),
+      ),
+      (
+        icon: Icons.info_outline,
+        title: context.t('more_about'),
+        onTap: () => context.push('/more/about'),
+      ),
     ];
 
     return Scaffold(
@@ -104,17 +156,21 @@ class MoreScreen extends ConsumerWidget {
               ),
               itemCount: entries.length,
               itemBuilder: (context, i) {
-                final (icon, title, route) = entries[i];
+                final entry = entries[i];
                 return AppCard(
-                  onTap: () => context.push(route),
+                  onTap: entry.onTap,
                   child: Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(icon, size: 30, color: theme.colorScheme.primary),
+                        Icon(
+                          entry.icon,
+                          size: 30,
+                          color: theme.colorScheme.primary,
+                        ),
                         const SizedBox(height: SLSpacing.s8),
                         Text(
-                          title,
+                          entry.title,
                           textAlign: TextAlign.center,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,

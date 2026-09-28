@@ -464,5 +464,8 @@
   "autosilent_minutes_label": "সাইলেন্ট থাকার সময়",
   "autosilent_minutes_suffix": "মিনিট সাইলেন্ট",
   "autosilent_waqts_title": "কোন কোন ওয়াক্তে চালু হবে",
-  "autosilent_reboot_note": "ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।"
+  "autosilent_reboot_note": "ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।",
+  "more_donate": "দান করুন",
+  "donation_open_failed": "লিংক খোলা যায়নি",
+  "referral_by": "রেফার করেছেন"
 }

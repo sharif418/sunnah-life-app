@@ -1,6 +1,6 @@
 /// যাকাত ক্যালকুলেটর — gold/silver/cash/investments/debts inputs;
 /// nisab = 85g gold (server-configurable price, offline fallback);
-/// CTA shows the donation link.
+/// CTA opens the donation link in the in-app browser (Chrome Custom Tabs).
 library;
 
 import 'package:flutter/material.dart';
@@ -8,6 +8,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/bn_digits.dart';
+import '../../core/external_urls.dart';
 import '../../design/design_tokens.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
@@ -55,8 +56,9 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
     );
     final donationUrl = config.maybeWhen(
       data: (c) => c.donationUrl,
-      orElse: () => 'https://sunnahlife.app',
+      orElse: () => kFallbackDonationUrl,
     );
+    final canDonate = isLaunchableHttpUrl(donationUrl);
 
     // Nisab per the task rule: 85 grams of gold.
     final nisab = 85 * goldPrice;
@@ -164,18 +166,20 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
             ),
           ),
           const SizedBox(height: SLSpacing.s12),
-          if (eligible)
+          if (eligible && canDonate)
             FilledButton.icon(
               icon: const Icon(Icons.volunteer_activism),
               label: Text(context.t('zakat_donate')),
               onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: donationUrl));
-                if (context.mounted) {
+                // C-W3g: in-app browser (Chrome Custom Tabs on Android /
+                // SFSafariViewController on iOS); external browser fallback
+                // lives inside openInAppBrowser.
+                final opened = await openInAppBrowser(donationUrl);
+                if (!context.mounted) return;
+                if (!opened) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(
-                        '${context.t('zakat_donate')}: $donationUrl (${context.t('copied')})',
-                      ),
+                      content: Text(context.t('donation_open_failed')),
                     ),
                   );
                 }
@@ -183,11 +187,38 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
             ),
           const SizedBox(height: SLSpacing.s8),
           Center(
-            child: Text(
-              '${context.t('zakat_donation_link')}: $donationUrl',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: Text(
+                    '${context.t('zakat_donation_link')}: $donationUrl',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                // Copy affordance kept (genuinely useful for sharing the
+                // link on), alongside the new open action.
+                IconButton(
+                  tooltip: context.t('copy'),
+                  icon: Icon(
+                    Icons.copy,
+                    size: 16,
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: () async {
+                    await Clipboard.setData(
+                      ClipboardData(text: donationUrl),
+                    );
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(context.t('copied'))),
+                      );
+                    }
+                  },
+                ),
+              ],
             ),
           ),
         ],

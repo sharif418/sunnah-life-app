@@ -1444,4 +1444,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get autosilent_reboot_note =>
       'After a phone restart, opening the app once re-arms the schedule.';
+
+  @override
+  String get more_donate => 'Donate';
+
+  @override
+  String get donation_open_failed => 'Could not open the link';
+
+  @override
+  String get referral_by => 'Referred by';
 }

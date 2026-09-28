@@ -55,6 +55,12 @@ dependencies:
   just_audio: ^0.10.4
   geolocator: ^14.0.2
   flutter_compass: ^0.8.1
+  # Donation link in the in-app browser (Chrome Custom Tabs on Android /
+  # SFSafariViewController on iOS — LaunchMode.inAppBrowserView, C-W3g).
+  url_launcher: ^6.3.2
+  # https://sunnahlife.app/join/* + sunnahlife://join/* referral deep links
+  # (cold start + warm stream, C-W3h).
+  app_links: ^7.2.1
 
 dev_dependencies:
   flutter_test:

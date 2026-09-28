@@ -1436,4 +1436,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get autosilent_reboot_note =>
       'بعد إعادة تشغيل الهاتف، يُعاد تفعيل الجدولة بفتح التطبيق مرة واحدة.';
+
+  @override
+  String get more_donate => 'تبرّع';
+
+  @override
+  String get donation_open_failed => 'تعذّر فتح الرابط';
+
+  @override
+  String get referral_by => 'المُحيل';
 }

@@ -36,13 +36,15 @@ import 'package:sunnah_life/state/providers.dart';
 import 'package:sunnah_life/state/remote_state.dart';
 
 /// Offline-shaped config with NO audioBase — the reader's play buttons are
-/// hidden on every machine that runs this, CI or laptop.
+/// hidden on every machine that runs this, CI or laptop. Nisab prices use
+/// the shared offline fallback constants (remote_state.dart) so a pack
+/// change can never leave this copy drifting.
 const AppConfig _kGoldenConfig = AppConfig(
-  donationUrl: 'https://sunnahlife.app/donate',
+  donationUrl: kFallbackDonationUrl,
   domain: 'sunnahlife.app',
   hijriAdjust: 0,
-  goldPerGramBdt: 11500,
-  silverPerGramBdt: 135,
+  goldPerGramBdt: kFallbackGoldPerGramBdt,
+  silverPerGramBdt: kFallbackSilverPerGramBdt,
 );
 
 Future<AppDatabase> _dbFor(String language) async {

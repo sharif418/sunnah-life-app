@@ -464,5 +464,8 @@
   "autosilent_minutes_label": "Silent duration",
   "autosilent_minutes_suffix": "min silent",
   "autosilent_waqts_title": "Which prayer times",
-  "autosilent_reboot_note": "After a phone restart, opening the app once re-arms the schedule."
+  "autosilent_reboot_note": "After a phone restart, opening the app once re-arms the schedule.",
+  "more_donate": "Donate",
+  "donation_open_failed": "Could not open the link",
+  "referral_by": "Referred by"
 }

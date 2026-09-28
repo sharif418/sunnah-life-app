@@ -2889,6 +2889,24 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।'**
   String get autosilent_reboot_note;
+
+  /// No description provided for @more_donate.
+  ///
+  /// In bn, this message translates to:
+  /// **'দান করুন'**
+  String get more_donate;
+
+  /// No description provided for @donation_open_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'লিংক খোলা যায়নি'**
+  String get donation_open_failed;
+
+  /// No description provided for @referral_by.
+  ///
+  /// In bn, this message translates to:
+  /// **'রেফার করেছেন'**
+  String get referral_by;
 }
 
 class _AppLocalizationsDelegate
