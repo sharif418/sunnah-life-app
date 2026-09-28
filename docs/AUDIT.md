@@ -138,3 +138,14 @@ Full narrative in `worklog.md` (entries C-W3a..C-W3i-CI). Evidence: local analyz
 | keepDebugSymbols + misleading abiFilters removed (W3i) | Done | debug APK artifact 386 MB → 87.76 MB zipped across the same job lineage; release split drives ABI selection |
 
 **Wave 3 honest edges (owner/device-pending):** every notification fire, ringer flip, GPS fix, compass turn, widget tile, audio playback and cold-start link is code-proven + CI-compiled but device-unproven until the owner runs the internal-test APK; app-links verification requires the real upload-key SHA-256; referral codes do not cross the install boundary (browser localStorage ≠ app storage, RELEASE.md §8.3); R8/minify deliberately deferred until after the device smoke.
+
+## Phase C — Wave 4 (Part C) — first units
+
+| Item | Status | Proven by |
+|---|---|---|
+| Global header on the five tabs (logo, location, triple calendar, notification/reminder/profile actions) (W4a) | Done | flutter analyze 0 + 236/236; rtl/smoke tests still assert localized tab labels through the new chrome |
+| Notification + Reminder panels (W4a) | Done (code) | consumes the existing /api/reminders (finally wired on mobile); panel behavior needs a real session on the device |
+| Floating contact button — five institutions (W4a) | Done (code) | configProvider.contacts rendered; tel/in-app-browser actions reuse W3g helpers; on-device tap-through pending |
+| Token-built bottom bar + Phosphor set (W4a/W4f subset) | Done | SLBottomBar replaces stock NavigationBar (localized labels kept, tests green); fonts vendored (pub package didn't compile in the build env — commit d4e3a7f); icon migration is incremental by design |
+| Home per spec — countdown ring, সর্বাধিক ব্যবহৃত, দ্রুত প্রবেশ, Ilm/amal/Live sections, সব দেখুন headers (W4b) | **Partial — logic + 10 tests only** | most_used.dart + waqt_progress.dart pinned by test/w4_home_logic_test.dart (236/236); the home_screen rewiring is NOT done — next unit, honestly stated |
+| W4c..W4j | Not started this session | — |
