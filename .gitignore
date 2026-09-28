@@ -91,3 +91,6 @@ opt/
 # sandbox tool-output dumps (never ship)
 tool-results/
 apps/mobile/artifacts/
+
+# agent scratch records (worklog.md is the shared log)
+agent-ctx/
