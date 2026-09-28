@@ -1266,4 +1266,19 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get dawah_req_live_action => 'লাইভ চেকলিস্ট';
+
+  @override
+  String get bell_minutes_title => 'ঘণ্টির সময় নির্ধারণ';
+
+  @override
+  String get bell_minutes_before => 'ওয়াক্তের আগে (মিনিট)';
+
+  @override
+  String get bell_minutes_after => 'নামাজের পরে (মিনিট)';
+
+  @override
+  String get bell_minutes_reset => 'রিসেট';
+
+  @override
+  String get bell_minutes_done => 'ঠিক আছে';
 }

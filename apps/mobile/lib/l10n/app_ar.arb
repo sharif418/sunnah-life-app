@@ -407,5 +407,10 @@
   "dawah_req_all_met": "ما شاء الله — تحققت جميع الشروط! في انتظار الترقية.",
   "dawah_req_auto_hint": "عند تحقق جميع الشروط ترفع التقييم الليلي المستوى تلقائيًا إن شاء الله.",
   "dawah_req_load_failed": "تعذّر تحميل قائمة المتطلبات",
-  "dawah_req_live_action": "القائمة الحيّة"
+  "dawah_req_live_action": "القائمة الحيّة",
+  "bell_minutes_title": "توقيت الجرس",
+  "bell_minutes_before": "دقائق قبل الوقت",
+  "bell_minutes_after": "دقائق بعد الصلاة",
+  "bell_minutes_reset": "إعادة تعيين",
+  "bell_minutes_done": "حسنًا"
 }

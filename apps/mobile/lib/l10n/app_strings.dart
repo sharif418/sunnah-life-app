@@ -469,6 +469,11 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'dawah_req_auto_hint' => l.dawah_req_auto_hint,
   'dawah_req_load_failed' => l.dawah_req_load_failed,
   'dawah_req_live_action' => l.dawah_req_live_action,
+  'bell_minutes_title' => l.bell_minutes_title,
+  'bell_minutes_before' => l.bell_minutes_before,
+  'bell_minutes_after' => l.bell_minutes_after,
+  'bell_minutes_reset' => l.bell_minutes_reset,
+  'bell_minutes_done' => l.bell_minutes_done,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

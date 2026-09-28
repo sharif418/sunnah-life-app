@@ -2547,6 +2547,36 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'লাইভ চেকলিস্ট'**
   String get dawah_req_live_action;
+
+  /// No description provided for @bell_minutes_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঘণ্টির সময় নির্ধারণ'**
+  String get bell_minutes_title;
+
+  /// No description provided for @bell_minutes_before.
+  ///
+  /// In bn, this message translates to:
+  /// **'ওয়াক্তের আগে (মিনিট)'**
+  String get bell_minutes_before;
+
+  /// No description provided for @bell_minutes_after.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজের পরে (মিনিট)'**
+  String get bell_minutes_after;
+
+  /// No description provided for @bell_minutes_reset.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিসেট'**
+  String get bell_minutes_reset;
+
+  /// No description provided for @bell_minutes_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঠিক আছে'**
+  String get bell_minutes_done;
 }
 
 class _AppLocalizationsDelegate

@@ -407,5 +407,10 @@
   "dawah_req_all_met": "Masha'Allah — every requirement is met! Awaiting the level promotion.",
   "dawah_req_auto_hint": "Once every requirement is met, the nightly evaluation promotes the level automatically, insha'Allah.",
   "dawah_req_load_failed": "Could not load the checklist",
-  "dawah_req_live_action": "Live checklist"
+  "dawah_req_live_action": "Live checklist",
+  "bell_minutes_title": "Bell timing",
+  "bell_minutes_before": "Minutes before waqt",
+  "bell_minutes_after": "Minutes after prayer",
+  "bell_minutes_reset": "Reset",
+  "bell_minutes_done": "Done"
 }

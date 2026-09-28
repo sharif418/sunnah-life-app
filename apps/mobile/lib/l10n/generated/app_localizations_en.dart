@@ -1264,4 +1264,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dawah_req_live_action => 'Live checklist';
+
+  @override
+  String get bell_minutes_title => 'Bell timing';
+
+  @override
+  String get bell_minutes_before => 'Minutes before waqt';
+
+  @override
+  String get bell_minutes_after => 'Minutes after prayer';
+
+  @override
+  String get bell_minutes_reset => 'Reset';
+
+  @override
+  String get bell_minutes_done => 'Done';
 }

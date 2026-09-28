@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bn_digits.dart';
+import '../../core/bell_schedule.dart';
 import '../../core/calendars.dart';
 import '../../core/cities.dart';
 import '../../core/date_keys.dart';
@@ -64,6 +65,118 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         _bells = _bells.where((b) => b != key.name).toSet();
       }
     });
+  }
+
+  /// Per-waqt bell timing (long-press on the bell): lead minutes before the
+  /// waqt + lag minutes before the diary prompt, persisted per waqt.
+  Future<void> _openBellTiming(PrayerKey key) async {
+    final prefs = await SharedPreferences.getInstance();
+    var bell = bellMinutesFor(
+      key,
+      stored: prefs.getInt(bellMinutesPrefKey(key)),
+    );
+    var post = postPrayerMinutesFor(
+      key,
+      stored: prefs.getInt(postPrayerMinutesPrefKey(key)),
+    );
+    var dirty = false;
+    if (!mounted) return;
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, setSheet) {
+          final theme = Theme.of(sheetContext);
+          final sheetBn = sheetContext.isBn;
+          String mins(int v) =>
+              sheetBn ? toBn(v) : '$v';
+          Widget row(String labelKey, int value, int min, int max, int divisions, void Function(int) set) => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: SLSpacing.s4),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${sheetContext.t(labelKey)} — ${mins(value)} ${sheetContext.t('quiz_minutes')}',
+                      style: theme.textTheme.bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              ),
+              Slider(
+                value: value.toDouble(),
+                min: min.toDouble(),
+                max: max.toDouble(),
+                divisions: divisions,
+                label: mins(value),
+                onChanged: (v) => setSheet(() => set(v.round())),
+                onChangeEnd: (_) => dirty = true,
+              ),
+            ],
+          );
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(
+              SLSpacing.s16,
+              SLSpacing.s4,
+              SLSpacing.s16,
+              SLSpacing.s16,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${sheetContext.t('bell_minutes_title')} — ${_prayerLabel(key, sheetContext.lang)}',
+                  style: theme.textTheme.titleMedium,
+                ),
+                row(
+                  'bell_minutes_before',
+                  bell,
+                  0,
+                  60,
+                  60,
+                  (v) => bell = v,
+                ),
+                row(
+                  'bell_minutes_after',
+                  post,
+                  5,
+                  120,
+                  23,
+                  (v) => post = v,
+                ),
+                const SizedBox(height: SLSpacing.s8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    TextButton.icon(
+                      onPressed: () => setSheet(() {
+                        bell = kDefaultBellMinutes;
+                        post = kDefaultPostPrayerMinutes;
+                        dirty = true;
+                      }),
+                      icon: const Icon(Icons.restart_alt),
+                      label: Text(sheetContext.t('bell_minutes_reset')),
+                    ),
+                    FilledButton(
+                      onPressed: () => Navigator.of(sheetContext).pop(),
+                      child: Text(sheetContext.t('bell_minutes_done')),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    if (dirty) {
+      await ref
+          .read(prayerProvider.notifier)
+          .updateBellMinutes(key, bellMinutes: bell, postMinutes: post);
+    }
   }
 
   @override
@@ -164,6 +277,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               bells: _bells,
               bn: bn,
               onBell: _toggleBell,
+              onBellLongPress: _openBellTiming,
             ),
             const SizedBox(height: SLSpacing.s24),
             Center(
@@ -434,11 +548,13 @@ class _Schedule extends StatelessWidget {
     required this.bells,
     required this.bn,
     required this.onBell,
+    required this.onBellLongPress,
   });
   final PrayerNow prayer;
   final Set<String> bells;
   final bool bn;
   final void Function(PrayerKey key) onBell;
+  final void Function(PrayerKey key) onBellLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -524,7 +640,11 @@ class _Schedule extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: SLSpacing.s4),
-              _BellButton(on: bellOn, onToggle: () => onBell(key)),
+              _BellButton(
+                on: bellOn,
+                onToggle: () => onBell(key),
+                onLongPress: () => onBellLongPress(key),
+              ),
             ],
           ),
         ),
@@ -534,9 +654,14 @@ class _Schedule extends StatelessWidget {
 }
 
 class _BellButton extends StatelessWidget {
-  const _BellButton({required this.on, required this.onToggle});
+  const _BellButton({
+    required this.on,
+    required this.onToggle,
+    this.onLongPress,
+  });
   final bool on;
   final VoidCallback onToggle;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
@@ -549,6 +674,7 @@ class _BellButton extends StatelessWidget {
           : context.t('prayer_bell_enable'),
       child: InkWell(
         onTap: onToggle,
+        onLongPress: onLongPress,
         customBorder: const CircleBorder(),
         child: SizedBox(
           width: SLSpacing.minTapTarget,

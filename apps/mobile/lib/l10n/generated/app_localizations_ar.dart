@@ -1257,4 +1257,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dawah_req_live_action => 'القائمة الحيّة';
+
+  @override
+  String get bell_minutes_title => 'توقيت الجرس';
+
+  @override
+  String get bell_minutes_before => 'دقائق قبل الوقت';
+
+  @override
+  String get bell_minutes_after => 'دقائق بعد الصلاة';
+
+  @override
+  String get bell_minutes_reset => 'إعادة تعيين';
+
+  @override
+  String get bell_minutes_done => 'حسنًا';
 }

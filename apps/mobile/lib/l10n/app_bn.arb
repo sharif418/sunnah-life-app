@@ -407,5 +407,10 @@
   "dawah_req_all_met": "মাশাআল্লাহ — সব শর্ত পূরণ হয়েছে! স্তর উন্নতির অপেক্ষায়।",
   "dawah_req_auto_hint": "সব শর্ত পূরণ হলে রাতের মূল্যায়নে স্তর স্বয়ংক্রিয়ভাবে উন্নত হবে, ইনশাআল্লাহ।",
   "dawah_req_load_failed": "চেকলিস্ট আনা যায়নি",
-  "dawah_req_live_action": "লাইভ চেকলিস্ট"
+  "dawah_req_live_action": "লাইভ চেকলিস্ট",
+  "bell_minutes_title": "ঘণ্টির সময় নির্ধারণ",
+  "bell_minutes_before": "ওয়াক্তের আগে (মিনিট)",
+  "bell_minutes_after": "নামাজের পরে (মিনিট)",
+  "bell_minutes_reset": "রিসেট",
+  "bell_minutes_done": "ঠিক আছে"
 }
