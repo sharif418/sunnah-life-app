@@ -584,3 +584,24 @@ Work Log:
 Stage Summary:
 - All three audit gaps closed and machine-verified; two EXTRA repo-integrity bugs (dead web code, un-committed generated types) found and fixed along the way.
 - Every gate re-verified on a fresh clone at the final commit.
+
+---
+Task ID: B10
+Agent: lead-architect (main session)
+Task: Diagnose GitHub Actions run #20 failure via the Actions API (PAT now has actions:read) and fix CI so the debug APK artifact is generated.
+
+Work Log:
+- Queried the Actions API with the embedded remote token: runs #15–#20 ALL conclusion=failure with ZERO jobs, same-second completion, no check runs — workflow-level rejection, not a job failure.
+- Verified the workflow blob is byte-identical local↔GitHub (git blob sha e80bc7976c… matches the contents API) and strict-YAML-valid — so the rejection had to be GitHub's workflow compiler. Fetched the public run page HTML and extracted the real annotation: "Invalid workflow file: .github/workflows/ci.yml#L1 … (Line: 37/50/137/164/190/249, Col: 9): Unrecognized function: 'hashFiles'".
+- Root cause: job-level `if: hashFiles('…') != ''` gates on 6 jobs. hashFiles() is not available in job-level if (no workspace exists before checkout), so GitHub rejected the whole file on EVERY push since the first — the "mobile debug APK artifact: Done" audit row was never observable (honest correction made).
+- Pre-validated the mobile job before fixing: gradle-wrapper.jar committed, firebase_options.dart committed, google-services plugin guarded (builds without the real json), migrate:deploy + seed scripts exist, bun.lock committed for api/web/admin, api env needs only DATABASE_URL (all CI envs set).
+- Fix (commit 2bbb55b): new `workspace` probe job (one checkout, exports true/false per workspace to GITHUB_OUTPUT); every downstream job gates on `needs.workspace.outputs.* == 'true'` — same "activate only when the workspace exists" intent, valid syntax. Flutter pinned to 3.47.5 (the SDK the repo is verified with: analyze 0, tests 65/65) in both mobile and release-bundle. Header/report comments refreshed (PAT now has actions:read).
+- Hardening (commit 7bccddd): debug APK upload `if-no-files-found: warn → error` — a green run with no artifact is a silent failure; now it fails red.
+- Dropped the unpushed auto-snapshot commit b93532a (mode-only, 0 content changes — it would have re-broken 49d0b68's mode normalization) via reset to 49d0b68 before committing.
+- Verified via API: run #21 (2bbb55b) and #22 (7bccddd) — the workflow now COMPILES and creates 8 jobs (workspace → tokens/api/web/admin/mobile/release-bundle gated; report with always()). Local strict YAML parse + structure dump OK.
+- NEW BLOCKER surfaced (was masked by the compile error): every job start is refused with "The job was not started because your account is locked due to a billing issue." — account-level GitHub billing lock on sharif418. Not fixable via API (billing API → 403 with this PAT); repo is public so ubuntu-latest minutes are free once the lock is cleared.
+- AUDIT.md honesty updates: "CI green" row → Blocked (workflow FIXED, account billing-locked) with the full API evidence; "Debug APK artifact" row Done → Not done (blocked) with the correction note.
+
+Stage Summary:
+- Workflow compile bug FIXED and proven live: 0 jobs → 8 jobs (runs #21/#22). Remaining blocker is the user's GitHub billing lock; once cleared, a re-run of #22 (or any push) will execute the full pipeline and upload `mobile-debug-apk`.
+- Commits pushed: 2bbb55b (workspace probe + pin), 7bccddd (strict artifact upload) + AUDIT/worklog in this commit.
