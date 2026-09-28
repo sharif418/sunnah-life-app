@@ -17,6 +17,8 @@
 ///    PrayerChannel (kept alongside the plugin path).
 library;
 
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     show AndroidNotificationAction;
@@ -32,6 +34,7 @@ import '../db/database.dart';
 import '../models/domain.dart';
 import 'notification_service.dart';
 import 'platform_channels.dart';
+import 'widget_snapshot.dart';
 
 class PrayerBellScheduler {
   PrayerBellScheduler._();
@@ -105,10 +108,14 @@ class PrayerBellScheduler {
   /// (Re)arm the rolling window. Idempotent per dateKey: days already
   /// armed under the same profile are skipped, so the once-per-minute
   /// ticker, the resume hook and the daily background task can all call
-  /// this cheaply.
+  /// this cheaply. [city] (optional) refreshes the persisted widget
+  /// snapshot from the same computation — that keeps the Android home
+  /// widget fresh on the headless daily WorkManager path where no live
+  /// ticker runs (C-W3f).
   static Future<void> refresh(
     PrayerBellConfig config, {
     DateTime? now,
+    String? city,
   }) async {
     try {
       await NotificationService.instance.init();
@@ -239,6 +246,22 @@ class PrayerBellScheduler {
           body: '${prayerLabelsBn[nextKey]}-এর সময় হয়েছে',
         );
       }
+
+      // Persist the next-prayer snapshot for the home widget (C-W3f). The
+      // foreground ticker rewrites it every minute anyway — this write is
+      // for the headless paths (daily WorkManager) that never run a ticker,
+      // so the widget stays fresh for as long as the background task
+      // lives. Failure is swallowed inside the writer.
+      if (city != null) {
+        unawaited(
+          WidgetSnapshotService.write(
+            city: city,
+            dateKey: today,
+            times: times,
+            nextKey: nextKey,
+          ),
+        );
+      }
     }
 
     // Auto-silent jama'at windows (C-W3e) — parallel to the bells, same
@@ -322,6 +345,10 @@ Future<void> refreshPrayerBellsFromDb() async {
         method: CalcMethodJson.fromJson(row.method),
         madhhab: MadhhabJson.fromJson(row.madhhab),
       ),
+      // Pass the city so the headless daily task also refreshes the widget
+      // snapshot (C-W3f) — the Kotlin widget renders from it for days
+      // without the app ever being opened.
+      city: row.city,
     );
   } catch (e) {
     debugPrint('background bell refresh failed: $e');

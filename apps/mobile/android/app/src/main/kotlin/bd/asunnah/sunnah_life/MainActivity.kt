@@ -92,7 +92,7 @@ class MainActivity : FlutterActivity() {
                     "updateNextPrayer" -> {
                         val prayerName = call.argument<String>("prayerName") ?: ""
                         val countdown = call.argument<String>("countdown") ?: ""
-                        PrayerWidgetProvider.pushUpdate(applicationContext, prayerName, countdown)
+                        WidgetRender.pushLive(applicationContext, prayerName, countdown)
                         result.success(true)
                     }
                     else -> result.notImplemented()

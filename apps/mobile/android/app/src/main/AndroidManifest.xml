@@ -114,10 +114,24 @@
             android:label="পরবর্তী ওয়াক্ত">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="bd.asunnah.sunnah_life.WIDGET_RENDER" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_prayer_info" />
+        </receiver>
+
+        <!-- C-W3f · widget boot restore: after BOOT_COMPLETED / package
+             replace, re-render from the persisted snapshot (written by the
+             Flutter side after every prayer tick) + re-arm the periodic
+             re-render alarm so the widget never resets to its placeholder. -->
+        <receiver
+            android:name=".WidgetBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
         </receiver>
 
         <!-- Don't delete the meta-data below.

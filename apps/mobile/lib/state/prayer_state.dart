@@ -152,7 +152,8 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
 
   /// (Re)arm the rolling 3-day bell window with the CURRENT profile.
   /// Called on app start, day rollover, profile change, bell toggle,
-  /// per-waqt minute change and app resume.
+  /// per-waqt minute change and app resume. Passes the city through so the
+  /// same refresh also rewrites the widget snapshot (C-W3f).
   Future<void> refreshBells() async {
     try {
       final profile = ref.read(profileProvider);
@@ -164,6 +165,7 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
           method: profile.method,
           madhhab: profile.madhhab,
         ),
+        city: profile.city,
       );
     } catch (e) {
       debugPrint('bell window refresh failed: $e');

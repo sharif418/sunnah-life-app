@@ -262,5 +262,60 @@ void main() {
         expect(v as String, matches(RegExp(r'^([01]\d|2[0-3]):[0-5]\d$')));
       }
     });
+
+    // C-W3f — the Kotlin widget provider (PrayerWidgetProvider.kt
+    // WidgetRender) parses this JSON after process death / reboot, with no
+    // Flutter engine alive to fix a shape change. Pin the CONTRACT, not
+    // just the values: exact key set, types (nextAt must stay an int —
+    // epoch millis — not a double/string), all ten waqt slots as HH:mm,
+    // and the four string fields non-empty. On Android this is read from
+    // the app's DEFAULT SharedPreferences under the 'flutter.' key prefix;
+    // the on-device read path is covered by the phone test checklist.
+    test('Kotlin reader contract — field set, types, HH:mm slots', () async {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+      final times = PrayerEngine.compute('2026-02-08');
+      await WidgetSnapshotService.write(
+        city: 'ঢাকা',
+        dateKey: '2026-02-08',
+        times: times,
+        nextKey: PrayerKey.dhuhr,
+      );
+      final prefs = await SharedPreferences.getInstance();
+      final snap = jsonDecode(
+        prefs.getString('widget_snapshot')!,
+      ) as Map<String, dynamic>;
+
+      expect(snap.keys.toSet(), {
+        'city',
+        'dateKey',
+        'times',
+        'nextKey',
+        'nextAt',
+        'nextLabelBn',
+      });
+      expect(snap['city'], isA<String>());
+      expect(snap['city'] as String, isNotEmpty);
+      expect(snap['dateKey'], isA<String>());
+      expect(snap['nextKey'], isA<String>());
+      expect(
+        (snap['nextKey'] as String),
+        isIn(PrayerKey.values.map((k) => k.name)),
+      );
+      expect(snap['nextLabelBn'], isA<String>());
+      expect((snap['nextLabelBn'] as String), isNotEmpty);
+      // Kotlin optLong() tolerates numbers, but keep the wire an int so
+      // the epoch never silently degrades to a double (JS-style) literal.
+      expect(snap['nextAt'], isA<int>());
+      expect(snap['nextAt'] as int, greaterThan(0));
+      expect(snap['times'], isA<Map<String, dynamic>>());
+      final timesMap = snap['times'] as Map<String, dynamic>;
+      expect(timesMap.keys.toSet(), {
+        for (final k in PrayerKey.values) k.name,
+      });
+      for (final v in timesMap.values) {
+        expect(v, isA<String>());
+        expect(v as String, matches(RegExp(r'^([01]\d|2[0-3]):[0-5]\d$')));
+      }
+    });
   });
 }
