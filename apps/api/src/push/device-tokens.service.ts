@@ -2,7 +2,10 @@
 // Device-token registration service (Task B2).
 //
 // POST /api/push/token  — upsert (userId, token), refresh lastSeenAt, cap the
-// per-user device list (MAX_TOKENS_PER_USER). DELETE — unregister on logout.
+// per-user device list (MAX_TOKENS_PER_USER); a token registered by a new user
+// is first taken over from every other user (system context — FCM delivers
+// to the device, so stale previous-owner rows would leak notifications across
+// accounts). DELETE — unregister on logout.
 //
 // All writes run through RlsService.run(user): PostgreSQL RLS on DeviceToken
 // only ever allows a user to touch their OWN rows (WITH CHECK), so a stolen
@@ -58,6 +61,14 @@ export class DeviceTokensService {
       : "android";
     if (!PLATFORMS.includes(platform)) throw new ApiError(400, "প্ল্যাটফর্ম সঠিক নয়");
 
+    // A device switching accounts takes its token with it: FCM delivers to
+    // the DEVICE, so a leftover previous-owner row would leak their
+    // notifications to the new account. Cross-user deletes are impossible
+    // under the user's own RLS context (by design) — a maintenance write,
+    // so it runs in the system context (the PushService.pruneTokens pattern).
+    await this.rls.system((tx) =>
+      tx.deviceToken.deleteMany({ where: { token, userId: { not: user.id } } })
+    );
     const now = new Date();
     await this.rls.run(user, async (tx) => {
       await tx.deviceToken.upsert({

@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // FCM HTTP v1 adapter (Task B2) — plain fetch, NO firebase-admin SDK.
 //
-// Auth: service-account → OAuth2 client-credentials JWT grant
+// Auth: service-account → OAuth2 jwt-bearer grant (RFC 7523)
 // (https://developers.google.com/identity/protocols/oauth2/service-account).
 // The RS256 signature is produced with WebCrypto (crypto.subtle), which both
 // the node (>= 18) and bun runtimes expose globally — zero new dependencies.
@@ -167,7 +167,7 @@ export class FcmTransport implements PushTransport {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        grant_type: "client_credentials",
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
         assertion: jwt,
       }).toString(),
     });

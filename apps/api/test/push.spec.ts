@@ -9,8 +9,9 @@ import { join } from "node:path";
 import { ApiError } from "src/common/api-error";
 import type { RlsService } from "src/common/rls.service";
 import type { Gender, User } from "src/shared/domain";
-import { selectTokensToEvict, MAX_TOKENS_PER_USER } from "src/push/device-tokens.service";
+import { DeviceTokensService, selectTokensToEvict, MAX_TOKENS_PER_USER } from "src/push/device-tokens.service";
 import {
+  FcmTransport,
   buildFcmMessage,
   buildJwtClaims,
   signRsaJwt,
@@ -312,5 +313,81 @@ describe("push: PushService fan-out (scripted RlsService)", () => {
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ApiError);
     expect((err as ApiError).getStatus()).toBe(403);
+  });
+});
+
+describe("push: FCM OAuth token exchange (mocked endpoint)", () => {
+  it("uses the RFC 7523 jwt-bearer grant and caches until expiry", async () => {
+    const { privateKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
+    const pem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
+    const account = {
+      project_id: "p1",
+      client_email: "push@p1.iam.gserviceaccount.com",
+      private_key: pem,
+    };
+    const bodies: URLSearchParams[] = [];
+    const fetchImpl = (async (url: RequestInfo, init?: RequestInit) => {
+      if (String(url).includes("oauth2.googleapis.com/token")) {
+        bodies.push(new URLSearchParams(String(init?.body)));
+        return new Response(
+          JSON.stringify({ access_token: `at-${bodies.length}`, expires_in: 3600 }),
+          { status: 200 }
+        );
+      }
+      throw new Error(`unexpected fetch: ${String(url)}`);
+    }) as unknown as typeof fetch;
+    const transport = new FcmTransport(account, fetchImpl);
+
+    const t1 = await transport.getAccessToken();
+    expect(bodies).toHaveLength(1);
+    expect(bodies[0].get("grant_type")).toBe("urn:ietf:params:oauth:grant-type:jwt-bearer");
+    const assertion = bodies[0].get("assertion") ?? "";
+    expect(assertion.split(".")).toHaveLength(3);
+    const claims = JSON.parse(Buffer.from(assertion.split(".")[1], "base64url").toString("utf8"));
+    expect(claims.iss).toBe(account.client_email);
+    expect(claims.scope).toBe("https://www.googleapis.com/auth/firebase.messaging");
+    expect(claims.aud).toBe("https://oauth2.googleapis.com/token");
+
+    // cached until expiry: a second call must NOT hit the token endpoint
+    const t2 = await transport.getAccessToken();
+    expect(t2).toBe(t1);
+    expect(bodies).toHaveLength(1);
+
+    // forced refresh (the 401 race path) exchanges again
+    const t3 = await transport.getAccessToken(true);
+    expect(t3).toBe("at-2");
+    expect(bodies).toHaveLength(2);
+  });
+});
+
+describe("push: device-token registration takes the token over", () => {
+  it("register() removes the token from every OTHER user (system context) before upserting", async () => {
+    const deletes: unknown[] = [];
+    const upserts: unknown[] = [];
+    const tx = {
+      deviceToken: {
+        deleteMany: async ({ where }: { where: unknown }) => {
+          deletes.push(where);
+          return { count: 1 };
+        },
+        upsert: async (args: unknown) => {
+          upserts.push(args);
+          return {};
+        },
+        findMany: async () => [],
+      },
+    };
+    const rls = {
+      run: async (_u: unknown, fn: (t: unknown) => Promise<unknown>) => fn(tx),
+      system: async (fn: (t: unknown) => Promise<unknown>) => fn(tx),
+    } as unknown as RlsService;
+    const svc = new DeviceTokensService(rls);
+    const u = user({ id: "u9" });
+    const token = "t".repeat(80);
+
+    await svc.register(u, { token, platform: "android" });
+
+    expect(deletes).toContainEqual({ token, userId: { not: "u9" } });
+    expect(upserts).toHaveLength(1);
   });
 });

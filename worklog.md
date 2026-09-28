@@ -700,3 +700,17 @@ Work Log:
 
 Stage Summary:
 - Commits 4f25465 + 1e7eb76. VERIFIED RAW: rls.e2e 23/23 TWICE in a row (re-runnability proof); full suite 216/216 in 7.85s; eslint 0/0 on the spec. CI runs 36436114518 (4f25465) + 36436665733 (1e7eb76) started — verdicts to be confirmed.
+
+
+---
+Task ID: C-W2f
+Agent: lead-architect (main session)
+Task: Push delivery — RFC 7523 jwt-bearer grant + device-token takeover dedup.
+
+Work Log:
+- fcm.transport.ts: grant_type switched from client_credentials to urn:ietf:params:oauth:grant-type:jwt-bearer (Google's canonical service-account form; token caching with 60s pre-expiry margin and 401-forced refresh already stood from B2 — now proven by test).
+- device-tokens.service.ts: register() now takes the token over from every OTHER user first (system-context deleteMany { token, userId not self }) — FCM delivers to the device, so a leftover previous-owner row would leak the old account's notifications to the new account. Cross-user deletes are impossible under the user's own RLS context by design; the takeover is a maintenance write in the same pattern as PushService.pruneTokens.
+- push.spec.ts: two new describes — (1) OAuth token exchange against a mocked endpoint: asserts the jwt-bearer grant_type, a 3-part assertion JWT with iss/scope/aud claims, caching (2nd call does NOT re-hit the endpoint), and forced refresh (2nd exchange); (2) register() takeover: the scripted RlsService records the system-context deleteMany where-clause { token, userId: { not } } before the upsert.
+
+Stage Summary:
+- VERIFIED RAW: push spec 22/22; eslint 0/0 on src/push + test/push.spec.ts; full suite 218/218 (was 216).
