@@ -16,9 +16,12 @@ WORKDIR /app
 
 ARG NEXT_PUBLIC_API_BASE=""
 ARG NEXT_PUBLIC_APP_URL=""
+# "true" only on demo/staging builds: shows the demo quick-login grid.
+ARG NEXT_PUBLIC_DEMO=""
 ENV NEXT_TELEMETRY_DISABLED=1 \
     NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE} \
-    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+    NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL} \
+    NEXT_PUBLIC_DEMO=${NEXT_PUBLIC_DEMO}
 
 COPY package.json bun.lock* ./
 RUN bun install --frozen-lockfile || bun install

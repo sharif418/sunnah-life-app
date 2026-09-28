@@ -1,0 +1,231 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Sunnah Life — Coolify deployment stack (Docker Compose build pack).
+#
+# Differences from infra/docker-compose.yml (local / CI):
+#   • no host ports and no fixed network name — Coolify's Traefik routes the
+#     domains assigned per service, and staging + production can share a host
+#   • no Caddy (Coolify's Traefik owns 80/443)
+#   • postgres image built from infra/postgres/Dockerfile (init scripts baked
+#     in; Coolify does not provide repo files to runtime bind mounts)
+#   • no MinIO for now — anonymous pulls of MinIO images are gone (see the
+#     docker-compose.yml comment); the api uses its local storage adapter on a
+#     persistent volume. Add an S3 endpoint via S3_* env when one exists.
+#
+# Domains (set in Coolify per service, container port after the colon):
+#   web   → https://<web-domain>:3000
+#   admin → https://<admin-domain>:3000
+#   api   → https://<api-domain>:4000
+# Every ${VAR} below is set in the Coolify environment of this resource.
+# ─────────────────────────────────────────────────────────────────────────────
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  postgres:
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-sunnahlife}
+      SUNNAH_APP_PASSWORD: ${SUNNAH_APP_PASSWORD:?set SUNNAH_APP_PASSWORD}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=${PG_SHARED_BUFFERS:-256MB}
+      - -c
+      - max_connections=${PG_MAX_CONNECTIONS:-100}
+      - -c
+      - archive_mode=on
+      - -c
+      - "archive_command=test -f /var/lib/postgresql/data/walarchive/%f || cp %p /var/lib/postgresql/data/walarchive/%f"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sunnahlife} -h 127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 1g
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    logging: *default-logging
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    mem_limit: 256m
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.54.0
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili:/meili_data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:7700/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 512m
+
+  api:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    environment: &api-env
+      NODE_ENV: ${NODE_ENV:-production}
+      TZ: UTC
+      PORT: 4000
+      DATABASE_URL: postgresql://sunnah_app:${SUNNAH_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
+      DIRECT_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
+      REDIS_URL: redis://redis:6379
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_KEY: ${MEILI_MASTER_KEY}
+      STORAGE_DIR: /app/storage
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-}
+      S3_PUBLIC_BASE: ${S3_PUBLIC_BASE:-}
+      METRICS_TOKEN: ${METRICS_TOKEN:-}
+      DOCS_ENABLED: ${DOCS_ENABLED:-}
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set JWT_REFRESH_SECRET}
+      QUIZ_SECRET: ${QUIZ_SECRET:?set QUIZ_SECRET}
+      ACCESS_TOKEN_TTL_MIN: ${ACCESS_TOKEN_TTL_MIN:-15}
+      REFRESH_TOKEN_TTL_DAYS: ${REFRESH_TOKEN_TTL_DAYS:-7}
+      APP_DOMAIN: ${APP_DOMAIN:?set APP_DOMAIN}
+      CORS_ORIGINS: ${CORS_ORIGINS:?set CORS_ORIGINS}
+      SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      SMS_SSLWIRELESS_URL: ${SMS_SSLWIRELESS_URL:-}
+      SMS_SSLWIRELESS_USER: ${SMS_SSLWIRELESS_USER:-}
+      SMS_SSLWIRELESS_PASS: ${SMS_SSLWIRELESS_PASS:-}
+      SMS_INFOBIP_URL: ${SMS_INFOBIP_URL:-}
+      SMS_INFOBIP_KEY: ${SMS_INFOBIP_KEY:-}
+      FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_IOS_CLIENT_ID: ${GOOGLE_IOS_CLIENT_ID:-}
+      APPLE_SERVICES_ID: ${APPLE_SERVICES_ID:-}
+      APPLE_IOS_BUNDLE_ID: ${APPLE_IOS_BUNDLE_ID:-}
+      APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
+    volumes:
+      - apistorage:/app/storage
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+    mem_limit: 1g
+
+  worker:
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      api:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment: *api-env
+    volumes:
+      - apistorage:/app/storage
+    command:
+      - /bin/sh
+      - -c
+      - |
+        if [ -f dist/worker.js ]; then exec bun dist/worker.js;
+        elif [ -f dist/src/worker.js ]; then exec bun dist/src/worker.js;
+        elif grep -q '"start:worker":' package.json; then exec bun run start:worker;
+        else echo '[worker] no worker entrypoint in the api image'; exit 1; fi
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          kill -0 1 &&
+          bun -e "import('ioredis').then(({default:R})=>{const r=new R(process.env.REDIS_URL||'redis://127.0.0.1:6379',{maxRetriesPerRequest:1,lazyConnect:true});r.connect().then(()=>r.ping()).then(p=>process.exit(p==='PONG'?0:1)).catch(()=>process.exit(1))})"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    mem_limit: 768m
+
+  web:
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?set NEXT_PUBLIC_API_BASE}
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    mem_limit: 512m
+
+  admin:
+    build:
+      context: ../apps/admin
+      dockerfile: ../../infra/admin.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?set NEXT_PUBLIC_API_BASE}
+        NEXT_PUBLIC_DEMO: ${NEXT_PUBLIC_DEMO:-}
+    restart: unless-stopped
+    logging: *default-logging
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    mem_limit: 512m
+
+volumes:
+  pgdata:
+  redisdata:
+  meili:
+  apistorage:
