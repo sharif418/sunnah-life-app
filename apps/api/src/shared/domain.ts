@@ -306,6 +306,19 @@ export interface AssessmentTemplate {
   titleBn: string;
   titleEn: string;
   sections: AssessmentSection[];
+  /** Verbatim client form metadata (farze_ain_v1.1+): instructions,
+   *  category descriptions, scale, header fields, signature labels. */
+  meta?: {
+    instructionsBn?: string | null;
+    categories?: { id: number; titleBn: string; descriptionBn: string }[] | null;
+    categoriesFooterBn?: string | null;
+    scale?: { key: number; labelBn: string }[] | null;
+    scaleNoteBn?: string | null;
+    summarySpec?: { noteBn?: string | null; columnsBn?: string[] | null } | null;
+    overallCommentLabelBn?: string | null;
+    signatures?: { key: string; labelBn: string }[] | null;
+    headerFields?: { key: string; labelBn: string }[] | null;
+  };
 }
 export interface AssessmentDetail extends AssessmentSummary {
   template: AssessmentTemplate;

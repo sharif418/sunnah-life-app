@@ -250,11 +250,15 @@ model WeeklyReview {
 
 model AssessmentTemplate {
   id           String   @id @default(cuid())
-  key          String // template family, e.g. farze_ain_v1 — versions share it
+  key          String // template family, e.g. farze_ain_v1.1 — versions share it
   version      Int      @default(1)
   titleBn      String
   titleEn      String
   sectionsJson Json // [{key,titleBn,criteria:[{key,titleBn,hintBn}]}]
+  // Verbatim client form metadata (Phase C/D): instructions, the two
+  // category descriptions, scale, header fields, signature labels,
+  // summary spec — everything the paper form carries besides the criteria.
+  metaJson     Json?
   // Versioned activation (B6): exactly one row per key should be active; the
   // member-facing GET /api/assessments/templates serves only active versions.
   active       Boolean  @default(true)

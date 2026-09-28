@@ -23,6 +23,7 @@ type TemplateRow = {
   titleBn: string;
   titleEn: string;
   sectionsJson: unknown;
+  metaJson?: unknown;
   active?: boolean;
 };
 
@@ -49,7 +50,33 @@ export function mapTemplate(row: TemplateRow): AssessmentTemplate {
           : [],
       }));
   }
-  return { key: row.key, version: row.version, titleBn: row.titleBn, titleEn: row.titleEn, sections };
+  let meta: AssessmentTemplate["meta"];
+  const m = row.metaJson;
+  if (m && typeof m === "object" && !Array.isArray(m)) {
+    const raw = m as Record<string, unknown>;
+    meta = {
+      instructionsBn: typeof raw.instructionsBn === "string" ? raw.instructionsBn : null,
+      categories: Array.isArray(raw.categories)
+        ? (raw.categories as NonNullable<AssessmentTemplate["meta"]>["categories"])
+        : null,
+      categoriesFooterBn: typeof raw.categoriesFooterBn === "string" ? raw.categoriesFooterBn : null,
+      scale: Array.isArray(raw.scale) ? (raw.scale as NonNullable<AssessmentTemplate["meta"]>["scale"]) : null,
+      scaleNoteBn: typeof raw.scaleNoteBn === "string" ? raw.scaleNoteBn : null,
+      summarySpec:
+        raw.summarySpec && typeof raw.summarySpec === "object"
+          ? (raw.summarySpec as NonNullable<AssessmentTemplate["meta"]>["summarySpec"])
+          : null,
+      overallCommentLabelBn:
+        typeof raw.overallCommentLabelBn === "string" ? raw.overallCommentLabelBn : null,
+      signatures: Array.isArray(raw.signatures)
+        ? (raw.signatures as NonNullable<AssessmentTemplate["meta"]>["signatures"])
+        : null,
+      headerFields: Array.isArray(raw.headerFields)
+        ? (raw.headerFields as NonNullable<AssessmentTemplate["meta"]>["headerFields"])
+        : null,
+    };
+  }
+  return { key: row.key, version: row.version, titleBn: row.titleBn, titleEn: row.titleEn, sections, ...(meta ? { meta } : {}) };
 }
 
 function parseScores(raw: unknown): Record<string, { score: 0 | 1 | 2; comment?: string }> {

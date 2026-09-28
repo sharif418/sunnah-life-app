@@ -121,6 +121,18 @@ async function main() {
   await db.liveProgram.deleteMany();
   await db.enrollment.deleteMany();
   await db.quizAttempt.deleteMany();
+  // usrah content first (FK → users/usrahs) — missed table made user.deleteMany
+  // throw on any database that already had usrah questions (Phase C find).
+  await db.usrahQuestion.deleteMany();
+  await db.assessment.deleteMany();
+  await db.weeklyReview.deleteMany();
+  await db.dayUnlock.deleteMany();
+  await db.levelTransition.deleteMany();
+  await db.personalGoal.deleteMany();
+  await db.deviceToken.deleteMany();
+  await db.announcement.deleteMany();
+  await db.reminder.deleteMany();
+  await db.amalEntry.deleteMany();
   await db.session.deleteMany();
   await db.refreshToken.deleteMany();
   await db.otpCode.deleteMany();
@@ -152,12 +164,20 @@ async function main() {
   });
   console.log(`  AmalDefinitions: ${catalog.definitions.length}`);
 
-  // ── 2) Assessment template (verbatim Farze Ain v1) ────────────────────────
+  // ── 2) Assessment template (verbatim Farze Ain v1.1) ──────────────────────
+  // The criteria/instructions/category descriptions are the CLIENT's exact
+  // text (packages/content/assessment-farze-ain-v1.json, key farze_ain_v1.1).
+  // metaJson carries instructions + categories + scale + header fields +
+  // signature labels so the stored + printed form matches the paper one.
   const tmpl = JSON.parse(
     await fs.readFile(path.join(CONTENT_DIR, "assessment-farze-ain-v1.json"), "utf8")
   ) as {
     key: string; version: number; titleBn: string; titleEn: string;
     sections: { key: string; titleBn: string; criteria: { key: string; titleBn: string; hintBn?: string }[] }[];
+    instructionsBn?: string; categories?: unknown; categoriesFooterBn?: string;
+    scale?: unknown; scaleNoteBn?: string; summarySpec?: unknown;
+    overallCommentLabelBn?: string; signatures?: unknown; headerFields?: unknown;
+    source?: string;
   };
   await db.assessmentTemplate.create({
     data: {
@@ -166,6 +186,18 @@ async function main() {
       titleBn: tmpl.titleBn,
       titleEn: tmpl.titleEn,
       sectionsJson: tmpl.sections,
+      metaJson: {
+        instructionsBn: tmpl.instructionsBn ?? null,
+        categories: tmpl.categories ?? null,
+        categoriesFooterBn: tmpl.categoriesFooterBn ?? null,
+        scale: tmpl.scale ?? null,
+        scaleNoteBn: tmpl.scaleNoteBn ?? null,
+        summarySpec: tmpl.summarySpec ?? null,
+        overallCommentLabelBn: tmpl.overallCommentLabelBn ?? null,
+        signatures: tmpl.signatures ?? null,
+        headerFields: tmpl.headerFields ?? null,
+        source: tmpl.source ?? null,
+      },
     },
   });
   const allCriteria = tmpl.sections.flatMap((s) => s.criteria.map((c) => ({ section: s.key, key: c.key })));

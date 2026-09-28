@@ -141,6 +141,12 @@ jobs:
         working-directory: apps/api
         run: bun install --frozen-lockfile || bun install
 
+      # Phase C content pipeline gate: packages/content is the single source;
+      # the mobile copies must be byte-identical and no pack may be empty
+      # (the owner's phone shipped with quran-meta = {"surahs": []}).
+      - name: Content parity gate (packages/content ↔ mobile assets)
+        run: bun run content:check
+
       - name: Prepare database (RLS role + migrations + demo seed)
         working-directory: apps/api
         run: |

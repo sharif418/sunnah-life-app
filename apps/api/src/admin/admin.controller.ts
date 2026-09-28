@@ -107,6 +107,12 @@ export class PromoteDto {
   @IsIn(LEVELS as unknown as string[], { message: "স্তর ঠিক নয়" })
   toLevel!: Level;
 
+  /** Required when the TARGET level's rules demand the usrah head's outline
+   * review (Muhibbus Sunnah model, Phase C/D): the promoting admin attests
+   * that the head has reviewed every outline goal item by item. */
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  outlineReviewed?: boolean;
   /** REQUIRED (Bengali) — recorded on the LevelTransition + audit entry. */
   @ApiProperty({ example: "তারবিয়াত পরিষদের সিদ্ধান্তে সকল শর্ত পূরণ হয়েছে" })
   @IsString({ message: "উন্নয়নের কারণ লিখুন" })
@@ -658,12 +664,20 @@ export class AdminService {
 
       const domainUser = toDomainUser(target as never);
 
-      // requirement validation applies to the muhibbus-sunnah promotion
-      if (toLevel === "muhibbus_sunnah") {
-        const { checklist } = await this.levels.evaluate(tx, domainUser);
+      // Requirement validation applies to every target level that defines
+      // rules in level-rules.json (Phase C/D ladder). Machine rows must be
+      // met; head-attested rows demand the outlineReviewed flag.
+      const { rules, checklist, nextLevel } = await this.levels.evaluate(tx, domainUser);
+      if (nextLevel === toLevel) {
         const missing = checklist.rows.filter((r) => r.autoChecked && !r.met);
         if (missing.length) {
           throw new ApiError(422, `চাহিদা পূরণ হয়নি: ${missing.map((r) => r.labelBn).join("; ")}`);
+        }
+        if (rules.outlineReviewRequired && dto.outlineReviewed !== true) {
+          throw new ApiError(
+            422,
+            "উসরা প্রধানের আউটলাইন পর্যালোচনা সম্পন্ন হয়নি — নিশ্চিত করতে outlineReviewed পাঠান (প্রতিটি লক্ষ্য আইটেম ধরে ধরে যাচাই করা হয়েছে কি না)"
+          );
         }
       }
 
@@ -675,6 +689,9 @@ export class AdminService {
         evidence: {
           promotedBy: user.id,
           reason,
+          ...(rules.outlineReviewRequired && dto.outlineReviewed === true
+            ? { outlineReviewed: true }
+            : {}),
         },
       });
       if (outcome.skipped) {

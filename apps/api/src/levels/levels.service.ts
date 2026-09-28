@@ -56,13 +56,19 @@ export class LevelsService {
     private readonly guard: GuardService
   ) {}
 
-  /** Evaluate the promotion rules for a user (inside an RLS transaction). */
+  /** Evaluate the promotion rules for a user's NEXT level (inside an RLS
+   * transaction). Phase C/D ladder: none → muhibbus_sunnah (outline review),
+   * muhibbus → farze_ain_1/2 (the 23-criterion assessment). */
   async evaluate(
     tx: Prisma.TransactionClient,
     user: User
   ): Promise<{ rules: LevelRules; checklist: LevelChecklist; nextLevel: Level }> {
-    const [rules, facts] = await Promise.all([loadLevelRules(), gatherLevelFacts(tx, user)]);
-    return { rules, checklist: buildLevelChecklist(rules, facts), nextLevel: nextLevelOf(user.level) };
+    const nextLevel = nextLevelOf(user.level);
+    const [rules, facts] = await Promise.all([
+      loadLevelRules(nextLevel === "none" ? "muhibbus_sunnah" : nextLevel),
+      gatherLevelFacts(tx, user),
+    ]);
+    return { rules, checklist: buildLevelChecklist(rules, facts), nextLevel };
   }
 
   /**
@@ -73,8 +79,9 @@ export class LevelsService {
     const user = this.guard.requireUser(viewer);
     return this.rls.run(user, async (tx) => {
       const { checklist, nextLevel } = await this.evaluate(tx, user);
-      // rules only gate the none → muhibbus_sunnah step today (pack scope)
-      const rulesApply = user.level === "none";
+      // rules apply to every ladder step that has a definition in
+      // level-rules.json (all three levels do under Phase C/D)
+      const rulesApply = nextLevel !== user.level;
       return {
         level: user.level,
         nextLevel,

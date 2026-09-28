@@ -16,14 +16,34 @@ function messageOf(fn: () => unknown): string {
   }
 }
 
+// Farze-Ain-style rules (assessment-gated ladder step — the corrected model:
+// the 23-criterion form gates farze_ain_1/2, NOT muhibbus).
 const rules = {
   ...DEFAULT_LEVEL_RULES,
   minMonths: 4,
+  requireAssessmentPassed: true,
+  outlineReviewRequired: false,
   minReferralsAtLevel: 5,
   autoPromote: true,
   checklist: [
     { key: "iman", label: "ঈমান: ঈমানের অপরিহার্য পাঠ সম্পন্ন" },
     { key: "ilm", label: "ইলম: মূল শিক্ষা অর্জন" },
+  ],
+};
+
+// Muhibbus Sunnah rules (Phase C/D corrected ladder): minimum 4 months +
+// the usrah head's outline review + 5 people brought to the level. The
+// Farze Ain assessment does NOT appear here — it belongs to the next step.
+const muhibbus = {
+  ...DEFAULT_LEVEL_RULES,
+  minMonths: 4,
+  requireAssessmentPassed: false,
+  outlineReviewRequired: true,
+  minReferralsAtLevel: 5,
+  autoPromote: false,
+  checklist: [
+    { key: "iman_1", label: "ঈমানের তাত্ত্বিক জ্ঞান অর্জন এবং অন্তরে তার সুদৃঢ় বিশ্বাস স্থাপন।", category: "ঈমান" },
+    { key: "sifat_1", label: "ধীরস্থিরভাবে সালাত আদায় করবেন।", category: "সিফাত" },
   ],
 };
 
@@ -74,10 +94,33 @@ describe("buildLevelChecklist — met/not-met matrix", () => {
   });
 
   it("assessment rule drops out when requireAssessmentPassed = false", () => {
-    const noExam = { ...rules, requireAssessmentPassed: false };
+    const noExam = { ...rules, requireAssessmentPassed: false, minMonths: 4, minReferralsAtLevel: 5, outlineReviewRequired: false };
     const c = buildLevelChecklist(noExam, { months: 4, assessmentPassed: false, referralsAtLevel: 5 });
     expect(c.rows.some((r) => r.key === "assessment_passed")).toBe(false);
     expect(c.allMet).toBe(true);
+  });
+
+  it("muhibbus model: no assessment row, outline_review row present, autoEligible false", () => {
+    const c = buildLevelChecklist(muhibbus, { months: 4, assessmentPassed: false, referralsAtLevel: 5 });
+    expect(c.rows.some((r) => r.key === "assessment_passed")).toBe(false);
+    const outline = c.rows.find((r) => r.key === "outline_review");
+    expect(outline).toBeDefined();
+    expect(outline!.autoChecked).toBe(false);
+    expect(outline!.met).toBe(false);
+    // machine rows (months + referrals) met, but autoPromote=false → head must attest
+    expect(c.allMet).toBe(true);
+    expect(c.autoEligible).toBe(false);
+  });
+
+  it("muhibbus model: machine rows still gate (months unmet → allMet false)", () => {
+    const c = buildLevelChecklist(muhibbus, { months: 2, assessmentPassed: false, referralsAtLevel: 5 });
+    expect(c.allMet).toBe(false);
+  });
+
+  it("outline items carry their category for grouped display", () => {
+    const c = buildLevelChecklist(muhibbus, { months: 4, assessmentPassed: false, referralsAtLevel: 5 });
+    const sifat = c.rows.find((r) => r.key === "checklist_sifat_1");
+    expect(sifat?.detailBn).toContain("সিফাত");
   });
 
   it("informational checklist items are present, NOT auto-checked and never block", () => {
