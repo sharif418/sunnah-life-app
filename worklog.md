@@ -767,3 +767,9 @@ Work Log:
 
 Stage Summary:
 - Local verification: CI YAML + compose YAML parse clean; API suite 248/248; eslint 0 errors; AmalDefinition catalog = 31 rows (the >=30 smoke assert holds). Docker itself cannot run in the sandbox — the CI docker job on this push IS the proof (run result to be appended below when green).
+
+CI RUN HISTORY (the proof, appended as it happened):
+- Run 5 (36453750873, ed25921) — W2d api-image fix: `nest build && cp -R src/generated dist/` in apps/api/package.json (tsc never compiled the generated JS; dist/common/prisma-client.js crashed on 'Cannot find module ../generated/prisma'). RESULT: api image FIXED — api-1 Healthy, "Nest application successfully started", listening :4000, migrations+seed ran. But the smoke failed one container later: sunnahlife-worker-1 unhealthy.
+- Root cause #2 (fixed same day, 9f6617d): the compose worker service passed only SMS_PROVIDER through — not SMS_SSLWIRELESS_URL/USER/PASS — so with CI's SMS_PROVIDER=sslwireless the worker crash-looped on 'Invalid environment configuration → SMS_SSLWIRELESS_URL: … incomplete' (worker boots the same validated env with NODE_ENV=production). Hidden until run 5 because the worker depends_on a healthy api, which the pre-W2d image could never become. Worker env now mirrors the api's SMS block incl. the infobip pair.
+- Run 6 (36454553711, 9f6617d): Docker — image build + compose smoke (migrate·seed·health) GREEN — full stack healthy, smoke asserts passed. The API test job flaked ONCE on test/token-security.spec.ts 'two RACING refreshes … exactly one wins' (247/248; winner's new token resolved instead of rejecting — timing-dependent, unrelated to the W2d diff which touched no API source). Re-run of failed jobs: attempt 2 fully GREEN, 248/248.
+- NOTE for a later hardening pass: the racing-refresh test is flake-prone on loaded CI runners (one observed failure in two identical-code runs) — worth a retry wrapper or a deterministic interleave.
