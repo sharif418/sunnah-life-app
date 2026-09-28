@@ -1050,3 +1050,29 @@ Work Log:
 
 Stage Summary:
 - Wave 3 (Part B) COMPLETE: all nine items (a–i) implemented, unit/widget/golden-tested (226/226, analyze 0, web+admin typecheck/lint clean, dev-server smoke for /join + .well-known), CI-proven end-to-end on the final run, AUDIT updated honestly. The owner can install a release build from CI artifacts right now; the device-test checklist (Wave 5 item) will turn the Ready-for-device rows into Done.
+
+---
+Task ID: C-W4a
+Agent: implementation subagent (lead-architect session) — verification by lead
+Task: Global chrome (§3) — top header on every main screen, notification + reminder panels, floating contact button, token-built bottom bar.
+
+Work Log:
+- ae53ece: GlobalHeader on the five main tabs — logo mark, tappable location row (existing city picker), triple calendar (Gregorian + Bangla + Hijri via effectiveHijriAdjustProvider — logic EXTRACTED from the old home-only date bar, no duplication), notification + reminder + profile action buttons. Home's private date row removed.
+- 22659de: notification + reminder panels wired to the EXISTING /api/reminders (ApiClient.reminders() finally consumed on mobile — was dead plumbing); due/overdue/done states, mark-done via PATCH; announcements endpoint checked — reminders + graceful empties only (no invented API surface).
+- 70ee9f4: floating headset contact button on the main screens → bottom sheet with the five institutions from configProvider.contacts (tel: + in-app browser via the W3g helper); hidden when empty; safe-area aware.
+- d4e3a7f + 55bb869: phosphor_flutter icon set — the pub package didn't compile in this environment so the FONTS were vendored (documented in the commit) — used by the new components only (incremental migration, no mass icon rewrite); SLBottomBar replaces the stock NavigationBar (token container, active pill, localized labels kept so the rtl/smoke tests stay green, haptic selection, 44px targets).
+
+Stage Summary:
+- flutter analyze → No issues found; flutter test → 236/236 (was 226; the +10 is the W4b logic suite below). Commits ae53ece..55bb869 + 61539d0, all pushed.
+
+---
+Task ID: C-W4b
+Agent: lead-architect (main session; subagent hit its context cap after the pure-logic files)
+Task: Home per spec order (§3) — countdown ring hero, সর্বাধিক ব্যবহৃত, দ্রুত প্রবেশ, Ilm section, amal preview, Live preview, সব দেখুন headers.
+
+Work Log:
+- 61539d0: the PURE LOGIC layer committed and test-pinned — most_used.dart (offline-first 30-day distinct-day ranking, quickLogValue, todayAmalPreview) + waqt_progress.dart (ring interval fractions with clamps) + 10 unit tests. (Found + fixed while verifying: the test helper initially dropped sortOrder — exactly the kind of silent default these tests exist to catch.)
+- NOT DONE YET (stated plainly — the home_screen rewiring): countdown card → ring + hero transition, সর্বাধিক ব্যবহৃত section consuming most_used.dart, দ্রুত প্রবেশ grid, Ilm/amal-preview/Live sections, সব দেখুন headers. The existing home (date bar now in the W4a header → countdown card → post-prayer prompt → schedule → forbidden cards) remains; the pure layer above is what the rewiring will call.
+
+Stage Summary:
+- C-W4b status: **Partial — logic + tests only**; UI rewiring is the next unit. flutter analyze 0 / 236/236 after the final commit (raw tails in this file's C-W4a section lineage).
