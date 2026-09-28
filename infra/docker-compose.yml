@@ -74,7 +74,7 @@ services:
       - -c
       - archive_mode=on
       - -c
-      - "test ! -f /var/lib/postgresql/walarchive/%f && cp %p /var/lib/postgresql/walarchive/%f"
+      - "archive_command=test ! -f /var/lib/postgresql/walarchive/%f && cp %p /var/lib/postgresql/walarchive/%f"
     volumes:
       - pgdata:/var/lib/postgresql/data
       # shared unix-socket dir → the pgBackRest backup containers connect
