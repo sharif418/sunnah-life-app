@@ -404,3 +404,243 @@ live quiz ran as a separate bun mini-service (:3030) outside NestJS; and
   - ARB strings bn/en/ar for every new screen (gen-l10n).
 
 *Commit + push after every wave. Git is the safety net.*
+
+---
+
+# Phase C — make it real (post-device audit)
+
+**Trigger:** the owner installed the debug APK on a real phone. It runs, but a
+line-by-line audit found that most remaining failures only show up on a real
+phone or a real server (empty Qur'an list, receivers missing from the
+manifest, seed wiping the DB on boot, mock-only SMS, 6-hour-late pushes…).
+Phase C is not "add more code" — it is "make what exists real, safe and
+complete". Baseline tag: `v0.9-pre-phase-c`.
+
+## C.0 Ordering & reasoning (why this order)
+
+Five observations drive the ordering:
+
+1. **Shared plumbing first.** tz handling (User.tz), the config endpoint
+   (contacts / hijri adjust / donation URL / flags), and the content pipeline
+   (packages/content → mobile assets copy + CI parity) are depended on by
+   items in Parts A, B and C. Doing them first means every later item is born
+   correct instead of being retrofitted.
+2. **Client-form content rides the same pipe.** Part D (verbatim assessment
+   criteria, ~30-goal Muhibbus outline, ladder fix) is pure content + rules.
+   `seed:reference` (A1) seeds exactly those files — so D must land *with or
+   before* the seed split, or the split would seed the drifted text a second
+   time.
+3. **Security before features, deployability before polish.** Part A
+   (SMS, tokens, RLS, Docker, URLs) is what makes the thing *safe to run*;
+   Part B is what makes it *run at all* on a device; Part C is what makes it
+   *feel premium*. A customer cannot feel premium UI served by a mock SMS
+   layer that logs everyone in as anyone.
+4. **Proof discipline is constant.** Anything not runnable in the sandbox
+   (Gradle, Docker, real FCM) gets a CI job as its proof ("Done without a CI
+   job or test that proves it is not [acceptable]"). Every device-only bug
+   gets a regression test that would have caught it (114-surah assert,
+   manifest-receiver parse, non-empty content-pack check, tz tests for
+   Dhaka/Riyadh/London, DTO-through-the-real-pipeline merge test).
+5. **Sandbox resource budget.** 1.8 GB disk free, no Docker daemon, no
+   Gradle/NDK. Plan accordingly: prove Docker via a GitHub Actions compose
+   job; prove release APK via a split-per-abi release job with a size report;
+   never run heavy toolchains in parallel; `jest --runInBand`.
+
+## Wave 1 — Shared plumbing (unblocks everything)
+
+- **C-W1a · User.tz + tz-correct scheduling.** Add `tz` (default
+  `Asia/Dhaka`) to User; prayer-push processor computes the delay from the
+  *user's* wall clock (not UTC-shifted Dhaka); `weekStartOf` takes tz;
+  day-lock computed in user tz (not hard-coded +6). Tests: Dhaka, Riyadh,
+  London. (Part A8 — done early because B2's scheduler and C2's date bar
+  consume it.)
+- **C-W1b · Config endpoint consolidation.** One `/api/config` source of
+  truth: Hijri ±adjust, donation URL, five institution contacts, app-user
+  group links, leaderboard flag, detox flag. Admin CMS writes it; mobile,
+  web and admin read it. (Feeds A1 seed, C1 chrome, C4 More, C8 admin.)
+- **C-W1c · Content pipeline + Part D content.** `packages/content` is the
+  only source; a build script copies packs into `apps/mobile/assets/content`
+  (and web consumes directly); CI check fails if a copy differs or any pack
+  is empty/`{}`. Fill: 114-surah `quran-meta-bn.json` (from Uthmani data),
+  real `faq.json`, real `mosques.json`; copy `amal-catalog.json`,
+  `assessment-farze-ain-v1.json`, `level-rules.json` into mobile. **Part D
+  verbatim:** 23 criteria + instructions + two category descriptions
+  (`farze_ain_v1.1`), the ~30-goal Muhibbus outline, the corrected ladder
+  (Muhibbus = 4 months + outline review + 5 people; Farze Ain = the
+  assessment), diary instructions 1–6 surfaced in-app. Tests: 114-surah
+  assert, pack non-empty assert, manifest-receiver parse assert.
+- **C-W1d · Monorepo hygiene (Part E subset).** One package manager (bun
+  workspaces, root `bun.lock`, `packageManager` field), remove
+  `pnpm-workspace.yaml`/`turbo.json`, delete sandbox leftovers
+  (`.zscripts/`, `mini-services/`, `examples/`, `download/`, root
+  `tests/*.sh`, root `Caddyfile`), `ignoreBuildErrors: false` + typecheck
+  jobs in CI, CI `report` job stops pushing commits (job summary only),
+  top-level `permissions: block`, remove sandbox URL vars (XTransformPort)
+  → `NEXT_PUBLIC_API_BASE` build-arg everywhere. (Done now — later waves
+  must not reintroduce any of it.)
+
+## Wave 2 — Part A · Production blockers (security & deploy)
+
+- **C-W2a · Seed split.** `seed:reference` = idempotent upserts only (amal
+  catalog, templates, level rules, content, config) — runs on boot, never
+  deletes; `seed:demo` = demo users/usrahs, only when `SEED_DEMO=true` AND
+  `NODE_ENV !== "production"`. FCM `google-services` guarded. Tests: boot
+  twice → row counts stable; demo seed refuses in production.
+- **C-W2b · Real SMS + OTP hardening.** SSL Wireless + Infobip HTTP
+  adapters (env creds); production boot fails on `SMS_PROVIDER=mock` or
+  missing creds; `devCode` never returned outside non-production;
+  `crypto.randomInt` OTPs stored hashed; atomic attempt counter;
+  `@nestjs/throttler` per IP + per phone; mobile release build must not
+  auto-fill devCode; admin quick-login grid only with
+  `NEXT_PUBLIC_DEMO=true`.
+- **C-W2c · Token & secret handling.** JWT `typ` claim checked in
+  `auth.guard.ts`; separate refresh secret (no fallback to access secret);
+  atomic rotation (`updateMany … usedAt IS NULL` in a transaction);
+  production env validation fails boot for default/missing
+  `JWT_SECRET`/`JWT_REFRESH_SECRET`/`QUIZ_SECRET` and empty
+  `CORS_ORIGINS`; remove `override: true`; CORS list also applied to the
+  socket.io gateway.
+- **C-W2d · Docker images + compose smoke CI.** Fix all four Dockerfiles
+  (standalone output, `outputFileTracingRoot` server.js path, dockerignores,
+  admin port 3000-in-container, no non-existent copies). CI job: build
+  api/worker/web/admin images → `docker compose up -d` → wait healthy →
+  migrate + seed:reference → curl `/health` 200, web `/` 200, admin
+  `/login` 200. That job is the proof.
+- **C-W2e · RLS tightening.** (a) User `usrahId` clause restricted to
+  usrah_head/invigilator; (b) DayUnlock insert = usrah_head+ at DB level;
+  (c) RLS on OtpCode/AuditLog/MasalaQuestion/Feedback; (d) users cannot
+  change own role/gender/usrahId at DB level (column privileges); (e)
+  migration fallback password removed; (f) worker runs as restricted role
+  (no superuser DIRECT_URL); (g) `rls.e2e.spec.ts` extended: positive
+  control, same-gender-other-usrah member, reports/reviews coverage,
+  `current_user`/`rolbypassrls` asserts. PATCH /admin/users gender-mismatch
+  rejected; weekly-review fallback = same-gender invigilator, never
+  cross-gender admin.
+- **C-W2f · Push delivery.** FCM `urn:ietf:params:oauth:grant-type:jwt-bearer`
+  grant; OAuth token cached until expiry; device-token registration removes
+  the token from every other user. Tests: transport unit test with mocked
+  token endpoint (grant type + cache), dedup test.
+- **C-W2g · Sync & guest merge (server).** `GuestEntryDto` validators (the
+  whitelist pipe was stripping `value`/`clientUpdatedAt`!); test app uses
+  the *real* `main.ts` pipeline; LWW: clamp `clientUpdatedAt` ≤ now+5min,
+  conditional/atomic upsert, validate values against inputType, `auto:*`
+  source not trusted blindly, server's winning value returned on rejection;
+  guest merge ordered + capped chunks.
+- **C-W2h · Operations.** `/health` 503 when degraded; `/metrics` + `/docs`
+  internal-only; structured logger wired (no PII — names/phones/query
+  strings redacted); compose: API not bound to host port (2-replica
+  scalable), socket.io Redis adapter, Redis AOF, pinned minio/mc,
+  pgBackRest/WAL — honest `Partial` if unprovable.
+
+## Wave 3 — Part B · What breaks on a real phone
+
+- **C-W3a · Qur'an reader.** 114-surah metadata (W1c); ~5 MB JSON parsed in
+  a background isolate (`compute`); FutureBuilder bugs fixed (search closes
+  keyboard; bookmark/translation toggle jumps scroll to top — memoized
+  futures); recitation audio (`just_audio`, per-ayah streaming + cache +
+  reciter choice); go-to-ayah; resume-from-last-read. Golden tests bn
+  light/dark + ar RTL.
+- **C-W3b · Prayer bell scheduler.** Manifest: `ScheduledNotificationReceiver`,
+  `ScheduledNotificationBootReceiver`, `ActionBroadcastReceiver`,
+  `RECEIVE_BOOT_COMPLETED`; Android 14 exact-alarm permission screen with
+  inexact fallback (no unhandled throw); rolling 2–3-day schedule;
+  reschedule on boot / city / madhhab / method change + daily WorkManager;
+  post-prayer notification with জামাতে/একা/কাযা action buttons writing the
+  diary; monochrome `ic_notification`; per-row "N minutes before/after"
+  (not only fixed 10-min).
+- **C-W3c · Location, qibla, mosques.** `geolocator` permission flow +
+  manual city fallback; snap to nearest district; city in header;
+  magnetometer compass + calibration hint; `flutter_map` (OSM tiles) +
+  nearby mosques from API.
+- **C-W3d · Sync pull.** Cursor-based pull on login + app start; rejected
+  entries stop retrying forever (bounded retries + surface state); non-API
+  error no longer leaves `syncing=true`; sync state visible in UI.
+  (Server side in W2g; this is the client side + golden test.)
+- **C-W3e · Auto-silent.** Settings screen (explain → request DND access →
+  silence N min at each jama'at → restore). Kotlin DND handlers already
+  exist; wire Dart calls.
+- **C-W3f · Home widget.** Persist next-prayer times for the widget;
+  background refresh so it survives app death (no "--:--" reset).
+- **C-W3g · Hijri adjust + donation.** Admin `/api/config` hijri ±1 applied
+  to mobile date bar; donation link opens in-app browser (Custom Tabs).
+- **C-W3h · Referral links.** Web `/join/DS-000123` route + landing;
+  `assetlinks.json` + `apple-app-site-association`; `autoVerify` intent
+  filter + iOS associated-domains; app handles incoming link → onboarding
+  pre-fills `referred_by`. (Store upload of the site files documented for
+  the owner.)
+- **C-W3i · APK size + release CI.** Remove `keepDebugSymbols`; release
+  ships arm64-v8a + armeabi-v7a; CI job `flutter build apk --release
+  --split-per-abi` (upload key when secret exists, else
+  `internal-test-<abi>`), artifacts + sizes in job summary. Target: arm64
+  release < 40 MB.
+
+## Wave 4 — Part C · Make it feel complete and premium
+
+- **C-W4a · Global chrome (§3).** Top header on every main screen (logo,
+  location, Gregorian/Bangla/Hijri bar, notification + reminder + profile
+  icons); floating headset button → Contact panel (five institutions from
+  config); Notification panel + Reminder panel as real screens.
+- **C-W4b · Home per spec order.** Countdown ring hero (HH:MM:SS) with
+  hero-transition to the schedule; schedule incl. tahajjud/ishraq/duha with
+  alarm popup; three forbidden-time cards; সর্বাধিক ব্যবহৃত (real usage
+  counts); দ্রুত প্রবেশ grid; Ilm section; today's amal preview (progress
+  ring); Live preview; "সব দেখুন →" headers.
+- **C-W4c · Amal completeness (§4.2).** 14 personal-goal amals
+  (set → mentor approve → remind → review), custom checklist, single-amal
+  tracker, exercise tracker, fard/sunnah/nafl/akhlaq groupings,
+  daily/forgotten/salah sunnahs, tilawat minutes for beginners,
+  gender-scoped leaderboard as percentile bands behind a config flag.
+- **C-W4d · More (§4.3) complete.** Donate + Foundation services (top),
+  zakat, live support thread (admin replies), usrah join request, masala,
+  99 names, Islamic names, 70 branches, app user groups, my mosque, qibla,
+  auto-silent, Social Media Detox (UsageStats — seed of the Guard module),
+  about, FAQ, feedback, share (`share_plus`).
+- **C-W4e · Dawah craft.** Referral share card rendered to a branded PNG;
+  real madu tree view.
+- **C-W4f · Design system craft.** Custom bottom bar + app bar from
+  design-tokens (no stock Material chrome); one icon set (Phosphor) mapped
+  to the spec's element codes; bento grid on 8-pt rhythm; Bengali
+  line-height ≥ 1.6; subtle Islamic geometric texture in hero/header;
+  motion tokens (shared-axis/fade-through, hero transitions, haptics +
+  micro-interactions); shimmer skeletons; illustrated empty/error/offline
+  states; tuned dark mode; 360×640 + 1.3× text-scale verified; lazy heavy
+  packs for < 2 s cold start; golden tests (Home, Today diary, Month grid,
+  Qur'an reader × bn light/dark/ar RTL); Widgetbook entries.
+- **C-W4g · Web (§3.3).** Top nav (Home, আমাদের সম্পর্কে, আর্টিকেল/রুলস,
+  সেবা, highlighted Donate, Notification, Reminder, Login/Profile); real
+  service worker (PWA installs, offline prayer times + content);
+  `<html lang dir>` per locale; finish web i18n (remove hard-coded bn).
+- **C-W4h · Admin maturity.** Role-specific nav + dashboards; level-rules
+  editor; CMS for courses/quizzes/duas/articles/FAQ/mosques/contacts/config;
+  referral tree visualisation with server-side pagination; meaningful
+  invigilator health score (review completion, mean amal completion,
+  inactive members, overdue flags).
+- **C-W4i · Assessment signature.** Assessee notified → reviews scores in
+  app → confirms with OTP → only then final (schema + flow + admin view).
+- **C-W4j · Search.** Meilisearch query endpoint (duas/adhkar/names/
+  articles/Islamic names, Bengali typo-tolerant) + mobile & web usage with
+  offline fallback.
+
+## Wave 5 — Part E · Clean-up + reporting
+
+- Unused web deps removed; DEPLOY_COOLIFY.md rewritten to reality (Traefik
+  owns 80/443, FQDN per service, build args, seed split, SMS provider,
+  backups, cdn. MinIO, Cloudflare websockets for /socket.io, rollback).
+- `docs/AUDIT.md` rewritten with a **Proven by** column (unit/widget test ·
+  CI job `<name>` · needs real device / credentials). Last group ⇒ "Ready
+  for device test", never "Done".
+- `docs/PHONE_TEST_CHECKLIST.md` — owner's step-by-step device script.
+- Sandbox-impossible items (real Firebase project, SMS creds, Google/Apple
+  client IDs, iOS build, Coolify deploy, on-device test) documented as
+  exact human steps.
+
+## Invariants for every wave
+
+- Small descriptive commits; push after each meaningful unit.
+- Fresh-clone gates: `bun run lint`, `tsc --noEmit`, `jest --runInBand`,
+  `next build` (webpack), `flutter analyze`, `flutter test` — where
+  runnable.
+- Raw terminal output pasted into the report; Actions run URL + per-job
+  table for CI-proven items; APK sizes in the summary.
+- The worklog gets one section per wave; AUDIT.md is never allowed to say
+  "Done" for anything not proven here.
