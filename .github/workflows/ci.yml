@@ -158,8 +158,14 @@ jobs:
       - name: Unit + e2e tests (jest — includes the RLS gender-isolation e2e)
         working-directory: apps/api
         run: |
-          if grep -q '"test":' package.json; then bun run test; fi
+          if grep -q '"test":' package.json; then bun run test -- --runInBand; fi
           if grep -q '"test:e2e":' package.json; then bun run test:e2e; fi
+        # --runInBand: the suites are integration tests against ONE shared
+        # postgres — several sign in as the same seeded demo phones, and OTP
+        # verify honors only the newest code per phone. Parallel workers
+        # interleaved those sign-ins and raced the OTP rows (found by run #24:
+        # P2025 "no record found for update" behind 7 rls.e2e 500s). Serial
+        # execution is the correct topology for a shared-DB suite.
 
       - name: Build (nest build)
         working-directory: apps/api

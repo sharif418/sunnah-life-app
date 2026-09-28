@@ -109,8 +109,15 @@ export class AuthService {
       throw new ApiError(429, "অনেকবার ভুল কোড — নতুন কোড নিন");
     }
     if (otp.code !== code.trim()) {
+      // updateMany, not update: a concurrent successful verify on another
+      // device deletes the OTP rows for this phone between our findFirst and
+      // this write — a plain update() then throws P2025 and 500s the request.
+      // Counting the failed attempt is best-effort; 0 rows is fine here.
       await this.rls.system((tx) =>
-        tx.otpCode.update({ where: { id: otp.id }, data: { attempts: otp.attempts + 1 } })
+        tx.otpCode.updateMany({
+          where: { id: otp.id },
+          data: { attempts: otp.attempts + 1 },
+        })
       );
       throw new ApiError(400, "ভুল কোড");
     }
