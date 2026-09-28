@@ -1,9 +1,14 @@
-import { type LoggerService as NestLoggerService, LogLevel } from "@nestjs/common";
+import { type LoggerService as NestLoggerService, Injectable, LogLevel } from "@nestjs/common";
 
 /**
  * Structured JSON logger — one line per event, no PII (phones/codes/tokens are
  * never logged; caller-visible ids are masked to a short prefix).
+ *
+ * Registered as an app provider (AppModule) and wired with
+ * `app.useLogger(app.get(StructuredLogger))` in main.ts / worker.ts, so every
+ * Nest log line ships as `{"ts","level","ctx","msg",…}` JSON. [Phase C/W2h]
  */
+@Injectable()
 export class StructuredLogger implements NestLoggerService {
   constructor(private readonly levels: LogLevel[] = ["log", "error", "warn", "debug", "verbose"]) {}
 

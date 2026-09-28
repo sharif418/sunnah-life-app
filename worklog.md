@@ -731,3 +731,21 @@ Work Log:
 
 Stage Summary:
 - VERIFIED RAW: full suite 233/233 (was 218; +15 tests: clamp, inputType matrix, guardSource, serverValue, strip-bug-through-real-pipe, merge-clamp, unknown-key-dropped, merge-LWW); bunx tsc --noEmit clean; eslint 0 errors (4 pre-existing warnings in untouched files).
+
+
+---
+Task ID: C-W2h
+Agent: lead-architect (main session) + implementation subagent (200-turn cap hit mid-verification; lead completed verification)
+Task: Operations hardening — health 503, internal-only metrics/docs, structured logging, redis adapter, compose persistence.
+
+Work Log:
+- /health now returns 503 (not 200) when degraded — readiness semantics for the compose healthcheck + any LB probe.
+- /metrics gated: METRICS_TOKEN set → bearer/?token required else 403; unset → non-production only. prom-client collectDefaultMetrics() added (CPU/mem/GC). Route labels stay PII-free (route templates only).
+- /docs + /openapi.json gated via docsEnabled (DOCS_ENABLED env override; default off in production) — full admin-route/DTO disclosure is no longer public in prod. Setup extracted to src/common/swagger-setup.ts with a pure docsEnabled(env) unit-tested + integration-tested.
+- StructuredLogger (previously dead code) wired via app.useLogger in main.ts AND worker.ts; access-log middleware logs the PATH ONLY (query strings stripped — /api/admin/users?q=<phone|name> PII was leaking into docker json-file logs, contradicting its own no-PII comment).
+- socket.io Redis adapter wired (new src/common/redis-socket.adapter.ts + @socket.io/redis-adapter) — broadcasts cross-replica now. socket.io pinned 4.8.3 (apps/api + root override) to collapse a 4.8.3/4.8.4 duplicate-copy type clash. Quiz-smoke race FIXED: the pub/sub hop can deliver the first question event after host:next fired — the smoke now awaits the SPECIFIC index-1 payload (3x stable).
+- compose: api host-port binding REMOVED (caddy is the only ingress; REST scales with --scale api=N — quiz rooms documented as single-instance until state is externalized); redis AOF on (appendonly yes, appendfsync everysec — queued jobs survive restarts); postgres WAL archiving ON (archive_mode + cp-to-pgwal-volume command, init-walarchive.sh creates the dir on first boot, honest Partial: scheduled pgBackRest stays owner-run per DEPLOY_COOLIFY.md); minio/mc pinned to quay.io RELEASE tags with the full story documented (MinIO withdrew from Docker Hub; last image RELEASE.2025-09-07; quay needs docker login since 2026-09-24).
+- .env.example + DEPLOY_COOLIFY.md updated (METRICS_TOKEN, DOCS_ENABLED, no API_PORT, AOF, WAL).
+
+Stage Summary:
+- VERIFIED RAW: full suite 248/248 (17 suites; +15 ops tests: health 503/200, metrics gating matrix, docs gating incl. pure fn); quiz smoke OK x3 consecutive; eslint 0 errors; tsc --noEmit clean; nest build OK. Compose itself is not runnable in the sandbox — the W2d CI job is its proof (next).

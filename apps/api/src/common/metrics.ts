@@ -1,8 +1,13 @@
 import { type CallHandler, type ExecutionContext, Injectable, type NestInterceptor } from "@nestjs/common";
 import { type Observable, tap } from "rxjs";
-import { Registry, Histogram } from "prom-client";
+import { Registry, Histogram, collectDefaultMetrics } from "prom-client";
 
 export const metricsRegistry = new Registry();
+
+// Node runtime (CPU / memory / event-loop lag / GC) on the same registry —
+// /metrics previously exposed only the HTTP histogram, so capacity planning
+// had no OS-level signal at all. [C-W2h]
+collectDefaultMetrics({ register: metricsRegistry });
 
 export const httpRequestDuration = new Histogram({
   name: "http_request_duration_seconds",

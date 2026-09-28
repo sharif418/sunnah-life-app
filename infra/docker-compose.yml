@@ -13,9 +13,10 @@
 # Services: postgres:16 (+RLS bootstrap), redis:7, minio (+bucket init),
 # meilisearch, api (NestJS), worker (same image, BullMQ), web (Next.js PWA),
 # admin (Next.js) and — behind the optional `proxy` profile — Caddy.
-# Everything talks on the internal `sunnah` network; only web (3000),
-# admin (3002) and api (4000) are published to the host. Cloudflare fronts
-# them in production (docs/DEPLOY_COOLIFY.md).
+# Everything talks on the internal `sunnah` network; only web (3000) and
+# admin (3002) are published to the host — the api is reached through the
+# proxy over the docker network (see the api service comment). Cloudflare
+# fronts them in production (docs/DEPLOY_COOLIFY.md).
 #
 # Requires Docker Engine 20.10+ with BuildKit (docker compose v2) — per-image
 # .dockerignore files (infra/*.Dockerfile.dockerignore) need it.
@@ -39,6 +40,7 @@ networks:
 
 volumes:
   pgdata: # PostgreSQL 16 data (backup it — see docs/DEPLOY_COOLIFY.md §Backups)
+  pgwal: # archived WAL segments — pgBackRest PITR source (C/W2h; consumed per docs/DEPLOY_COOLIFY.md)
   pgsocket: # postgres unix socket dir — shared with the pgBackRest one-shot containers
   miniodata: # MinIO objects (media, PDFs, versioned content packs)
   meili: # Meilisearch indexes (rebuildable from the database)
@@ -63,14 +65,28 @@ services:
       - shared_buffers=${PG_SHARED_BUFFERS:-256MB}
       - -c
       - max_connections=${PG_MAX_CONNECTIONS:-100}
+      # WAL archiving (C/W2h): segments are copied to the pgwal volume and
+      # pgBackRest consumes them from there per docs/DEPLOY_COOLIFY.md — giving
+      # PITR beyond the nightly base backup. The init-walarchive.sh script
+      # creates the directory on first boot (archive_command cannot).
+      # Scheduled pgBackRest runs remain OWNER-RUN (honest Partial: the backup
+      # cron + off-site repo are operator-side, see §6.3).
+      - -c
+      - archive_mode=on
+      - -c
+      - "test ! -f /var/lib/postgresql/walarchive/%f && cp %p /var/lib/postgresql/walarchive/%f"
     volumes:
       - pgdata:/var/lib/postgresql/data
       # shared unix-socket dir → the pgBackRest backup containers connect
       # "locally" (the official image trusts local connections)
       - pgsocket:/var/run/postgresql
+      # archived WAL segments → mounted into the pgBackRest one-shots as well
+      - pgwal:/var/lib/postgresql/walarchive
       # runs once on an EMPTY volume: creates the NOBYPASSRLS role sunnah_app.
       # The API's migrations add the tables + RLS policies (docs/DATA_MODEL.md).
       - ./postgres/init-rls.sql:/docker-entrypoint-initdb.d/10-rls.sql:ro
+      # …and once more for the WAL archive dir (runs as postgres on first boot).
+      - ./postgres/init-walarchive.sh:/docker-entrypoint-initdb.d/20-walarchive.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sunnahlife}"]
       interval: 10s
@@ -81,12 +97,15 @@ services:
     # To inspect from the host (optional):
     # ports: ["127.0.0.1:5432:5432"]
 
-  # ── Redis 7 — BullMQ queues + cache (no persistence by design) ────────────
+  # ── Redis 7 — BullMQ queues + cache (AOF persistence: everysec) ───────────
   redis:
     image: redis:7
     restart: unless-stopped
     logging: *default-logging
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    # (C/W2h) append-only file ON, fsync every second: queued BullMQ jobs and
+    # repeatable schedules now survive a container/host restart (up to 1 s of
+    # skew) instead of evaporating with the old --save "" --appendonly no.
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -97,8 +116,14 @@ services:
     # ports: ["127.0.0.1:6379:6379"]
 
   # ── MinIO — S3 object storage (console :9001 + API :9000, internal only) ──
+  # (C/W2h) Pinned: MinIO withdrew its images from Docker Hub in 2025 (the
+  # minio org no longer lists a `minio` repo — hub API returns object-not-
+  # found) and stopped publishing images after RELEASE.2025-09-07T16-13-09Z
+  # (GitHub has newer releases, image builds do not). The quay.io copy is the
+  # official home; since 2026-09-24 it requires a (free) `docker login quay.io`
+  # — or mirror the image into a private registry. https://quay.io/minio/minio
   minio:
-    image: minio/minio:latest # pin a RELEASE.20xx-xx-xx tag in production
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     restart: unless-stopped
     logging: *default-logging
     command: ["server", "/data", "--console-address", ":9001"]
@@ -118,8 +143,9 @@ services:
     # ports: ["127.0.0.1:9000:9000", "127.0.0.1:9001:9001"]
 
   # One-shot: create the sunnahlife bucket (idempotent, safe on every boot).
+  # Pinned like minio itself — quay.io, last image release (see above).
   minio-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z
     restart: "no"
     logging: *default-logging
     depends_on:
@@ -180,8 +206,8 @@ services:
     environment:
       NODE_ENV: production
       TZ: UTC
-      # The container always listens on 4000 (Dockerfile ENV PORT=4000);
-      # API_PORT below only changes the HOST side of the port mapping.
+      # The container always listens on 4000 (Dockerfile ENV PORT=4000); no
+      # host port is published — caddy proxies api:4000 over the network.
       PORT: 4000
       # runtime connection = NOBYPASSRLS role (RLS always applies)
       DATABASE_URL: postgresql://sunnah_app:${SUNNAH_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
@@ -219,8 +245,11 @@ services:
       APPLE_SERVICES_ID: ${APPLE_SERVICES_ID:-}
       APPLE_IOS_BUNDLE_ID: ${APPLE_IOS_BUNDLE_ID:-}
       APPLE_TEAM_ID: ${APPLE_TEAM_ID:-}
-    ports:
-      - "${API_PORT:-4000}:4000"
+    # no host port by design — caddy (the only ingress) talks to api:4000 over
+    # the sunnah network; REST capacity scales with --scale api=N.
+    # NOTE: the live-quiz gateway keeps room state in-process (by design,
+    # quiz.gateway.ts header) — scale for REST, not for quiz rooms, until
+    # state is externalized.
     healthcheck:
       # PORT is pinned to 4000 inside the container (see environment above).
       test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health"]

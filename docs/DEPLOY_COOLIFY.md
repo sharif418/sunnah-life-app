@@ -30,11 +30,11 @@ docs when you change it.
 | Service | Image | Host port | Notes |
 |---|---|---|---|
 | `postgres` | postgres:16 | — (internal) | `sunnahlife` DB; RLS bootstrap on first init; volume `pgdata` |
-| `redis` | redis:7 | — (internal) | BullMQ queues + cache; no persistence by design |
-| `minio` | minio/minio | — (internal) | S3 API :9000 + console :9001, internal only; volume `miniodata` |
-| `minio-init` | minio/mc | — | one-shot: creates the `sunnahlife` bucket |
+| `redis` | redis:7 | — (internal) | BullMQ queues + cache; AOF everysec [C/W2h] — queued jobs survive restarts |
+| `minio` | quay.io/minio/minio | — (internal) | S3 API :9000 + console :9001, internal only; volume `miniodata`; pinned [C/W2h] — MinIO left Docker Hub, see compose comment |
+| `minio-init` | quay.io/minio/mc | — | one-shot: creates the `sunnahlife` bucket |
 | `meilisearch` | getmeili/meilisearch:v1.54.0 | — (internal) | Bengali typo-tolerant search; volume `meili` |
-| `api` | built from the repo root (`apps/api` + `packages/content`) via `infra/api.Dockerfile` | **4000** | NestJS; runs migrations + idempotent seed then serves |
+| `api` | built from the repo root (`apps/api` + `packages/content`) via `infra/api.Dockerfile` | — (internal `api:4000`) | NestJS; runs migrations + idempotent seed then serves; no host port [C/W2h] — caddy (the only ingress) talks to it over the `sunnah` network, `--scale api=N` for REST capacity |
 | `worker` | same image as `api` | — | BullMQ workers, different command; no HTTP — health = liveness probe (PID 1 + Redis ping) |
 | `web` | built from `apps/web` via `infra/web.Dockerfile` | **3000** | Next.js PWA (standalone). **No local database** — all data via the NestJS API (`NEXT_PUBLIC_API_BASE`, default `http://api:4000` inside the compose network). Gender isolation is enforced by Postgres RLS inside the api service. |
 | `admin` | built from `apps/admin` via `infra/admin.Dockerfile` | **3002** → 3000 | Next.js admin panel |
@@ -162,11 +162,16 @@ per `apps/api/src/config/env.validation.ts`.)
 | `DIRECT_URL` | `postgresql://postgres:…@postgres:5432/sunnahlife` | ✔ | owner connection for `prisma migrate deploy` + seed |
 | `MEILI_HOST` | `http://meilisearch:7700` | ✔ | hard-wired in compose |
 
+Redis runs with **AOF persistence (`appendfsync everysec`)** since C/W2h —
+queued BullMQ jobs survive a restart (up to 1 s of fsync skew).
+
 ### API / worker (apps/api)
 
 | Variable | Example | Req | Notes |
 |---|---|---|---|
-| `API_PORT` | `4000` | ✔ | **host** port for the api (the container always listens on 4000) |
+| `API_PORT` | *(unused)* | — | **removed in C/W2h** — the api publishes **no host port**; caddy (the only ingress) talks to `api:4000` over the `sunnah` network, so REST capacity scales with `--scale api=N` (quiz rooms stay single-instance: in-process room state) |
+| `METRICS_TOKEN` | `b1a…` | opt | unlocks `GET /metrics` via `Authorization: Bearer …` or `?token=…`; unset ⇒ /metrics 403s in production |
+| `DOCS_ENABLED` | `false` | opt | `false` disables the Swagger UI (`/docs`) + `/openapi.json`; unset ⇒ enabled outside production only |
 | `JWT_SECRET` | `J4v…` (min 8) | **✔** | signs access tokens (and refresh tokens when `JWT_REFRESH_SECRET` is unset); rotation + family revocation via the `RefreshToken` table |
 | `JWT_REFRESH_SECRET` | *(empty)* | opt | separate secret for refresh tokens; empty ⇒ `JWT_SECRET` is used |
 | `ACCESS_TOKEN_TTL_MIN` | `15` | opt | |
@@ -244,7 +249,10 @@ per `apps/api/src/config/env.validation.ts`.)
 ## 6. Volumes & backup strategy
 
 Docker named volumes: `pgdata` (critical),
-`miniodata` (media), `meili` (rebuildable indexes).
+`pgwal` (archived WAL segments — postgres copies them there via
+`archive_command`, pgBackRest consumes them for PITR [C/W2h]; the backup
+cron itself stays owner-run), `miniodata` (media), `meili` (rebuildable
+indexes).
 
 ### 6.1 PostgreSQL — pgBackRest to off-site S3 (the critical backup)
 
@@ -304,7 +312,7 @@ S3 with `mc`:
 docker run --rm --network sunnah \
   -e MC_HOST_src="http://$MINIO_ROOT_USER:$MINIO_ROOT_PASSWORD@minio:9000" \
   -e MC_HOST_dst="https://<offsite-key>:<offsite-secret>@s3.<region>.amazonaws.com" \
-  minio/mc:latest \
+  quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z \
   mc mirror --overwrite --remove src/sunnahlife dst/sunnahlife-minio
 ```
 
@@ -316,7 +324,7 @@ Crontab on the VPS (`crontab -e` — assumes the repo at `/opt/sunnahlife`):
 # m h  dom mon dow   command
 15 3 * * *  cd /opt/sunnahlife && PGBR="-v sunnahlife_pgdata:/var/lib/postgresql/data:ro -v sunnahlife_pgsocket:/var/run/postgresql -v $PWD/infra/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro" && docker run --rm $PGBR pgbackrest/pgbackrest:latest --stanza=sunnahlife --type=full backup
 0  5 * * 1  cd /opt/sunnahlife && PGBR="-v sunnahlife_pgdata:/var/lib/postgresql/data:ro -v sunnahlife_pgsocket:/var/run/postgresql -v $PWD/infra/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro" && docker run --rm $PGBR pgbackrest/pgbackrest:latest --stanza=sunnahlife --type=diff backup
-30 4 * * *  cd /opt/sunnahlife && docker run --rm --network sunnah -e MC_HOST_src="http://$MINIO_ROOT_USER:$MINIO_ROOT_PASSWORD@minio:9000" -e MC_HOST_dst="https://<offsite-key>:<offsite-secret>@s3.<region>.amazonaws.com" minio/mc:latest mc mirror --overwrite --remove src/sunnahlife dst/sunnahlife-minio
+30 4 * * *  cd /opt/sunnahlife && docker run --rm --network sunnah -e MC_HOST_src="http://$MINIO_ROOT_USER:$MINIO_ROOT_PASSWORD@minio:9000" -e MC_HOST_dst="https://<offsite-key>:<offsite-secret>@s3.<region>.amazonaws.com" quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z mc mirror --overwrite --remove src/sunnahlife dst/sunnahlife-minio
 ```
 
 Test restores quarterly; a backup that has never been restored is a hope, not
@@ -336,9 +344,10 @@ a backup.
   distribute jobs; keep at 1 on a 2 vCPU box.
 - Meilisearch: give it RAM (`meili` volume grows with the corpus); rebuild
   indexes from the API after major content changes.
-- Redis has **no persistence by design** (queues/cache only) — losing a
-  pending job queue is acceptable; the diary sync protocol is idempotent and
-  client-side retries cover it.
+- Redis now persists with **AOF (`appendfsync everysec`)** [C/W2h] —
+  queued BullMQ jobs and repeatable schedules survive restarts (previously
+  "no persistence by design"); the diary sync protocol is still idempotent
+  and client-side retries still cover any tail skew.
 - For >10 k users move Postgres to a dedicated box (same pgBackRest config,
   `pg1-host` set accordingly) and put Cloudflare in front of a horizontally
   scaled api.

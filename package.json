@@ -2,7 +2,7 @@
   "name": "sunnah-life",
   "version": "1.0.0",
   "private": true,
-  "description": "Sunnah Life monorepo — NestJS API (apps/api), web PWA (apps/web), admin (apps/admin), Flutter app (apps/mobile), shared packages (packages/*). One package manager: bun workspaces (this root lockfile is the only one).",
+  "description": "Sunnah Life monorepo \u2014 NestJS API (apps/api), web PWA (apps/web), admin (apps/admin), Flutter app (apps/mobile), shared packages (packages/*). One package manager: bun workspaces (this root lockfile is the only one).",
   "packageManager": "bun@1.3.14",
   "workspaces": [
     "apps/api",
@@ -23,5 +23,8 @@
     "test:api": "cd apps/api && bun run test",
     "content:sync": "cd packages/content && bun run sync:mobile",
     "content:check": "cd packages/content && bun run check:mobile"
+  },
+  "overrides": {
+    "socket.io": "4.8.3"
   }
 }

@@ -29,12 +29,15 @@ import { NestFactory } from "@nestjs/core";
 import { Logger } from "@nestjs/common";
 import { WorkerAppModule } from "./worker-app.module";
 import { QueuesService } from "./queues/queues.service";
+import { StructuredLogger } from "./common/structured-logger";
 
 async function bootstrap() {
-  const logger = new Logger("Worker");
   const app = await NestFactory.createApplicationContext(WorkerAppModule, {
     logger: ["log", "warn", "error"],
   });
+  // structured JSON logs — same one-line-per-event format as the api process
+  // (shared provider via AppModule), so log shipping parses both identically. [C-W2h]
+  app.useLogger(app.get(StructuredLogger));
   app.enableShutdownHooks();
 
   // Register the repeatable job schedules (idempotent upserts — BullMQ
@@ -43,6 +46,7 @@ async function bootstrap() {
   await queues.registerSchedulers();
 
   const stats = await queues.stats();
+  const logger = new Logger("Worker"); // routed through the structured logger above
   logger.log(`Worker up — queues: ${JSON.stringify(stats)}`);
   logger.log("Waiting for jobs… (Ctrl+C to stop)");
 }

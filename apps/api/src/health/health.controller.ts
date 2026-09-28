@@ -1,8 +1,8 @@
-import { Res, Controller, Get } from "@nestjs/common";
+import { Res, Controller, Get, HttpException, HttpStatus, Req } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import { metricsRegistry } from "../common/metrics";
-import type { Response } from "express";
+import type { Request, Response } from "express";
 import { PrismaService } from "../common/prisma.service";
 
 @Injectable()
@@ -81,17 +81,37 @@ export class HealthService {
 export class HealthController {
   constructor(private readonly service: HealthService) {}
 
-  /** GET /health — PG + Redis + Meili + storage probes (no auth). */
+  /** GET /health — PG + Redis + Meili + storage probes (no auth).
+   *  Degraded ⇒ HTTP 503 (load balancers / compose healthchecks can act on
+   *  it); the body shape is unchanged for human readers. [C-W2h] */
   @Get("health")
   @ApiOperation({ summary: "Liveness/readiness probe" })
-  health() {
-    return this.service.health();
+  async health(@Res({ passthrough: true }) res: Response) {
+    const body = await this.service.health();
+    res.status(body.status === "ok" ? HttpStatus.OK : HttpStatus.SERVICE_UNAVAILABLE);
+    return body;
   }
 
-  /** GET /metrics — Prometheus exposition (no auth in sandbox; guard in prod). */
+  /** GET /metrics — Prometheus exposition, internal-only [C-W2h].
+   *  Gate: when METRICS_TOKEN is set, callers must present it via
+   *  `Authorization: Bearer <token>` or `?token=<token>`; without a token
+   *  configured the endpoint is open ONLY outside production (sandbox/dev),
+   *  and 403s in production so the registry is never accidentally public. */
   @Get("metrics")
-  @ApiOperation({ summary: "Prometheus metrics" })
-  async metrics(@Res({ passthrough: true }) res: Response) {
+  @ApiOperation({ summary: "Prometheus metrics (internal)" })
+  async metrics(@Res({ passthrough: true }) res: Response, @Req() req: Request) {
+    const expected = process.env.METRICS_TOKEN;
+    if (expected) {
+      const header = (req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+      const raw = req.query.token;
+      const query = Array.isArray(raw) ? String(raw[0]) : String(raw ?? "");
+      if (header !== expected && query !== expected) {
+        throw new HttpException("metrics token required", HttpStatus.FORBIDDEN);
+      }
+    } else if (process.env.NODE_ENV === "production") {
+      // no token configured — refuse in production rather than expose it
+      throw new HttpException("metrics disabled", HttpStatus.FORBIDDEN);
+    }
     res.setHeader("Content-Type", metricsRegistry.contentType);
     const body = await metricsRegistry.metrics();
     res.send(body);

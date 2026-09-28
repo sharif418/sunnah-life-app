@@ -86,8 +86,16 @@ const main = async () => {
 
   // 5. one more question where p1 answers with the LEARNED correct index of
   //    question 2 — we discover the answer from the tally+our own choice:
+  // Redis-adapter pub/sub hop: the first question's broadcast can still be
+  // in flight when host:next fires — await the SPECIFIC index, not merely
+  // "the next event" (the stale index-0 delivery won the race once).
   const q2 = await new Promise<any>((res) => {
-    host.once("quiz:question", res);
+    const onQuestion = (payload: any) => {
+      if (payload?.index !== 1) return;
+      host.off("quiz:question", onQuestion);
+      res(payload);
+    };
+    host.on("quiz:question", onQuestion);
     host.emit("host:next");
   });
   check(`second question index 1 (got ${q2?.index})`, q2?.index === 1);

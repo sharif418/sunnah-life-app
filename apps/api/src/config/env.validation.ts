@@ -64,6 +64,13 @@ const schema = z
   // HMAC secret of the live-quiz room tokens (quiz-token.ts). Dev fallback
   // "dev-secret"; production refuses to boot without a real value.
   QUIZ_SECRET: z.string().optional().default(""),
+  // ── Operations hardening (Phase C/W2h) ──────────────────────────────────
+  // Bearer/query token that unlocks GET /metrics. Unset ⇒ /metrics is open in
+  // non-production and 403s in production (never accidentally public).
+  METRICS_TOKEN: z.string().optional().default(""),
+  // "false" disables the Swagger UI (/docs) + /openapi.json entirely; unset
+  // they are enabled outside production and disabled in production.
+  DOCS_ENABLED: z.string().optional().default(""),
   })
   .superRefine((env, ctx) => {
     // ── Production hardening (Phase C/W2b): a production boot with a mock

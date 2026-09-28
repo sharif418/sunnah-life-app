@@ -10,6 +10,7 @@ import { StorageModule } from "./storage/storage.module";
 import { JwtAuthGuard } from "./common/auth.guard";
 import { AllExceptionsFilter } from "./common/all-exceptions.filter";
 import { MetricsInterceptor } from "./common/metrics";
+import { StructuredLogger } from "./common/structured-logger";
 import { QueueModule } from "./queues/queue.module";
 import { AuthThrottlerGuard } from "./common/auth-throttler.guard";
 
@@ -87,6 +88,10 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
     TestRlsModule, // test-only RLS probe (header-gated, non-production)
   ],
   providers: [
+    // Structured JSON logger (Phase C/W2h): one provider instance shared by
+    // main.ts / worker.ts via app.useLogger(app.get(StructuredLogger)).
+    // useValue because the constructor takes a log-level array — not a DI token.
+    { provide: StructuredLogger, useValue: new StructuredLogger() },
     // GLOBAL ValidationPipe (Phase C/W2g): ONE pipeline shared by production
     // (main.ts bootstrap) AND every e2e test app. Previously the pipe lived
     // only in main.ts useGlobalPipes — test apps built via

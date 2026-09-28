@@ -15,20 +15,25 @@
 import { Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
-import { IoAdapter } from "@nestjs/platform-socket.io";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
+import { StructuredLogger } from "./common/structured-logger";
+import { docsEnabled, setupSwagger } from "./common/swagger-setup";
+import { RedisSocketAdapter } from "./common/redis-socket.adapter";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  // structured JSON logs (one line per event, no PII) for every Nest log call
+  // from here on — the docker json-file driver and Loki both parse them. [C-W2h]
+  app.useLogger(app.get(StructuredLogger));
 
   // Product routes under /api (web + mobile contract); infra endpoints bare.
   app.setGlobalPrefix("api", { exclude: ["health", "metrics"] });
 
   // socket.io gateways (live usrah quiz) mount on the SAME HTTP server at
-  // /socket.io — one backend, one auth, one deployment.
-  app.useWebSocketAdapter(new IoAdapter(app));
+  // /socket.io — one backend, one auth, one deployment. The Redis adapter
+  // replicates broadcasts across api replicas (real --scale api=N rooms).
+  app.useWebSocketAdapter(new RedisSocketAdapter(app));
 
   // Request access log — one line per /api hit (method, route, status, ms).
   // This is the operator-facing proof that web/mobile traffic reaches the
@@ -36,10 +41,13 @@ async function bootstrap(): Promise<void> {
   const access = new Logger("HTTP");
   app.use((req: { method?: string; originalUrl?: string }, res: { statusCode?: number; on?: (ev: string, cb: () => void) => void }, next: () => void) => {
     const startedAt = Date.now();
-    const url = req.originalUrl ?? "";
-    if (url.startsWith("/api/") && res.on) {
+    // PATH ONLY [C-W2h]: the query string is stripped — admin user search
+    // (/api/admin/users?q=…) carries names/phones in ?q= and must never land
+    // in logs. Route + status + duration is all the log needs.
+    const path = (req.originalUrl ?? "").split("?")[0];
+    if (path.startsWith("/api/") && res.on) {
       res.on("finish", () => {
-        access.log(`${req.method} ${url} → ${res.statusCode} ${Date.now() - startedAt}ms`);
+        access.log(`${req.method} ${path} → ${res.statusCode} ${Date.now() - startedAt}ms`);
       });
     }
     next();
@@ -71,32 +79,19 @@ async function bootstrap(): Promise<void> {
   );
 
   // OpenAPI document — matches the deployed route map (all /api/* + health).
-  const config = new DocumentBuilder()
-    .setTitle("Sunnah Life API")
-    .setDescription(
-      "দাওয়াতুস সুন্নাহ তারবিয়াত প্ল্যাটফর্ম — auth (OTP + JWT), muhasaba diary, " +
-        "usrah & dawah engine, weekly reviews, assessments, admin console. " +
-        "Every data route is enforced by PostgreSQL Row-Level Security (gender / " +
-        "usrah / downline scoping); auth via `Authorization: Bearer <accessToken>` " +
-        "or the HttpOnly sl_access cookie."
-    )
-    .setVersion(process.env.npm_package_version ?? "1.0.0")
-    .addBearerAuth()
-    .addCookieAuth("sl_access")
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("docs", app, document);
-  // Stable machine URL for shared-types generation (N2b / admin panel).
-  app.getHttpAdapter().get("/openapi.json", (_req, res) => {
-    (res as { setHeader: (k: string, v: string) => void }).setHeader("Content-Type", "application/json");
-    (res as { json: (d: unknown) => void }).json(document);
-  });
+  // GATED [C-W2h]: off in production (and whenever DOCS_ENABLED=false) — the
+  // full route map is recon material; unknown routes simply 404.
+  if (docsEnabled(process.env)) {
+    setupSwagger(app);
+  }
 
   app.enableShutdownHooks(); // PrismaService/queues close cleanly
 
   const port = Number(process.env.PORT || 3001);
   await app.listen(port, "0.0.0.0");
-  console.log(`⚡ Sunnah Life API listening on :${port} (docs at /docs, spec at /openapi.json)`);
+  new Logger("Bootstrap").log(
+    `⚡ Sunnah Life API listening on :${port}${docsEnabled(process.env) ? " (docs at /docs, spec at /openapi.json)" : ""}`
+  );
 }
 
 bootstrap().catch((err) => {
