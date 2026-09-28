@@ -1,18 +1,24 @@
 /// কুরআন পাঠক — surah list → Uthmani reader with Bengali translation
-/// toggle, ayah bookmarks, last-read resume, and tilawat auto-log
-/// (session minutes → diary quantity entry, source auto:quran:tilawat).
+/// toggle, ayah bookmarks, last-read resume, tilawat auto-log
+/// (session minutes → diary quantity entry, source auto:quran:tilawat),
+/// go-to-ayah (two-step jump) and per-ayah recitation audio (W3a).
 library;
 
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
+import '../../l10n/app_strings.dart' show LangX;
 import '../../models/quran_models.dart';
 import '../../state/providers.dart';
+import '../../state/remote_state.dart' show configProvider;
 import '../shared/widgets.dart';
+import 'quran_audio.dart';
 import 'quran_tilawat_sheet.dart';
 
 class QuranReaderScreen extends ConsumerStatefulWidget {
@@ -26,9 +32,15 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
   String _query = '';
   (int, int)? _lastRead;
 
+  /// Memoized once (W3a): the search field lives OUTSIDE the FutureBuilder,
+  /// so keystrokes rebuild the filtered list — never the TextField — and the
+  /// keyboard stays open; the future identity never changes mid-session.
+  late final Future<List<SurahMeta>> _surahsFuture;
+
   @override
   void initState() {
     super.initState();
+    _surahsFuture = QuranRepository.surahList();
     _loadLastRead();
   }
 
@@ -48,69 +60,58 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
         leading: const BackButton(),
         title: Text(context.t('quran_reader')),
       ),
-      body: FutureBuilder<List<SurahMeta>>(
-        future: QuranRepository.surahList(),
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return const Skeleton(height: 64, count: 8);
-          }
-          final surahs = snap.data ?? const <SurahMeta>[];
-          if (surahs.isEmpty) {
-            return EmptyState(
-              message: context.t('empty_generic'),
-              icon: Icons.menu_book_outlined,
-            );
-          }
-          final q = _query.trim();
-          final filtered = q.isEmpty
-              ? surahs
-              : surahs
-                    .where(
-                      (s) =>
-                          s.nameBn.contains(q) ||
-                          s.englishName.toLowerCase().contains(
-                            q.toLowerCase(),
-                          ) ||
-                          '${s.number}' == q,
-                    )
-                    .toList();
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: SLSpacing.s16,
-                  vertical: SLSpacing.s8,
-                ),
-                child: TextField(
-                  onChanged: (v) => setState(() => _query = v),
-                  decoration: InputDecoration(
-                    hintText:
-                        '${context.t('search')} — ${context.t('quran_surahs')}',
-                    prefixIcon: const Icon(Icons.search),
-                    isDense: true,
-                  ),
-                ),
+      body: Column(
+        children: [
+          // Stable across list rebuilds — typing never unmounts the field.
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: SLSpacing.s16,
+              vertical: SLSpacing.s8,
+            ),
+            child: TextField(
+              onChanged: (v) => setState(() => _query = v),
+              decoration: InputDecoration(
+                hintText:
+                    '${context.t('search')} — ${context.t('quran_surahs')}',
+                prefixIcon: const Icon(Icons.search),
+                isDense: true,
               ),
-              if (_lastRead != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: SLSpacing.s16,
-                    vertical: SLSpacing.s4,
+            ),
+          ),
+          if (_lastRead != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SLSpacing.s16,
+                vertical: SLSpacing.s4,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ActionChip(
+                      avatar: const Icon(Icons.bookmark, size: 18),
+                      label: Text(context.t('quran_resume')),
+                      onPressed: () => _openSurah(_lastRead!.$1),
+                    ),
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: ActionChip(
-                          avatar: const Icon(Icons.bookmark, size: 18),
-                          label: Text(context.t('quran_resume')),
-                          onPressed: () => _openSurah(_lastRead!.$1),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              Expanded(
-                child: ListView.builder(
+                ],
+              ),
+            ),
+          Expanded(
+            child: FutureBuilder<List<SurahMeta>>(
+              future: _surahsFuture,
+              builder: (context, snap) {
+                if (snap.connectionState != ConnectionState.done) {
+                  return const Skeleton(height: 64, count: 8);
+                }
+                final surahs = snap.data ?? const <SurahMeta>[];
+                if (surahs.isEmpty) {
+                  return EmptyState(
+                    message: context.t('empty_generic'),
+                    icon: Icons.menu_book_outlined,
+                  );
+                }
+                final filtered = QuranRepository.filterSurahs(surahs, _query);
+                return ListView.builder(
                   padding: const EdgeInsets.symmetric(
                     horizontal: SLSpacing.s16,
                     vertical: SLSpacing.s4,
@@ -169,11 +170,11 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                       ),
                     );
                   },
-                ),
-              ),
-            ],
-          );
-        },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -204,11 +205,49 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
   DateTime _sessionStart = DateTime.now();
   Set<(int, int)> _bookmarks = <(int, int)>{};
 
+  /// Memoized in initState (W3a): the AppBar-title and body FutureBuilders
+  /// share ONE future, and the translation toggle / bookmark writes /
+  /// audio state changes only setState — the future identity never changes,
+  /// so the list never rebuilds from scratch (no jump back to the top).
+  late final Future<Surah> _surahFuture;
+  final ScrollController _scroll = ScrollController();
+
+  /// Per-ayah-item keys (0-based list index → key) so the two-step jump can
+  /// `Scrollable.ensureVisible` the exact item after the coarse estimate.
+  final Map<int, GlobalKey> _ayahKeys = <int, GlobalKey>{};
+
+  // ── Recitation audio (W3a) ──────────────────────────────────────────────────
+  AudioPlayer? _player;
+  StreamSubscription<ProcessingState>? _processingSub;
+  int? _playingAyah;
+  int _totalAyahs = 0;
+  ReciterOption _reciter = kQuranReciters.first;
+
   @override
   void initState() {
     super.initState();
     _sessionStart = DateTime.now();
+    _surahFuture = QuranRepository.surah(widget.surahNumber);
     _loadBookmarks();
+    _loadReciter();
+    _surahFuture.then((surah) {
+      if (!mounted) return;
+      _totalAyahs = surah.ayahs.length;
+      // Resume-from-last-read: only when the reader was opened through the
+      // resume chip (lastReadAyah was passed and belongs to this surah).
+      final target = widget.lastReadAyah;
+      if (target != null && target >= 1 && target <= _totalAyahs) {
+        unawaited(_jumpToAyah(target));
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _processingSub?.cancel();
+    unawaited(_player?.dispose());
+    _scroll.dispose();
+    super.dispose();
   }
 
   Future<void> _loadBookmarks() async {
@@ -243,10 +282,227 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
     _sessionStart = DateTime.now();
   }
 
+  // ── Go-to-ayah: coarse estimate → exact ensureVisible ─────────────────────
+
+  Future<void> _jumpToAyah(int ayah) async {
+    final surah = await _surahFuture;
+    final idx = (ayah - 1).clamp(0, surah.ayahs.length - 1);
+    // Let the resolved future paint a frame first so the scrollable has
+    // real extents and the target item is built.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || !_scroll.hasClients) return;
+    _scroll.jumpTo(
+      estimateJumpOffset(
+        ayahIndex: idx,
+        totalAyahs: surah.ayahs.length,
+        maxScrollExtent: _scroll.position.maxScrollExtent,
+      ),
+    );
+    // After the estimate lands, the lazily-built target exists — snap to it
+    // exactly (and keep it near the top rather than hiding under the AppBar).
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    final ctx = _ayahKeys[idx]?.currentContext;
+    if (ctx != null && ctx.mounted) {
+      await Scrollable.ensureVisible(
+        ctx,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+        alignment: 0.15,
+      );
+    }
+  }
+
+  Future<void> _showGoToAyah() async {
+    final surah = await _surahFuture;
+    if (!mounted) return;
+    final controller = TextEditingController();
+    final submitted = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.t('quran_goto_ayah')),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          // Bengali digits are accepted by parseAyahInput on submit.
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            hintText:
+                '${context.t('quran_goto_ayah_hint')} (1–${context.isBn ? toBn(surah.ayahs.length) : surah.ayahs.length})',
+          ),
+          onSubmitted: (v) => Navigator.of(dialogContext).pop(v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(context.t('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            child: Text(context.t('ok')),
+          ),
+        ],
+      ),
+    );
+    if (submitted == null) return;
+    final n = parseAyahInput(submitted);
+    if (n == null || n < 1 || n > surah.ayahs.length) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.t('quran_invalid_ayah'))),
+        );
+      }
+      return;
+    }
+    await _jumpToAyah(n);
+  }
+
+  // ── Recitation audio ───────────────────────────────────────────────────────
+
+  /// audioBase is the config gate: empty/absent → no audio affordances.
+  bool get _audioEnabled =>
+      (ref.watch(configProvider).valueOrNull?.audioBase ?? '').isNotEmpty;
+
+  Future<void> _loadReciter() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final id = prefs.getString(kQuranReciterPrefKey);
+      if (id != null && mounted) {
+        setState(() => _reciter = reciterById(id));
+      }
+    } on Exception {
+      // Prefs unavailable → keep the default reciter.
+    }
+  }
+
+  void _ensurePlayer() {
+    final existing = _player;
+    if (existing != null) return;
+    final player = AudioPlayer();
+    _player = player;
+    // Auto-advance: when an ayah finishes, play the next one until the
+    // surah ends (idle/stop states never emit `completed`).
+    _processingSub = player.processingStateStream.listen((state) {
+      if (state == ProcessingState.completed) _onAyahCompleted();
+    });
+  }
+
+  void _onAyahCompleted() {
+    final current = _playingAyah;
+    if (current == null) return;
+    if (current < _totalAyahs) {
+      unawaited(_playAyah(current + 1));
+    } else {
+      unawaited(_stopAudio());
+    }
+  }
+
+  Future<void> _playAyah(int ayah) async {
+    try {
+      _ensurePlayer();
+      if (_playingAyah != ayah && mounted) {
+        setState(() => _playingAyah = ayah);
+      } else {
+        _playingAyah = ayah;
+      }
+      // LockCachingAudioSource caches each ayah on disk after the first
+      // play — re-listening is instant and offline once cached.
+      await _player!.setAudioSource(
+        // The experimental tag is just_audio's API-stability marker; the
+        // class has shipped stable on Android/iOS for years.
+        // ignore: experimental_member_use
+        LockCachingAudioSource(
+          Uri.parse(
+            ayahAudioUrl(
+              reciter: _reciter,
+              surah: widget.surahNumber,
+              ayah: ayah,
+            ),
+          ),
+        ),
+      );
+      await _player!.play();
+    } on Exception {
+      // Network/404/source errors surface a SnackBar — never a crash.
+      await _stopAudio();
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(context.t('quran_audio_error'))));
+      }
+    }
+  }
+
+  Future<void> _stopAudio() async {
+    if (mounted && _playingAyah != null) {
+      setState(() => _playingAyah = null);
+    } else {
+      _playingAyah = null;
+    }
+    try {
+      await _player?.stop();
+    } on Exception {
+      // A failed stop leaves nothing playing anyway.
+    }
+  }
+
+  void _toggleAudio(int ayah) {
+    if (_playingAyah == ayah) {
+      unawaited(_stopAudio());
+    } else {
+      unawaited(_playAyah(ayah));
+    }
+  }
+
+  Future<void> _pickReciter() async {
+    final lang = context.lang.code;
+    final picked = await showModalBottomSheet<ReciterOption>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.only(bottom: SLSpacing.s16),
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s16),
+              child: Text(
+                context.t('quran_reciter'),
+                style: Theme.of(sheetContext).textTheme.titleMedium,
+              ),
+            ),
+            for (final r in kQuranReciters)
+              ListTile(
+                title: Text(r.nameFor(lang)),
+                trailing: r.id == _reciter.id
+                    ? Icon(
+                        Icons.check_circle,
+                        color: Theme.of(sheetContext).colorScheme.primary,
+                      )
+                    : null,
+                onTap: () => Navigator.of(sheetContext).pop(r),
+              ),
+          ],
+        ),
+      ),
+    );
+    if (picked == null) return;
+    if (mounted) setState(() => _reciter = picked);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(kQuranReciterPrefKey, picked.id);
+    } on Exception {
+      // Persisting the choice is best-effort; the session keeps it anyway.
+    }
+    // A reciter switch mid-playback restarts from a clean slate.
+    await _stopAudio();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bn = context.isBn;
+    final audio = _audioEnabled;
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) async {
@@ -258,7 +514,7 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
         appBar: AppBar(
           leading: const BackButton(),
           title: FutureBuilder<Surah>(
-            future: QuranRepository.surah(widget.surahNumber),
+            future: _surahFuture,
             builder: (context, snap) => Text(
               snap.data?.meta.nameBn ?? context.t('quran_reader'),
               style: const TextStyle(fontWeight: FontWeight.w700),
@@ -276,10 +532,31 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                 icon: const Icon(Icons.translate),
               ),
             ),
+            IconButton(
+              tooltip: context.t('quran_goto_ayah'),
+              icon: const Icon(Icons.gps_fixed),
+              onPressed: _showGoToAyah,
+            ),
+            if (audio) ...[
+              IconButton(
+                tooltip: context.t('quran_reciter'),
+                icon: const Icon(Icons.record_voice_over_outlined),
+                onPressed: _pickReciter,
+              ),
+              if (_playingAyah != null)
+                IconButton(
+                  tooltip: context.t('quran_stop_audio'),
+                  icon: Icon(
+                    Icons.stop_circle,
+                    color: theme.colorScheme.tertiary,
+                  ),
+                  onPressed: _stopAudio,
+                ),
+            ],
           ],
         ),
         body: FutureBuilder<Surah>(
-          future: QuranRepository.surah(widget.surahNumber),
+          future: _surahFuture,
           builder: (context, snap) {
             if (snap.connectionState != ConnectionState.done) {
               return const Skeleton(height: 96, count: 5);
@@ -289,6 +566,7 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
             }
             final surah = snap.data!;
             return ListView.builder(
+              controller: _scroll,
               padding: const EdgeInsets.symmetric(
                 horizontal: SLSpacing.s16,
                 vertical: SLSpacing.s12,
@@ -300,8 +578,23 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                   widget.surahNumber,
                   ayah.numberInSurah,
                 ));
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: SLSpacing.s16),
+                final playing = _playingAyah == ayah.numberInSurah;
+                return AnimatedContainer(
+                  key: _ayahKeys.putIfAbsent(i, GlobalKey.new),
+                  duration: SLMotion.base,
+                  curve: SLMotion.standard,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SLSpacing.s8,
+                    vertical: SLSpacing.s4,
+                  ),
+                  decoration: BoxDecoration(
+                    // Playing ayah glows in the gold accent.
+                    color: playing
+                        ? theme.colorScheme.tertiary.withValues(alpha: 0.10)
+                        : Colors.transparent,
+                    borderRadius: SLRadius.brMd,
+                  ),
+                  margin: const EdgeInsets.only(bottom: SLSpacing.s16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -331,6 +624,26 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                               '${context.t('quran_juz')} ${bn ? toBn(ayah.juz!) : ayah.juz}',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          if (audio)
+                            Semantics(
+                              toggled: playing,
+                              label: context.t('quran_play_ayah'),
+                              child: IconButton(
+                                tooltip: context.t('quran_play_ayah'),
+                                iconSize: 18,
+                                isSelected: playing,
+                                onPressed: () =>
+                                    _toggleAudio(ayah.numberInSurah),
+                                icon: Icon(
+                                  playing
+                                      ? Icons.pause_circle
+                                      : Icons.play_circle,
+                                  color: playing
+                                      ? theme.colorScheme.tertiary
+                                      : null,
+                                ),
                               ),
                             ),
                           Semantics(

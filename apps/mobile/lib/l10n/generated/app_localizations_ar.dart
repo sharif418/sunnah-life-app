@@ -380,6 +380,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quran_tilawat_logged => 'أُضيف التلاوة إلى سجلك';
 
   @override
+  String get quran_goto_ayah => 'الانتقال إلى الآية';
+
+  @override
+  String get quran_goto_ayah_hint => 'أدخل رقم الآية';
+
+  @override
+  String get quran_invalid_ayah => 'رقم الآية غير صحيح';
+
+  @override
+  String get quran_reciter => 'اختر القارئ';
+
+  @override
+  String get quran_play_ayah => 'تشغيل الآية';
+
+  @override
+  String get quran_stop_audio => 'إيقاف الصوت';
+
+  @override
+  String get quran_audio_error =>
+      'تعذّر تشغيل الصوت — تحقق من اتصالك بالإنترنت';
+
+  @override
   String get adhkar_morning => 'أذكار الصباح';
 
   @override

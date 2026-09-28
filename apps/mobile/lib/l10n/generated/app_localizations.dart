@@ -826,6 +826,48 @@ abstract class AppLocalizations {
   /// **'তিলাওয়াত আমলনামায় যোগ হয়েছে'**
   String get quran_tilawat_logged;
 
+  /// No description provided for @quran_goto_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াতে যান'**
+  String get quran_goto_ayah;
+
+  /// No description provided for @quran_goto_ayah_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াত নম্বর লিখুন'**
+  String get quran_goto_ayah_hint;
+
+  /// No description provided for @quran_invalid_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াত নম্বরটি সঠিক নয়'**
+  String get quran_invalid_ayah;
+
+  /// No description provided for @quran_reciter.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাদক নির্বাচন করুন'**
+  String get quran_reciter;
+
+  /// No description provided for @quran_play_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াত শুনুন'**
+  String get quran_play_ayah;
+
+  /// No description provided for @quran_stop_audio.
+  ///
+  /// In bn, this message translates to:
+  /// **'অডিও বন্ধ করুন'**
+  String get quran_stop_audio;
+
+  /// No description provided for @quran_audio_error.
+  ///
+  /// In bn, this message translates to:
+  /// **'অডিও চালানো যায়নি — ইন্টারনেট সংযোগ দেখে নিন'**
+  String get quran_audio_error;
+
   /// No description provided for @adhkar_morning.
   ///
   /// In bn, this message translates to:

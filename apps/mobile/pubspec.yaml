@@ -51,6 +51,8 @@ dependencies:
   sign_in_with_apple: ^8.2.0
   flutter_timezone: ^5.1.0
   workmanager: ^0.10.10
+  # Qur'an per-ayah recitation with on-disk caching (LockCachingAudioSource).
+  just_audio: ^0.10.4
 
 dev_dependencies:
   flutter_test:

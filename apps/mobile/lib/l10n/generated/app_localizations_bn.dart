@@ -382,6 +382,28 @@ class AppLocalizationsBn extends AppLocalizations {
   String get quran_tilawat_logged => 'তিলাওয়াত আমলনামায় যোগ হয়েছে';
 
   @override
+  String get quran_goto_ayah => 'আয়াতে যান';
+
+  @override
+  String get quran_goto_ayah_hint => 'আয়াত নম্বর লিখুন';
+
+  @override
+  String get quran_invalid_ayah => 'আয়াত নম্বরটি সঠিক নয়';
+
+  @override
+  String get quran_reciter => 'বাদক নির্বাচন করুন';
+
+  @override
+  String get quran_play_ayah => 'আয়াত শুনুন';
+
+  @override
+  String get quran_stop_audio => 'অডিও বন্ধ করুন';
+
+  @override
+  String get quran_audio_error =>
+      'অডিও চালানো যায়নি — ইন্টারনেট সংযোগ দেখে নিন';
+
+  @override
   String get adhkar_morning => 'সকালের আযকার';
 
   @override

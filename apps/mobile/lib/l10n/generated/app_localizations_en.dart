@@ -380,6 +380,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quran_tilawat_logged => 'Tilawat added to your diary';
 
   @override
+  String get quran_goto_ayah => 'Go to ayah';
+
+  @override
+  String get quran_goto_ayah_hint => 'Enter ayah number';
+
+  @override
+  String get quran_invalid_ayah => 'That ayah number is not valid';
+
+  @override
+  String get quran_reciter => 'Choose reciter';
+
+  @override
+  String get quran_play_ayah => 'Play ayah';
+
+  @override
+  String get quran_stop_audio => 'Stop audio';
+
+  @override
+  String get quran_audio_error =>
+      'Could not play the audio — check your connection';
+
+  @override
   String get adhkar_morning => 'Morning adhkar';
 
   @override
