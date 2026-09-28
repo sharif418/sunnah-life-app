@@ -5,13 +5,18 @@
 # when their workspace exists, so the pipeline stays green while the monorepo
 # lands one workstream at a time (apps/api, apps/admin, apps/mobile).
 #
-# NOTE (sandbox): there is no GitHub remote in the build sandbox — this file is
-# verified for syntax only; it runs on the client's GitHub org.
+# NOTE (2026-09-28): the job-level `if: hashFiles(...) != ''` gates used in
+# earlier revisions are INVALID — GitHub's workflow compiler rejects hashFiles()
+# outside step context ("Unrecognized function: 'hashFiles'"), so every run since
+# the first push failed with zero jobs ever started. Jobs are now gated on the
+# `workspace` probe job's outputs (needs.workspace.outputs.<name>). Verified
+# live via the Actions API on run #21+.
 #
 # Jobs:
+#   workspace  file-existence probe (gates every job below)
 #   tokens  design-token parity guard (tokens.json ↔ web globals.css)
 #   api     lint · jest (unit + RLS e2e against postgres:16 + redis:7, seeded) · build
-#   web     lint · production build (repo root — heavy, CI only)
+#   web     lint · production build (apps/web)
 #   admin   lint · build (when apps/admin exists)
 #   mobile  flutter analyze · test · debug APK (when apps/mobile exists)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -31,10 +36,40 @@ env:
 
 jobs:
   # ───────────────────────────────────────────────────────────────────────────
+  # Workspace existence probe. Job-level `if` CANNOT call hashFiles() — the
+  # compiler rejects it (no filesystem exists before checkout), which is what
+  # broke every earlier run. One checkout exports true/false per workspace;
+  # each downstream job gates on needs.workspace.outputs.<name>.
+  workspace:
+    name: Workspace — existence matrix
+    runs-on: ubuntu-latest
+    outputs:
+      tokens: ${{ steps.probe.outputs.tokens }}
+      api: ${{ steps.probe.outputs.api }}
+      web: ${{ steps.probe.outputs.web }}
+      admin: ${{ steps.probe.outputs.admin }}
+      mobile: ${{ steps.probe.outputs.mobile }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe workspaces
+        id: probe
+        run: |
+          probe() { [ -f "$1" ] && echo true || echo false; }
+          {
+            echo "tokens=$(probe packages/design-tokens/package.json)"
+            echo "api=$(probe apps/api/package.json)"
+            echo "web=$(probe apps/web/package.json)"
+            echo "admin=$(probe apps/admin/package.json)"
+            echo "mobile=$(probe apps/mobile/pubspec.yaml)"
+          } >> "$GITHUB_OUTPUT"
+
+  # ───────────────────────────────────────────────────────────────────────────
   tokens:
     name: Design tokens — parity check
     runs-on: ubuntu-latest
-    if: hashFiles('packages/design-tokens/package.json') != ''
+    needs: workspace
+    if: needs.workspace.outputs.tokens == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -47,7 +82,8 @@ jobs:
   api:
     name: API — lint · test (PG16+Redis) · build
     runs-on: ubuntu-latest
-    if: hashFiles('apps/api/package.json') != ''
+    needs: workspace
+    if: needs.workspace.outputs.api == 'true'
 
     services:
       postgres:
@@ -134,7 +170,8 @@ jobs:
   web:
     name: Web — lint · production build (apps/web)
     runs-on: ubuntu-latest
-    if: hashFiles('apps/web/package.json') != ''
+    needs: workspace
+    if: needs.workspace.outputs.web == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -161,7 +198,8 @@ jobs:
   admin:
     name: Admin — lint · build
     runs-on: ubuntu-latest
-    if: hashFiles('apps/admin/package.json') != ''
+    needs: workspace
+    if: needs.workspace.outputs.admin == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -187,7 +225,8 @@ jobs:
   mobile:
     name: Flutter — analyze · test · debug APK
     runs-on: ubuntu-latest
-    if: hashFiles('apps/mobile/pubspec.yaml') != ''
+    needs: workspace
+    if: needs.workspace.outputs.mobile == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -201,6 +240,9 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Pinned to the SDK the repo is verified against (analyze 0 issues,
+          # tests 65/65 in the sandbox) so a new stable can't break CI overnight.
+          flutter-version: 3.47.5
           cache: true
 
       - name: Gradle cache
@@ -246,7 +288,8 @@ jobs:
   release-bundle:
     name: Flutter — release App Bundle (secrets-gated)
     runs-on: ubuntu-latest
-    if: hashFiles('apps/mobile/pubspec.yaml') != ''
+    needs: workspace
+    if: needs.workspace.outputs.mobile == 'true'
     steps:
       - uses: actions/checkout@v4
 
@@ -258,6 +301,8 @@ jobs:
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
+          # Same pin as the mobile job — see the note there.
+          flutter-version: 3.47.5
           cache: true
 
       - name: Gradle cache
@@ -314,9 +359,9 @@ jobs:
 
   # ───────────────────────────────────────────────────────────────────────────
   # CI report — writes .github/ci-status.md back to the branch so the build
-  # results are machine-readable without actions:read API access (the sandbox
-  # PAT cannot read the Actions API). [skip ci] prevents a report loop.
-  # Remove this job once a PAT with actions:read is available.
+  # results are machine-readable in-repo. [skip ci] prevents a report loop.
+  # (The PAT now has actions:read — the API is used for verification — but the
+  # in-repo status file is kept as a quick human-readable record.)
   report:
     name: CI status file
     runs-on: ubuntu-latest
