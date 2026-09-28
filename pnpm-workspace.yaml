@@ -1,7 +1,0 @@
-# Sunnah Life — pnpm workspaces.
-# NOTE: the Next.js web app is the REPO ROOT itself (sandbox preview constraint,
-# see docs/PLAN.md §3). On the VPS you may keep this layout or move web to apps/web.
-packages:
-  - "."
-  - "apps/*"
-  - "packages/*"

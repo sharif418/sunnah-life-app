@@ -1,7 +1,7 @@
 import { Req, Body, Controller, Get, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../common/prisma-client";
 import { addDays } from "../shared/calendars";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";

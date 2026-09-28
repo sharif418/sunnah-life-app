@@ -1471,7 +1471,7 @@ function searchFilter(q: string) {
 }
 
 /** Next DS-XXXXXX member code: max numeric suffix + 1. */
-async function nextMemberCode(tx: import("@prisma/client").Prisma.TransactionClient): Promise<string> {
+async function nextMemberCode(tx: import("../common/prisma-client").Prisma.TransactionClient): Promise<string> {
   const rows = await tx.user.findMany({ where: { memberCode: { not: null } }, select: { memberCode: true } });
   let max = 0;
   for (const r of rows) {

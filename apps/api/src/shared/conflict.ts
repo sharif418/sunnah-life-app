@@ -4,7 +4,7 @@
 // by the web API. Mirrors src/app/api/amal/entries/route.ts POST logic.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../common/prisma-client";
 import { isValidDateKey } from "./amal";
 import type { AmalValue } from "./domain";
 

@@ -6,6 +6,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // Bun-workspaces layout: @prisma/client resolves through the .bun store,
+  // so the default node_modules/.prisma output is unreachable. Generate into
+  // the package itself (re-exported by src/common/prisma-client.ts).
+  output   = "../src/generated/prisma"
 }
 
 datasource db {

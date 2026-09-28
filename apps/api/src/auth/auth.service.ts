@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { createHash, randomUUID } from "crypto";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../common/prisma-client";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { toDomainUser } from "../common/mappers";

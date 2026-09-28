@@ -5,7 +5,7 @@
 // explicit Prisma transaction client so every query runs inside withRls().
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../common/prisma-client";
 import { computePrayerTimes } from "./prayer-times";
 import { addDays, parseKey, dateKey } from "./calendars";
 import type {

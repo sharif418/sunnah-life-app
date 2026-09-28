@@ -13,7 +13,7 @@
 // announcements, reminders, personal goals, day unlock, audit log.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../src/common/prisma-client";
 import { promises as fs } from "fs";
 import path from "path";
 

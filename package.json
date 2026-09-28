@@ -2,13 +2,26 @@
   "name": "sunnah-life",
   "version": "1.0.0",
   "private": true,
-  "description": "Sunnah Life monorepo root — thin orchestrator. The web app lives in apps/web (port 3000), the only backend is the NestJS API in apps/api (RLS-enforced Postgres). Run `bun run dev` here to start the web app.",
+  "description": "Sunnah Life monorepo — NestJS API (apps/api), web PWA (apps/web), admin (apps/admin), Flutter app (apps/mobile), shared packages (packages/*). One package manager: bun workspaces (this root lockfile is the only one).",
+  "packageManager": "bun@1.3.14",
+  "workspaces": [
+    "apps/api",
+    "apps/web",
+    "apps/admin",
+    "packages/content",
+    "packages/design-tokens",
+    "packages/shared-types"
+  ],
   "scripts": {
     "dev": "cd apps/web && bun run dev",
+    "dev:api": "cd apps/api && bun run start:dev",
+    "dev:admin": "cd apps/admin && bun run dev",
+    "worker": "cd apps/api && bun run start:worker",
     "lint": "cd apps/web && bun run lint",
+    "typecheck": "tsc --noEmit -p apps/web/tsconfig.json && tsc --noEmit -p apps/admin/tsconfig.json",
     "test": "cd apps/api && bun run test",
     "test:api": "cd apps/api && bun run test",
-    "api": "cd apps/api && bun run start:dev",
-    "worker": "cd apps/api && bun run start:worker"
+    "content:sync": "cd packages/content && bun run sync:mobile",
+    "content:check": "cd packages/content && bun run check:mobile"
   }
 }

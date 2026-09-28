@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Sunnah Life admin — typed API client for the NestJS API (apps/api :3001).
+// Sunnah Life admin — typed API client for the NestJS API.
 //
-// GATEWAY RULE (sandbox): the reviewer's browser can only reach the API through
-// the Caddy gateway on the SAME ORIGIN — every request therefore uses a RELATIVE
-// URL plus `?XTransformPort=3001`. Absolute URLs (http://localhost:3001/…)
-// are unreachable from the browser and must never appear.
+// ONE variable decides where requests go: NEXT_PUBLIC_API_BASE (e.g.
+// https://api.sunnahlife.app), baked at BUILD time — pass it as a Docker
+// build arg (infra/admin.Dockerfile) or set it in the dev environment.
+// Empty → same-origin requests (a reverse proxy fronts both apps).
 //
 // Auth: Bearer access token (15 min) + rotating refresh token; both live in
 // localStorage (desktop admin tool — the PWA/mobile apps use HttpOnly cookies).
@@ -12,7 +12,6 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
-const XFORM_PORT = process.env.NEXT_PUBLIC_API_XPORT ?? "3001";
 
 export const TOKEN_KEY = "sl_admin_token";
 export const REFRESH_KEY = "sl_admin_refresh";
@@ -48,11 +47,9 @@ export function getRefreshTokenSafe(): string | null {
   return window.localStorage.getItem(REFRESH_KEY);
 }
 
-/** Relative path + XTransformPort query (correct ?/& joining). */
+/** Absolute (or same-origin when API_BASE is empty) URL for a path. */
 export function gatewayUrl(path: string): string {
-  const base = `${API_BASE}${path}`;
-  if (!XFORM_PORT) return base;
-  return `${base}${path.includes("?") ? "&" : "?"}XTransformPort=${XFORM_PORT}`;
+  return `${API_BASE}${path}`;
 }
 
 export class ApiError extends Error {

@@ -4,7 +4,7 @@
 // Ported from the web workspace src/lib/server/reviews.ts (tx-injected, Json).
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../common/prisma-client";
 import { addDays, dateKey, parseKey } from "./calendars";
 import { amalPoints, bdToday, loadDailyDefinitions } from "./amal";
 import type { WeeklyReview } from "./domain";

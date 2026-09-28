@@ -5,7 +5,7 @@
 // "levels" worker job (auto-promotion) via LevelsService.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../common/prisma-client";
 import { promises as fs } from "fs";
 import path from "path";
 import { toBn } from "./calendars";

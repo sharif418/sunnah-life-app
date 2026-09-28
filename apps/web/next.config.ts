@@ -8,13 +8,14 @@ const nextConfig: NextConfig = {
   // would be missing from the production bundle.
   outputFileTracingRoot: path.join(__dirname, "../../"),
   typescript: {
-    ignoreBuildErrors: true,
+    // Strict: type errors must fail the build (CI runs `tsc --noEmit` too).
+    ignoreBuildErrors: false,
   },
   reactStrictMode: false,
   // Content packs live in packages/content (monorepo, outside apps/web) —
   // webpack must be allowed to import outside the project root.
   experimental: { externalDir: true },
-  allowedDevOrigins: ["*.space-z.ai", "*.z.ai", "localhost", "127.0.0.1"],
+  allowedDevOrigins: ["localhost", "127.0.0.1"],
 };
 
 export default nextConfig;

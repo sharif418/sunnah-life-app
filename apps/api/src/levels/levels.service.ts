@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../common/prisma-client";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
 import { ApiError } from "../common/api-error";

@@ -2,8 +2,8 @@
 
 // লাইভ কুইজ — উসরাভিত্তিক socket.io কুইজ। B9 থেকে গেটওয়েটি NestJS API-র
 // ভেতরেই (একই প্রসেস, একই auth, একই ডিপ্লয়মেন্ট) — পথ /socket.io।
-// সংযোগ সবসময় গেটওয়ের মাধ্যমে: স্যান্ডবক্সে io("/?XTransformPort=3001") —
-// প্রোডাকশনে NEXT_PUBLIC_API_BASE সরাসরি। টোকেন API থেকে (GET
+// সংযোগ: NEXT_PUBLIC_API_BASE দিলে সেটিই, নাহলে same-origin (একটি
+// reverse proxy /socket.io কে API-র দিকে পাঠায়)। টোকেন API থেকে (GET
 // /api/quiz/live-token) — উসরা প্রধান হোস্ট, বাকিরা প্লেয়ার; ঘর = উসরা
 // (এক-লিঙ্গ), তাই লিডারবোর্ডে শুধু প্রথম নাম + মেম্বার কোড যায়।
 
@@ -13,7 +13,7 @@ import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Brain, Check, ChevronRight, Crown, LogIn, Radio, RotateCcw, Users, Wifi, WifiOff } from "lucide-react";
 import { api } from "@/lib/api";
-import { API_BASE, API_PORT } from "@/lib/api-base";
+import { API_BASE } from "@/lib/api-base";
 import { getPack } from "@/lib/content";
 import type { QuizzesPack } from "@/lib/content";
 import type { Quiz } from "@/types/domain";
@@ -87,13 +87,13 @@ export function LiveQuizSection() {
   const remainingSec = question ? Math.max(0, Math.ceil((question.endsAt - now) / 1000)) : 0;
 
   // ── join: mint a token through the API, then connect to the API's own
-  // socket.io gateway (sandbox: same-origin through the edge gateway with
-  // the XTransformPort query; prod: the API origin directly) ────────────
+  // socket.io gateway (NEXT_PUBLIC_API_BASE origin, or same-origin when a
+  // reverse proxy fronts the API) ────────────
   const join = async () => {
     setJoining(true);
     try {
       const res = await api.quizLiveToken("");
-      const url = API_BASE || `/?XTransformPort=${API_PORT}`;
+      const url = API_BASE || "/";
       const s = io(url, {
         path: "/socket.io",
         auth: { token: res.token },

@@ -1,5 +1,5 @@
 import { Injectable, type OnModuleDestroy, type OnModuleInit } from "@nestjs/common";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "./prisma-client";
 
 /**
  * Plain Prisma client. It connects as the RLS-constrained `sunnah_app` role
