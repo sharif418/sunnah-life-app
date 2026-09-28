@@ -21,6 +21,7 @@ import request from "supertest";
 import { AppModule } from "src/app.module";
 import { RlsService } from "src/common/rls.service";
 import type { User } from "src/shared/domain";
+import { PrismaClient } from "src/generated/prisma/client";
 
 const F_HEAD = "01000000005"; // উম্মে হাবিবা — head of উসরা আয়েশা সিদ্দিকা (F)
 const M_HEAD = "01000000003"; // মাওলানা ইউসুফ — head of উসরা আল-ফুরকান (M)
@@ -31,6 +32,10 @@ const FULL_ADMIN = "01000000001"; // আব্দুল্লাহ আল ম�
 const GENDER_ERR = "বিপরীত লিঙ্গের তথ্য দেখার অনুমতি নেই";
 
 let app: INestApplication;
+// Superuser maintenance connection: RLS has NO delete policy on DayUnlock
+// (owner-connection-only by design) and rls.system cannot delete either —
+// leftover rows from earlier runs would trip the unique (userId, date) index.
+const maintenance = new PrismaClient({ datasources: { db: { url: process.env.DIRECT_URL || process.env.DATABASE_URL || "" } } });
 let http: () => ReturnType<typeof request>;
 // Module scope: shared by both describe blocks below.
 let adminToken: string;
@@ -75,11 +80,13 @@ beforeAll(async () => {
   app = moduleRef.createNestApplication();
   app.setGlobalPrefix("api", { exclude: ["health", "metrics"] });
   await app.init();
+  await app.listen(0); // own the listener - supertest lazy listen(0) race (CI 36423438154)
   http = () => request(app.getHttpServer());
 });
 
 afterAll(async () => {
   await app.close();
+  await maintenance.$disconnect();
 });
 
 describe("RLS e2e — the database refuses cross-gender reads", () => {
@@ -352,13 +359,13 @@ describe("RLS e2e — W2e tightening", () => {
   it("(b) DayUnlock: the USRAH HEAD still can (the real flow)", async () => {
     const head = await signInUser(M_HEAD); // মাওলানা ইউসুফ — head of আল-ফুরকান
     const date = new Date().toISOString().slice(0, 10);
+    await maintenance.dayUnlock.deleteMany({ where: { userId: maleMember.id, date } });
     await rls.run(head, async (tx) => {
-      await tx.dayUnlock.deleteMany({ where: { userId: maleMember.id, date } });
       await tx.dayUnlock.create({
         data: { userId: maleMember.id, date, byUserId: head.id, reason: "e2e" },
       });
-      await tx.dayUnlock.deleteMany({ where: { userId: maleMember.id, date } });
     });
+    await maintenance.dayUnlock.deleteMany({ where: { userId: maleMember.id, date } });
   });
 
   it("(c) OtpCode rows are invisible outside the system context", async () => {
