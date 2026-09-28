@@ -1945,7 +1945,7 @@ abstract class AppLocalizations {
   /// No description provided for @qibla_dial_hint.
   ///
   /// In bn, this message translates to:
-  /// **'ডায়াল ঘোরান — তীরটি যেন উপরে থাকে'**
+  /// **'ডায়াল ঘুরিয়ে উ (N) চিহ্নটি উত্তর দিকে আনুন — তীর তখন কিবলার দিক দেখাবে'**
   String get qibla_dial_hint;
 
   /// No description provided for @qibla_dial.
@@ -2667,6 +2667,144 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'অপ্রত্যাশিত সমস্যা — আবার চেষ্টা করুন'**
   String get sync_error_unexpected;
+
+  /// No description provided for @gps_find_city.
+  ///
+  /// In bn, this message translates to:
+  /// **'GPS দিয়ে খুঁজুন'**
+  String get gps_find_city;
+
+  /// No description provided for @gps_find_city_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার নিকটতম জেলা স্বয়ংক্রিয়ভাবে খুঁজে নেওয়া হবে'**
+  String get gps_find_city_hint;
+
+  /// No description provided for @gps_locating.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থান নেওয়া হচ্ছে…'**
+  String get gps_locating;
+
+  /// No description provided for @gps_your_location.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান'**
+  String get gps_your_location;
+
+  /// No description provided for @gps_approx.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমান'**
+  String get gps_approx;
+
+  /// No description provided for @gps_approx_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিকটতম তালিকাভুক্ত শহর থেকে অনেক দূরে'**
+  String get gps_approx_note;
+
+  /// No description provided for @gps_tap_confirm.
+  ///
+  /// In bn, this message translates to:
+  /// **'ট্যাপ করে নিশ্চিত করুন'**
+  String get gps_tap_confirm;
+
+  /// No description provided for @gps_permission_denied.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দেওয়া হয়নি — তালিকা থেকে শহর বেছে নিন'**
+  String get gps_permission_denied;
+
+  /// No description provided for @gps_permission_denied_forever.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি বন্ধ আছে — সেটিংস থেকে অনুমতি দিন'**
+  String get gps_permission_denied_forever;
+
+  /// No description provided for @gps_open_settings.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেটিংস খুলুন'**
+  String get gps_open_settings;
+
+  /// No description provided for @gps_service_off.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনের লোকেশন বন্ধ আছে'**
+  String get gps_service_off;
+
+  /// No description provided for @gps_open_location_settings.
+  ///
+  /// In bn, this message translates to:
+  /// **'লোকেশন চালু করুন'**
+  String get gps_open_location_settings;
+
+  /// No description provided for @gps_unavailable.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থান পাওয়া যায়নি — আবার চেষ্টা করুন'**
+  String get gps_unavailable;
+
+  /// No description provided for @unit_m.
+  ///
+  /// In bn, this message translates to:
+  /// **'মি'**
+  String get unit_m;
+
+  /// No description provided for @qibla_compass_heading.
+  ///
+  /// In bn, this message translates to:
+  /// **'বর্তমান দিক'**
+  String get qibla_compass_heading;
+
+  /// No description provided for @qibla_calibration_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কম্পাস ক্যালিব্রেট করুন'**
+  String get qibla_calibration_title;
+
+  /// No description provided for @qibla_calibration_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনটি বাতাসে ৮ আকৃতিতে কয়েকবার ঘোরান, তারপর আবার দেখুন'**
+  String get qibla_calibration_hint;
+
+  /// No description provided for @qibla_compass_unavailable.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই ফোনে কম্পাস পাওয়া যায়নি — নিচের ম্যানুয়াল ডায়াল ব্যবহার করুন'**
+  String get qibla_compass_unavailable;
+
+  /// No description provided for @mosques_near_me.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার কাছাকাছি'**
+  String get mosques_near_me;
+
+  /// No description provided for @mosques_from_city.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই শহর থেকে'**
+  String get mosques_from_city;
+
+  /// No description provided for @mosques_from_location.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান থেকে'**
+  String get mosques_from_location;
+
+  /// No description provided for @mosques_use_city.
+  ///
+  /// In bn, this message translates to:
+  /// **'শহর থেকে দেখুন'**
+  String get mosques_use_city;
+
+  /// No description provided for @mosque_direction.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিক'**
+  String get mosque_direction;
 }
 
 class _AppLocalizationsDelegate

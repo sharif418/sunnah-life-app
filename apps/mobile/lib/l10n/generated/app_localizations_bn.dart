@@ -953,7 +953,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get qibla_north => 'উত্তর';
 
   @override
-  String get qibla_dial_hint => 'ডায়াল ঘোরান — তীরটি যেন উপরে থাকে';
+  String get qibla_dial_hint =>
+      'ডায়াল ঘুরিয়ে উ (N) চিহ্নটি উত্তর দিকে আনুন — তীর তখন কিবলার দিক দেখাবে';
 
   @override
   String get qibla_dial => 'ডায়াল';
@@ -1327,4 +1328,78 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get sync_error_unexpected => 'অপ্রত্যাশিত সমস্যা — আবার চেষ্টা করুন';
+
+  @override
+  String get gps_find_city => 'GPS দিয়ে খুঁজুন';
+
+  @override
+  String get gps_find_city_hint =>
+      'আপনার নিকটতম জেলা স্বয়ংক্রিয়ভাবে খুঁজে নেওয়া হবে';
+
+  @override
+  String get gps_locating => 'অবস্থান নেওয়া হচ্ছে…';
+
+  @override
+  String get gps_your_location => 'আপনার অবস্থান';
+
+  @override
+  String get gps_approx => 'অনুমান';
+
+  @override
+  String get gps_approx_note => 'নিকটতম তালিকাভুক্ত শহর থেকে অনেক দূরে';
+
+  @override
+  String get gps_tap_confirm => 'ট্যাপ করে নিশ্চিত করুন';
+
+  @override
+  String get gps_permission_denied =>
+      'অনুমতি দেওয়া হয়নি — তালিকা থেকে শহর বেছে নিন';
+
+  @override
+  String get gps_permission_denied_forever =>
+      'অনুমতি বন্ধ আছে — সেটিংস থেকে অনুমতি দিন';
+
+  @override
+  String get gps_open_settings => 'সেটিংস খুলুন';
+
+  @override
+  String get gps_service_off => 'ফোনের লোকেশন বন্ধ আছে';
+
+  @override
+  String get gps_open_location_settings => 'লোকেশন চালু করুন';
+
+  @override
+  String get gps_unavailable => 'অবস্থান পাওয়া যায়নি — আবার চেষ্টা করুন';
+
+  @override
+  String get unit_m => 'মি';
+
+  @override
+  String get qibla_compass_heading => 'বর্তমান দিক';
+
+  @override
+  String get qibla_calibration_title => 'কম্পাস ক্যালিব্রেট করুন';
+
+  @override
+  String get qibla_calibration_hint =>
+      'ফোনটি বাতাসে ৮ আকৃতিতে কয়েকবার ঘোরান, তারপর আবার দেখুন';
+
+  @override
+  String get qibla_compass_unavailable =>
+      'এই ফোনে কম্পাস পাওয়া যায়নি — নিচের ম্যানুয়াল ডায়াল ব্যবহার করুন';
+
+  @override
+  String get mosques_near_me => 'আমার কাছাকাছি';
+
+  @override
+  String get mosques_from_city => 'এই শহর থেকে';
+
+  @override
+  String get mosques_from_location => 'আপনার অবস্থান থেকে';
+
+  @override
+  String get mosques_use_city => 'শহর থেকে দেখুন';
+
+  @override
+  String get mosque_direction => 'দিক';
 }

@@ -952,7 +952,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qibla_north => 'North';
 
   @override
-  String get qibla_dial_hint => 'Rotate the dial — keep the arrow on top';
+  String get qibla_dial_hint =>
+      'Turn the dial until N points north — the arrow then shows the qibla';
 
   @override
   String get qibla_dial => 'Dial';
@@ -1325,4 +1326,77 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sync_error_unexpected => 'Unexpected error — try again';
+
+  @override
+  String get gps_find_city => 'Find with GPS';
+
+  @override
+  String get gps_find_city_hint => 'Detect your nearest district automatically';
+
+  @override
+  String get gps_locating => 'Getting your location…';
+
+  @override
+  String get gps_your_location => 'Your location';
+
+  @override
+  String get gps_approx => 'approximate';
+
+  @override
+  String get gps_approx_note => 'far from the nearest listed city';
+
+  @override
+  String get gps_tap_confirm => 'Tap to confirm';
+
+  @override
+  String get gps_permission_denied =>
+      'Permission not granted — pick a city from the list';
+
+  @override
+  String get gps_permission_denied_forever =>
+      'Permission is off — allow it from settings';
+
+  @override
+  String get gps_open_settings => 'Open settings';
+
+  @override
+  String get gps_service_off => 'Phone location is off';
+
+  @override
+  String get gps_open_location_settings => 'Turn on location';
+
+  @override
+  String get gps_unavailable => 'Couldn\'t get a location — try again';
+
+  @override
+  String get unit_m => 'm';
+
+  @override
+  String get qibla_compass_heading => 'Current heading';
+
+  @override
+  String get qibla_calibration_title => 'Calibrate the compass';
+
+  @override
+  String get qibla_calibration_hint =>
+      'Wave the phone in a figure-8 pattern a few times, then check again';
+
+  @override
+  String get qibla_compass_unavailable =>
+      'No compass found on this phone — use the manual dial below';
+
+  @override
+  String get mosques_near_me => 'Near me';
+
+  @override
+  String get mosques_from_city => 'From this city';
+
+  @override
+  String get mosques_from_location => 'From your location';
+
+  @override
+  String get mosques_use_city => 'Use city';
+
+  @override
+  String get mosque_direction => 'direction';
 }

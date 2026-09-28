@@ -947,7 +947,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qibla_north => 'الشمال';
 
   @override
-  String get qibla_dial_hint => 'أدر القرص — اجعل السهم في الأعلى';
+  String get qibla_dial_hint =>
+      'أدر القرص حتى يشير N إلى الشمال — سيدل السهم حينها إلى القبلة';
 
   @override
   String get qibla_dial => 'القرص';
@@ -1318,4 +1319,76 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sync_error_unexpected => 'خطأ غير متوقع — أعد المحاولة';
+
+  @override
+  String get gps_find_city => 'ابحث عبر GPS';
+
+  @override
+  String get gps_find_city_hint => 'سنكتشف أقرب منطقة لك تلقائيًا';
+
+  @override
+  String get gps_locating => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get gps_your_location => 'موقعك';
+
+  @override
+  String get gps_approx => 'تقريبي';
+
+  @override
+  String get gps_approx_note => 'بعيد عن أقرب مدينة مدرجة';
+
+  @override
+  String get gps_tap_confirm => 'اضغط للتأكيد';
+
+  @override
+  String get gps_permission_denied => 'لم يُمنح الإذن — اختر مدينة من القائمة';
+
+  @override
+  String get gps_permission_denied_forever =>
+      'الإذن معطّل — فعّله من الإعدادات';
+
+  @override
+  String get gps_open_settings => 'افتح الإعدادات';
+
+  @override
+  String get gps_service_off => 'خدمة الموقع في الهاتف معطّلة';
+
+  @override
+  String get gps_open_location_settings => 'تشغيل الموقع';
+
+  @override
+  String get gps_unavailable => 'تعذّر تحديد الموقع — أعد المحاولة';
+
+  @override
+  String get unit_m => 'م';
+
+  @override
+  String get qibla_compass_heading => 'الاتجاه الحالي';
+
+  @override
+  String get qibla_calibration_title => 'معايرة البوصلة';
+
+  @override
+  String get qibla_calibration_hint =>
+      'حرّك الهاتف في الهواء على شكل الرقم ٨ عدة مرات ثم تحقق مجددًا';
+
+  @override
+  String get qibla_compass_unavailable =>
+      'لم يتم العثور على بوصلة في هذا الهاتف — استخدم القرص اليدوي أدناه';
+
+  @override
+  String get mosques_near_me => 'قريبة منّي';
+
+  @override
+  String get mosques_from_city => 'من هذه المدينة';
+
+  @override
+  String get mosques_from_location => 'من موقعك';
+
+  @override
+  String get mosques_use_city => 'استخدم المدينة';
+
+  @override
+  String get mosque_direction => 'الاتجاه';
 }
