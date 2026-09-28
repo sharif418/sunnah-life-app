@@ -97,18 +97,32 @@ describe("Dhaka wall-clock helpers", () => {
   });
 });
 
-describe("locking rule (Ishraq of D+1)", () => {
+describe("locking rule (Ishraq of D+1, real-epoch per user tz)", () => {
   it("a date ~2 days ago is locked; today never is", () => {
     const today = bdToday();
-    const twoDaysAgo = new Date(bdNowShifted() - 2 * 86400_000).toISOString().slice(0, 10);
+    const twoDaysAgo = new Date(Date.now() - 2 * 86400_000).toISOString().slice(0, 10);
     expect(isDateLocked(USER, twoDaysAgo)).toBe(true);
     expect(isDateLocked(USER, today)).toBe(false);
   });
-  it("the deadline is morning of the next day (Ishraq ≈ sunrise+20m)", () => {
+  it("the deadline is morning of the next day (Ishraq ≈ sunrise+20m) in the user's zone", () => {
+    // Dhaka user (June): ishraq ≈ 05:31 wall → real epoch 23:31Z the day before.
     const deadline = computeLockDeadline("2025-06-14", USER);
-    const nextMidnight = Date.UTC(2025, 5, 15); // Dhaka-shifted domain
-    const hours = (deadline - nextMidnight) / 3_600_000;
-    expect(hours).toBeGreaterThan(5); // after sunrise everywhere in BD
-    expect(hours).toBeLessThan(8); // but still morning
+    expect(new Date(deadline).toISOString()).toBe("2025-06-14T23:31:00.000Z");
+    // …which in the USER's OWN wall clock is 2025-06-15 ~05:31 — morning.
+    const wall = new Date(deadline + 6 * 3_600_000).toISOString();
+    expect(wall.startsWith("2025-06-15T05:3")).toBe(true);
+  });
+  it("a London user (London coords) gets a different instant (tz honored)", () => {
+    // The zone alone re-labels the wall clock; a REAL London user also has
+    // London coordinates — sunrise there is a different SOLAR instant.
+    const londonUser = { ...USER, lat: 51.5074, lng: -0.1278, tz: "Europe/London" };
+    const dhaka = computeLockDeadline("2025-06-14", USER);
+    const london = computeLockDeadline("2025-06-14", londonUser);
+    // Dhaka deadline ≈ 23:31Z; London ishraq ≈ 05:0x BST ≈ 04:0xZ → ~4.5 h apart
+    const diffH = Math.abs(dhaka - london) / 3_600_000;
+    expect(diffH).toBeGreaterThan(3.5);
+    expect(diffH).toBeLessThan(6.5);
+    // and the London deadline must land in London's morning wall clock
+    expect(new Date(london).toISOString().startsWith("2025-06-15T0")).toBe(true);
   });
 });

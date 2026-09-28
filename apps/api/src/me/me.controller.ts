@@ -89,7 +89,7 @@ export class MePatchDto {
 
 const ALLOWED_FIELDS = [
   "name", "gender", "language", "madhhab", "calcMethod", "lat", "lng", "city",
-  "district", "workplace", "department", "category",
+  "district", "workplace", "department", "category", "tz",
 ] as const;
 
 @ApiTags("me")

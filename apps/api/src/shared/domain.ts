@@ -60,6 +60,8 @@ export interface User {
   department: string | null;
   language: Lang;
   madhhab: Madhhab;
+  /** IANA time zone (prayer pushes, week starts, day-lock). */
+  tz: string;
   calcMethod: CalcMethodKey;
   lat: number | null;
   lng: number | null;

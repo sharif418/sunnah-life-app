@@ -118,16 +118,26 @@ export async function loadDailyDefinitions(tx: Prisma.TransactionClient): Promis
   return rows.filter((r) => r.cadence === "daily").map(mapDefinition);
 }
 
-// ── Dhaka wall-clock helpers (server may run in any timezone) ────────────────
+// ── Wall-clock helpers (server may run in any timezone) ──────────────────────
+// Phase C/W1a: per-USER zones everywhere. bdToday()/bdNowShifted() remain for
+// callers that are genuinely Dhaka-scoped; user-facing code passes user.tz.
 
-/** Epoch-ms shifted so that UTC getters read Dhaka wall clock. */
+import { todayInTz, tzOffsetHoursFor, wallTimeToEpoch } from "./tz";
+
+/** Epoch-ms shifted so that UTC getters read Dhaka wall clock (legacy domain
+ *  — do NOT mix with real epochs; kept only for the review-window maths). */
 export function bdNowShifted(): number {
   return Date.now() + BD_TZ_HOURS * 3_600_000;
 }
 
 /** Today's YYYY-MM-DD in Bangladesh. */
 export function bdToday(): string {
-  return new Date(bdNowShifted()).toISOString().slice(0, 10);
+  return todayInTz("Asia/Dhaka");
+}
+
+/** Today's YYYY-MM-DD in the USER's zone. */
+export function todayForUser(user: { tz?: string | null }): string {
+  return todayInTz(user.tz ?? "Asia/Dhaka");
 }
 
 /** Last n day-keys ending today (Dhaka), oldest first. */
@@ -145,13 +155,14 @@ export function isValidDateKey(key: string): boolean {
 
 // ── Locking rule ─────────────────────────────────────────────────────────────
 
-export type LockUser = Pick<User, "lat" | "lng" | "calcMethod" | "madhhab">;
+export type LockUser = Pick<User, "lat" | "lng" | "calcMethod" | "madhhab"> & { tz?: string | null };
 
 /**
  * Deadline of amal-day `date`: Ishraq (sunrise + 20 min) of the NEXT day,
  * computed at the user's location (fallback: Dhaka), Karachi/Hanafi defaults
- * from the user's own profile. Returned in the Dhaka-shifted epoch domain —
- * compare with `bdNowShifted()`.
+ * from the user's own profile. Returns a REAL epoch instant — the local wall
+ * time (next-day 00:00 + ishraq minutes) is converted through the user's OWN
+ * time zone (Phase C/W1a: was a hard-coded UTC+6 shifted domain).
  */
 export function computeLockDeadline(date: string, user: LockUser): number {
   const next = addDays(date, 1);
@@ -161,18 +172,18 @@ export function computeLockDeadline(date: string, user: LockUser): number {
     {
       lat: user.lat ?? DHAKA_LAT,
       lng: user.lng ?? DHAKA_LNG,
-      tzOffsetHours: BD_TZ_HOURS,
+      tzOffsetHours: tzOffsetHoursFor(next, user.tz),
       method: user.calcMethod,
       madhhab: user.madhhab,
     }
   );
-  // D+1 00:00 (Dhaka wall clock) + ishraq minutes, expressed in the shifted domain.
-  return Date.UTC(y, m - 1, d) + times.ishraq * 60_000;
+  // next-day 00:00 + ishraq minutes in the USER's wall clock → real epoch.
+  return wallTimeToEpoch(next, Math.round(times.ishraq), user.tz ?? "Asia/Dhaka").getTime();
 }
 
-/** A diary day is locked once Ishraq of the next day has passed (Dhaka time). */
+/** A diary day is locked once Ishraq of the next day has passed (user tz). */
 export function isDateLocked(user: LockUser, date: string): boolean {
-  return computeLockDeadline(date, user) < bdNowShifted();
+  return computeLockDeadline(date, user) < Date.now();
 }
 
 // ── Completion maths ──────────────────────────────────────────────────────────

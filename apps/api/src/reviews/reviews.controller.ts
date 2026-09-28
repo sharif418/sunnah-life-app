@@ -8,7 +8,7 @@ import { GuardService } from "../common/guard.service";
 import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
 import { ApiError } from "../common/api-error";
-import { bdToday, completion7dForUsers, isValidDateKey, ownUsrahIds } from "../shared/amal";
+import { completion7dForUsers, isValidDateKey, ownUsrahIds, todayForUser } from "../shared/amal";
 import { computeWeekSummary, mapReview, weekStartOf, type ReviewRow } from "../shared/reviews";
 import { ReviewSubmitDto } from "../auth/dto/auth.dto";
 import { Roles } from "../common/roles.decorator";
@@ -67,8 +67,8 @@ export class ReviewsService {
       if (!targetUsers.length) return { queue: [] };
       const targetIds = targetUsers.map((t) => t.id);
 
-      const ws = weekStartOf(new Date());
-      const today = bdToday();
+      const ws = weekStartOf(user.tz);
+      const today = todayForUser(user);
       const cutoff = addDays(today, -7);
 
       // lazily create this week's pending reviews (PG: skipDuplicates is safe)

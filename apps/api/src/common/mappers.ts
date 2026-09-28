@@ -10,6 +10,7 @@ type UserRow = Omit<User, "levelStartedAt" | "createdAt" | "lastActiveAt" | "gen
   category: string;
   language: string;
   madhhab: string;
+  tz: string;
   calcMethod: string;
 };
 
@@ -38,6 +39,7 @@ export function toDomainUser(u: UserRow): User {
     department: u.department ?? null,
     language: u.language as User["language"],
     madhhab: u.madhhab as User["madhhab"],
+    tz: u.tz ?? "Asia/Dhaka",
     calcMethod: u.calcMethod as User["calcMethod"],
     lat: u.lat ?? null,
     lng: u.lng ?? null,

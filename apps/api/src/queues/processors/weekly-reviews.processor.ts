@@ -6,7 +6,7 @@ import { RlsService } from "../../common/rls.service";
 import { PushService } from "../../push/push.service";
 import { DEEP_LINKS } from "../../push/deep-links";
 import { addDays } from "../../shared/calendars";
-import { bdToday } from "../../shared/amal";
+import { todayInTz } from "../../shared/tz";
 import { weekStartOf } from "../../shared/reviews";
 
 /**
@@ -41,8 +41,10 @@ export class WeeklyReviewsProcessor extends WorkerHost {
     reminders: number;
     push?: { sent: number; users: number };
   }> {
-    const ws = weekStartOf(new Date());
-    const cutoff = addDays(bdToday(), -7);
+    // Week starts per reviewed member's zone (Phase C/W1a) — computed per
+    // user inside; the BD default covers heads whose members share Dhaka.
+    const ws = weekStartOf("Asia/Dhaka");
+    const cutoff = addDays(todayInTz("Asia/Dhaka"), -7);
 
     const result = await this.rls.system(async (tx) => {
       // reviewers: usrah heads (+ first admin fallback)

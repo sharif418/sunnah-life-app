@@ -5,7 +5,8 @@ import { QUEUES } from "../queue.constants";
 import { RlsService } from "../../common/rls.service";
 import { PushService } from "../../push/push.service";
 import { DEEP_LINKS } from "../../push/deep-links";
-import { BD_TZ_HOURS, DHAKA_LAT, DHAKA_LNG } from "../../shared/amal";
+import { DHAKA_LAT, DHAKA_LNG } from "../../shared/amal";
+import { todayInTz, tzOffsetHoursFor, wallTimeToEpoch } from "../../shared/tz";
 import { PRAYER_LABELS_BN, type PrayerKey } from "../../shared/domain";
 import { computePrayerTimes } from "../../shared/prayer-times";
 import { addDays } from "../../shared/calendars";
@@ -71,37 +72,39 @@ export class PrayerPushProcessor extends WorkerHost {
 
   /** Nightly sweep: reminders + delayed push jobs for the whole next day. */
   private async scheduledNightly(): Promise<{ users: number; reminders: number; pushJobs: number }> {
-    const nowShifted = Date.now() + BD_TZ_HOURS * 3_600_000;
-    const today = new Date(nowShifted).toISOString().slice(0, 10);
-    const tomorrow = addDays(today, 1);
-    const [y, m, d] = tomorrow.split("-").map(Number);
-
     const users = await this.rls.system((tx) =>
       tx.user.findMany({
         where: { lat: { not: null }, lng: { not: null } },
-        select: { id: true, lat: true, lng: true, calcMethod: true, madhhab: true },
+        select: { id: true, lat: true, lng: true, calcMethod: true, madhhab: true, tz: true },
       })
     );
 
     let created = 0;
     let pushJobs = 0;
+    // Per-user day (Phase C/W1a): "tomorrow" is the USER's tomorrow — a
+    // London user at 20:05 BD (15:05 local) is still on their own today.
     for (const u of users) {
+      const tz = u.tz ?? "Asia/Dhaka";
+      const today = todayInTz(tz);
+      const tomorrow = addDays(today, 1);
+      const [y, m, d] = tomorrow.split("-").map(Number);
       const times = computePrayerTimes(
         { y, m, d },
         {
           lat: u.lat ?? DHAKA_LAT,
           lng: u.lng ?? DHAKA_LNG,
-          tzOffsetHours: BD_TZ_HOURS,
+          tzOffsetHours: tzOffsetHoursFor(tomorrow, tz),
           method: u.calcMethod as "karachi",
           madhhab: u.madhhab as "hanafi",
         }
       );
-      const dayStart = new Date(Date.UTC(y, m - 1, d, 0, 0, 0));
-      const dayEnd = new Date(Date.UTC(y, m - 1, d, 23, 59, 59));
 
       const payloads = FARZ.map((key) => {
         const minutes = Math.round(times[key]);
-        const scheduledAt = new Date(dayStart.getTime() + minutes * 60_000); // BD wall clock stored as UTC-shifted instant
+        // WALL CLOCK → REAL EPOCH through the user's zone. The Phase B bug:
+        // dayStart + minutes stored the wall clock AS UTC, so every push
+        // fired 6 h late in Dhaka (and worse elsewhere).
+        const scheduledAt = wallTimeToEpoch(tomorrow, minutes, tz);
         return {
           key,
           scheduledAt,
@@ -109,6 +112,10 @@ export class PrayerPushProcessor extends WorkerHost {
           body: `${PRAYER_LABELS_BN[key]} নামাজের সময় হয়েছে — মাসনূন আমলের জন্য অ্যাপ খুলুন`,
         };
       });
+
+      // reminder-day window in the user's own zone (real epochs)
+      const dayStart = wallTimeToEpoch(tomorrow, 0, tz);
+      const dayEnd = wallTimeToEpoch(tomorrow, 24 * 60 - 1, tz);
 
       await this.rls.system(async (tx) => {
         // idempotency: replace this user's prayer reminders for the target day
@@ -146,12 +153,12 @@ export class PrayerPushProcessor extends WorkerHost {
       }
 
       this.logger.log(
-        `prayer-push ${tomorrow} user ${u.id.slice(0, 6)}… fajr ${Math.round(times.fajr)}m isha ${Math.round(times.isha)}m (+5 reminders/pushes)`
+        `prayer-push ${tomorrow} (${tz}) user ${u.id.slice(0, 6)}… fajr ${Math.round(times.fajr)}m isha ${Math.round(times.isha)}m (+5 reminders/pushes)`
       );
     }
 
     this.logger.log(
-      `prayer-push complete: ${users.length} users × ${FARZ.length} = ${created} reminders, ${pushJobs} delayed push jobs for ${tomorrow}`
+      `prayer-push complete: ${users.length} users × ${FARZ.length} = ${created} reminders, ${pushJobs} delayed push jobs (per-user tz)`
     );
     return { users: users.length, reminders: created, pushJobs };
   }

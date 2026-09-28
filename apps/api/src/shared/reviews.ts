@@ -6,13 +6,17 @@
 
 import type { Prisma } from "../common/prisma-client";
 import { addDays, dateKey, parseKey } from "./calendars";
-import { amalPoints, bdToday, loadDailyDefinitions } from "./amal";
+import { amalPoints, loadDailyDefinitions } from "./amal";
+import { todayInTz, weekStartInTz } from "./tz";
 import type { WeeklyReview } from "./domain";
 
-/** Most recent Saturday (00:00) as YYYY-MM-DD — BD week starts Saturday. */
-export function weekStartOf(d: Date = new Date()): string {
-  const diff = (d.getDay() + 1) % 7; // Sat → 0, Sun → 1, … Fri → 6
-  return dateKey(new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff));
+/**
+ * Most recent Saturday (00:00) as YYYY-MM-DD — the week starts Saturday.
+ * Phase C/W1a: computed in the given IANA zone (default Asia/Dhaka). The old
+ * signature read the SERVER's local clock — wrong on any non-Dhaka host.
+ */
+export function weekStartOf(tz: string | null | undefined = "Asia/Dhaka", at: Date = new Date()): string {
+  return weekStartInTz(tz, at);
 }
 
 export function weekDays(weekStart: string): string[] {
@@ -35,16 +39,18 @@ export interface WeekSummary {
  *    with ≥50% daily completion
  *  - missedDays: elapsed days with 0 points
  *  - counts: completed count per amalKey across the week
- * Only days up to today (Dhaka) count toward expectations — a running week is
- * not punished for days that have not happened yet.
+ * Only days up to today (the member's zone) count toward expectations — a
+ * running week is not punished for days that have not happened yet.
  */
 export async function computeWeekSummary(
   tx: Prisma.TransactionClient,
   userId: string,
-  weekStart: string
+  weekStart: string,
+  userTz?: string | null
 ): Promise<WeekSummary> {
   const days = weekDays(weekStart);
-  const today = bdToday();
+  // "today" in the MEMBER's zone (Phase C/W1a), falling back to Dhaka.
+  const today = todayInTz(userTz ?? "Asia/Dhaka");
   const elapsed = days.filter((d) => d <= today);
 
   const defs = await loadDailyDefinitions(tx);

@@ -5,7 +5,7 @@ import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
 import {
-  bdToday,
+  todayForUser,
   isDateLocked,
   isValidDateKey,
   loadActiveDefinitions,
@@ -138,7 +138,7 @@ export class AmalService {
     const result = await this.rls.run(user, async (tx) => {
       const definitions = (await loadActiveDefinitions(tx)) as AmalDefRow[];
       const defKeys = new Set(definitions.map((d) => d.key));
-      const today = bdToday();
+      const today = todayForUser(user);
       const now = new Date();
 
       // pre-compute lock status per distinct date (Ishraq rule + DayUnlock override)

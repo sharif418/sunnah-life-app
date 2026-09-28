@@ -49,6 +49,9 @@ model User {
   department    String?
   language      String    @default("bn")
   madhhab       String    @default("hanafi")
+  // IANA zone for every wall-clock computation this user triggers (prayer
+  // pushes, week starts, diary day-lock). Phase C/W1a: was hard-coded UTC+6.
+  tz            String    @default("Asia/Dhaka")
   calcMethod    String    @default("karachi")
   lat           Float?
   lng           Float?
