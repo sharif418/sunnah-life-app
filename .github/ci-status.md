@@ -1,13 +1,13 @@
-# CI status — run 36388005989
+# CI status — run 36389041267
 
-- **Commit:** 7056ca3984f75429067bfc4a6a30c9e70f82033e
-- **Started:** 2026-09-28T06:44:57Z
-- **Run:** https://github.com/sharif418/sunnah-life-app/actions/runs/36388005989
+- **Commit:** 3d632c01cf1d5c917a4d205eff7868085543c901
+- **Started:** 2026-09-28T06:57:08Z
+- **Run:** https://github.com/sharif418/sunnah-life-app/actions/runs/36389041267
 
 | Job | Result |
 |---|---|
 | tokens | success |
-| api | failure |
+| api | success |
 | web | success |
 | admin | success |
 | mobile (debug APK) | success |
