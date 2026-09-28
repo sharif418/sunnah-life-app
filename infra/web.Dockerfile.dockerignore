@@ -22,9 +22,12 @@ node_modules
 .git
 .github
 
-# sibling workspaces — the web app is the repo root itself (PLAN.md §3);
-# apps/* (api, admin, mobile, worker) build from their own contexts.
-apps
+# sibling workspaces — the web build only needs apps/web itself (shared types
+# and content packs live under packages/, which stays INCLUDED); the api/admin/
+# mobile apps build from their own contexts / per-Dockerfile ignores.
+apps/api
+apps/admin
+apps/mobile
 
 # local databases, dumps, logs, scratch
 db

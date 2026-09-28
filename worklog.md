@@ -749,3 +749,21 @@ Work Log:
 
 Stage Summary:
 - VERIFIED RAW: full suite 248/248 (17 suites; +15 ops tests: health 503/200, metrics gating matrix, docs gating incl. pure fn); quiz smoke OK x3 consecutive; eslint 0 errors; tsc --noEmit clean; nest build OK. Compose itself is not runnable in the sandbox — the W2d CI job is its proof (next).
+
+
+---
+Task ID: C-W2d
+Agent: lead-architect (main session) + implementation subagent
+Task: Docker images + compose smoke CI job (the Wave-2 proof-by-CI item).
+
+Work Log:
+- infra/worker.Dockerfile DELETED (its apps/worker context was removed in W1d; compose's worker reuses the api image — the story lives in the compose comments; zero remaining references in infra//docs//README).
+- infra/web.Dockerfile REWRITTEN: single WORKDIR /repo; correct monorepo standalone layout (outputFileTracingRoot = repo root — server at .next/standalone/apps/web/server.js, static+public repacked beside it, stray pre-monorepo repack output stripped); runtime WORKDIR /app/apps/web + bun server.js.
+- web.Dockerfile.dockerignore: blanket apps exclusion → specific siblings (apps/api, apps/admin, apps/mobile) — the old exclusion broke the Dockerfile's own COPY apps/web paths.
+- api.Dockerfile: COPY content fixed to COPY packages/content — the root content/ dir was deleted in B1, so the old COPY pointed at a nonexistent path and the compose build (the W2d proof itself) could never succeed. Discovered by the implementing agent verifying against git ls-tree.
+- compose: QUIZ_SECRET hard-fail wiring added to api + worker (env.validation demands it in production but compose never passed it — a real deploy would have refused to boot); METRICS_TOKEN + DOCS_ENABLED passthroughs on api.
+- NEW CI docker job: compose config sanity — quay.io MinIO pre-pull with docker.io fallback + retag — build the four images — up -d --wait (health-gated) — smoke: api /health status:ok (proves migrations + seed:reference completed), web :3000 and admin :3002 HTTP 200, seeded AmalDefinition count >= 30 — always: ps + logs + down -v. 40-min timeout; gated on api+web+admin workspace probes; report job needs it.
+- docs/DEPLOY_COOLIFY.md: QUIZ_SECRET documented (compose hard-fails without it).
+
+Stage Summary:
+- Local verification: CI YAML + compose YAML parse clean; API suite 248/248; eslint 0 errors; AmalDefinition catalog = 31 rows (the >=30 smoke assert holds). Docker itself cannot run in the sandbox — the CI docker job on this push IS the proof (run result to be appended below when green).

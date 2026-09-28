@@ -173,6 +173,7 @@ queued BullMQ jobs survive a restart (up to 1 s of fsync skew).
 | `METRICS_TOKEN` | `b1a…` | opt | unlocks `GET /metrics` via `Authorization: Bearer …` or `?token=…`; unset ⇒ /metrics 403s in production |
 | `DOCS_ENABLED` | `false` | opt | `false` disables the Swagger UI (`/docs`) + `/openapi.json`; unset ⇒ enabled outside production only |
 | `JWT_SECRET` | `J4v…` (min 8) | **✔** | signs access tokens (and refresh tokens when `JWT_REFRESH_SECRET` is unset); rotation + family revocation via the `RefreshToken` table |
+| QUIZ_SECRET | required | HMAC secret for live-quiz room tokens (compose hard-fails without it) |
 | `JWT_REFRESH_SECRET` | *(empty)* | opt | separate secret for refresh tokens; empty ⇒ `JWT_SECRET` is used |
 | `ACCESS_TOKEN_TTL_MIN` | `15` | opt | |
 | `REFRESH_TOKEN_TTL_DAYS` | `7` | opt | |

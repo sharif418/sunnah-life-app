@@ -7,7 +7,7 @@
 # Build (from repo root):   docker compose --env-file .env -f infra/docker-compose.yml build api
 # Build context:             the REPOSITORY ROOT ("..") — NOT apps/api alone!
 #                            The image needs apps/api AND the content packs
-#                            (repo content/ = packages/content via symlink):
+#                            (packages/content — the single content source)
 #                            the entrypoint seed reads amal-catalog.json +
 #                            assessment-farze-ain-v1.json, and the content
 #                            routes serve the Qur'an + packs from CONTENT_DIR
@@ -58,12 +58,12 @@ ENV NODE_ENV=production \
 # Built app + prod node_modules + prisma (migrations, seed).
 COPY --from=build /app ./
 
-# Content packs — copied from the REPO's content/ directory (packages/content
-# is a symlink to it; copying the symlink itself would be dangling in the
-# image, so copy the real directory to /app/packages/content = CONTENT_DIR).
+# Content packs — packages/content is the ONLY content source since B1
+# (commit 16370d8 removed the old root content/ dir + packages/content
+# symlink); copy the real directory to /app/packages/content = CONTENT_DIR.
 # The seed reads amal-catalog.json + assessment-farze-ain-v1.json from here
 # and the content routes serve the Qur'an + packs from CONTENT_DIR.
-COPY content ./packages/content
+COPY packages/content ./packages/content
 
 # Entrypoint: migrate (owner via DIRECT_URL) → seed (idempotent) → serve.
 # Written inline (COPY heredoc) so the image is self-contained even when the

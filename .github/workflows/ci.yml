@@ -18,6 +18,7 @@
 #   api     lint · jest (unit + RLS e2e against postgres:16 + redis:7, seeded) · build
 #   web     lint · production build (apps/web)
 #   admin   lint · build (when apps/admin exists)
+#   docker  image build + compose smoke — migrate·seed·health of the full stack
 #   mobile  flutter analyze · test · debug APK (when apps/mobile exists)
 # ─────────────────────────────────────────────────────────────────────────────
 name: CI
@@ -251,6 +252,84 @@ jobs:
         run: |
           if grep -q '"build":' package.json; then bun run build; else echo 'no build script — skipping'; fi
 
+  # ───────────────────────────────────────────────────────────────────────
+  # Docker — build the compose images (api, worker=api, web, admin) and
+  # smoke-test the FULL stack on the runner's Docker: compose up --wait, then
+  # assert the api /health (migrations + seed:reference done), web / and
+  # admin / answer 200 on the published ports, and the seeded amal catalog
+  # actually landed in Postgres. This is the W2d proof: the sandbox cannot
+  # run Docker, so this job is the only place the Dockerfiles, .dockerignore
+  # files and compose wiring are exercised end-to-end.
+  docker:
+    name: Docker — image build + compose smoke (migrate·seed·health)
+    runs-on: ubuntu-latest
+    needs: workspace
+    if: needs.workspace.outputs.api == 'true' && needs.workspace.outputs.web == 'true' && needs.workspace.outputs.admin == 'true'
+    timeout-minutes: 40
+    env:
+      # compose interpolates these from the shell (no .env on CI)
+      POSTGRES_PASSWORD: ci-smoke-pg-password
+      SUNNAH_APP_PASSWORD: ci-smoke-app-password
+      MINIO_ROOT_USER: ci-smoke-minio
+      MINIO_ROOT_PASSWORD: ci-smoke-minio-secret
+      MEILI_MASTER_KEY: ci-smoke-meili-master-key-0123456789abcdef
+      JWT_SECRET: ci-smoke-jwt-access-secret-1234
+      JWT_REFRESH_SECRET: ci-smoke-jwt-refresh-secret-5678
+      QUIZ_SECRET: ci-smoke-quiz-secret-9012
+      SMS_PROVIDER: sslwireless
+      SMS_SSLWIRELESS_URL: https://sms.example.invalid/send
+      SMS_SSLWIRELESS_USER: ci-smoke
+      SMS_SSLWIRELESS_PASS: ci-smoke-pass
+      STACK_TAG: ci-smoke
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compose config sanity (interpolation + schema)
+        run: docker compose -f infra/docker-compose.yml config >/dev/null
+
+      # quay.io may require login for minio (2026-09 policy change) — pre-pull
+      # with a Docker Hub fallback + retag so compose never hits the wall.
+      - name: Pre-pull MinIO images (quay.io, docker.io fallback)
+        run: |
+          set -e
+          for img in "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z" "quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z"; do
+            if ! docker pull "$img"; then
+              hub="${img#quay.io/}"
+              echo "quay pull failed for $img — trying docker.io/$hub"
+              docker pull "$hub"
+              docker tag "$hub" "$img"
+            fi
+          done
+
+      - name: Build the four images (api, worker=api, web, admin)
+        run: docker compose -f infra/docker-compose.yml build
+
+      - name: Compose up — wait for health
+        run: docker compose -f infra/docker-compose.yml up -d --wait --wait-timeout 420
+
+      - name: Smoke — API health (migrations + seed done, serving)
+        run: |
+          docker compose -f infra/docker-compose.yml exec -T api curl -fsS http://localhost:4000/health | tee /tmp/health.json
+          grep -q '"status":"ok"' /tmp/health.json
+
+      - name: Smoke — web / and admin / (HTTP 200 through published ports)
+        run: |
+          curl -fsS -o /dev/null -w "web:%{http_code}\n" http://localhost:3000/
+          curl -fsS -o /dev/null -w "admin:%{http_code}\n" http://localhost:3002/
+
+      - name: Smoke — seeded reference data exists (amal catalog row count)
+        run: |
+          docker compose -f infra/docker-compose.yml exec -T postgres psql -U postgres -d sunnahlife -tAc \
+            "SELECT COUNT(*) FROM \"AmalDefinition\"" | tee /tmp/defs.txt
+          test "$(cat /tmp/defs.txt | tr -d '[:space:]')" -ge 30
+
+      - name: Always — logs + teardown
+        if: always()
+        run: |
+          docker compose -f infra/docker-compose.yml ps || true
+          docker compose -f infra/docker-compose.yml logs --tail=80 api worker web admin postgres || true
+          docker compose -f infra/docker-compose.yml down -v --remove-orphans
+
   # ───────────────────────────────────────────────────────────────────────────
   mobile:
     name: Flutter — analyze · test · debug APK
@@ -398,7 +477,7 @@ jobs:
   report:
     name: CI summary
     runs-on: ubuntu-latest
-    needs: [tokens, api, web, admin, mobile, release-bundle]
+    needs: [tokens, api, web, admin, docker, mobile, release-bundle]
     if: always()
     steps:
       - name: Write job summary table
@@ -415,6 +494,7 @@ jobs:
             echo "| api | ${{ needs.api.result }} |"
             echo "| web | ${{ needs.web.result }} |"
             echo "| admin | ${{ needs.admin.result }} |"
+            echo "| docker (compose smoke) | ${{ needs.docker.result }} |"
             echo "| mobile (debug APK) | ${{ needs.mobile.result }} |"
             echo "| release-bundle (aab) | ${{ needs.release-bundle.result }} |"
           } >> "$GITHUB_STEP_SUMMARY"
