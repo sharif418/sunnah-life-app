@@ -282,6 +282,7 @@ class Quiz {
     this.descBn,
     required this.category,
     required this.minutes,
+    this.live = false,
     required this.questions,
   });
   final String id;
@@ -289,6 +290,8 @@ class Quiz {
   final String? descBn;
   final String category;
   final int minutes;
+  /// Live-quiz eligible (played in the usrah room over socket.io).
+  final bool live;
   final List<QuizQuestion> questions;
 
   factory Quiz.fromJson(Map<String, dynamic> m) => Quiz(
@@ -297,6 +300,7 @@ class Quiz {
     descBn: m['descBn'] as String?,
     category: m['category'] as String? ?? 'general',
     minutes: (m['minutes'] as num?)?.toInt() ?? 5,
+    live: m['live'] as bool? ?? false,
     questions: ((m['questions'] as List?) ?? [])
         .whereType<Map>()
         .map((e) => QuizQuestion.fromJson(e.cast<String, dynamic>()))

@@ -1002,4 +1002,277 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get live_programs_count => 'টি প্রোগ্রাম';
+
+  @override
+  String get ilm_courses => 'কোর্স';
+
+  @override
+  String get ilm_quizzes => 'কুইজ';
+
+  @override
+  String get ilm_live_quiz => 'লাইভ কুইজ';
+
+  @override
+  String get course_lessons_unit => 'পাঠ';
+
+  @override
+  String get course_enrolled_unit => 'জন ভর্তি';
+
+  @override
+  String get course_start => 'কোর্সটি শুরু করুন';
+
+  @override
+  String get course_continue => 'চালিয়ে যান';
+
+  @override
+  String get course_enroll => 'কোর্সে ভর্তি হোন';
+
+  @override
+  String get course_enrolled => 'ভর্তি আছেন';
+
+  @override
+  String get course_enrolling => 'ভর্তি হচ্ছে…';
+
+  @override
+  String get course_signin_to_enroll => 'কোর্সে ভর্তি হতে সাইন ইন করুন';
+
+  @override
+  String get course_progress_of => 'পাঠ সম্পন্ন';
+
+  @override
+  String get courses_empty_title => 'কোর্স শীঘ্রই আসছে, ইনশাআল্লাহ';
+
+  @override
+  String get courses_empty_hint =>
+      'আস-সুন্নাহ ফাউন্ডেশনের স্টাডি-সার্কেল ও কোর্সগুলো এখানে যুক্ত হবে।';
+
+  @override
+  String get courses_load_failed => 'কোর্স লোড করা যায়নি';
+
+  @override
+  String get lesson_complete => 'পাঠ সম্পন্ন হয়েছে';
+
+  @override
+  String get lesson_unmark => 'সম্পন্ন থেকে সরান';
+
+  @override
+  String get lesson_next => 'পরের পাঠ';
+
+  @override
+  String get quiz_play => 'কুইজ খেলুন';
+
+  @override
+  String get quiz_live_eligible => 'লাইভ কুইজযোগ্য';
+
+  @override
+  String get quiz_best => 'সেরা';
+
+  @override
+  String get quiz_last => 'সর্বশেষ';
+
+  @override
+  String get quiz_question_of => 'প্রশ্ন';
+
+  @override
+  String get quiz_choose_option => 'একটি উত্তর বেছে নিন';
+
+  @override
+  String get quiz_correct_was => 'সঠিক উত্তর ছিল';
+
+  @override
+  String get quiz_explanation => 'ব্যাখ্যা';
+
+  @override
+  String get quiz_next_question => 'পরের প্রশ্ন';
+
+  @override
+  String get quiz_finish => 'ফলাফল দেখুন';
+
+  @override
+  String get quiz_result_title => 'কুইজ শেষ';
+
+  @override
+  String get quiz_your_score => 'আপনার স্কোর';
+
+  @override
+  String get quiz_result_saved => 'স্কোর সার্ভারে সংরক্ষিত হয়েছে';
+
+  @override
+  String get quiz_result_local => 'সাইন ইন করলে স্কোর সংরক্ষিত হতো';
+
+  @override
+  String get quiz_play_again => 'আবার খেলুন';
+
+  @override
+  String get quiz_back_to_list => 'তালিকায় ফিরুন';
+
+  @override
+  String get quiz_history_title => 'আমার কুইজ ইতিহাস';
+
+  @override
+  String get quizzes_empty_title => 'কুইজ শীঘ্রই আসছে, ইনশাআল্লাহ';
+
+  @override
+  String get quizzes_empty_hint =>
+      'কুরআন-সুন্নাহ, আকীদা ও ফিকহের কুইজ এখানে যুক্ত হবে।';
+
+  @override
+  String get quizzes_load_failed => 'কুইজ লোড করা যায়নি';
+
+  @override
+  String get live_quiz_desc =>
+      'আপনার উসরার ঘরে ঢুকে একসাথে কুইজ খেলুন — প্রশ্ন আসবে একে একে, সবার স্কোর লিডারবোর্ডে উঠবে। উসরা প্রধান কুইজ শুরু করলেই আপনার স্ক্রিনে প্রশ্ন চলে আসবে, ইনশাআল্লাহ।';
+
+  @override
+  String get live_quiz_enter => 'কুইজ ঘরে প্রবেশ করুন';
+
+  @override
+  String get live_quiz_joining => 'যোগ হচ্ছে…';
+
+  @override
+  String get live_quiz_connected => 'সংযুক্ত';
+
+  @override
+  String get live_quiz_disconnected => 'বিচ্ছিন্ন';
+
+  @override
+  String get live_quiz_signin_hint =>
+      'উসরার সদস্য হিসেবে সাইন ইন করলে আপনার উসরা প্রধানের চালানো লাইভ কুইজে অংশ নিতে পারবেন।';
+
+  @override
+  String get live_quiz_for_usrah => 'লাইভ কুইজ — উসরার জন্য';
+
+  @override
+  String get live_quiz_host_controls => 'উসরা প্রধান — কুইজ নিয়ন্ত্রণ';
+
+  @override
+  String get live_quiz_start => 'কুইজ শুরু করুন';
+
+  @override
+  String get live_quiz_next => 'পরের প্রশ্ন';
+
+  @override
+  String get live_quiz_reveal_now => 'ফলাফল দেখান';
+
+  @override
+  String get live_quiz_end => 'শেষ করুন';
+
+  @override
+  String get live_quiz_leave => 'ঘর থেকে বেরিয়ে যান';
+
+  @override
+  String get live_quiz_lobby_host =>
+      'একটি কুইজ বেছে নিয়ে শুরু করুন — আপনার উসরার সদস্যরা যোগ দিচ্ছেন।';
+
+  @override
+  String get live_quiz_lobby_player =>
+      'উসরা প্রধান কুইজ শুরু করলে প্রশ্ন এখানে আসবে…';
+
+  @override
+  String get live_quiz_answered => 'উত্তর জমা হয়েছে — অপেক্ষা করুন…';
+
+  @override
+  String get live_quiz_host_hint =>
+      'সবাই উত্তর দিলে অটো ফলাফল — তাড়াতাড়ি দেখতে “ফলাফল দেখান” চাপুন';
+
+  @override
+  String get live_quiz_reveal_title => 'ফলাফল';
+
+  @override
+  String get live_quiz_final => 'কুইজ শেষ — চূড়ান্ত ফলাফল';
+
+  @override
+  String get live_quiz_leaderboard => 'লিডারবোর্ড';
+
+  @override
+  String get live_quiz_players => 'সদস্যরা';
+
+  @override
+  String get live_quiz_connect_failed => 'কুইজ সার্ভারে পৌঁছানো যাচ্ছে না';
+
+  @override
+  String get live_quiz_secs => 'সে';
+
+  @override
+  String get live_quiz_people => 'জন';
+
+  @override
+  String get usrah_q_title => 'উসরার প্রশ্নোত্তর';
+
+  @override
+  String get usrah_q_hint =>
+      'দায়ী হিসেবে সাইন ইন করলে আপনার উসরার ভেতরে প্রশ্ন করতে পারবেন এবং উসরা প্রধানের উত্তর দেখতে পারবেন।';
+
+  @override
+  String get usrah_q_ask_hint => 'আপনার প্রশ্ন লিখুন…';
+
+  @override
+  String get usrah_q_send => 'প্রশ্ন পাঠান';
+
+  @override
+  String get usrah_q_sending => 'পাঠানো হচ্ছে…';
+
+  @override
+  String get usrah_q_sent =>
+      'প্রশ্ন পাঠানো হয়েছে — উসরা প্রধান উত্তর দিলে এখানে দেখা যাবে';
+
+  @override
+  String get usrah_q_empty =>
+      'এখনো কোনো প্রশ্ন নেই — প্রথম প্রশ্নটি আপনিই করুন';
+
+  @override
+  String get usrah_q_answered_by => 'উত্তর দিয়েছেন';
+
+  @override
+  String get usrah_q_awaiting => 'উসরা প্রধানের উত্তরের অপেক্ষায়';
+
+  @override
+  String get usrah_q_answer_hint => 'উত্তর লিখুন…';
+
+  @override
+  String get usrah_q_answer_submit => 'উত্তর প্রকাশ করুন';
+
+  @override
+  String get usrah_q_answered => 'উত্তর প্রকাশিত হয়েছে';
+
+  @override
+  String get usrah_q_cat_general => 'সাধারণ';
+
+  @override
+  String get usrah_q_cat_aqeedah => 'আকীদা';
+
+  @override
+  String get usrah_q_cat_salah => 'সালাত';
+
+  @override
+  String get usrah_q_cat_quran => 'কুরআন';
+
+  @override
+  String get usrah_q_cat_muamalah => 'লেনদেন';
+
+  @override
+  String get usrah_q_cat_tarbiyah => 'তারবিয়াত';
+
+  @override
+  String get dawah_req_title => 'স্তরের প্রয়োজনীয়তা';
+
+  @override
+  String get dawah_req_progress_unit => 'পূরণ';
+
+  @override
+  String get dawah_req_invigilator_check => 'পরিদর্শক যাচাই';
+
+  @override
+  String get dawah_req_all_met =>
+      'মাশাআল্লাহ — সব শর্ত পূরণ হয়েছে! স্তর উন্নতির অপেক্ষায়।';
+
+  @override
+  String get dawah_req_auto_hint =>
+      'সব শর্ত পূরণ হলে রাতের মূল্যায়নে স্তর স্বয়ংক্রিয়ভাবে উন্নত হবে, ইনশাআল্লাহ।';
+
+  @override
+  String get dawah_req_load_failed => 'চেকলিস্ট আনা যায়নি';
+
+  @override
+  String get dawah_req_live_action => 'লাইভ চেকলিস্ট';
 }

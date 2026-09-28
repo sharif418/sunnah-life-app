@@ -404,4 +404,128 @@ class ApiClient {
         )
         .toList();
   }
+
+  // ── Ilm engagement (B4/B9): courses, quizzes, usrah questions, live quiz ────
+
+  /// GET /api/courses — public catalog (lesson counts + enrollment stats).
+  Future<List<CourseSummary>> courses() async {
+    final j = await _req('GET', '/api/courses');
+    return ((j['courses'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => CourseSummary.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// GET /api/courses/:id — course with lesson bodies + my progress.
+  Future<CourseDetailResponse> courseDetail(String id) async {
+    final j = await _req('GET', '/api/courses/$id');
+    return CourseDetailResponse.fromJson(j);
+  }
+
+  /// GET /api/enrollments — my enrollment rows (progress per course).
+  Future<List<EnrollmentItem>> enrollments() async {
+    final j = await _req('GET', '/api/enrollments');
+    return ((j['enrollments'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => EnrollmentItem.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/enroll — idempotent enrollment (login).
+  Future<void> enroll(String courseId) =>
+      _req('POST', '/api/enroll', body: {'courseId': courseId});
+
+  /// PATCH /api/enroll — persist the done-lesson list (login).
+  Future<void> saveCourseProgress(String courseId, List<String> done) => _req(
+    'PATCH',
+    '/api/enroll',
+    body: {
+      'courseId': courseId,
+      'progressJson': jsonEncode({'done': done}),
+    },
+  );
+
+  /// GET /api/content/quizzes — the quiz pack (server mirror; the bundled
+  /// asset is the offline fallback).
+  Future<List<Quiz>> quizPack() async {
+    final j = await _req('GET', '/api/content/quizzes');
+    return ((j['quizzes'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => Quiz.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/quiz-attempt — record a finished self-paced quiz (login).
+  Future<void> submitQuizAttempt({
+    required String quizId,
+    required int score,
+    required int total,
+  }) => _req(
+    'POST',
+    '/api/quiz-attempt',
+    body: {'quizId': quizId, 'score': score, 'total': total},
+  );
+
+  /// GET /api/quiz-attempts — my attempt history (login).
+  Future<List<QuizAttemptItem>> quizAttempts() async {
+    final j = await _req('GET', '/api/quiz-attempts');
+    return ((j['attempts'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => QuizAttemptItem.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// GET /api/usrah-questions — own usrah's board (RLS, newest first).
+  Future<List<UsrahQuestion>> usrahQuestions() async {
+    final j = await _req('GET', '/api/usrah-questions');
+    return ((j['questions'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => UsrahQuestion.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/usrah-questions — ask inside own usrah (login).
+  Future<UsrahQuestion> askUsrahQuestion({
+    required String question,
+    String category = 'general',
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/usrah-questions',
+      body: {'question': question, 'category': category},
+    );
+    return UsrahQuestion.fromJson(
+      (j['question'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// POST /api/usrah-questions/:id/answers — the usrah head answers.
+  Future<UsrahQuestion> answerUsrahQuestion({
+    required String id,
+    required String answer,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/usrah-questions/$id/answers',
+      body: {'answer': answer},
+    );
+    return UsrahQuestion.fromJson(
+      (j['question'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// GET /api/dawah/requirements — live next-level checklist (daee+).
+  Future<DawahRequirements> dawahRequirements() async =>
+      DawahRequirements.fromJson(await _req('GET', '/api/dawah/requirements'));
+
+  /// GET /api/quiz/live-token?quizId=… — HMAC room token for the API's own
+  /// socket.io gateway (apps/api/src/engagement/quiz.gateway.ts).
+  Future<QuizLiveTokenResponse> quizLiveToken([String quizId = '']) async {
+    final j = await _req(
+      'GET',
+      '/api/quiz/live-token',
+      query: quizId.isEmpty ? null : {'quizId': quizId},
+    );
+    return QuizLiveTokenResponse.fromJson(j);
+  }
 }

@@ -995,4 +995,275 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get live_programs_count => 'برنامجًا';
+
+  @override
+  String get ilm_courses => 'الدورات';
+
+  @override
+  String get ilm_quizzes => 'الاختبارات';
+
+  @override
+  String get ilm_live_quiz => 'اختبار مباشر';
+
+  @override
+  String get course_lessons_unit => 'دروس';
+
+  @override
+  String get course_enrolled_unit => 'منخرطًا';
+
+  @override
+  String get course_start => 'ابدأ الدورة';
+
+  @override
+  String get course_continue => 'متابعة';
+
+  @override
+  String get course_enroll => 'التسجيل في الدورة';
+
+  @override
+  String get course_enrolled => 'مسجَّل';
+
+  @override
+  String get course_enrolling => 'جارٍ التسجيل…';
+
+  @override
+  String get course_signin_to_enroll => 'سجّل الدخول للتسجيل في الدورات';
+
+  @override
+  String get course_progress_of => 'دروس مكتملة';
+
+  @override
+  String get courses_empty_title => 'الدورات قادمة قريبًا إن شاء الله';
+
+  @override
+  String get courses_empty_hint =>
+      'ستُضاف هنا حلقات الدراسة ودورات مؤسسة السنة.';
+
+  @override
+  String get courses_load_failed => 'تعذّر تحميل الدورات';
+
+  @override
+  String get lesson_complete => 'اكتمل الدرس';
+
+  @override
+  String get lesson_unmark => 'إزالة من المكتملة';
+
+  @override
+  String get lesson_next => 'الدرس التالي';
+
+  @override
+  String get quiz_play => 'ابدأ الاختبار';
+
+  @override
+  String get quiz_live_eligible => 'صالح للاختبار المباشر';
+
+  @override
+  String get quiz_best => 'الأفضل';
+
+  @override
+  String get quiz_last => 'الأحدث';
+
+  @override
+  String get quiz_question_of => 'السؤال';
+
+  @override
+  String get quiz_choose_option => 'اختر إجابة';
+
+  @override
+  String get quiz_correct_was => 'الإجابة الصحيحة هي';
+
+  @override
+  String get quiz_explanation => 'الشرح';
+
+  @override
+  String get quiz_next_question => 'السؤال التالي';
+
+  @override
+  String get quiz_finish => 'اعرض النتيجة';
+
+  @override
+  String get quiz_result_title => 'انتهى الاختبار';
+
+  @override
+  String get quiz_your_score => 'نتيجتك';
+
+  @override
+  String get quiz_result_saved => 'حُفظت النتيجة في حسابك';
+
+  @override
+  String get quiz_result_local => 'سجّل الدخول لحفظ نتائجك';
+
+  @override
+  String get quiz_play_again => 'أعد المحاولة';
+
+  @override
+  String get quiz_back_to_list => 'العودة إلى القائمة';
+
+  @override
+  String get quiz_history_title => 'سجل اختباراتي';
+
+  @override
+  String get quizzes_empty_title => 'الاختبارات قادمة قريبًا إن شاء الله';
+
+  @override
+  String get quizzes_empty_hint =>
+      'ستُضاف هنا اختبارات القرآن والسنة والعقيدة والفقه.';
+
+  @override
+  String get quizzes_load_failed => 'تعذّر تحميل الاختبارات';
+
+  @override
+  String get live_quiz_desc =>
+      'ادخل غرفة أسرتك والعبوا معًا — تأتي الأسئلة واحدًا بعد الآخر، وتصعد نتائج الجميع في لوحة المتصدرين. عندما يبدأ رئيس الأسر الاختبار يظهر السؤال على شاشتك إن شاء الله.';
+
+  @override
+  String get live_quiz_enter => 'ادخل غرفة الاختبار';
+
+  @override
+  String get live_quiz_joining => 'جارٍ الانضمام…';
+
+  @override
+  String get live_quiz_connected => 'متصل';
+
+  @override
+  String get live_quiz_disconnected => 'غير متصل';
+
+  @override
+  String get live_quiz_signin_hint =>
+      'سجّل الدخول كعضو أسر للمشاركة في الاختبار المباشر الذي يديره رئيس الأسر.';
+
+  @override
+  String get live_quiz_for_usrah => 'الاختبار المباشر — لأسرتك';
+
+  @override
+  String get live_quiz_host_controls => 'رئيس الأسر — التحكم بالاختبار';
+
+  @override
+  String get live_quiz_start => 'ابدأ الاختبار';
+
+  @override
+  String get live_quiz_next => 'السؤال التالي';
+
+  @override
+  String get live_quiz_reveal_now => 'اعرض النتيجة';
+
+  @override
+  String get live_quiz_end => 'أنهِ الاختبار';
+
+  @override
+  String get live_quiz_leave => 'غادر الغرفة';
+
+  @override
+  String get live_quiz_lobby_host =>
+      'اختر اختبارًا وابدأ — أعضاء أسرتك ينضمون.';
+
+  @override
+  String get live_quiz_lobby_player =>
+      'عندما يبدأ رئيس الأسر الاختبار تظهر الأسئلة هنا…';
+
+  @override
+  String get live_quiz_answered => 'تم إرسال الإجابة — انتظر…';
+
+  @override
+  String get live_quiz_host_hint =>
+      'تظهر النتيجة تلقائيًا عند إجابة الجميع — اضغط «اعرض النتيجة» لتسريعها';
+
+  @override
+  String get live_quiz_reveal_title => 'النتيجة';
+
+  @override
+  String get live_quiz_final => 'انتهى الاختبار — النتائج النهائية';
+
+  @override
+  String get live_quiz_leaderboard => 'لوحة المتصدرين';
+
+  @override
+  String get live_quiz_players => 'الأعضاء';
+
+  @override
+  String get live_quiz_connect_failed => 'تعذّر الوصول إلى خادم الاختبار';
+
+  @override
+  String get live_quiz_secs => 'ث';
+
+  @override
+  String get live_quiz_people => 'أجابوا';
+
+  @override
+  String get usrah_q_title => 'أسئلة الأسر';
+
+  @override
+  String get usrah_q_hint =>
+      'سجّل الدخول كداعٍ لتطرح الأسئلة داخل أسرتك وتطّلع على إجابات الرئيس.';
+
+  @override
+  String get usrah_q_ask_hint => 'اكتب سؤالك…';
+
+  @override
+  String get usrah_q_send => 'أرسل السؤال';
+
+  @override
+  String get usrah_q_sending => 'جارٍ الإرسال…';
+
+  @override
+  String get usrah_q_sent => 'أُرسل السؤال — ستظهر إجابة الرئيس هنا';
+
+  @override
+  String get usrah_q_empty => 'لا أسئلة بعد — اطرح أول سؤال';
+
+  @override
+  String get usrah_q_answered_by => 'أجاب';
+
+  @override
+  String get usrah_q_awaiting => 'في انتظار إجابة رئيس الأسر';
+
+  @override
+  String get usrah_q_answer_hint => 'اكتب الإجابة…';
+
+  @override
+  String get usrah_q_answer_submit => 'انشر الإجابة';
+
+  @override
+  String get usrah_q_answered => 'نُشرت الإجابة';
+
+  @override
+  String get usrah_q_cat_general => 'عام';
+
+  @override
+  String get usrah_q_cat_aqeedah => 'العقيدة';
+
+  @override
+  String get usrah_q_cat_salah => 'الصلاة';
+
+  @override
+  String get usrah_q_cat_quran => 'القرآن';
+
+  @override
+  String get usrah_q_cat_muamalah => 'المعاملات';
+
+  @override
+  String get usrah_q_cat_tarbiyah => 'التربية';
+
+  @override
+  String get dawah_req_title => 'متطلبات المستوى';
+
+  @override
+  String get dawah_req_progress_unit => 'محقق';
+
+  @override
+  String get dawah_req_invigilator_check => 'تحقق المراقب';
+
+  @override
+  String get dawah_req_all_met =>
+      'ما شاء الله — تحققت جميع الشروط! في انتظار الترقية.';
+
+  @override
+  String get dawah_req_auto_hint =>
+      'عند تحقق جميع الشروط ترفع التقييم الليلي المستوى تلقائيًا إن شاء الله.';
+
+  @override
+  String get dawah_req_load_failed => 'تعذّر تحميل قائمة المتطلبات';
+
+  @override
+  String get dawah_req_live_action => 'القائمة الحيّة';
 }

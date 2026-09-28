@@ -9,6 +9,7 @@ library;
 export 'amal.dart';
 export 'assessment.dart';
 export 'dawah.dart';
+export 'ilm_engagement.dart';
 export 'live.dart';
 export 'review.dart';
 export 'user.dart';

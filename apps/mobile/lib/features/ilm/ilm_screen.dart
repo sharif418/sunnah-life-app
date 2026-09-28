@@ -35,6 +35,21 @@ class _IlmScreenState extends State<IlmScreen> {
     final theme = Theme.of(context);
     final entries = <_IlmEntry>[
       _IlmEntry(
+        icon: Icons.school_outlined,
+        title: context.t('ilm_courses'),
+        route: '/ilm/courses',
+      ),
+      _IlmEntry(
+        icon: Icons.quiz_outlined,
+        title: context.t('ilm_quizzes'),
+        route: '/ilm/quizzes',
+      ),
+      _IlmEntry(
+        icon: Icons.wifi_tethering_outlined,
+        title: context.t('ilm_live_quiz'),
+        route: '/ilm/live-quiz',
+      ),
+      _IlmEntry(
         icon: Icons.menu_book_outlined,
         title: context.t('ilm_quran'),
         route: '/ilm/quran',

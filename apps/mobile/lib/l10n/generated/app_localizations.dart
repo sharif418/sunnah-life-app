@@ -2043,6 +2043,528 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'টি প্রোগ্রাম'**
   String get live_programs_count;
+
+  /// No description provided for @ilm_courses.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোর্স'**
+  String get ilm_courses;
+
+  /// No description provided for @ilm_quizzes.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ'**
+  String get ilm_quizzes;
+
+  /// No description provided for @ilm_live_quiz.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ কুইজ'**
+  String get ilm_live_quiz;
+
+  /// No description provided for @course_lessons_unit.
+  ///
+  /// In bn, this message translates to:
+  /// **'পাঠ'**
+  String get course_lessons_unit;
+
+  /// No description provided for @course_enrolled_unit.
+  ///
+  /// In bn, this message translates to:
+  /// **'জন ভর্তি'**
+  String get course_enrolled_unit;
+
+  /// No description provided for @course_start.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোর্সটি শুরু করুন'**
+  String get course_start;
+
+  /// No description provided for @course_continue.
+  ///
+  /// In bn, this message translates to:
+  /// **'চালিয়ে যান'**
+  String get course_continue;
+
+  /// No description provided for @course_enroll.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোর্সে ভর্তি হোন'**
+  String get course_enroll;
+
+  /// No description provided for @course_enrolled.
+  ///
+  /// In bn, this message translates to:
+  /// **'ভর্তি আছেন'**
+  String get course_enrolled;
+
+  /// No description provided for @course_enrolling.
+  ///
+  /// In bn, this message translates to:
+  /// **'ভর্তি হচ্ছে…'**
+  String get course_enrolling;
+
+  /// No description provided for @course_signin_to_enroll.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোর্সে ভর্তি হতে সাইন ইন করুন'**
+  String get course_signin_to_enroll;
+
+  /// No description provided for @course_progress_of.
+  ///
+  /// In bn, this message translates to:
+  /// **'পাঠ সম্পন্ন'**
+  String get course_progress_of;
+
+  /// No description provided for @courses_empty_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোর্স শীঘ্রই আসছে, ইনশাআল্লাহ'**
+  String get courses_empty_title;
+
+  /// No description provided for @courses_empty_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আস-সুন্নাহ ফাউন্ডেশনের স্টাডি-সার্কেল ও কোর্সগুলো এখানে যুক্ত হবে।'**
+  String get courses_empty_hint;
+
+  /// No description provided for @courses_load_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোর্স লোড করা যায়নি'**
+  String get courses_load_failed;
+
+  /// No description provided for @lesson_complete.
+  ///
+  /// In bn, this message translates to:
+  /// **'পাঠ সম্পন্ন হয়েছে'**
+  String get lesson_complete;
+
+  /// No description provided for @lesson_unmark.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন থেকে সরান'**
+  String get lesson_unmark;
+
+  /// No description provided for @lesson_next.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরের পাঠ'**
+  String get lesson_next;
+
+  /// No description provided for @quiz_play.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ খেলুন'**
+  String get quiz_play;
+
+  /// No description provided for @quiz_live_eligible.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ কুইজযোগ্য'**
+  String get quiz_live_eligible;
+
+  /// No description provided for @quiz_best.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেরা'**
+  String get quiz_best;
+
+  /// No description provided for @quiz_last.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ'**
+  String get quiz_last;
+
+  /// No description provided for @quiz_question_of.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রশ্ন'**
+  String get quiz_question_of;
+
+  /// No description provided for @quiz_choose_option.
+  ///
+  /// In bn, this message translates to:
+  /// **'একটি উত্তর বেছে নিন'**
+  String get quiz_choose_option;
+
+  /// No description provided for @quiz_correct_was.
+  ///
+  /// In bn, this message translates to:
+  /// **'সঠিক উত্তর ছিল'**
+  String get quiz_correct_was;
+
+  /// No description provided for @quiz_explanation.
+  ///
+  /// In bn, this message translates to:
+  /// **'ব্যাখ্যা'**
+  String get quiz_explanation;
+
+  /// No description provided for @quiz_next_question.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরের প্রশ্ন'**
+  String get quiz_next_question;
+
+  /// No description provided for @quiz_finish.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল দেখুন'**
+  String get quiz_finish;
+
+  /// No description provided for @quiz_result_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ শেষ'**
+  String get quiz_result_title;
+
+  /// No description provided for @quiz_your_score.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার স্কোর'**
+  String get quiz_your_score;
+
+  /// No description provided for @quiz_result_saved.
+  ///
+  /// In bn, this message translates to:
+  /// **'স্কোর সার্ভারে সংরক্ষিত হয়েছে'**
+  String get quiz_result_saved;
+
+  /// No description provided for @quiz_result_local.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাইন ইন করলে স্কোর সংরক্ষিত হতো'**
+  String get quiz_result_local;
+
+  /// No description provided for @quiz_play_again.
+  ///
+  /// In bn, this message translates to:
+  /// **'আবার খেলুন'**
+  String get quiz_play_again;
+
+  /// No description provided for @quiz_back_to_list.
+  ///
+  /// In bn, this message translates to:
+  /// **'তালিকায় ফিরুন'**
+  String get quiz_back_to_list;
+
+  /// No description provided for @quiz_history_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার কুইজ ইতিহাস'**
+  String get quiz_history_title;
+
+  /// No description provided for @quizzes_empty_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ শীঘ্রই আসছে, ইনশাআল্লাহ'**
+  String get quizzes_empty_title;
+
+  /// No description provided for @quizzes_empty_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুরআন-সুন্নাহ, আকীদা ও ফিকহের কুইজ এখানে যুক্ত হবে।'**
+  String get quizzes_empty_hint;
+
+  /// No description provided for @quizzes_load_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ লোড করা যায়নি'**
+  String get quizzes_load_failed;
+
+  /// No description provided for @live_quiz_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার উসরার ঘরে ঢুকে একসাথে কুইজ খেলুন — প্রশ্ন আসবে একে একে, সবার স্কোর লিডারবোর্ডে উঠবে। উসরা প্রধান কুইজ শুরু করলেই আপনার স্ক্রিনে প্রশ্ন চলে আসবে, ইনশাআল্লাহ।'**
+  String get live_quiz_desc;
+
+  /// No description provided for @live_quiz_enter.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ ঘরে প্রবেশ করুন'**
+  String get live_quiz_enter;
+
+  /// No description provided for @live_quiz_joining.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোগ হচ্ছে…'**
+  String get live_quiz_joining;
+
+  /// No description provided for @live_quiz_connected.
+  ///
+  /// In bn, this message translates to:
+  /// **'সংযুক্ত'**
+  String get live_quiz_connected;
+
+  /// No description provided for @live_quiz_disconnected.
+  ///
+  /// In bn, this message translates to:
+  /// **'বিচ্ছিন্ন'**
+  String get live_quiz_disconnected;
+
+  /// No description provided for @live_quiz_signin_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরার সদস্য হিসেবে সাইন ইন করলে আপনার উসরা প্রধানের চালানো লাইভ কুইজে অংশ নিতে পারবেন।'**
+  String get live_quiz_signin_hint;
+
+  /// No description provided for @live_quiz_for_usrah.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ কুইজ — উসরার জন্য'**
+  String get live_quiz_for_usrah;
+
+  /// No description provided for @live_quiz_host_controls.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরা প্রধান — কুইজ নিয়ন্ত্রণ'**
+  String get live_quiz_host_controls;
+
+  /// No description provided for @live_quiz_start.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ শুরু করুন'**
+  String get live_quiz_start;
+
+  /// No description provided for @live_quiz_next.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরের প্রশ্ন'**
+  String get live_quiz_next;
+
+  /// No description provided for @live_quiz_reveal_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল দেখান'**
+  String get live_quiz_reveal_now;
+
+  /// No description provided for @live_quiz_end.
+  ///
+  /// In bn, this message translates to:
+  /// **'শেষ করুন'**
+  String get live_quiz_end;
+
+  /// No description provided for @live_quiz_leave.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঘর থেকে বেরিয়ে যান'**
+  String get live_quiz_leave;
+
+  /// No description provided for @live_quiz_lobby_host.
+  ///
+  /// In bn, this message translates to:
+  /// **'একটি কুইজ বেছে নিয়ে শুরু করুন — আপনার উসরার সদস্যরা যোগ দিচ্ছেন।'**
+  String get live_quiz_lobby_host;
+
+  /// No description provided for @live_quiz_lobby_player.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরা প্রধান কুইজ শুরু করলে প্রশ্ন এখানে আসবে…'**
+  String get live_quiz_lobby_player;
+
+  /// No description provided for @live_quiz_answered.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর জমা হয়েছে — অপেক্ষা করুন…'**
+  String get live_quiz_answered;
+
+  /// No description provided for @live_quiz_host_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'সবাই উত্তর দিলে অটো ফলাফল — তাড়াতাড়ি দেখতে “ফলাফল দেখান” চাপুন'**
+  String get live_quiz_host_hint;
+
+  /// No description provided for @live_quiz_reveal_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল'**
+  String get live_quiz_reveal_title;
+
+  /// No description provided for @live_quiz_final.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ শেষ — চূড়ান্ত ফলাফল'**
+  String get live_quiz_final;
+
+  /// No description provided for @live_quiz_leaderboard.
+  ///
+  /// In bn, this message translates to:
+  /// **'লিডারবোর্ড'**
+  String get live_quiz_leaderboard;
+
+  /// No description provided for @live_quiz_players.
+  ///
+  /// In bn, this message translates to:
+  /// **'সদস্যরা'**
+  String get live_quiz_players;
+
+  /// No description provided for @live_quiz_connect_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ সার্ভারে পৌঁছানো যাচ্ছে না'**
+  String get live_quiz_connect_failed;
+
+  /// No description provided for @live_quiz_secs.
+  ///
+  /// In bn, this message translates to:
+  /// **'সে'**
+  String get live_quiz_secs;
+
+  /// No description provided for @live_quiz_people.
+  ///
+  /// In bn, this message translates to:
+  /// **'জন'**
+  String get live_quiz_people;
+
+  /// No description provided for @usrah_q_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরার প্রশ্নোত্তর'**
+  String get usrah_q_title;
+
+  /// No description provided for @usrah_q_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'দায়ী হিসেবে সাইন ইন করলে আপনার উসরার ভেতরে প্রশ্ন করতে পারবেন এবং উসরা প্রধানের উত্তর দেখতে পারবেন।'**
+  String get usrah_q_hint;
+
+  /// No description provided for @usrah_q_ask_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার প্রশ্ন লিখুন…'**
+  String get usrah_q_ask_hint;
+
+  /// No description provided for @usrah_q_send.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রশ্ন পাঠান'**
+  String get usrah_q_send;
+
+  /// No description provided for @usrah_q_sending.
+  ///
+  /// In bn, this message translates to:
+  /// **'পাঠানো হচ্ছে…'**
+  String get usrah_q_sending;
+
+  /// No description provided for @usrah_q_sent.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রশ্ন পাঠানো হয়েছে — উসরা প্রধান উত্তর দিলে এখানে দেখা যাবে'**
+  String get usrah_q_sent;
+
+  /// No description provided for @usrah_q_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো প্রশ্ন নেই — প্রথম প্রশ্নটি আপনিই করুন'**
+  String get usrah_q_empty;
+
+  /// No description provided for @usrah_q_answered_by.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর দিয়েছেন'**
+  String get usrah_q_answered_by;
+
+  /// No description provided for @usrah_q_awaiting.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরা প্রধানের উত্তরের অপেক্ষায়'**
+  String get usrah_q_awaiting;
+
+  /// No description provided for @usrah_q_answer_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর লিখুন…'**
+  String get usrah_q_answer_hint;
+
+  /// No description provided for @usrah_q_answer_submit.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর প্রকাশ করুন'**
+  String get usrah_q_answer_submit;
+
+  /// No description provided for @usrah_q_answered.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর প্রকাশিত হয়েছে'**
+  String get usrah_q_answered;
+
+  /// No description provided for @usrah_q_cat_general.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাধারণ'**
+  String get usrah_q_cat_general;
+
+  /// No description provided for @usrah_q_cat_aqeedah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আকীদা'**
+  String get usrah_q_cat_aqeedah;
+
+  /// No description provided for @usrah_q_cat_salah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সালাত'**
+  String get usrah_q_cat_salah;
+
+  /// No description provided for @usrah_q_cat_quran.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুরআন'**
+  String get usrah_q_cat_quran;
+
+  /// No description provided for @usrah_q_cat_muamalah.
+  ///
+  /// In bn, this message translates to:
+  /// **'লেনদেন'**
+  String get usrah_q_cat_muamalah;
+
+  /// No description provided for @usrah_q_cat_tarbiyah.
+  ///
+  /// In bn, this message translates to:
+  /// **'তারবিয়াত'**
+  String get usrah_q_cat_tarbiyah;
+
+  /// No description provided for @dawah_req_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'স্তরের প্রয়োজনীয়তা'**
+  String get dawah_req_title;
+
+  /// No description provided for @dawah_req_progress_unit.
+  ///
+  /// In bn, this message translates to:
+  /// **'পূরণ'**
+  String get dawah_req_progress_unit;
+
+  /// No description provided for @dawah_req_invigilator_check.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরিদর্শক যাচাই'**
+  String get dawah_req_invigilator_check;
+
+  /// No description provided for @dawah_req_all_met.
+  ///
+  /// In bn, this message translates to:
+  /// **'মাশাআল্লাহ — সব শর্ত পূরণ হয়েছে! স্তর উন্নতির অপেক্ষায়।'**
+  String get dawah_req_all_met;
+
+  /// No description provided for @dawah_req_auto_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'সব শর্ত পূরণ হলে রাতের মূল্যায়নে স্তর স্বয়ংক্রিয়ভাবে উন্নত হবে, ইনশাআল্লাহ।'**
+  String get dawah_req_auto_hint;
+
+  /// No description provided for @dawah_req_load_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'চেকলিস্ট আনা যায়নি'**
+  String get dawah_req_load_failed;
+
+  /// No description provided for @dawah_req_live_action.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ চেকলিস্ট'**
+  String get dawah_req_live_action;
 }
 
 class _AppLocalizationsDelegate

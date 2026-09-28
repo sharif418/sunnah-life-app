@@ -502,3 +502,24 @@ Stage Summary:
 - VERIFIED RAW: `bun run smoke:quiz` → 21/21 PASS against the in-process gateway (websocket direct :3001). Socket through Caddy `/?XTransformPort=3001` path `/socket.io`: polling PASS + websocket-upgrade PASS (room:state received on both). `bun run test` (apps/api) → 9 suites, 133/133 PASS. eslint clean (api files + web app).
 - One backend stands again: web+mobile both reach NestJS :3001 for REST and WS.
 - API dev boot: `DATABASE_URL=postgresql://sunnah_app:sunnah_app_dev@127.0.0.1:5433/sunnahlife DIRECT_URL=postgresql://postgres@127.0.0.1:5433/sunnahlife QUIZ_SECRET=dev-quiz-secret JWT_SECRET=… JWT_REFRESH_SECRET=… REDIS_URL=redis://127.0.0.1:6380 SMS_PROVIDER=mock PORT=3001 bun src/main.ts`
+
+---
+Task ID: B9-b
+Agent: lead-architect (main session)
+Task: Flutter foundation for the B9 surface parity — models, API client, providers, l10n, router, entry points (screens themselves land in B9-c/B9-d).
+
+Work Log:
+- Restored Flutter 3.47.5 stable (Dart 3.13.4, exact repo pin) to /home/z/flutter — storage.googleapis.com now streams at ~17 MB/s, no ranged downloader needed.
+- pubspec: + socket_io_client ^3.1.6 (socket.io v4 protocol — matches the API gateway). flutter pub get green.
+- NEW lib/models/ilm_engagement.dart: CourseSummary/CourseDetail/CourseLesson/CourseDetailResponse/EnrollmentItem, QuizAttemptItem, UsrahQuestion (+6 category ARB keys), LevelCheckRow/DawahRequirements, QuizLiveTokenResponse, loadBundledCourses() (offline pack). Quiz/QuizQuestion NOT duplicated — content_models.dart owns them (now with a `live` flag). Exported via the domain.dart barrel.
+- api_client.dart: courses/courseDetail/enrollments/enroll/saveCourseProgress/quizPack/submitQuizAttempt/quizAttempts/usrahQuestions/askUsrahQuestion/answerUsrahQuestion/dawahRequirements/quizLiveToken.
+- remote_state.dart: quizPackProvider (API→bundled fallback), coursePackProvider (API→bundled), enrollmentsProvider, quizAttemptsProvider, usrahQuestionsProvider, dawahRequirementsProvider — all session-aware.
+- ARB: +87 keys ×3 (bn/en/ar, parity 411/411/411), flutter gen-l10n regenerated (411 getters), app_strings.dart identity map updated by script.
+- app.dart router: /ilm/courses(+/:courseId), /ilm/quizzes(+/:quizId), /ilm/live-quiz, /dawah/questions, /dawah/requirements.
+- Ilm grid: +কোর্স +কুইজ +লাইভ কুইজ tiles (11 total). Dawah tab: requirements section got a "লাইভ চেকলিস্ট" action → /dawah/requirements; Usrah tab got the উসরার প্রশ্নোত্তর entry card → /dawah/questions.
+- Bundled the real packs (assets/content/quizzes.json + courses.json — copies of packages/content) for the offline fallbacks.
+- 7 STUB screens committed so the tree compiles while agents replace them (courses_screen.dart: CoursesScreen+CourseDetailScreen(courseId, openLessonId); quizzes_screen.dart: QuizzesScreen+QuizPlayerScreen(quizId); live_quiz_screen.dart; usrah_questions_screen.dart; dawah_requirements_screen.dart).
+
+Stage Summary:
+- flutter analyze: No issues found. flutter test: 65/65 pass (with stubs).
+- The screen writers (B9-c, B9-d) now have a frozen contract: models in lib/models/ilm_engagement.dart + content_models.dart, providers in lib/state/remote_state.dart, api methods on ApiClient, l10n keys 411 in ARB (t('key') / context.t), routes fixed.

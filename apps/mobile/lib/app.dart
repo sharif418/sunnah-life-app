@@ -18,16 +18,21 @@ import 'features/amal/month_screen.dart';
 import 'features/amal/self_test_screen.dart';
 import 'features/amal/today_screen.dart';
 import 'features/auth/auth_screen.dart';
+import 'features/dawah/dawah_requirements_screen.dart';
 import 'features/dawah/dawah_screen.dart';
+import 'features/dawah/usrah_questions_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/ilm/adhkar_screen.dart';
 import 'features/ilm/articles_screen.dart';
+import 'features/ilm/courses_screen.dart';
 import 'features/ilm/duas_screen.dart';
 import 'features/ilm/iman_branches_screen.dart';
 import 'features/ilm/islamic_names_screen.dart';
 import 'features/ilm/ilm_screen.dart';
+import 'features/ilm/live_quiz_screen.dart';
 import 'features/ilm/names99_screen.dart';
 import 'features/ilm/quran_reader_screen.dart';
+import 'features/ilm/quizzes_screen.dart';
 import 'features/ilm/sunnahs_screen.dart';
 import 'features/more/about_screen.dart';
 import 'features/more/live_screen.dart';
@@ -158,7 +163,22 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(path: '/dawah', builder: (c, s) => const DawahScreen()),
+              GoRoute(
+                path: '/dawah',
+                builder: (c, s) => const DawahScreen(),
+                routes: [
+                  // B9: usrah question board + live level checklist (mobile
+                  // parity with the web views).
+                  GoRoute(
+                    path: 'questions',
+                    builder: (c, s) => const UsrahQuestionsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'requirements',
+                    builder: (c, s) => const DawahRequirementsScreen(),
+                  ),
+                ],
+              ),
             ],
           ),
           StatefulShellBranch(
@@ -167,6 +187,36 @@ final routerProvider = Provider<GoRouter>((ref) {
                 path: '/ilm',
                 builder: (c, s) => const IlmScreen(),
                 routes: [
+                  // B9: courses + self-paced quizzes + live usrah quiz.
+                  GoRoute(
+                    path: 'courses',
+                    builder: (c, s) => const CoursesScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':courseId',
+                        builder: (c, s) => CourseDetailScreen(
+                          courseId: s.pathParameters['courseId'] ?? '',
+                          openLessonId: s.uri.queryParameters['lesson'],
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'quizzes',
+                    builder: (c, s) => const QuizzesScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':quizId',
+                        builder: (c, s) => QuizPlayerScreen(
+                          quizId: s.pathParameters['quizId'] ?? '',
+                        ),
+                      ),
+                    ],
+                  ),
+                  GoRoute(
+                    path: 'live-quiz',
+                    builder: (c, s) => const LiveQuizScreen(),
+                  ),
                   GoRoute(
                     path: 'quran',
                     builder: (c, s) => const QuranReaderScreen(),

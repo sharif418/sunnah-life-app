@@ -265,10 +265,16 @@ class _DawahOverviewTab extends ConsumerWidget {
             ),
             const SizedBox(height: SLSpacing.s12),
 
-            // Requirements checklist
+            // Requirements checklist — “Live checklist” opens the live screen
+            // (GET /api/dawah/requirements, B9 mobile parity with the web).
             SectionHeader(
               context.t('dawah_requirements'),
               icon: Icons.checklist,
+              action: TextButton.icon(
+                onPressed: () => context.push('/dawah/requirements'),
+                icon: const Icon(Icons.bolt, size: 16),
+                label: Text(context.t('dawah_req_live_action')),
+              ),
             ),
             AppCard(
               padding: EdgeInsets.zero,
@@ -528,6 +534,29 @@ class _UsrahTab extends ConsumerWidget {
                   ],
                 ),
               ),
+              // B9: usrah question board — members ask, the head answers (RLS).
+              AppCard(
+                onTap: () => context.push('/dawah/questions'),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.forum_outlined,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: SLSpacing.s12),
+                    Expanded(
+                      child: Text(
+                        context.t('usrah_q_title'),
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                      ),
+                      ),
+                    ),
+                    const DirectionalIcon(Icons.chevron_right),
+                  ],
+                ),
+              ),
+              const SizedBox(height: SLSpacing.s4),
               SectionHeader(
                 context.t('dawah_announcements'),
                 icon: Icons.campaign_outlined,

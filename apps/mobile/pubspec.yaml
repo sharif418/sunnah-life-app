@@ -29,6 +29,9 @@ dependencies:
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.0
 
+  # Live usrah quiz (socket.io client for the NestJS gateway, path /socket.io)
+  socket_io_client: ^3.1.6
+
   # Fonts + storage + net
   google_fonts: ^6.2.1
   shared_preferences: ^2.3.4

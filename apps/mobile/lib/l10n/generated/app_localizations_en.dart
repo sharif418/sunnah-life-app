@@ -1001,4 +1001,276 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get live_programs_count => 'programs';
+
+  @override
+  String get ilm_courses => 'Courses';
+
+  @override
+  String get ilm_quizzes => 'Quizzes';
+
+  @override
+  String get ilm_live_quiz => 'Live quiz';
+
+  @override
+  String get course_lessons_unit => 'lessons';
+
+  @override
+  String get course_enrolled_unit => 'enrolled';
+
+  @override
+  String get course_start => 'Start the course';
+
+  @override
+  String get course_continue => 'Continue';
+
+  @override
+  String get course_enroll => 'Enroll in the course';
+
+  @override
+  String get course_enrolled => 'Enrolled';
+
+  @override
+  String get course_enrolling => 'Enrolling…';
+
+  @override
+  String get course_signin_to_enroll => 'Sign in to enroll in courses';
+
+  @override
+  String get course_progress_of => 'lessons completed';
+
+  @override
+  String get courses_empty_title => 'Courses coming soon, insha\'Allah';
+
+  @override
+  String get courses_empty_hint =>
+      'As-Sunnah Foundation study circles and courses will be added here.';
+
+  @override
+  String get courses_load_failed => 'Could not load courses';
+
+  @override
+  String get lesson_complete => 'Lesson completed';
+
+  @override
+  String get lesson_unmark => 'Remove from completed';
+
+  @override
+  String get lesson_next => 'Next lesson';
+
+  @override
+  String get quiz_play => 'Play the quiz';
+
+  @override
+  String get quiz_live_eligible => 'Live-quiz eligible';
+
+  @override
+  String get quiz_best => 'Best';
+
+  @override
+  String get quiz_last => 'Latest';
+
+  @override
+  String get quiz_question_of => 'Question';
+
+  @override
+  String get quiz_choose_option => 'Choose an answer';
+
+  @override
+  String get quiz_correct_was => 'The correct answer was';
+
+  @override
+  String get quiz_explanation => 'Explanation';
+
+  @override
+  String get quiz_next_question => 'Next question';
+
+  @override
+  String get quiz_finish => 'See the result';
+
+  @override
+  String get quiz_result_title => 'Quiz finished';
+
+  @override
+  String get quiz_your_score => 'Your score';
+
+  @override
+  String get quiz_result_saved => 'Score saved to your account';
+
+  @override
+  String get quiz_result_local => 'Sign in to save your scores';
+
+  @override
+  String get quiz_play_again => 'Play again';
+
+  @override
+  String get quiz_back_to_list => 'Back to the list';
+
+  @override
+  String get quiz_history_title => 'My quiz history';
+
+  @override
+  String get quizzes_empty_title => 'Quizzes coming soon, insha\'Allah';
+
+  @override
+  String get quizzes_empty_hint =>
+      'Qur\'an-Sunnah, aqeedah and fiqh quizzes will be added here.';
+
+  @override
+  String get quizzes_load_failed => 'Could not load quizzes';
+
+  @override
+  String get live_quiz_desc =>
+      'Join your usrah\'s room and play together — questions arrive one by one and everyone\'s score climbs the leaderboard. When your usrah head starts a quiz, the question appears on your screen, insha\'Allah.';
+
+  @override
+  String get live_quiz_enter => 'Enter the quiz room';
+
+  @override
+  String get live_quiz_joining => 'Joining…';
+
+  @override
+  String get live_quiz_connected => 'Connected';
+
+  @override
+  String get live_quiz_disconnected => 'Disconnected';
+
+  @override
+  String get live_quiz_signin_hint =>
+      'Sign in as an usrah member to join the live quiz your usrah head runs.';
+
+  @override
+  String get live_quiz_for_usrah => 'Live quiz — for your usrah';
+
+  @override
+  String get live_quiz_host_controls => 'Usrah head — quiz controls';
+
+  @override
+  String get live_quiz_start => 'Start the quiz';
+
+  @override
+  String get live_quiz_next => 'Next question';
+
+  @override
+  String get live_quiz_reveal_now => 'Reveal now';
+
+  @override
+  String get live_quiz_end => 'End the quiz';
+
+  @override
+  String get live_quiz_leave => 'Leave the room';
+
+  @override
+  String get live_quiz_lobby_host =>
+      'Pick a quiz and start — your usrah members are joining.';
+
+  @override
+  String get live_quiz_lobby_player =>
+      'When the usrah head starts the quiz, questions appear here…';
+
+  @override
+  String get live_quiz_answered => 'Answer submitted — please wait…';
+
+  @override
+  String get live_quiz_host_hint =>
+      'Auto-reveal when everyone has answered — press “Reveal now” to see it sooner';
+
+  @override
+  String get live_quiz_reveal_title => 'Result';
+
+  @override
+  String get live_quiz_final => 'Quiz over — final scores';
+
+  @override
+  String get live_quiz_leaderboard => 'Leaderboard';
+
+  @override
+  String get live_quiz_players => 'Members';
+
+  @override
+  String get live_quiz_connect_failed => 'Could not reach the quiz server';
+
+  @override
+  String get live_quiz_secs => 's';
+
+  @override
+  String get live_quiz_people => 'answered';
+
+  @override
+  String get usrah_q_title => 'Usrah Q&A';
+
+  @override
+  String get usrah_q_hint =>
+      'Sign in as a da\'ee to ask questions inside your usrah and read the head\'s answers.';
+
+  @override
+  String get usrah_q_ask_hint => 'Write your question…';
+
+  @override
+  String get usrah_q_send => 'Send question';
+
+  @override
+  String get usrah_q_sending => 'Sending…';
+
+  @override
+  String get usrah_q_sent =>
+      'Question sent — the head\'s answer will appear here';
+
+  @override
+  String get usrah_q_empty => 'No questions yet — ask the first one';
+
+  @override
+  String get usrah_q_answered_by => 'Answered by';
+
+  @override
+  String get usrah_q_awaiting => 'Awaiting the usrah head\'s answer';
+
+  @override
+  String get usrah_q_answer_hint => 'Write the answer…';
+
+  @override
+  String get usrah_q_answer_submit => 'Publish the answer';
+
+  @override
+  String get usrah_q_answered => 'Answer published';
+
+  @override
+  String get usrah_q_cat_general => 'General';
+
+  @override
+  String get usrah_q_cat_aqeedah => 'Aqeedah';
+
+  @override
+  String get usrah_q_cat_salah => 'Salah';
+
+  @override
+  String get usrah_q_cat_quran => 'Qur\'an';
+
+  @override
+  String get usrah_q_cat_muamalah => 'Transactions';
+
+  @override
+  String get usrah_q_cat_tarbiyah => 'Tarbiyah';
+
+  @override
+  String get dawah_req_title => 'Level requirements';
+
+  @override
+  String get dawah_req_progress_unit => 'met';
+
+  @override
+  String get dawah_req_invigilator_check => 'Invigilator verification';
+
+  @override
+  String get dawah_req_all_met =>
+      'Masha\'Allah — every requirement is met! Awaiting the level promotion.';
+
+  @override
+  String get dawah_req_auto_hint =>
+      'Once every requirement is met, the nightly evaluation promotes the level automatically, insha\'Allah.';
+
+  @override
+  String get dawah_req_load_failed => 'Could not load the checklist';
+
+  @override
+  String get dawah_req_live_action => 'Live checklist';
 }
