@@ -36,6 +36,7 @@ import 'features/ilm/quran_reader_screen.dart';
 import 'features/ilm/quizzes_screen.dart';
 import 'features/ilm/sunnahs_screen.dart';
 import 'features/more/about_screen.dart';
+import 'features/more/auto_silent_screen.dart';
 import 'features/more/live_screen.dart';
 import 'features/more/masala_screen.dart';
 import 'features/more/more_screen.dart';
@@ -281,6 +282,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'qibla',
                     builder: (c, s) => const QiblaScreen(),
+                  ),
+                  GoRoute(
+                    path: 'autosilent',
+                    builder: (c, s) => const AutoSilentScreen(),
                   ),
                   GoRoute(
                     path: 'mosques',

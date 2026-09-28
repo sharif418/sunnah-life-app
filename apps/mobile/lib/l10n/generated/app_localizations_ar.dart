@@ -1391,4 +1391,49 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mosque_direction => 'الاتجاه';
+
+  @override
+  String get more_autosilent => 'الصامت التلقائي';
+
+  @override
+  String get autosilent_explain_title => 'صامت أثناء الجماعة';
+
+  @override
+  String get autosilent_explain_body =>
+      'في بداية كل وقت صلاة يتحول الهاتف إلى الصامت (المهم فقط) ثم يعود إلى حالته بعد المدة المحددة. يتطلب ذلك إذن ‘عدم الإزعاج’ في أندرويد.';
+
+  @override
+  String get autosilent_dnd_status => 'حالة الإذن';
+
+  @override
+  String get autosilent_granted => 'الإذن مُنَح';
+
+  @override
+  String get autosilent_not_granted => 'الإذن غير مُنَح';
+
+  @override
+  String get autosilent_grant => 'منح الإذن';
+
+  @override
+  String get autosilent_recheck => 'تحقق مرة أخرى';
+
+  @override
+  String get autosilent_return_hint =>
+      'عُد إلى التطبيق بعد المنح — تتحدث الحالة تلقائيًا';
+
+  @override
+  String get autosilent_master => 'تشغيل الصامت التلقائي';
+
+  @override
+  String get autosilent_minutes_label => 'مدة الصمت';
+
+  @override
+  String get autosilent_minutes_suffix => 'دقيقة صامتة';
+
+  @override
+  String get autosilent_waqts_title => 'أي أوقات الصلاة';
+
+  @override
+  String get autosilent_reboot_note =>
+      'بعد إعادة تشغيل الهاتف، يُعاد تفعيل الجدولة بفتح التطبيق مرة واحدة.';
 }

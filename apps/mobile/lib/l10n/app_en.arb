@@ -450,5 +450,19 @@
   "mosques_from_city": "From this city",
   "mosques_from_location": "From your location",
   "mosques_use_city": "Use city",
-  "mosque_direction": "direction"
+  "mosque_direction": "direction",
+  "more_autosilent": "Auto-silent",
+  "autosilent_explain_title": "Silent during jama'at",
+  "autosilent_explain_body": "At the start of each prayer time the phone goes silent (priority-only) and returns to normal after the set minutes. Android's Do Not Disturb access is required for this.",
+  "autosilent_dnd_status": "Permission status",
+  "autosilent_granted": "Access granted",
+  "autosilent_not_granted": "Access not granted",
+  "autosilent_grant": "Grant access",
+  "autosilent_recheck": "Check again",
+  "autosilent_return_hint": "Return to the app after granting — the status updates by itself",
+  "autosilent_master": "Auto-silent on",
+  "autosilent_minutes_label": "Silent duration",
+  "autosilent_minutes_suffix": "min silent",
+  "autosilent_waqts_title": "Which prayer times",
+  "autosilent_reboot_note": "After a phone restart, opening the app once re-arms the schedule."
 }

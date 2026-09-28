@@ -2805,6 +2805,90 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'দিক'**
   String get mosque_direction;
+
+  /// No description provided for @more_autosilent.
+  ///
+  /// In bn, this message translates to:
+  /// **'অটো-সাইলেন্ট'**
+  String get more_autosilent;
+
+  /// No description provided for @autosilent_explain_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'জামাতের সময় ফোন নিঃশব্দ'**
+  String get autosilent_explain_title;
+
+  /// No description provided for @autosilent_explain_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতি ওয়াক্তের শুরুতে ফোন সাইলেন্ট (শুধু জরুরি) হয়ে যায় এবং নির্দিষ্ট সময় পর আগের অবস্থায় ফিরে আসে। এর জন্য অ্যান্ড্রয়েডের ‘বিরক্ত না করুন’ (Do Not Disturb) অনুমতি দরকার।'**
+  String get autosilent_explain_body;
+
+  /// No description provided for @autosilent_dnd_status.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতির অবস্থা'**
+  String get autosilent_dnd_status;
+
+  /// No description provided for @autosilent_granted.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দেওয়া আছে'**
+  String get autosilent_granted;
+
+  /// No description provided for @autosilent_not_granted.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি নেই'**
+  String get autosilent_not_granted;
+
+  /// No description provided for @autosilent_grant.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দিন'**
+  String get autosilent_grant;
+
+  /// No description provided for @autosilent_recheck.
+  ///
+  /// In bn, this message translates to:
+  /// **'আবার চেক করুন'**
+  String get autosilent_recheck;
+
+  /// No description provided for @autosilent_return_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দিয়ে অ্যাপে ফিরে এলে অবস্থা নিজেই হালনাগাদ হবে'**
+  String get autosilent_return_hint;
+
+  /// No description provided for @autosilent_master.
+  ///
+  /// In bn, this message translates to:
+  /// **'অটো-সাইলেন্ট চালু'**
+  String get autosilent_master;
+
+  /// No description provided for @autosilent_minutes_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাইলেন্ট থাকার সময়'**
+  String get autosilent_minutes_label;
+
+  /// No description provided for @autosilent_minutes_suffix.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট সাইলেন্ট'**
+  String get autosilent_minutes_suffix;
+
+  /// No description provided for @autosilent_waqts_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোন কোন ওয়াক্তে চালু হবে'**
+  String get autosilent_waqts_title;
+
+  /// No description provided for @autosilent_reboot_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।'**
+  String get autosilent_reboot_note;
 }
 
 class _AppLocalizationsDelegate

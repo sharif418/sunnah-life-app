@@ -1402,4 +1402,49 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get mosque_direction => 'দিক';
+
+  @override
+  String get more_autosilent => 'অটো-সাইলেন্ট';
+
+  @override
+  String get autosilent_explain_title => 'জামাতের সময় ফোন নিঃশব্দ';
+
+  @override
+  String get autosilent_explain_body =>
+      'প্রতি ওয়াক্তের শুরুতে ফোন সাইলেন্ট (শুধু জরুরি) হয়ে যায় এবং নির্দিষ্ট সময় পর আগের অবস্থায় ফিরে আসে। এর জন্য অ্যান্ড্রয়েডের ‘বিরক্ত না করুন’ (Do Not Disturb) অনুমতি দরকার।';
+
+  @override
+  String get autosilent_dnd_status => 'অনুমতির অবস্থা';
+
+  @override
+  String get autosilent_granted => 'অনুমতি দেওয়া আছে';
+
+  @override
+  String get autosilent_not_granted => 'অনুমতি নেই';
+
+  @override
+  String get autosilent_grant => 'অনুমতি দিন';
+
+  @override
+  String get autosilent_recheck => 'আবার চেক করুন';
+
+  @override
+  String get autosilent_return_hint =>
+      'অনুমতি দিয়ে অ্যাপে ফিরে এলে অবস্থা নিজেই হালনাগাদ হবে';
+
+  @override
+  String get autosilent_master => 'অটো-সাইলেন্ট চালু';
+
+  @override
+  String get autosilent_minutes_label => 'সাইলেন্ট থাকার সময়';
+
+  @override
+  String get autosilent_minutes_suffix => 'মিনিট সাইলেন্ট';
+
+  @override
+  String get autosilent_waqts_title => 'কোন কোন ওয়াক্তে চালু হবে';
+
+  @override
+  String get autosilent_reboot_note =>
+      'ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।';
 }

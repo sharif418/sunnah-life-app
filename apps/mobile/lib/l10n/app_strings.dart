@@ -512,6 +512,20 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'mosques_from_location' => l.mosques_from_location,
   'mosques_use_city' => l.mosques_use_city,
   'mosque_direction' => l.mosque_direction,
+  'more_autosilent' => l.more_autosilent,
+  'autosilent_explain_title' => l.autosilent_explain_title,
+  'autosilent_explain_body' => l.autosilent_explain_body,
+  'autosilent_dnd_status' => l.autosilent_dnd_status,
+  'autosilent_granted' => l.autosilent_granted,
+  'autosilent_not_granted' => l.autosilent_not_granted,
+  'autosilent_grant' => l.autosilent_grant,
+  'autosilent_recheck' => l.autosilent_recheck,
+  'autosilent_return_hint' => l.autosilent_return_hint,
+  'autosilent_master' => l.autosilent_master,
+  'autosilent_minutes_label' => l.autosilent_minutes_label,
+  'autosilent_minutes_suffix' => l.autosilent_minutes_suffix,
+  'autosilent_waqts_title' => l.autosilent_waqts_title,
+  'autosilent_reboot_note' => l.autosilent_reboot_note,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

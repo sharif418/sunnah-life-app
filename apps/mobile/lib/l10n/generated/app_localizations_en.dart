@@ -1399,4 +1399,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mosque_direction => 'direction';
+
+  @override
+  String get more_autosilent => 'Auto-silent';
+
+  @override
+  String get autosilent_explain_title => 'Silent during jama\'at';
+
+  @override
+  String get autosilent_explain_body =>
+      'At the start of each prayer time the phone goes silent (priority-only) and returns to normal after the set minutes. Android\'s Do Not Disturb access is required for this.';
+
+  @override
+  String get autosilent_dnd_status => 'Permission status';
+
+  @override
+  String get autosilent_granted => 'Access granted';
+
+  @override
+  String get autosilent_not_granted => 'Access not granted';
+
+  @override
+  String get autosilent_grant => 'Grant access';
+
+  @override
+  String get autosilent_recheck => 'Check again';
+
+  @override
+  String get autosilent_return_hint =>
+      'Return to the app after granting — the status updates by itself';
+
+  @override
+  String get autosilent_master => 'Auto-silent on';
+
+  @override
+  String get autosilent_minutes_label => 'Silent duration';
+
+  @override
+  String get autosilent_minutes_suffix => 'min silent';
+
+  @override
+  String get autosilent_waqts_title => 'Which prayer times';
+
+  @override
+  String get autosilent_reboot_note =>
+      'After a phone restart, opening the app once re-arms the schedule.';
 }

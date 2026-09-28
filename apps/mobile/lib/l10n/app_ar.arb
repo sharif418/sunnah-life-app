@@ -450,5 +450,19 @@
   "mosques_from_city": "من هذه المدينة",
   "mosques_from_location": "من موقعك",
   "mosques_use_city": "استخدم المدينة",
-  "mosque_direction": "الاتجاه"
+  "mosque_direction": "الاتجاه",
+  "more_autosilent": "الصامت التلقائي",
+  "autosilent_explain_title": "صامت أثناء الجماعة",
+  "autosilent_explain_body": "في بداية كل وقت صلاة يتحول الهاتف إلى الصامت (المهم فقط) ثم يعود إلى حالته بعد المدة المحددة. يتطلب ذلك إذن ‘عدم الإزعاج’ في أندرويد.",
+  "autosilent_dnd_status": "حالة الإذن",
+  "autosilent_granted": "الإذن مُنَح",
+  "autosilent_not_granted": "الإذن غير مُنَح",
+  "autosilent_grant": "منح الإذن",
+  "autosilent_recheck": "تحقق مرة أخرى",
+  "autosilent_return_hint": "عُد إلى التطبيق بعد المنح — تتحدث الحالة تلقائيًا",
+  "autosilent_master": "تشغيل الصامت التلقائي",
+  "autosilent_minutes_label": "مدة الصمت",
+  "autosilent_minutes_suffix": "دقيقة صامتة",
+  "autosilent_waqts_title": "أي أوقات الصلاة",
+  "autosilent_reboot_note": "بعد إعادة تشغيل الهاتف، يُعاد تفعيل الجدولة بفتح التطبيق مرة واحدة."
 }

@@ -21,6 +21,8 @@ class MoreScreen extends ConsumerWidget {
     final entries = <(IconData, String, String)>[
       (Icons.calculate_outlined, context.t('more_zakat'), '/more/zakat'),
       (Icons.explore_outlined, context.t('more_qibla'), '/more/qibla'),
+      (Icons.do_not_disturb_on_outlined,
+          context.t('more_autosilent'), '/more/autosilent'),
       (Icons.mosque_outlined, context.t('more_mosque'), '/more/mosques'),
       (Icons.help_outline, context.t('more_masala'), '/more/masala'),
       (Icons.podcasts_outlined, context.t('more_live'), '/more/live'),
