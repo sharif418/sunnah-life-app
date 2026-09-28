@@ -213,7 +213,9 @@ class PrayerAlarmReceiver : BroadcastReceiver() {
         if (!postOk) return
 
         val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-            .setSmallIcon(context.applicationInfo.icon)
+            // Monochrome status-bar icon (colored applicationInfo.icon renders
+            // as a white square); mirrors the FCM meta-data + Dart plugin init.
+            .setSmallIcon(R.drawable.ic_notification)
             .setContentTitle(title)
             .setContentText(body)
             .setPriority(NotificationCompat.PRIORITY_HIGH)

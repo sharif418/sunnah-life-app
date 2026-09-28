@@ -9,6 +9,7 @@ library;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -29,7 +30,12 @@ class NotificationService {
   Future<void> init() async {
     if (_initialized) return;
     tzdata.initializeTimeZones();
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    await _initLocalTimeZone();
+    // Monochrome small icon for EVERY local notification (colored launcher
+    // mipmaps render as a white square in the status bar).
+    const androidInit = AndroidInitializationSettings(
+      '@drawable/ic_notification',
+    );
     const initSettings = InitializationSettings(
       android: androidInit,
       iOS: DarwinInitializationSettings(),
@@ -50,6 +56,21 @@ class NotificationService {
         >();
     await androidImpl?.requestNotificationsPermission();
     _initialized = true;
+  }
+
+  /// zonedSchedule() interprets its trigger in [tz.local]; leaving it at the
+  /// package default (UTC) shifts every bell by the city offset on a real
+  /// device. The app's model assumes the device clock is in the city
+  /// timezone, so the device zone is the correct [tz.local].
+  Future<void> _initLocalTimeZone() async {
+    try {
+      final info = await FlutterTimezone.getLocalTimezone();
+      tz.setLocalLocation(tz.getLocation(info.identifier));
+    } catch (_) {
+      // Plugin unavailable (tests, stubbed platforms) — fall back to the
+      // app's home market so Bangladeshi devices stay correct.
+      tz.setLocalLocation(tz.getLocation('Asia/Dhaka'));
+    }
   }
 
   Future<bool> requestPermission() async {
@@ -97,8 +118,14 @@ class NotificationService {
     );
   }
 
-  /// Zoned schedule — used for the per-waqt bell and the 20-min post-prayer
+  /// Zoned schedule — used for the per-waqt bell and the post-prayer
   /// prompt. [when] must be a future tz datetime in the city timezone.
+  ///
+  /// Android 12+/14 exact-alarm policy: SCHEDULE_EXACT_ALARM is denied by
+  /// default, so query [AndroidFlutterLocalNotificationsPlugin
+  /// .canScheduleExactAlarms] and fall back to inexact-allow-while-idle —
+  /// a slightly-delayed bell beats a thrown exception (and the permission
+  /// card on Home asks the user to upgrade it to exact).
   Future<void> zoned({
     required int id,
     required String title,
@@ -106,6 +133,7 @@ class NotificationService {
     required DateTime when,
     String channel = 'sunnah_life_prayers',
     DateTimeComponents? matchComponents,
+    String payload = 'prayer',
   }) async {
     if (when.isBefore(DateTime.now())) return;
     await _channel(channel, 'নামাজের সময়', Importance.high);
@@ -123,12 +151,30 @@ class NotificationService {
         ),
         iOS: const DarwinNotificationDetails(),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: await _resolveScheduleMode(),
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: matchComponents,
-      payload: 'prayer',
+      payload: payload,
     );
+  }
+
+  /// Exact when the OS granted SCHEDULE_EXACT_ALARM, inexact otherwise.
+  /// Never throws — every failure path degrades to the inexact mode.
+  Future<AndroidScheduleMode> _resolveScheduleMode() async {
+    try {
+      final androidImpl = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidImpl != null &&
+          await androidImpl.canScheduleExactNotifications() == true) {
+        return AndroidScheduleMode.exactAllowWhileIdle;
+      }
+    } catch (e) {
+      debugPrint('canScheduleExactAlarms probe failed: $e');
+    }
+    return AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
   Future<void> cancel(int id) => _plugin.cancel(id);
