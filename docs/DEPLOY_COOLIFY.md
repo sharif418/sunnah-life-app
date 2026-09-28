@@ -249,11 +249,19 @@ queued BullMQ jobs survive a restart (up to 1 s of fsync skew).
 
 ## 6. Volumes & backup strategy
 
-Docker named volumes: `pgdata` (critical),
-`pgwal` (archived WAL segments — postgres copies them there via
-`archive_command`, pgBackRest consumes them for PITR [C/W2h]; the backup
-cron itself stays owner-run), `miniodata` (media), `meili` (rebuildable
-indexes).
+Docker named volumes: `pgdata` (critical — also holds the archived WAL
+segments at `walarchive/` inside the volume: postgres copies them there
+via `archive_command` to `pgdata/walarchive`, and pgBackRest reads them
+from that same path for PITR [C/W2h]; the backup cron itself stays
+owner-run), `miniodata` (media), `meili` (rebuildable indexes).
+
+> Why inside `pgdata` and not a dedicated `pgwal` volume: the postgres
+> entrypoint chowns PGDATA before dropping privileges, so a directory
+> created there is writable by the `postgres` user. A separate named
+> volume is created `root:root` by docker (the path doesn't exist in the
+> image) and the entrypoint re-execs as `postgres` before the initdb
+> scripts run — neither the init script nor the archiver could write it
+> ("cp: Permission denied").
 
 ### 6.1 PostgreSQL — pgBackRest to off-site S3 (the critical backup)
 
@@ -270,6 +278,11 @@ PGBR="-v sunnahlife_pgdata:/var/lib/postgresql/data:ro \
       -v sunnahlife_pgsocket:/var/run/postgresql \
       -v $PWD/infra/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro"
 ```
+
+The read-only `pgdata` mount above is all WAL reading needs: archived
+segments live at `<pgdata-mount>/walarchive` (i.e.
+`/var/lib/postgresql/data/walarchive` inside the one-shot containers), so
+there is no separate WAL volume to mount.
 
 One-shot containers (from the repo root on the VPS):
 

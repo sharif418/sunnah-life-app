@@ -39,8 +39,7 @@ networks:
     driver: bridge
 
 volumes:
-  pgdata: # PostgreSQL 16 data (backup it — see docs/DEPLOY_COOLIFY.md §Backups)
-  pgwal: # archived WAL segments — pgBackRest PITR source (C/W2h; consumed per docs/DEPLOY_COOLIFY.md)
+  pgdata: # PostgreSQL 16 data + walarchive/ (backed up — see docs/DEPLOY_COOLIFY.md §Backups)
   pgsocket: # postgres unix socket dir — shared with the pgBackRest one-shot containers
   miniodata: # MinIO objects (media, PDFs, versioned content packs)
   meili: # Meilisearch indexes (rebuildable from the database)
@@ -65,30 +64,40 @@ services:
       - shared_buffers=${PG_SHARED_BUFFERS:-256MB}
       - -c
       - max_connections=${PG_MAX_CONNECTIONS:-100}
-      # WAL archiving (C/W2h): segments are copied to the pgwal volume and
-      # pgBackRest consumes them from there per docs/DEPLOY_COOLIFY.md — giving
-      # PITR beyond the nightly base backup. The init-walarchive.sh script
-      # creates the directory on first boot (archive_command cannot).
+      # WAL archiving (C/W2h): segments are copied to pgdata/walarchive —
+      # INSIDE the PGDATA volume, which the entrypoint chowns to the postgres
+      # user — and pgBackRest reads them from there per docs/DEPLOY_COOLIFY.md,
+      # giving PITR beyond the nightly base backup. A separate named volume
+      # would be created root:root by docker (the path doesn't exist in the
+      # image) and the entrypoint re-execs as the postgres user BEFORE running
+      # docker-entrypoint-initdb.d scripts, so neither the init script nor the
+      # archiver could write it ("cp: Permission denied"). The
+      # init-walarchive.sh script creates the directory on first boot
+      # (archive_command cannot). The `test -f … || cp …` idiom returns
+      # success for already-archived segments — `test ! -f … && cp …` would
+      # fail on every re-archive and postgres would retry forever.
       # Scheduled pgBackRest runs remain OWNER-RUN (honest Partial: the backup
       # cron + off-site repo are operator-side, see §6.3).
       - -c
       - archive_mode=on
       - -c
-      - "archive_command=test ! -f /var/lib/postgresql/walarchive/%f && cp %p /var/lib/postgresql/walarchive/%f"
+      - "archive_command=test -f /var/lib/postgresql/data/walarchive/%f || cp %p /var/lib/postgresql/data/walarchive/%f"
     volumes:
       - pgdata:/var/lib/postgresql/data
       # shared unix-socket dir → the pgBackRest backup containers connect
       # "locally" (the official image trusts local connections)
       - pgsocket:/var/run/postgresql
-      # archived WAL segments → mounted into the pgBackRest one-shots as well
-      - pgwal:/var/lib/postgresql/walarchive
       # runs once on an EMPTY volume: creates the NOBYPASSRLS role sunnah_app.
       # The API's migrations add the tables + RLS policies (docs/DATA_MODEL.md).
       - ./postgres/init-rls.sql:/docker-entrypoint-initdb.d/10-rls.sql:ro
       # …and once more for the WAL archive dir (runs as postgres on first boot).
       - ./postgres/init-walarchive.sh:/docker-entrypoint-initdb.d/20-walarchive.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sunnahlife}"]
+      # -h 127.0.0.1 forces TCP — the image's temporary initdb server accepts
+      # UNIX-SOCKET connections only, so a socket-based pg_isready passes ~5s
+      # before the real server listens and compose starts dependents too early
+      # (api P1001 crash loop; found by the compose smoke, run 36451058678).
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-sunnahlife} -h 127.0.0.1"]
       interval: 10s
       timeout: 5s
       retries: 10

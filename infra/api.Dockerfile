@@ -76,13 +76,21 @@ log() { printf '[api] %s\n' "$1"; }
 has() { grep -q "\"$1\":" package.json; }
 
 log "applying Prisma migrations (owner role via DIRECT_URL)"
-if has migrate:deploy; then
-  bun run migrate:deploy
-elif has db:migrate:prod; then
-  bun run db:migrate:prod
-elif [ -d prisma/migrations ]; then
-  bunx prisma migrate deploy
-fi
+migrate() {
+  if has migrate:deploy; then bun run migrate:deploy
+  elif has db:migrate:prod; then bun run db:migrate:prod
+  elif [ -d prisma/migrations ]; then bunx prisma migrate deploy
+  fi
+}
+# stack bring-up can race the DB healthcheck under load (P1001 is transient):
+# retry a few times before giving up — defense in depth behind -h 127.0.0.1
+n=0
+until migrate; do
+  n=$((n+1))
+  if [ "$n" -ge 5 ]; then log "FATAL: migrations failed after $n attempts"; exit 1; fi
+  log "migrations failed (attempt $n) — retrying in 5s"
+  sleep 5
+done
 
 # Phase C/W2a: boot seeds REFERENCE data only (amal catalog by key, the
 # farze_ain_v1.1 template, app config) — IDEMPOTENT upserts, never deletes.
