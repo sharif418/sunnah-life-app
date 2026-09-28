@@ -27,19 +27,26 @@ const int kRollingWindowDays = 3;
 //   bell        = 1000 + dayOffset * 16 + PrayerKey.index   (1000..1032)
 //   post-prayer = 2000 + dayOffset * 16 + PrayerKey.index   (2000..2032)
 //   exact alarm =  900 + PrayerKey.index (Kotlin AlarmManager path, unchanged)
+//   silent on   = 4000 + dayOffset * 16 + PrayerKey.index   (Kotlin ringer)
+//   silent off  = 5000 + dayOffset * 16 + PrayerKey.index   (Kotlin ringer)
 //
 // The day stride is 16 because max PrayerKey.index is tahajjud = 9 < 16:
 // the five farz slots of one day can never bleed into the next day's
 // block. Day-offset 0 reuses the historical single-day ids (1000+idx /
 // 2000+idx), so devices upgrading from the 1-day schedule replace their
-// existing alarms in place. Both families stay disjoint from the 900-exact
-// block and the push/foreground ids (< 900).
+// existing alarms in place. The families stay disjoint from each other, the
+// 900-exact block, the push/foreground ids (< 900) and the 3000-confirms.
+// The auto-silent ids are AlarmManager PendingIntent request codes (not
+// notification ids) but live in the same scheme so the whole scheduling
+// surface stays collision-free in one place.
 
 abstract final class Nid {
   static const int waqtBellBase = 1000; // + dayOffset*16 + PrayerKey.index
   static const int postPrayerBase = 2000; // + dayOffset*16 + PrayerKey.index
   static const int exactAlarmBase = 900; // + PrayerKey.index (Kotlin path)
   static const int amalConfirmBase = 3000; // + PrayerKey.index (diary-write ack)
+  static const int autoSilentOnBase = 4000; // + dayOffset*16 + PrayerKey.index
+  static const int autoSilentOffBase = 5000; // + dayOffset*16 + PrayerKey.index
 
   static const int _dayStride = 16;
 
@@ -53,6 +60,27 @@ abstract final class Nid {
 
   /// Exact-alarm (Kotlin AlarmManager) id for [key].
   static int exactAlarm(PrayerKey key) => exactAlarmBase + key.index;
+
+  /// Ringer-silence alarm id for [key] on [dayOffset] (Kotlin AlarmManager →
+  /// AutoSilentReceiver, fires setAutoSilent(true) at the waqt start).
+  static int autoSilentOn(int dayOffset, PrayerKey key) =>
+      autoSilentOnBase + dayOffset * _dayStride + key.index;
+
+  /// Ringer-restore alarm id for [key] on [dayOffset] (fires
+  /// setAutoSilent(false) N minutes after the waqt start).
+  static int autoSilentOff(int dayOffset, PrayerKey key) =>
+      autoSilentOffBase + dayOffset * _dayStride + key.index;
+
+  /// Every auto-silent id that can exist across the rolling window — the
+  /// deterministic cancel set (feature off / profile change). Covers every
+  /// slot of the stride, not just the farz indices, so the cancel stays
+  /// correct even if the waqt set ever widens.
+  static List<int> autoSilentAllIds() => [
+        for (final base in [autoSilentOnBase, autoSilentOffBase])
+          for (var offset = 0; offset < kRollingWindowDays; offset++)
+            for (var slot = 0; slot < _dayStride; slot++)
+              base + offset * _dayStride + slot,
+      ];
 
   /// Confirmation id for a diary write triggered by the [key] prompt.
   static int amalConfirm(PrayerKey key) => amalConfirmBase + key.index;
