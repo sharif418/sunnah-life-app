@@ -5,6 +5,7 @@
 library;
 
 import 'dart:convert';
+import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart' show compute, visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
@@ -152,7 +153,17 @@ class QuranRepository {
   /// before the packs were in and hit `সূরা পাওয়া যায়নি`).
   static Future<void> _ensureLoaded() {
     if (_meta != null) return Future<void>.value();
-    return _loading ??= _loadAll().whenComplete(() {
+    final inFlight = _loading;
+    if (inFlight != null) return inFlight;
+    // The inner future is stored FIRST and the completion wrapper built on a
+    // local — `map[k] ??= f.whenComplete(() => map.remove(k))` was empirically
+    // a NEVER-COMPLETING future on Dart 3.13.4 (the awaited wrapper future
+    // never resolved even though the body finished — reproduced minimal in
+    // test/quran_reader_test.dart 'map-memoized whenComplete never completes
+    // on Dart 3.13.4'). The reader would have deadlocked on every first open.
+    final inner = _loadAll();
+    _loading = inner;
+    return inner.whenComplete(() {
       // A failed load must stay retryable; a successful one keeps the
       // memoized (already-completed) future — later awaits are free.
       if (_meta == null) _loading = null;
@@ -166,11 +177,23 @@ class QuranRepository {
     // jsonDecode of ~5MB takes hundreds of ms — it must never run on the UI
     // isolate (W3a). The three packs decode in background isolates via
     // `compute`; the raw strings cross as a one-time copy.
-    final results = await Future.wait([
-      compute(_decodeMetaPack, metaRaw, debugLabel: 'quran-meta'),
-      compute(_decodeUthmaniPack, uthmaniRaw, debugLabel: 'quran-uthmani'),
-      compute(_decodeBnPack, bnRaw, debugLabel: 'quran-bn'),
-    ]);
+    //
+    // `flutter test` sets FLUTTER_TEST=true — `compute` (Isolate.run) under
+    // the test harness leaves the runner awaiting an isolate message that
+    // the fake-async zone never delivers (flutter#98362), so tests decode
+    // inline instead. Production boots with no such env var.
+    final useIsolate = Platform.environment['FLUTTER_TEST'] != 'true';
+    final results = useIsolate
+        ? await Future.wait([
+            compute(_decodeMetaPack, metaRaw, debugLabel: 'quran-meta'),
+            compute(_decodeUthmaniPack, uthmaniRaw, debugLabel: 'quran-uthmani'),
+            compute(_decodeBnPack, bnRaw, debugLabel: 'quran-bn'),
+          ])
+        : await Future.wait([
+            Future(() => _decodeMetaPack(metaRaw)),
+            Future(() => _decodeUthmaniPack(uthmaniRaw)),
+            Future(() => _decodeBnPack(bnRaw)),
+          ]);
     _meta = results[0] as List<SurahMeta>;
     _uthmaniBySurah
       ..clear()
@@ -211,8 +234,13 @@ class QuranRepository {
   static Future<Surah> surah(int n) {
     final cached = _cache[n];
     if (cached != null) return Future.value(cached);
-    return _pendingSurah[n] ??= _buildSurah(n)
-        .whenComplete(() => _pendingSurah.remove(n));
+    final inFlight = _pendingSurah[n];
+    if (inFlight != null) return inFlight;
+    // Same Dart 3.13.4 hazard as _ensureLoaded: never assign the
+    // whenComplete-wrapper into the map it is removing itself from.
+    final inner = _buildSurah(n);
+    _pendingSurah[n] = inner;
+    return inner.whenComplete(() => _pendingSurah.remove(n));
   }
 
   static Future<Surah> _buildSurah(int n) async {

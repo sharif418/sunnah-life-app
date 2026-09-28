@@ -36,6 +36,8 @@ int? parseBnDigits(String input) {
   if (s.isEmpty) return null;
   var value = 0;
   var seenDigit = false;
+  var sawAscii = false;
+  var sawBn = false;
   for (var i = 0; i < s.length; i++) {
     final code = s.codeUnitAt(i);
     final int digit;
@@ -44,11 +46,14 @@ int? parseBnDigits(String input) {
       continue;
     } else if (code >= 0x30 && code <= 0x39) {
       digit = code - 0x30;
+      sawAscii = true;
     } else if (code >= 0x09E6 && code <= 0x09EF) {
       digit = code - 0x09E6;
+      sawBn = true;
     } else {
       return null;
     }
+    if (sawAscii && sawBn) return null; // '1৭' is a typo, never 17
     seenDigit = true;
     value = value * 10 + digit;
   }
