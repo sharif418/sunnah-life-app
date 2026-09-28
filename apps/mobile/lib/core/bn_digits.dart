@@ -26,3 +26,31 @@ String fmtNum(Object value, {bool bengali = true}) =>
 
 /// Two-digit zero-padded key fragment in Bengali digits (e.g. 5 → ০৫).
 String pad2Bn(int n) => toBn(n.toString().padLeft(2, '0'));
+
+/// Parse user-typed digits into an int — accepts ASCII (`7`, `286`) and
+/// Bengali (`৭`, `২৮৬`) numerals, trims surrounding whitespace, tolerates an
+/// optional ASCII `+` sign. Returns null for anything else (mixed scripts,
+/// empty, non-digits) so callers can surface an error instead of guessing.
+int? parseBnDigits(String input) {
+  final s = input.trim();
+  if (s.isEmpty) return null;
+  var value = 0;
+  var seenDigit = false;
+  for (var i = 0; i < s.length; i++) {
+    final code = s.codeUnitAt(i);
+    final int digit;
+    if (i == 0 && code == 0x2B) {
+      // leading '+'
+      continue;
+    } else if (code >= 0x30 && code <= 0x39) {
+      digit = code - 0x30;
+    } else if (code >= 0x09E6 && code <= 0x09EF) {
+      digit = code - 0x09E6;
+    } else {
+      return null;
+    }
+    seenDigit = true;
+    value = value * 10 + digit;
+  }
+  return seenDigit ? value : null;
+}
