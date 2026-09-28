@@ -18,6 +18,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
     show AndroidNotificationAction;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workmanager/workmanager.dart';
 
 import '../core/bn_digits.dart';
 import '../core/bell_schedule.dart';
@@ -239,4 +240,23 @@ Future<void> refreshPrayerBellsFromDb() async {
       await db.close();
     } catch (_) {}
   }
+}
+
+/// WorkManager dispatcher — the unique daily periodic task
+/// `prayer-bell-refresh` re-arms the rolling window from the persisted
+/// profile so bells stay pending for days even when the app is never
+/// opened. MUST stay top-level with the vm:entry-point pragma; a task
+/// failure returns false so WorkManager retries with backoff.
+@pragma('vm:entry-point')
+void prayerBellCallbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    debugPrint('workmanager task: $task');
+    try {
+      await refreshPrayerBellsFromDb();
+      return true;
+    } catch (e) {
+      debugPrint('workmanager task failed: $e');
+      return false;
+    }
+  });
 }

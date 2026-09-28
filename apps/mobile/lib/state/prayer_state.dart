@@ -15,6 +15,7 @@ import '../core/date_keys.dart';
 import '../core/prayer_engine.dart';
 import '../services/platform_channels.dart';
 import '../services/prayer_bell_scheduler.dart';
+import '../services/widget_snapshot.dart';
 import 'providers.dart';
 
 class PrayerNow {
@@ -129,6 +130,16 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
       unawaited(refreshBells());
     }
     _updateWidget(s);
+    // Persist the next-prayer snapshot for the home widget (C-W3f reads
+    // it from Kotlin; survives app death). Fire-and-forget, swallowed.
+    unawaited(
+      WidgetSnapshotService.write(
+        city: ref.read(profileProvider).city,
+        dateKey: s.dateKey,
+        times: s.times,
+        nextKey: s.nextKey,
+      ),
+    );
   }
 
   PrayerBellConfig _bellConfigOf(ProfileState profile) => PrayerBellConfig(
