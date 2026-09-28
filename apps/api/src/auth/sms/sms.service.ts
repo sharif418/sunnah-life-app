@@ -1,19 +1,48 @@
 import { Injectable, Logger } from "@nestjs/common";
-import { MockSmsProvider } from "./sms-providers";
+import { InfobipProvider, MockSmsProvider, SslWirelessProvider, type SmsProvider } from "./sms-providers";
 
 export { type SmsProvider, type SmsSendResult } from "./sms-providers";
+
+/**
+ * devCode (the OTP in the response body) is a DEV/DEMO ONLY affordance of the
+ * mock provider. It must NEVER appear in production — this pure gate is
+ * unit-tested in test/auth-otp.spec.ts.
+ */
+export function shouldExposeDevCode(providerName: string, nodeEnv: string | undefined): boolean {
+  return providerName === "mock" && nodeEnv !== "production";
+}
 
 @Injectable()
 export class SmsService {
   private readonly logger = new Logger(SmsService.name);
 
-  private readonly provider = (() => {
-    // Adapter selection — production swaps via env, no code change.
-    switch (process.env.SMS_PROVIDER) {
-      case "sslwireless":
-      case "infobip":
-        this.logger.warn(`SMS_PROVIDER=${process.env.SMS_PROVIDER} has no credentials in this environment — verify with mock`);
-        return new MockSmsProvider();
+  private readonly provider: SmsProvider = (() => {
+    const provider = process.env.SMS_PROVIDER ?? "mock";
+    switch (provider) {
+      case "sslwireless": {
+        const url = process.env.SMS_SSLWIRELESS_URL ?? "";
+        const user = process.env.SMS_SSLWIRELESS_USER ?? "";
+        const pass = process.env.SMS_SSLWIRELESS_PASS ?? "";
+        if (!url || !user || !pass) {
+          // env.validation refuses this in production; dev gets a loud hint.
+          this.logger.error(
+            `SMS_PROVIDER=sslwireless but credentials missing (SMS_SSLWIRELESS_URL/USER/PASS) — falling back to mock`
+          );
+          return new MockSmsProvider();
+        }
+        return new SslWirelessProvider(url, user, pass);
+      }
+      case "infobip": {
+        const url = process.env.SMS_INFOBIP_URL ?? "";
+        const key = process.env.SMS_INFOBIP_KEY ?? "";
+        if (!url || !key) {
+          this.logger.error(
+            `SMS_PROVIDER=infobip but credentials missing (SMS_INFOBIP_URL/KEY) — falling back to mock`
+          );
+          return new MockSmsProvider();
+        }
+        return new InfobipProvider(url, key);
+      }
       default:
         return new MockSmsProvider();
     }
@@ -30,6 +59,10 @@ export class SmsService {
     if (!result.ok) {
       this.logger.error("SMS delivery failed", result.providerError);
     }
-    return result.devCode ? { devCode: result.devCode } : {};
+    // The devCode gate lives HERE — no caller can leak it in production even
+    // if a future controller forgets the rule.
+    return result.devCode && shouldExposeDevCode(this.provider.name, process.env.NODE_ENV)
+      ? { devCode: result.devCode }
+      : {};
   }
 }

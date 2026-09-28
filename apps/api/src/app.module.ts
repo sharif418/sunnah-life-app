@@ -3,6 +3,7 @@ import { config as loadDotenv } from "dotenv";
 import { Module } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ThrottlerModule } from "@nestjs/throttler";
 import { validateEnv } from "./config/env.validation";
 import { CommonModule } from "./common/common.module";
 import { StorageModule } from "./storage/storage.module";
@@ -10,6 +11,7 @@ import { JwtAuthGuard } from "./common/auth.guard";
 import { AllExceptionsFilter } from "./common/all-exceptions.filter";
 import { MetricsInterceptor } from "./common/metrics";
 import { QueueModule } from "./queues/queue.module";
+import { AuthThrottlerGuard } from "./common/auth-throttler.guard";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // The API's own .env is AUTHORITATIVE for this process. dotenv's default is to
@@ -58,6 +60,14 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
       validate: validateEnv,
       // .env is loaded by Nest; prisma seed reads DIRECT_URL itself.
     }),
+    ThrottlerModule.forRoot([
+      // per-IP general limit — generous for a phone app user, hard for a flood
+      { name: "ip", ttl: 60_000, limit: Number(process.env.THROTTLE_IP_PER_MIN || 600) },
+      // per-phone OTP request limit (attempts, not just stored codes).
+      // Test/CI raise this via env: the jest suites share one Redis across
+      // 13 spec files, each signing in the same demo phones.
+      { name: "otp-phone", ttl: 600_000, limit: Number(process.env.THROTTLE_OTP_PER_10MIN || 5) },
+    ]),
     CommonModule, // @Global: Prisma + RLS + Guard + Jwt
     StorageModule, // @Global: S3/local object storage (monthly report PDFs)
     QueueModule, // BullMQ queues + schedulers (Redis)
@@ -80,6 +90,10 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
     TestRlsModule, // test-only RLS probe (header-gated, non-production)
   ],
   providers: [
+    // AuthThrottlerGuard runs BEFORE JwtAuthGuard (guard order): unauthenticated
+    // floods get 429 without touching auth at all. Per-phone on the OTP route,
+    // per-IP everywhere else (Phase C/W2b).
+    { provide: APP_GUARD, useClass: AuthThrottlerGuard },
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },

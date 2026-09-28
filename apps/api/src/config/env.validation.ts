@@ -3,7 +3,9 @@ import { z } from "zod";
 /**
  * Environment validation (fail-fast at boot). Secrets only via env.
  */
-const schema = z.object({
+const schema = z
+  .object({
+  NODE_ENV: z.enum(["development", "test", "production", "staging"]).optional().default("development"),
   DATABASE_URL: z.string().url(),
   DIRECT_URL: z.string().url().optional(),
   PORT: z.coerce.number().int().positive().default(3001),
@@ -57,7 +59,37 @@ const schema = z.object({
   // Reserved for the Android/web Apple flow (needs a redirect on our
   // domain) — not required for the current iOS-only Apple button.
   APPLE_TEAM_ID: z.string().optional().default(""),
-});
+  THROTTLE_IP_PER_MIN: z.coerce.number().int().positive().default(600),
+  })
+  .superRefine((env, ctx) => {
+    // ── Production hardening (Phase C/W2b): a production boot with a mock
+    // SMS layer, or a real provider without credentials, is REFUSED. The
+    // mock provider returns the OTP in the response — logging anyone in as
+    // anyone (the audit's second production blocker).
+    if (env.NODE_ENV === "production") {
+      if (env.SMS_PROVIDER === "mock") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["SMS_PROVIDER"],
+          message: "SMS_PROVIDER=mock is FORBIDDEN in production (OTP would be returned in the response) — set sslwireless or infobip with credentials",
+        });
+      }
+      if (env.SMS_PROVIDER === "sslwireless" && (!env.SMS_SSLWIRELESS_URL || !env.SMS_SSLWIRELESS_USER || !env.SMS_SSLWIRELESS_PASS)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["SMS_SSLWIRELESS_URL"],
+          message: "sslwireless selected but SMS_SSLWIRELESS_URL/USER/PASS are incomplete",
+        });
+      }
+      if (env.SMS_PROVIDER === "infobip" && (!env.SMS_INFOBIP_URL || !env.SMS_INFOBIP_KEY)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["SMS_INFOBIP_URL"],
+          message: "infobip selected but SMS_INFOBIP_URL/KEY are incomplete",
+        });
+      }
+    }
+  });
 
 export type Env = z.infer<typeof schema>;
 

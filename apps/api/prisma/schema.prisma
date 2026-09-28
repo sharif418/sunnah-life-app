@@ -124,7 +124,9 @@ model RefreshToken {
 model OtpCode {
   id        String   @id @default(cuid())
   phone     String
-  code      String
+  // sha256(phone:code) — the PLAINTEXT code never touches the database
+  // (Phase C/W2b; was a plaintext `code` column).
+  codeHash  String
   attempts  Int      @default(0)
   createdAt DateTime @default(now())
   expiresAt DateTime

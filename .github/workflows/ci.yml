@@ -130,6 +130,10 @@ jobs:
       # Demo dataset (users/usrahs the RLS e2e signs in with): SEED_DEMO is
       # refused when NODE_ENV=production; CI runs with NODE_ENV unset.
       SEED_DEMO: "true"
+      # Throttlers stay wired but with raised limits: 13 jest suites share one
+      # Redis and sign in the same demo phones within the 10-minute window.
+      THROTTLE_OTP_PER_10MIN: "200"
+      THROTTLE_IP_PER_MIN: "5000"
       # MEILI_HOST stays unset — the api skips search indexing and the health
       # probe reports meilisearch "absent" instead of "down".
 

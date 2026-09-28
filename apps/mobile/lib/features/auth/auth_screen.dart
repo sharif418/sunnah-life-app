@@ -122,7 +122,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       setState(() {
         _codeSent = true;
         _devCode = res.devCode;
-        if (res.devCode != null) _code.text = res.devCode!;
+        // Auto-fill ONLY in debug builds (mock SMS): a release build must
+        // never auto-fill the code even if a misconfigured server returned
+        // one (Phase C/W2b).
+        if (res.devCode != null && kDebugMode) _code.text = res.devCode!;
       });
     } on ApiException catch (e) {
       setState(() => _error = e.message);
@@ -243,7 +246,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             ),
           ] else ...[
             const SizedBox(height: SLSpacing.s16),
-            if (_devCode != null)
+            if (_devCode != null && kDebugMode)
+              // debug-only: the code chip never renders in release builds
               Container(
                 margin: const EdgeInsets.only(bottom: SLSpacing.s12),
                 padding: const EdgeInsets.all(SLSpacing.s12),

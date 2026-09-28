@@ -213,6 +213,10 @@ export default function LoginPage() {
         </CardContent>
       </Card>
 
+      {/* Demo quick-login renders ONLY when the deployment was explicitly
+          built with NEXT_PUBLIC_DEMO=true (Phase C/W2b — a production admin
+          build must never show a one-click-login grid). */}
+      {process.env.NEXT_PUBLIC_DEMO === "true" && (
       <Card className="w-full max-w-3xl">
         <CardContent className="p-4 sm:p-5">
           <p className="mb-3 text-sm font-bold text-foreground">ডেমো অ্যাকাউন্ট — এক ক্লিকে লগইন</p>
@@ -268,6 +272,7 @@ export default function LoginPage() {
           </p>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

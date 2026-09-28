@@ -1,6 +1,6 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
-import { createHash, randomUUID } from "crypto";
+import { createHash, randomInt, randomUUID } from "crypto";
 import type { Prisma } from "../common/prisma-client";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
@@ -75,10 +75,17 @@ export class AuthService {
     if (recent >= MAX_SENDS_PER_WINDOW) {
       throw new ApiError(429, "অনেকবার চেষ্টা করেছেন — কিছুক্ষণ পর আবার চেষ্টা করুন");
     }
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    // crypto.randomInt — unbiased 6-digit code (Math.random was predictable
+    // enough to matter for a login credential).
+    const code = String(randomInt(100000, 1000000));
+    // The DATABASE never sees the plaintext: sha256(phone:code).
     await this.rls.system((tx) =>
       tx.otpCode.create({
-        data: { phone: normalized, code, expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60000) },
+        data: {
+          phone: normalized,
+          codeHash: sha256(`${normalized}:${code}`),
+          expiresAt: new Date(Date.now() + OTP_TTL_MIN * 60000),
+        },
       })
     );
     const { devCode } = await this.sms.sendOtp(normalized, code);
@@ -105,23 +112,36 @@ export class AuthService {
       })
     );
     if (!otp) throw new ApiError(400, "কোডের সময় শেষ — আবার পাঠান");
+    // Exhausted codes are dead even for the CORRECT value: the counter
+    // limits verification attempts, not just wrong ones.
     if (otp.attempts >= VERIFY_MAX_ATTEMPTS) {
       throw new ApiError(429, "অনেকবার ভুল কোড — নতুন কোড নিন");
     }
-    if (otp.code !== code.trim()) {
-      // updateMany, not update: a concurrent successful verify on another
-      // device deletes the OTP rows for this phone between our findFirst and
-      // this write — a plain update() then throws P2025 and 500s the request.
-      // Counting the failed attempt is best-effort; 0 rows is fine here.
-      await this.rls.system((tx) =>
+
+    if (otp.codeHash !== sha256(`${normalized}:${code.trim()}`)) {
+      // ATOMIC attempt counter: the conditional updateMany increments ONLY
+      // while attempts < MAX, so two racing wrong codes cannot both slip past
+      // the limit (0 rows updated ⇒ already exhausted ⇒ 429).
+      const bumped = await this.rls.system((tx) =>
         tx.otpCode.updateMany({
-          where: { id: otp.id },
-          data: { attempts: otp.attempts + 1 },
+          where: { id: otp.id, attempts: { lt: VERIFY_MAX_ATTEMPTS } },
+          data: { attempts: { increment: 1 } },
         })
       );
+      if (bumped.count === 0) {
+        throw new ApiError(429, "অনেকবার ভুল কোড — নতুন কোড নিন");
+      }
       throw new ApiError(400, "ভুল কোড");
     }
-    await this.rls.system((tx) => tx.otpCode.deleteMany({ where: { phone: normalized } }));
+
+    // ATOMIC consume: the deleteMany IS the lock — exactly one concurrent
+    // verify can pass (count ≥ 1); everyone else gets "code expired".
+    const consumed = await this.rls.system((tx) =>
+      tx.otpCode.deleteMany({ where: { phone: normalized } })
+    );
+    if (consumed.count === 0) {
+      throw new ApiError(400, "কোডটি ইতিমধ্যে ব্যবহৃত হয়েছে — আবার পাঠান");
+    }
 
     // find or create the user (bootstrap context: pre-auth)
     const user = await this.rls.system(async (tx) => {
