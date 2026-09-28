@@ -643,3 +643,60 @@ Stage Summary:
 - Known deferred: set-state-in-effect refactor → W4f (rule off, TODO noted in eslint config).
 - CI note: three mid-wave red web-build runs (36417635477/36418459317/36419173409) were all the same single root cause (orphaned sessionMinutes after the refs fix) — fixed in e9d69b7; both web+admin next builds verified locally after.
 
+
+
+---
+Task ID: C-W2b
+Agent: lead-architect (main session, prior round)
+Task: Real SMS providers + hardened OTP (Wave 2 — the "no one logs in as anyone" fix).
+
+Work Log:
+- SSL Wireless + Infobip HTTP adapters behind SMS_PROVIDER (env creds; mock only for dev/CI).
+- Production boot fails fast on SMS_PROVIDER=mock or missing provider creds.
+- devCode never returned outside non-production; OTPs generated with crypto.randomInt and stored hashed.
+- Atomic attempt counter (updateMany — concurrent consume cannot 500, B11 lesson carried forward); @nestjs/throttler per-IP + per-phone.
+- Mobile release build no longer auto-fills devCode; admin quick-login grid gated on NEXT_PUBLIC_DEMO=true.
+
+Stage Summary:
+- Commit d2285ba. CI run 36420807545 superseded mid-wave; the wave closed green on e35e8ee (run 36421191654, all jobs success).
+
+---
+Task ID: C-W2c
+Agent: lead-architect (main session, prior round)
+Task: Token & secret handling hardening.
+
+Work Log:
+- JWT typ claim enforced in auth.guard.ts (access vs refresh tokens cannot be swapped).
+- Separate refresh secret — no fallback to the access secret; atomic rotation via updateMany ... usedAt IS NULL inside a transaction.
+- Production env validation fails boot for default/missing JWT_SECRET/JWT_REFRESH_SECRET/QUIZ_SECRET and empty CORS_ORIGINS.
+- CORS list applied to the socket.io gateway as well; override removed.
+
+Stage Summary:
+- Commit e35e8ee; CI run 36421191654 — all 8 jobs success (first fully green Wave-2 run).
+
+---
+Task ID: C-W2e
+Agent: lead-architect (main session, prior round + this round)
+Task: RLS tightening (Part A: database-level enforcement).
+
+Work Log:
+- Migration 20260928210000_rls_tightening: sl_visible_user gated to usrah_head/invigilator (roster via sl_usrah_roster() projection); DayUnlock per-command policies (read for member/supervisors, insert/update for heads+, NO delete — owner-connection-only by design); RLS on OtpCode/AuditLog/MasalaQuestion/Feedback; BEFORE UPDATE trigger blocks users changing own role/gender/usrahId; migration fallback password removed; worker no longer gets superuser DIRECT_URL in compose.
+- rls.e2e.spec.ts extended to 23 tests: (meta) current_user/rolbypassrls asserts, (a) regression + positive control + other-usrah member, (b) DayUnlock member-denied/head-allowed, (c) OtpCode/AuditLog invisibility, (d) self-role/gender/usrahId trigger, (g) cross-gender admin assignment rejected + head-only reviews surface.
+- admin.controller.ts gender-mismatch rejection (এক-লিঙ্গ); weekly-review fallback = same-gender invigilator, never cross-gender admin.
+
+Stage Summary:
+- Commit 0f678a5 (message was a stray UUID — content verified by this worklog entry). CI run 36423438154: 215/216, one flake in rls.e2e (g).
+
+---
+Task ID: C-W2e-flake
+Agent: lead-architect (main session, this round)
+Task: Fix the W2e CI flake + make rls.e2e deterministic on re-runs.
+
+Work Log:
+- Root cause 1 (CI ECONNREFUSED 127.0.0.1:45861): the spec never called app.listen(); supertest lazily binds an ephemeral port per Test and races its own close across ~75 sequential round-trips. Fix: await app.listen(0) in root beforeAll — one stable listener for the whole file; afterAll app.close() symmetric.
+- Root cause 2 (local unique-constraint failure): the test cleaned up DayUnlock via rls.run/rls.system deleteMany, but RLS has NO delete policy on DayUnlock (owner-only by design) — leftover rows from earlier runs silently survived and tripped the unique (userId, date) index. CI never saw it (fresh DB per run). Fix: superuser maintenance connection (DIRECT_URL, the seed-split.spec.ts pattern) for pre/post cleanup.
+- Note: an earlier cleanup attempt deleted the WRONG const head line (test (b) would have hit ReferenceError) — caught by re-running the suite before pushing; restored, and the genuinely-unused vars removed instead.
+- Environment note: the sandbox tool transport was down most of this round (broken session 403); work continued via small single-command subagent dispatches.
+
+Stage Summary:
+- Commits 4f25465 + 1e7eb76. VERIFIED RAW: rls.e2e 23/23 TWICE in a row (re-runnability proof); full suite 216/216 in 7.85s; eslint 0/0 on the spec. CI runs 36436114518 (4f25465) + 36436665733 (1e7eb76) started — verdicts to be confirmed.
