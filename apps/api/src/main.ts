@@ -55,8 +55,15 @@ async function bootstrap(): Promise<void> {
   );
 
   // CORS for the web PWA / mobile app (cookie-based flows need credentials).
+  // Production: STRICTLY the CORS_ORIGINS list (env.validation refuses an
+  // empty list in production). Non-production keeps the reflect-any fallback
+  // so local tools and the sandbox preview work without configuration.
   const origins = (process.env.CORS_ORIGINS || "").split(",").map((s) => s.trim()).filter(Boolean);
-  app.enableCors({ origin: origins.length ? origins : true, credentials: true });
+  const isProduction = process.env.NODE_ENV === "production";
+  app.enableCors({
+    origin: isProduction ? origins : origins.length ? origins : true,
+    credentials: true,
+  });
 
   // Security headers. CSP disabled so the locally-served Swagger UI assets can
   // load; re-enable with tailored directives behind an edge proxy in prod.

@@ -60,6 +60,10 @@ const schema = z
   // domain) — not required for the current iOS-only Apple button.
   APPLE_TEAM_ID: z.string().optional().default(""),
   THROTTLE_IP_PER_MIN: z.coerce.number().int().positive().default(600),
+  THROTTLE_OTP_PER_10MIN: z.coerce.number().int().positive().default(5),
+  // HMAC secret of the live-quiz room tokens (quiz-token.ts). Dev fallback
+  // "dev-secret"; production refuses to boot without a real value.
+  QUIZ_SECRET: z.string().optional().default(""),
   })
   .superRefine((env, ctx) => {
     // ── Production hardening (Phase C/W2b): a production boot with a mock
@@ -67,6 +71,35 @@ const schema = z
     // mock provider returns the OTP in the response — logging anyone in as
     // anyone (the audit's second production blocker).
     if (env.NODE_ENV === "production") {
+      // ── Secrets (Phase C/W2c): defaults/missing values refuse boot.
+      if (!env.JWT_SECRET || env.JWT_SECRET === "dev-only-secret-change-me-in-production") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["JWT_SECRET"],
+          message: "JWT_SECRET must be set to a real secret in production (not the dev default)",
+        });
+      }
+      if (!env.JWT_REFRESH_SECRET || env.JWT_REFRESH_SECRET.length < 8 || env.JWT_REFRESH_SECRET === env.JWT_SECRET) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["JWT_REFRESH_SECRET"],
+          message: "JWT_REFRESH_SECRET must be set in production, ≥ 8 chars, and DIFFERENT from JWT_SECRET (no access-secret fallback)",
+        });
+      }
+      if (!env.QUIZ_SECRET || env.QUIZ_SECRET === "dev-secret") {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["QUIZ_SECRET"],
+          message: "QUIZ_SECRET must be set in production (the live-quiz room tokens default to 'dev-secret')",
+        });
+      }
+      if (!env.CORS_ORIGINS || !env.CORS_ORIGINS.includes("http")) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["CORS_ORIGINS"],
+          message: "CORS_ORIGINS must list the allowed origins in production (empty = reflect-any with credentials)",
+        });
+      }
       if (env.SMS_PROVIDER === "mock") {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

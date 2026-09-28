@@ -419,7 +419,9 @@ export class AuthService {
 
   private async signAccess(userId: string): Promise<string> {
     return this.jwt.signAsync(
-      { sub: userId },
+      // typ separates access from refresh credentials: the auth guard
+      // refuses refresh tokens presented as access tokens (Phase C/W2c).
+      { sub: userId, typ: "access" },
       { secret: process.env.JWT_SECRET, expiresIn: ACCESS_TTL_SEC() }
     );
   }
@@ -488,10 +490,28 @@ export class AuthService {
       throw new ApiError(401, "সেশন শেষ হয়ে গেছে — আবার সাইন ইন করুন");
     }
 
-    // rotate: burn the old token, mint a new one in the same family
-    await this.rls.system((tx) =>
-      tx.refreshToken.update({ where: { id: row.id }, data: { usedAt: new Date() } })
+    // ROTATE ATOMICALLY: the conditional updateMany IS the lock — two racing
+    // refresh() calls with the same token cannot both win; the loser sees
+    // 0 rows and the flow above already treats a used token as family-reuse
+    // (revoking the whole family). [Phase C/W2c]
+    const burned = await this.rls.system((tx) =>
+      tx.refreshToken.updateMany({
+        where: { id: row.id, usedAt: null, revokedAt: null },
+        data: { usedAt: new Date() },
+      })
     );
+    if (burned.count === 0) {
+      // lost the race — someone else consumed it between the read and the
+      // burn. Same response as any reuse: family revoked.
+      await this.rls.system((tx) =>
+        tx.refreshToken.updateMany({
+          where: { familyId: row.familyId, revokedAt: null },
+          data: { revokedAt: new Date() },
+        })
+      );
+      this.logger.warn(`Refresh rotation race — family revoked (user ${row.userId.slice(0, 6)}…)`);
+      throw new ApiError(401, "সেশন শেষ হয়ে গেছে — আবার সাইন ইন করুন");
+    }
     const accessToken = await this.signAccess(user.id);
     const jti = randomUUID();
     const nextRefresh = await this.jwt.signAsync(

@@ -16,7 +16,7 @@ import { createHmac } from "crypto";
 export const QUIZ_TOKEN_TTL_MS = 15 * 60 * 1000; // 15 minutes
 
 function quizSecret(): string {
-  return process.env.QUIZ_SECRET || "dev-secret";
+  return process.env.QUIZ_SECRET || "dev-secret"; // production: env.validation refuses boot without a real value
 }
 
 export interface QuizTokenPayload {

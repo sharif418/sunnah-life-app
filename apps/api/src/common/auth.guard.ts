@@ -45,9 +45,16 @@ export class JwtAuthGuard implements CanActivate {
       (header?.startsWith("Bearer ") ? header.slice(7).trim() : null) ?? readCookie(req, "sl_access");
     if (!token) return true;
     try {
-      const payload = await this.jwt.verifyAsync<{ sub: string }>(token, {
+      const payload = await this.jwt.verifyAsync<{ sub: string; typ?: string }>(token, {
         secret: process.env.JWT_SECRET,
       });
+      // A refresh token must never authenticate API calls. When the refresh
+      // secret equals the access secret (documented dev fallback), the
+      // signature alone would verify — the typ claim is the real gate.
+      // [Phase C/W2c]
+      if (payload.typ === "refresh") {
+        return true; // → anonymous; endpoints answer 401 where required
+      }
       const row = await this.rls.system((tx) =>
         tx.user.findUnique({ where: { id: payload.sub } })
       );

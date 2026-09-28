@@ -14,14 +14,11 @@ import { QueueModule } from "./queues/queue.module";
 import { AuthThrottlerGuard } from "./common/auth-throttler.guard";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// The API's own .env is AUTHORITATIVE for this process. dotenv's default is to
-// keep pre-existing shell vars, which breaks the sandbox (the web-app shell
-// exports DATABASE_URL=file:… — Prisma then rejects it at $connect). Loading
-// with override BEFORE any Prisma client is instantiated fixes both the dev
-// server and the jest suite (both import AppModule). In CI/Docker the file is
-// absent → this is a no-op and the real environment wins.
+// Load apps/api/.env if present (dev convenience). NO override: real
+// environment variables always win over the file [Phase C/W2c — override:true
+// let a stale .env silently mask the deployment's real secrets].
 // ─────────────────────────────────────────────────────────────────────────────
-loadDotenv({ path: join(__dirname, "../.env"), override: true, quiet: true });
+loadDotenv({ path: join(__dirname, "../.env"), quiet: true });
 
 import { AuthModule } from "./auth/auth.module";
 import { HealthModule } from "./health/health.module";

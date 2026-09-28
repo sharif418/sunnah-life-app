@@ -46,13 +46,18 @@ import { verifyQuizToken, type QuizTokenPayload } from "./quiz-token";
 
 const SECONDS_PER_QUESTION = 20;
 
-/** CORS mirrors main.ts (polling handshakes bypass Express). */
+/** CORS mirrors main.ts (polling handshakes bypass Express) — strict list in
+ *  production, reflect-any only outside it. [Phase C/W2c] */
 function socketCors() {
   const origins = (process.env.CORS_ORIGINS || "")
     .split(",")
     .map((s) => s.trim())
     .filter(Boolean);
-  return { origin: origins.length ? origins : true, credentials: true };
+  const strict = process.env.NODE_ENV === "production";
+  return {
+    origin: strict ? origins : origins.length ? origins : true,
+    credentials: true,
+  };
 }
 
 // ── quiz content (packages/content/quizzes.json — the same pack the API serves)
