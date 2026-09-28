@@ -279,7 +279,9 @@ jobs:
           name: mobile-debug-apk
           path: apps/mobile/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 7
-          if-no-files-found: warn
+          # The whole point of this job is the artifact — fail loudly if the
+          # APK is missing instead of warning and reporting a green run.
+          if-no-files-found: error
 
   # ───────────────────────────────────────────────────────────────────────────
   # Release bundle — Android App Bundle (.aab), signed with the store key.
