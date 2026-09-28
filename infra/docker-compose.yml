@@ -312,6 +312,17 @@ services:
       APP_DOMAIN: ${APP_DOMAIN:-sunnahlife.app}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3002}
       SMS_PROVIDER: ${SMS_PROVIDER:-mock}
+      # Same provider credentials as the api (worker-app.module boots the SAME
+      # validated env — production refuses sslwireless/infobip without them).
+      # Only SMS_PROVIDER was passed through before, so with the CI job's
+      # SMS_PROVIDER=sslwireless the worker crash-looped on "SMS_SSLWIRELESS_
+      # URL: … incomplete" while the api booted fine (compose smoke run
+      # 36453750873 — hidden until W2d made the api itself healthy).
+      SMS_SSLWIRELESS_URL: ${SMS_SSLWIRELESS_URL:-}
+      SMS_SSLWIRELESS_USER: ${SMS_SSLWIRELESS_USER:-}
+      SMS_SSLWIRELESS_PASS: ${SMS_SSLWIRELESS_PASS:-}
+      SMS_INFOBIP_URL: ${SMS_INFOBIP_URL:-}
+      SMS_INFOBIP_KEY: ${SMS_INFOBIP_KEY:-}
       # FCM (B2): the worker delivers prayer/review/broadcast pushes.
       FCM_SERVICE_ACCOUNT_JSON: ${FCM_SERVICE_ACCOUNT_JSON:-}
     command:
