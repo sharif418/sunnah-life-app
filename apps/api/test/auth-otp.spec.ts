@@ -19,11 +19,23 @@ import { createHash } from "crypto";
 
 import { AppModule } from "src/app.module";
 import { PrismaService } from "src/common/prisma.service";
+import { RlsService } from "src/common/rls.service";
 import { shouldExposeDevCode } from "src/auth/sms/sms.service";
 
 let app: INestApplication;
 let http: () => ReturnType<typeof request>;
 let prisma: PrismaService;
+let rls: RlsService;
+
+/** OtpCode rows are system-context-only since the W2e RLS tightening — the
+ *  spec must clean/seed through the same context the app itself uses. */
+const otpCleanup = () => rls.system((tx) => tx.otpCode.deleteMany({ where: { phone: THROWAWAY } }));
+const otpSeed = (data: { codeHash: string; attempts: number }) =>
+  rls.system((tx) =>
+    tx.otpCode.create({
+      data: { phone: THROWAWAY, codeHash: data.codeHash, attempts: data.attempts, expiresAt: new Date(Date.now() + 300_000) },
+    })
+  );
 
 const THROWAWAY = "01799990001"; // never part of the demo dataset
 
@@ -33,11 +45,12 @@ beforeAll(async () => {
   app.setGlobalPrefix("api", { exclude: ["health", "metrics"] });
   await app.init();
   prisma = app.get(PrismaService);
+  rls = app.get(RlsService);
   http = () => request(app.getHttpServer()) as unknown as ReturnType<typeof request>;
 });
 
 afterAll(async () => {
-  await prisma.otpCode.deleteMany({ where: { phone: THROWAWAY } });
+  await otpCleanup();
   await app.close();
 });
 
@@ -62,7 +75,7 @@ describe("POST /api/auth/otp/request — hashed storage", () => {
     // in the test env (NODE_ENV=test, mock provider) the code is exposed
     expect(devCode).toMatch(/^\d{6}$/);
 
-    const rows = await prisma.otpCode.findMany({ where: { phone: THROWAWAY } });
+    const rows = await rls.system((tx) => tx.otpCode.findMany({ where: { phone: THROWAWAY } }));
     expect(rows).toHaveLength(1);
     expect(rows[0].codeHash).toBe(createHash("sha256").update(`${THROWAWAY}:${devCode}`).digest("hex"));
     // and it is NOT the plaintext
@@ -71,7 +84,7 @@ describe("POST /api/auth/otp/request — hashed storage", () => {
   });
 
   it("4th send within 10 minutes is rate-limited (DB window)", async () => {
-    await prisma.otpCode.deleteMany({ where: { phone: THROWAWAY } });
+    await otpCleanup();
     await http().post("/api/auth/otp/request").send({ phone: THROWAWAY }).expect(200);
     await http().post("/api/auth/otp/request").send({ phone: THROWAWAY }).expect(200);
     await http().post("/api/auth/otp/request").send({ phone: THROWAWAY }).expect(200);
@@ -82,7 +95,7 @@ describe("POST /api/auth/otp/request — hashed storage", () => {
 
 describe("POST /api/auth/otp/verify — atomic counter + single-use consume", () => {
   beforeEach(async () => {
-    await prisma.otpCode.deleteMany({ where: { phone: THROWAWAY } });
+    await otpCleanup();
   });
 
   it("a WRONG code counts one attempt; the 6th attempt is a hard 429", async () => {
@@ -107,20 +120,16 @@ describe("POST /api/auth/otp/verify — atomic counter + single-use consume", ()
   it("attempts=MAX raced through the conditional updateMany → 429 (atomicity)", async () => {
     // seed a row already at the limit; a wrong code must get 429 (not a 400
     // that also bumps the counter past the limit)
-    await prisma.otpCode.create({
-      data: {
-        phone: THROWAWAY,
-        codeHash: createHash("sha256").update(`${THROWAWAY}:999999`).digest("hex"),
-        attempts: 5,
-        expiresAt: new Date(Date.now() + 300_000),
-      },
+    await otpSeed({
+      codeHash: createHash("sha256").update(`${THROWAWAY}:999999`).digest("hex"),
+      attempts: 5,
     });
     const res = await http()
       .post("/api/auth/otp/verify")
       .send({ phone: THROWAWAY, code: "123456" })
       .expect(429);
     expect(res.body.error).toContain("নতুন কোড");
-    const row = await prisma.otpCode.findFirst({ where: { phone: THROWAWAY } });
+    const row = await rls.system((tx) => tx.otpCode.findFirst({ where: { phone: THROWAWAY } }));
     expect(row?.attempts).toBe(5); // NOT incremented past the limit
   });
 

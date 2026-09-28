@@ -249,7 +249,6 @@ services:
       NODE_ENV: production
       TZ: UTC
       DATABASE_URL: postgresql://sunnah_app:${SUNNAH_APP_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
-      DIRECT_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-sunnahlife}
       REDIS_URL: redis://redis:6379
       MEILI_HOST: http://meilisearch:7700
       MEILI_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY in .env}

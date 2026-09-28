@@ -8,6 +8,7 @@ import type { AuthedRequest } from "../common/auth.guard";
 import { Roles } from "../common/roles.decorator";
 import { RolesGuard } from "../common/roles.guard";
 import { completion7dForUsers } from "../shared/amal";
+import { Prisma } from "../common/prisma-client";
 import type { Announcement, Gender, Level, User, UserCategory, Usrah, UsrahMember } from "../shared/domain";
 
 @Injectable()
@@ -25,7 +26,6 @@ export class UsrahService {
     return this.rls.run(user, async (tx) => {
       const usrahRow = await tx.usrah.findUnique({
         where: { id: user.usrahId! },
-        include: { members: true },
       });
       if (!usrahRow) return { usrah: null, announcements: [] };
 
@@ -33,19 +33,25 @@ export class UsrahService {
         ? await tx.user.findUnique({ where: { id: usrahRow.headUserId }, select: { name: true } })
         : null;
 
+      // ROSTER via the sl_usrah_roster projection (Phase C/W2e): plain
+      // members see WHO is in their usrah (names/level only) — full User
+      // rows and diary visibility stay governed by the tightened policies.
+      const roster = await tx.$queryRaw<{ id: string; name: string; member_code: string | null; level: string; gender: string }[]>(
+        Prisma.sql`SELECT id, name, member_code, level, gender FROM sl_usrah_roster(${user.usrahId}::text)`
+      );
       const completions = await completion7dForUsers(
         tx,
-        usrahRow.members.map((m) => ({ id: m.id, category: m.category }))
+        roster.map((m) => ({ id: m.id, category: "general" as const }))
       );
-      const members: UsrahMember[] = usrahRow.members
+      const members: UsrahMember[] = roster
         .map((m) => ({
           id: m.id,
           name: m.name,
           gender: m.gender as Gender,
           level: m.level as Level,
-          memberCode: m.memberCode,
-          category: m.category as UserCategory,
-          lastActiveAt: m.lastActiveAt.toISOString(),
+          memberCode: m.member_code,
+          category: "general" as UserCategory,
+          lastActiveAt: new Date(0).toISOString(),
           completion7d: completions.get(m.id) ?? 0,
         }))
         .sort((a, b) => a.name.localeCompare(b.name, "bn"));

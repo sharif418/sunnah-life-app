@@ -20,6 +20,7 @@ import request from "supertest";
 
 import { AppModule } from "src/app.module";
 import { RlsService } from "src/common/rls.service";
+import type { User } from "src/shared/domain";
 
 const F_HEAD = "01000000005"; // উম্মে হাবিবা — head of উসরা আয়েশা সিদ্দিকা (F)
 const M_HEAD = "01000000003"; // মাওলানা ইউসুফ — head of উসরা আল-ফুরকান (M)
@@ -47,6 +48,13 @@ async function signIn(phone: string): Promise<string> {
     .expect(200);
   expect(verifyRes.body.user.phone).toBe(phone);
   return verifyRes.body.accessToken as string;
+}
+
+/** Full OTP sign-in → the domain user row (for direct RlsService contexts). */
+async function signInUser(phone: string): Promise<User> {
+  const token = await signIn(phone);
+  const res = await http().get("/api/me").set("Authorization", `Bearer ${token}`).expect(200);
+  return res.body.user as User;
 }
 
 /** Look up a demo user's id via the admin console API (full_admin). */
@@ -235,5 +243,190 @@ describe("RLS e2e — DeviceToken refuses cross-gender fan-out (push, B2)", () =
       .set("x-rls-raw-test", "1")
       .expect(200);
     expect(res.body.rows).toBe(0);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase C/W2e — the tightened policies. Every bug the audit found gets a
+// test that would have caught it:
+//   (a) plain members could read same-gender usrah peers' diaries via the
+//       usrahId clause — now usrah_head/invigilator only
+//   (b) DayUnlock inserts were possible for any visible user — now heads+
+//   (c) OtpCode/AuditLog/MasalaQuestion/Feedback had no RLS
+//   (d) users could change own role/gender/usrahId at the DB level
+// ─────────────────────────────────────────────────────────────────────────────
+describe("RLS e2e — W2e tightening", () => {
+  const M_PEER = "01000000008"; // সাইফুল ইসলাম — plain user, SAME usrah as M_MEMBER
+  const F_PEER = "01000000011"; // ফাতিমা আক্তার — plain user, same usrah as F_MEMBER
+
+  let rls: RlsService;
+  let maleMember: User;
+  let maleMemberToken: string;
+  let femaleMember: User;
+  let adminToken: string;
+
+  beforeAll(async () => {
+    rls = app.get(RlsService);
+    adminToken = await signIn(FULL_ADMIN);
+    maleMember = await signInUser(M_MEMBER);
+    maleMemberToken = await signIn(M_MEMBER);
+    femaleMember = await signInUser(F_MEMBER);
+  });
+
+  it("(meta) the runtime connects as the restricted role — current_user + NO rolbypassrls", async () => {
+    const res = await rls.system((tx) =>
+      tx.$queryRaw<{ current_user: string; rolbypassrls: boolean }[]>`
+        SELECT current_user, r.rolbypassrls FROM pg_roles r WHERE r.rolname = current_user
+      `
+    );
+    expect(res[0].current_user).toBe("sunnah_app");
+    expect(res[0].rolbypassrls).toBe(false);
+  });
+
+  it("(a) regression: a plain member CANNOT read same-usrah peers' diaries (was the audit bug)", async () => {
+    // target = the USRAH HEAD: same usrah, same gender, NOT in the member's
+    // downline (M_MEMBER referred several peers — those stay visible to the
+    // daee; the head is the clean same-usrah-not-downline case).
+    const head = await signInUser(M_HEAD);
+    const today = new Date().toISOString().slice(0, 10);
+    const from = new Date(Date.now() - 29 * 86400_000).toISOString().slice(0, 10);
+    // the standard endpoint refuses (403 — not in guard's allowed set)
+    const res = await http()
+      .get(`/api/amal/entries?from=${from}&to=${today}&userId=${head.id}`)
+      .set("Authorization", `Bearer ${maleMemberToken}`)
+      .expect(403);
+    expect(res.body.error).toBeTruthy();
+    // and at the DATABASE level: unfiltered count inside the member's context
+    const count = await rls.run(maleMember, (tx) =>
+      tx.amalEntry.count({ where: { userId: head.id } })
+    );
+    expect(count).toBe(0);
+    // …while the OLD bug would have counted the head's seeded diary:
+    const headDiarySize = await rls.system((tx) => tx.amalEntry.count({ where: { userId: head.id } }));
+    expect(headDiarySize).toBeGreaterThan(0);
+  });
+
+  it("(a) positive control — the member still sees THEIR OWN diary", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const from = new Date(Date.now() - 29 * 86400_000).toISOString().slice(0, 10);
+    const res = await http()
+      .get(`/api/amal/entries?from=${from}&to=${today}`)
+      .set("Authorization", `Bearer ${maleMemberToken}`)
+      .expect(200);
+    expect(Array.isArray(res.body.entries)).toBe(true);
+    expect((res.body.entries as unknown[]).length).toBeGreaterThan(0); // seeded history
+  });
+
+  it("(a) same gender, OTHER usrah — a plain member of one usrah cannot read another usrah's member", async () => {
+    // build a second male usrah with one member (system context)
+    const { usrahId, memberId } = await rls.system(async (tx) => {
+      const usrah = await tx.usrah.create({
+        data: { name: "উসরা পরীক্ষা-২ (M)", gender: "M", district: "dhaka" },
+      });
+      const member = await tx.user.create({
+        data: { phone: "01777770002", name: "পরীক্ষা সদস্য", gender: "M", usrahId: usrah.id },
+      });
+      return { usrahId: usrah.id, memberId: member.id };
+    });
+    try {
+      const visible = await rls.run(maleMember, (tx) => tx.user.count({ where: { id: memberId } }));
+      expect(visible).toBe(0);
+      const diary = await rls.run(maleMember, (tx) => tx.amalEntry.count({ where: { userId: memberId } }));
+      expect(diary).toBe(0);
+    } finally {
+      await rls.system(async (tx) => {
+        await tx.user.delete({ where: { id: memberId } });
+        await tx.usrah.delete({ where: { id: usrahId } });
+      });
+    }
+  });
+
+  it("(b) DayUnlock: a member CANNOT insert an unlock row even for themself (DB-level)", async () => {
+    await expect(
+      rls.run(maleMember, (tx) =>
+        tx.dayUnlock.create({ data: { userId: maleMember.id, date: new Date().toISOString().slice(0, 10), reason: "self" } })
+      )
+    ).rejects.toThrow();
+  });
+
+  it("(b) DayUnlock: the USRAH HEAD still can (the real flow)", async () => {
+    const head = await signInUser(M_HEAD); // মাওলানা ইউসুফ — head of আল-ফুরকান
+    const date = new Date().toISOString().slice(0, 10);
+    await rls.run(head, async (tx) => {
+      await tx.dayUnlock.deleteMany({ where: { userId: maleMember.id, date } });
+      await tx.dayUnlock.create({
+        data: { userId: maleMember.id, date, byUserId: head.id, reason: "e2e" },
+      });
+      await tx.dayUnlock.deleteMany({ where: { userId: maleMember.id, date } });
+    });
+  });
+
+  it("(c) OtpCode rows are invisible outside the system context", async () => {
+    const total = await rls.system((tx) => tx.otpCode.count());
+    expect(total).toBeGreaterThanOrEqual(0);
+    const asMember = await rls.run(maleMember, (tx) => tx.otpCode.count());
+    expect(asMember).toBe(0);
+  });
+
+  it("(c) AuditLog rows are invisible to plain users", async () => {
+    const asMember = await rls.run(maleMember, (tx) => tx.auditLog.count());
+    expect(asMember).toBe(0);
+  });
+
+  it("(c) a guest can ask a masala question; nobody else's questions are visible", async () => {
+    const res = await http()
+      .post("/api/masala")
+      .send({ name: "অতিথি", question: "রিভিউ সময় কখন?" })
+      .expect(201);
+    const mine = await rls.run(maleMember, (tx) => tx.masalaQuestion.count());
+    expect(mine).toBe(0); // the guest row is not the member's
+    const asSystem = await rls.system((tx) => tx.masalaQuestion.count());
+    expect(asSystem).toBeGreaterThanOrEqual(1);
+    expect(res.body).toBeTruthy();
+  });
+
+  it("(d) a user cannot change own role / gender / usrahId at the DB level (trigger)", async () => {
+    await expect(
+      rls.run(maleMember, (tx) => tx.user.update({ where: { id: maleMember.id }, data: { role: "full_admin" } }))
+    ).rejects.toThrow();
+    await expect(
+      rls.run(maleMember, (tx) => tx.user.update({ where: { id: maleMember.id }, data: { gender: "F" } }))
+    ).rejects.toThrow();
+    await expect(
+      rls.run(maleMember, (tx) => tx.user.update({ where: { id: maleMember.id }, data: { usrahId: "anywhere" } }))
+    ).rejects.toThrow();
+    // the ONE-TIME gender completion (unspecified → M/F) stays allowed
+    await rls.system(async (tx) => {
+      const guest = await tx.user.create({ data: { phone: "01777770003", name: "সোশ্যাল গেস্ট", gender: "unspecified" } });
+      await tx.$executeRawUnsafe(`SELECT set_config('app.user_id', '${guest.id}', true), set_config('app.gender', 'unspecified', true), set_config('app.usrah_id', '', true), set_config('app.role', 'user', true)`);
+      // simulate PATCH /me: gender completion under the user's own context
+      await tx.user.update({ where: { id: guest.id }, data: { gender: "M" } });
+      await tx.user.delete({ where: { id: guest.id } });
+    });
+  });
+
+  it("(g) PATCH /api/admin/users: a cross-gender usrah assignment is rejected (400)", async () => {
+    const fUserId = (await signInUser(F_PEER)).id;
+    // the FEMALE member cannot be moved into the MALE usrah
+    const maleUsrah = await rls.system((tx) => tx.usrah.findFirst({ where: { gender: "M" } }));
+    const res = await http()
+      .patch("/api/admin/users")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ userId: fUserId, usrahId: maleUsrah!.id, reason: "পরীক্ষা" })
+      .expect(400);
+    expect(res.body.error).toContain("এক-লিঙ্গ");
+  });
+
+  it("(g) reports + reviews of the member stay readable by the HEAD only ( tightened surface)", async () => {
+    const head = await signInUser(M_HEAD);
+    // head CAN see the member's reviews through the standard endpoint
+    await http()
+      .get("/api/reviews")
+      .set("Authorization", `Bearer ${await signIn(M_HEAD)}`)
+      .expect(200);
+    // a same-usrah PEER cannot read the member's reviews at the DB level
+    const peer = await signInUser(M_PEER);
+    const reviews = await rls.run(peer, (tx) => tx.weeklyReview.count({ where: { userId: maleMember.id } }));
+    expect(reviews).toBe(0);
   });
 });

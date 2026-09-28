@@ -24,7 +24,11 @@
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'sunnah_app') THEN
-    CREATE ROLE sunnah_app LOGIN PASSWORD 'sunnah_app_dev' NOSUPERUSER NOBYPASSRLS;
+    -- NOLOGIN shell only [Phase C/W2e (e)]: a hardcoded fallback password
+    -- in a committed migration was a real deployment risk. Real deployments
+    -- create the login role with a real password BEFORE migrations run
+    -- (infra/postgres/init-rls.sql via docker compose; CI's prepare step).
+    CREATE ROLE sunnah_app NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS NOLOGIN;
   END IF;
 END
 $$;

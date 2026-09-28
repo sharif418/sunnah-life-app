@@ -47,14 +47,20 @@ export class WeeklyReviewsProcessor extends WorkerHost {
     const cutoff = addDays(todayInTz("Asia/Dhaka"), -7);
 
     const result = await this.rls.system(async (tx) => {
-      // reviewers: usrah heads (+ first admin fallback)
+      // reviewers: usrah heads; fallback = a SAME-GENDER invigilator —
+      // never a cross-gender admin (Phase C/W2e; the old "first admin
+      // fallback" could assign reviews of sisters to a male admin).
       const usrahs = await tx.usrah.findMany({
         select: { id: true, headUserId: true, name: true, gender: true },
       });
-      const admin = await tx.user.findFirst({
-        where: { role: "full_admin" },
+      const invigilators = await tx.user.findMany({
+        where: { role: "invigilator" },
         select: { id: true, name: true, gender: true },
       });
+      const invigilatorForGender = new Map<string, { id: string; name: string; gender: string }>();
+      for (const inv of invigilators) {
+        if (!invigilatorForGender.has(inv.gender)) invigilatorForGender.set(inv.gender, inv);
+      }
       const reviewerFor = new Map<string, { id: string; name: string; gender?: string }>();
       for (const u of usrahs) {
         if (!u.headUserId) continue;
@@ -83,10 +89,15 @@ export class WeeklyReviewsProcessor extends WorkerHost {
       if (missing.length) {
         const res = await tx.weeklyReview.createMany({
           data: missing.map((t) => {
-            const reviewer = (t.usrahId ? reviewerFor.get(t.usrahId) : undefined) ?? admin;
+            // head of the member's usrah → else a same-gender invigilator →
+            // else the member themself (self-review flag, surfaced for the
+            // admin to assign). A CROSS-GENDER reviewer is never chosen.
+            const reviewer =
+              (t.usrahId ? reviewerFor.get(t.usrahId) : undefined) ??
+              invigilatorForGender.get(t.gender ?? "M");
             return {
               userId: t.id,
-              reviewerId: reviewer?.id ?? t.id, // self when no reviewer exists
+              reviewerId: reviewer?.id ?? t.id, // self when no same-gender reviewer exists
               weekStart: ws,
               status: "pending",
             };
@@ -107,7 +118,9 @@ export class WeeklyReviewsProcessor extends WorkerHost {
       const freshMemberIds: string[] = [];
       const headAggregates = new Map<string, string[]>();
       for (const t of missing) {
-        const reviewer = (t.usrahId ? reviewerFor.get(t.usrahId) : undefined) ?? admin;
+        const reviewer =
+          (t.usrahId ? reviewerFor.get(t.usrahId) : undefined) ??
+          invigilatorForGender.get(t.gender ?? "M");
         if (reviewer && reviewer.id !== t.id) {
           await tx.reminder.create({
             data: {

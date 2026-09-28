@@ -637,6 +637,13 @@ export class AdminService {
         } else {
           const usrah = await tx.usrah.findUnique({ where: { id: dto.usrahId } });
           if (!usrah) throw new ApiError(400, "উসরা পাওয়া যায়নি");
+          // GENDER RULE on every path: an usrah is single-gender — a
+          // cross-gender assignment is rejected even for full_admin (the
+          // DB column guard would also block it; this gives a real message).
+          const targetGender = (dto.gender ?? target.gender) as string;
+          if (usrah.gender !== targetGender) {
+            throw new ApiError(400, "উসরা এক-লিঙ্গ — বিপরীত লিঙ্গের সদস্য এই উসরায় নেওয়া যায় না");
+          }
           data.usrahId = dto.usrahId;
         }
       }
