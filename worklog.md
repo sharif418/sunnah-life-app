@@ -900,3 +900,17 @@ Stage Summary:
     00:26 +164: All tests passed!
 - flutter test: 164/164 (was 138; +26 in test/location_qibla_test.dart: snap matrix incl. mid-Atlantic→New York approximate + the 44.5/55.6km threshold either side of 50km, known-pair distances ±1% (Dhaka–Kaaba 5172, Dhaka–Kolkata 250.6, Chattogram–Dhaka 214), bearingDeg cardinals + Dhaka qibla 277.6° + forward/reverse ±180°, full locationGate matrix, compassSignalQuality (accuracy-only / jitter / spread / settled / angDist wraparound), mosque sorting city-vs-GPS + immutability + raw-fix origin + mosque-bearing ≠ qibla). No platform channel touched in tests — only the LocationPermission enum is imported.
 - Known honest edges: (a) real-device GPS/compass behavior is static-verified only in the sandbox (no sensor) — the CI release-apk job (W3i) is the on-phone proof, and the manual fallbacks mean a bad sensor can never dead-end the screens; (b) Android magnetic-north declination uncorrected (≈1° in BD, documented); (c) geolocator_android uses flutter.compileSdkVersion — same as the app's gradle, no compileSdk conflict with CI's Flutter 3.47.5; (d) mosque bearing arrows assume the user holds the phone flat/screen-up like a map — the label states the mosque direction, matching the qibla dial's mental model.
+
+---
+Task ID: C-W3i-CI
+Agent: lead-architect (main session)
+Task: CI proof collection for the W3i release job (appendix to C-W3i).
+
+Work Log:
+- Run 36474538959 (f562208, covers the full W3a+W3d+W3i state): ALL TEN jobs success — including the NEW 'Flutter — release APKs · split-per-ABI (device test)' job on its first execution.
+- RAW from the job log (job 109104918178): `-rw-r--r-- 26665649 app-arm64-v8a-release.apk` (25.4 MB) and `24435193 app-armeabi-v7a-release.apk` (23.3 MB) — the < 40 MB PLAN target passes with 14.6 MB headroom on arm64.
+- Artifacts (no keystore secret configured → debug-signed device-test names, exactly per design): internal-test-arm64-v8a (13.28 MB zipped), internal-test-armeabi-v7a (12.74 MB zipped). THE OWNER'S PATH: Actions → run → artifacts → download internal-test-arm64-v8a → unzip → install on the phone (enable install-unknown-apps for the browser/files app first). NOT uploadable to Play (debug-signed) until the owner adds the ANDROID_KEYSTORE_BASE64 secret family — then the same job produces store-signed mobile-release-<abi>.
+- Bonus proof: mobile-debug-apk artifact shrank from 386 MB to 87.76 MB zipped after the keepDebugSymbols removal (run #25 vs this run) — the debug strip now runs on CI as intended.
+
+Stage Summary:
+- C-W3i is CI-PROVEN GREEN on first execution: split-per-ABI release APKs + sizes + the 40 MB gate + signing-aware artifact names. No follow-ups needed.
