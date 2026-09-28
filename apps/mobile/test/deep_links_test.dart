@@ -78,4 +78,72 @@ void main() {
       expect(deepLinkToRoute('//amal'), isNull);
     });
   });
+
+  group('referralCodeFromLink — /join deep links (C-W3h)', () {
+    test('both registered shapes extract + normalize the code', () {
+      expect(
+        referralCodeFromLink('https://sunnahlife.app/join/DS-000123'),
+        'DS-000123',
+      );
+      expect(
+        referralCodeFromLink('sunnahlife://join/DS-000123'),
+        'DS-000123',
+      );
+      expect(
+        referralCodeFromLink('https://www.sunnahlife.app/join/DS-000004'),
+        'DS-000004',
+      );
+      expect(
+        referralCodeFromLink('https://sunnahlife.app/join/ds-000123'),
+        'DS-000123', // typed lowercase → normalized upper
+      );
+      expect(
+        referralCodeFromLink('https://sunnahlife.app/join/DS-000123/'),
+        'DS-000123', // trailing slash tolerated
+      );
+    });
+
+    test('garbage codes are rejected (member-code shape DS-XXXXXX)', () {
+      expect(referralCodeFromLink('https://sunnahlife.app/join/garbage'),
+          isNull);
+      expect(referralCodeFromLink('sunnahlife://join/not-a-code'), isNull);
+      expect(referralCodeFromLink('https://sunnahlife.app/join/DS-123'),
+          isNull, reason: 'too few digits');
+      expect(referralCodeFromLink('https://sunnahlife.app/join/DS-'),
+          isNull);
+      expect(
+        referralCodeFromLink('https://sunnahlife.app/join/DS-000123<script>'),
+        isNull,
+      );
+    });
+
+    test('foreign hosts / paths / schemes / shapes never yield a code', () {
+      expect(referralCodeFromLink('https://evil.example.com/join/DS-000123'),
+          isNull);
+      expect(referralCodeFromLink('https://sunnahlife.app/amal'), isNull);
+      expect(referralCodeFromLink('https://sunnahlife.app/join'), isNull);
+      expect(referralCodeFromLink('https://sunnahlife.app/join/'), isNull);
+      expect(
+        referralCodeFromLink(
+          'https://sunnahlife.app/join/DS-000123/extra'),
+        isNull,
+      );
+      expect(referralCodeFromLink('sunnahlife://home'), isNull);
+      expect(referralCodeFromLink('sunnahlife://join'), isNull);
+      expect(referralCodeFromLink('sunnahlife://join/DS-000123/x'), isNull);
+      expect(referralCodeFromLink('intent://join/DS-000123'), isNull);
+      expect(referralCodeFromLink('http://sunnahlife.app/join/DS-000123'),
+          isNull, reason: 'https only');
+      expect(referralCodeFromLink('not a uri at all'), isNull);
+      expect(referralCodeFromLink(''), isNull);
+      expect(referralCodeFromLink(null), isNull);
+    });
+
+    test('join links never map to a navigation route', () {
+      // The referral is STORED, not navigated — deepLinkToRoute stays null
+      // for both shapes (a join tap lands on the app's normal entry).
+      expect(deepLinkToRoute('sunnahlife://join/DS-000123'), isNull);
+      expect(deepLinkToRoute('https://sunnahlife.app/join/DS-000123'), isNull);
+    });
+  });
 }
