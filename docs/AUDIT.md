@@ -89,3 +89,26 @@ The post-Phase-B audit found three gaps; all closed in this round:
 | Live quiz was a separate bun mini-service (:3030) outside NestJS | Done — folded into the API (`quiz.gateway.ts`, `IoAdapter`); mini-service deleted | `bun run smoke:quiz` → 21/21; Caddy polling+ws both PASS; browser E2E full host round |
 | `usrah.controller.ts` lacked `@Roles` | Done — `@UseGuards(RolesGuard)` + `@Roles("user")` | `bun run test` → 133/133 (incl. usrah coverage) |
 | (found during B9 E2E) web আরও tab was unreachable; `QuizzesSection` was dead code; host panel could not advance past the lobby | Done — fixed (`ilm-view.tsx` routeIlm cases, extras wiring, API_PORT export, প্রথম প্রশ্ন button) | browser E2E in worklog B9-e: grid reachable, quiz played, live round completed |
+
+
+## Phase C close-out — Wave 1 (shared plumbing) & Wave 2 (production blockers)
+
+Baseline tag: `v0.9-pre-phase-c`. Full narrative in `worklog.md` (entries C-W1..C-W2d); evidence trail in the linked CI runs.
+
+| Item | Status | Proven by |
+|---|---|---|
+| User.tz + tz-correct scheduling (push epochs, weekStart, lock deadline) | Done | `test/tz.spec.ts` (Dhaka/Riyadh/London) — part of the 248/248 suite |
+| Consolidated /api/config (contacts, hijri adjust, donation, flags) | Done | `test/config.spec.ts` + admin PATCH route audited |
+| Content pipeline (packages/content → mobile assets; CI parity gate; 114-surah pack) | Done | CI `Content parity gate` step (run 36448583413 lineage green since 1b2b593) + `test/content-packs.spec.ts` (30 tests) + mobile quran-meta canary (flutter test) |
+| Monorepo hygiene (bun workspaces, one lockfile, generated client committed, no sandbox leftovers, CI writes no commits) | Done | fresh-clone gates in B11 lineage + CI green since |
+| Part D verbatim content (farze_ain_v1.1 23 criteria, Muhibbus outline, ladder fix, diary rules) | Done | `test/levels.spec.ts` + `test/content-packs.spec.ts` asserts; template row via admin API |
+| Seed split (reference idempotent on boot; demo gated SEED_DEMO + non-production) | Done | `test/seed-split.spec.ts` (4 tests incl. boot-twice row stability + production refusal) |
+| Real SMS (SSL Wireless + Infobip) + OTP hardening | Done (code); live delivery needs real creds | `test/auth-otp.spec.ts` + `test/token-security.spec.ts`; **real SMS delivery: Ready for device/creds test** — providers are env-wired, mock refused in production |
+| Token & secret handling (typ claims, separate refresh secret, atomic rotation, production env gate, CORS on gateway) | Done | `test/token-security.spec.ts`; CI production-validation refuses bad env (proven by the compose smoke booting with full env) |
+| RLS tightening (DayUnlock policies, OtpCode/AuditLog/MasalaQuestion/Feedback RLS, self-role/gender trigger, worker role restricted, same-gender review fallback) | Done | `test/rls.e2e.spec.ts` 23/23 — twice in a row (re-runnability proof after the supertest listener + DayUnlock-cleanup fixes) |
+| Push delivery (RFC 7523 jwt-bearer, token cache, device-token takeover) | Done (code); real FCM delivery needs a Firebase project | `test/push.spec.ts` 22/22 incl. mocked-endpoint grant/cache/refresh + takeover; **real device push: Ready for device test** |
+| Sync & guest merge hardening (strip bug, clamped LWW, conditional writes, inputType validation, source guard, serverValue, capped ordered merge) | Done | `test/conflict.spec.ts` + `test/social-auth.spec.ts` through the REAL APP_PIPE (248/248) |
+| Operations (/health 503, internal-only /metrics + /docs, structured logger + PII redaction, socket.io redis adapter, durable compose) | Done (code) | `test/health-ops.spec.ts` + `test/docs-gating.spec.ts`; quiz smoke 21/21 ×3 through the adapter; compose itself proven by the docker job |
+| Docker images + compose smoke | Done (pending this run) | CI `docker` job: builds api/web/admin images, `up --wait`, /health status:ok, web/admin 200s, AmalDefinition ≥ 30 — run 36448583413 (verdict appended below) |
+
+**Known deferred:** real FCM/device push, real SMS credentials, social-login client IDs, iOS build — all documented as owner-side human steps (docs/RELEASE.md, docs/IOS_BUILD.md); quiz rooms remain single-instance by design until state is externalized (compose comment).
