@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
@@ -18,8 +20,11 @@ if (googleServicesJson.exists()) {
 android {
     namespace = "bd.asunnah.sunnah_life"
     compileSdk = flutter.compileSdkVersion
-    // No pinned ndkVersion: debug APKs keep native symbols (see packaging block
-    // below) so the build needs no NDK; release/CI builds install it.
+    // Pinned to Flutter's blessed NDK: AGP 9.1 demands an NDK at configure
+    // time (its default IS this version) for the jniLibs strip machinery —
+    // auto-installed on CI runners. Debug builds skip actual stripping via the
+    // keepDebugSymbols block below.
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -27,7 +32,6 @@ android {
         // flutter_local_notifications uses java.time APIs → required below minSdk 26.
         isCoreLibraryDesugaringEnabled = true
     }
-
     defaultConfig {
         applicationId = "bd.asunnah.sunnah_life"
         minSdk = flutter.minSdkVersion
@@ -57,7 +61,7 @@ android {
             // Release signing from android/key.properties when present
             // (CI injects it from secrets — see docs/RELEASE.md §3); falls
             // back to debug signing so local `flutter run --release` works.
-            val keystoreProperties = java.util.Properties()
+            val keystoreProperties = Properties()
             val keystorePropertiesFile = rootProject.file("key.properties")
             val hasReleaseKeystore = keystorePropertiesFile.exists()
             if (hasReleaseKeystore) {
@@ -74,6 +78,16 @@ android {
                 signingConfig = signingConfigs.getByName("debug")
             }
         }
+    }
+}
+
+// Debug APKs keep native symbols by design — the strip task's llvm-strip would
+// drag in a 2+ GB NDK download for zero debugging value. Scoped to the debug
+// variant only: release keeps the default stripping (CI runners provide the
+// NDK there).
+androidComponents {
+    onVariants(selector().withBuildType("debug")) { variant ->
+        variant.packaging.jniLibs.keepDebugSymbols.add("**/*.so")
     }
 }
 

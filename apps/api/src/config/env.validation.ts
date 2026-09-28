@@ -12,7 +12,17 @@ const schema = z.object({
   MEILI_HOST: z.string().optional().default(""),
   MEILI_KEY: z.string().optional().default(""),
   JWT_SECRET: z.string().min(8, "JWT_SECRET must be set (min 8 chars)").default("dev-only-secret-change-me-in-production"),
-  JWT_REFRESH_SECRET: z.string().min(8).optional().default(""),
+  // Empty is a legitimate state: auth.service falls back to JWT_SECRET when
+  // JWT_REFRESH_SECRET is empty (documented dev/sandbox default). Explicitly
+  // provided values must still be ≥ 8 chars. NOTE: zod validates the default
+  // through the inner schema, so a plain .min(8).default("") rejected EVERY
+  // boot without the var set (found by CI — runs #23 attempt 2: "JWT_REFRESH_
+  // SECRET: String must contain at least 8 character(s)" with zero .env files).
+  JWT_REFRESH_SECRET: z
+    .string()
+    .refine((v) => v.length === 0 || v.length >= 8, "JWT_REFRESH_SECRET must be empty (fallback to JWT_SECRET) or at least 8 chars")
+    .optional()
+    .default(""),
   ACCESS_TOKEN_TTL_MIN: z.coerce.number().int().positive().default(15),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
   SMS_PROVIDER: z.enum(["mock", "sslwireless", "infobip"]).default("mock"),

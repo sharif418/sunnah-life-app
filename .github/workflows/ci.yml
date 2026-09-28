@@ -230,12 +230,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # JDK 17 for AGP 8 / Gradle (flutter build apk needs it; the runner's
-      # default JDK is not guaranteed to match).
+      # JDK 21 — the toolchain this build was verified with locally
+      # (OpenJDK 21; AGP 9.1 requires 17+, and 21 is what the sandbox proof
+      # used: scripts compile, flutter plugin applies, NDK auto-install path).
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - uses: subosito/flutter-action@v2
         with:
@@ -298,7 +299,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: '21'
 
       - uses: subosito/flutter-action@v2
         with:
