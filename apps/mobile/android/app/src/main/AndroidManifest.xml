@@ -55,6 +55,22 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="sunnahlife" android:host="*"/>
             </intent-filter>
+            <!-- C-W3h · App Links: https://sunnahlife.app/join/* opens the app
+                 directly (no disambiguation sheet) once Android verifies the
+                 statement at https://sunnahlife.app/.well-known/assetlinks.json
+                 (served by apps/web — the sha256 fingerprint step for the owner
+                 is documented in docs/RELEASE.md §App Links). autoVerify +
+                 pathPrefix keeps every other path on the website; the
+                 sunnahlife:// filter above keeps working for QR/share links. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="https"
+                    android:host="sunnahlife.app"
+                    android:pathPrefix="/join"/>
+            </intent-filter>
         </activity>
 
         <!-- FCM (Task B2): system-tray notifications on background/terminated

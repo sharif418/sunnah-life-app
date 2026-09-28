@@ -11,9 +11,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'design/design_tokens.dart';
 import 'core/bell_schedule.dart';
+import 'core/referral.dart';
 import 'features/amal/habit_screen.dart';
 import 'features/amal/month_screen.dart';
 import 'features/amal/self_test_screen.dart';
@@ -52,9 +54,11 @@ import 'l10n/generated/app_localizations.dart';
 import 'models/domain.dart';
 import 'services/notification_service.dart';
 import 'services/push_service.dart';
+import 'services/app_link_service.dart';
 import 'state/amal_state.dart';
 import 'state/prayer_state.dart';
 import 'state/providers.dart';
+import 'state/referral_state.dart';
 
 /// Single-flight bootstrap: read the persisted guest profile before the
 /// router mounts so the onboarding redirect never races hydration.
@@ -86,6 +90,16 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     onNavigate: (route) => ref.read(routerProvider).go(route),
   );
   ref.watch(pushRegistrationProvider);
+  // C-W3h: /join deep links (cold start + warm stream) → the pending
+  // referral store; the auth screen surfaces the chip and rides the code
+  // along on sign-in. Idempotent writes; failures swallowed inside.
+  await AppLinkService.instance.ensureInitialized(
+    onReferralCode: (code) async {
+      final prefs = await SharedPreferences.getInstance();
+      await PendingReferralStore(prefs).write(code);
+      ref.invalidate(pendingReferralProvider);
+    },
+  );
 });
 
 /// Push registration lifecycle: register the FCM token when signed in,
