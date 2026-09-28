@@ -63,6 +63,15 @@ apps/*/dist
 apps/*/.next
 apps/api/generated
 packages/*/dist
+# … EXCEPT the generated typed client surface: apps/web type-checks against
+# packages/shared-types/dist/schema.d.ts (`import type`), so a fresh clone
+# (and any tsc gate) must have it. Same philosophy as the committed generated
+# l10n Dart (apps/mobile/lib/l10n/generated). Regenerate after API route
+# changes: `cd packages/shared-types && bun run generate` (boots the Nest app,
+# needs apps/api built + env), then commit the diff.
+!packages/shared-types/dist
+packages/shared-types/dist/*
+!packages/shared-types/dist/schema.d.ts
 # local databases & runtime (ROOT-ONLY — the bare `db/` rule used to hide
 # apps/mobile/lib/db/, the Drift database, from git!)
 *.db
