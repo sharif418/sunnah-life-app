@@ -6,7 +6,7 @@
 
 import * as React from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, BookHeart, Baby, Heart, MessageCircleQuestion, Newspaper, Radio, Sparkles, Sun } from "lucide-react";
+import { ArrowRight, BookHeart, Baby, Brain, Heart, MessageCircleQuestion, Newspaper, Radio, Sparkles, Sun } from "lucide-react";
 import { getPack } from "@/lib/content";
 import type { ArticlesPack, ImanBranchesPack, IslamicNamesPack, Names99Pack, SunnahsPack } from "@/lib/content";
 import { toBn } from "@/lib/calendars";
@@ -19,9 +19,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { QuizzesSection } from "./quizzes-section";
 import { cn } from "@/lib/utils";
 
 export type ExtraKey =
+  | "quizzes"
   | "names99"
   | "islamic-names"
   | "articles"
@@ -30,9 +32,18 @@ export type ExtraKey =
   | "live-quiz"
   | "usrah-questions";
 
-export function ExtrasSection({ active, highlightId }: { active: ExtraKey | null; highlightId?: string }) {
+export function ExtrasSection({
+  active,
+  highlightId,
+  startQuizId,
+}: {
+  active: ExtraKey | null;
+  highlightId?: string;
+  startQuizId?: string;
+}) {
   const { nav } = useApp();
 
+  if (active === "quizzes") return <QuizzesSection startQuizId={startQuizId} />;
   if (active === "names99") return <Names99View onBack={() => nav("ilm", "more")} />;
   if (active === "islamic-names") return <IslamicNamesView onBack={() => nav("ilm", "more")} />;
   if (active === "articles") return <ArticlesView onBack={() => nav("ilm", "more")} openId={highlightId} />;
@@ -42,6 +53,7 @@ export function ExtrasSection({ active, highlightId }: { active: ExtraKey | null
   if (active === "usrah-questions") return <UsrahQuestionsView />;
 
   const entries: { key: ExtraKey; icon: React.ElementType; title: string; desc: string; count: string }[] = [
+    { key: "quizzes", icon: Brain, title: "কুইজ", desc: "নিজে নিজে খেলুন — স্কোর সংরক্ষিত হয়, সেরা ফলাফল দেখুন", count: "৩টি" },
     { key: "live-quiz", icon: Radio, title: "লাইভ কুইজ", desc: "উসরার সবার সাথে একসাথে কুইজ — লাইভ লিডারবোর্ডসহ", count: "উসরা" },
     { key: "usrah-questions", icon: MessageCircleQuestion, title: "উসরার প্রশ্নোত্তর", desc: "উসরার ভেতরে প্রশ্ন করুন, প্রধানের উত্তর দেখুন", count: "উসরা" },
     { key: "names99", icon: Sparkles, title: "আল্লাহর ৯৯ নাম", desc: "আরবি, উচ্চারণ ও বাংলা অর্থসহ আসমাউল হুসনা", count: "৯৯টি" },

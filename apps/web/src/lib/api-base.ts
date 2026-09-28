@@ -10,7 +10,9 @@
 
 export const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 
-const API_PORT = process.env.NEXT_PUBLIC_API_PORT ?? "3001";
+/** The API port behind the sandbox gateway (exported: the socket.io client
+ *  needs it to build its URL — it does not go through fetch/apiUrl). */
+export const API_PORT = process.env.NEXT_PUBLIC_API_PORT ?? "3001";
 
 export function apiUrl(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;

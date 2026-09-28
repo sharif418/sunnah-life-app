@@ -25,7 +25,18 @@ const TABS: { key: IlmTab; label: string; icon: React.ElementType }[] = [
   { key: "more", label: "আরও", icon: LayoutGrid },
 ];
 
-const EXTRAS: ExtraKey[] = ["names99", "islamic-names", "articles", "sunnahs", "iman70"];
+// Views that render inside the আরও tab. NOTE: "more" itself (the tab) has
+// extra: null — the grid; the rest deep-link a specific extra card.
+const EXTRAS: ExtraKey[] = [
+  "quizzes",
+  "live-quiz",
+  "usrah-questions",
+  "names99",
+  "islamic-names",
+  "articles",
+  "sunnahs",
+  "iman70",
+];
 
 interface IlmRoute {
   tab: IlmTab;
@@ -68,6 +79,19 @@ function routeIlm(view: string, params: Record<string, string | number>): IlmRou
       return { ...base, tab: "courses", courseId: base.courseId ?? (params.id != null ? String(params.id) : undefined) };
     case "lesson":
       return { ...base, tab: "courses" };
+    case "more":
+      // the আরও tab itself — the extras grid (quizzes, live quiz, usrah
+      // questions, 99 names, …). Without this case the tab fell through to
+      // default (live) and the grid was unreachable.
+      return { ...base, tab: "more" };
+    case "quiz":
+      // deep link: jump straight into playing one quiz
+      return {
+        ...base,
+        tab: "more",
+        extra: "quizzes",
+        extraId: params.id != null ? String(params.id) : undefined,
+      };
     default:
       if (EXTRAS.includes(view as ExtraKey)) {
         return { ...base, tab: "more", extra: view as ExtraKey };
@@ -110,6 +134,7 @@ export function IlmView() {
             <ExtrasSection
               active={route.extra}
               highlightId={view === "article" && params.id != null ? String(params.id) : undefined}
+              startQuizId={route.extra === "quizzes" && route.extraId ? route.extraId : undefined}
             />
           )}
         </motion.div>

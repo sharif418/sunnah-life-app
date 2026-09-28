@@ -423,7 +423,12 @@ function HostPanel({
         <Crown className="size-4 text-gold-text-foreground" />
         <h3 className="text-sm font-bold">উসরা প্রধান — কুইজ নিয়ন্ত্রণ</h3>
       </div>
-      {phase === "lobby" ? (
+      {/*
+        Lobby WITHOUT a started quiz → the picker. Once quiz:started lands
+        (phase is still "lobby" until the first host:next) show the running
+        controls — the host advances to the first question with প্রথম প্রশ্ন.
+      */}
+      {phase === "lobby" && !quizTitle ? (
         <div className="mt-3 space-y-2">
           {liveQuizzes.map((q) => (
             <button
@@ -449,9 +454,22 @@ function HostPanel({
       ) : (
         <div className="mt-3">
           <p className="text-sm font-semibold">{quizTitle ?? "কুইজ চলছে"}</p>
-          <p className="mt-0.5 text-xs text-muted-foreground">{toBn(questionCount)} প্রশ্ন · ফেজ: {phase === "question" ? "চলছে" : phase === "reveal" ? "ফলাফল" : "শেষ"}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {toBn(questionCount)} প্রশ্ন · ফেজ:{" "}
+            {phase === "lobby"
+              ? "শুরু হয়েছে — প্রথম প্রশ্ন চালু করুন"
+              : phase === "question"
+                ? "চলছে"
+                : phase === "reveal"
+                  ? "ফলাফল"
+                  : "শেষ"}
+          </p>
           <div className="mt-3 flex gap-2">
-            {phase === "question" ? (
+            {phase === "lobby" ? (
+              <Button className="h-11 flex-1 rounded-xl" onClick={onNext}>
+                প্রথম প্রশ্ন <ChevronRight className="size-4" />
+              </Button>
+            ) : phase === "question" ? (
               <Button variant="secondary" className="h-11 flex-1 rounded-xl" onClick={onNext}>
                 ফলাফল দেখান
               </Button>
