@@ -14,6 +14,12 @@
     <!-- FCM background delivery (notification messages while the app is
          not in the foreground). -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- GPS location (C-W3c): city picker snap-to-nearest-district + mosques
+         "near me". Coarse covers Android 12+ "approximate" grants; fine is
+         requested for the near-me mosque distances. geolocator maps these to
+         the balanced-power priority at runtime. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:label="সুন্নাহ লাইফ"
