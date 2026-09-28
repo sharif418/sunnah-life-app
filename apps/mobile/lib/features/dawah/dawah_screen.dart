@@ -14,6 +14,7 @@ import '../../models/domain.dart';
 import '../../services/platform_channels.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
+import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 
 class DawahScreen extends ConsumerWidget {
@@ -43,16 +44,18 @@ class DawahScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.t('dawah_gate_title')),
-        actions: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
-            child: SyncBadge(),
-          ),
-        ],
+      // C-W4a: the shared global header replaces the screen's own AppBar
+      // (logo, location, triple calendar, notification/reminder/profile,
+      // sync badge — the badge used to live in this AppBar's actions).
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const GlobalHeader(),
+            Expanded(child: body),
+          ],
+        ),
       ),
-      body: SafeArea(top: false, child: body),
     );
   }
 }

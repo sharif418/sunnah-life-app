@@ -11,6 +11,7 @@ import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart' show configProvider;
+import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 
 class MoreScreen extends ConsumerWidget {
@@ -92,6 +93,10 @@ class MoreScreen extends ConsumerWidget {
             SLSpacing.s24,
           ),
           children: [
+            // C-W4a: the shared global header (logo, location, triple
+            // calendar, notification/reminder/profile, sync badge).
+            const GlobalHeader(),
+            const SizedBox(height: SLSpacing.s8),
             Text(
               context.t('tab_more'),
               style: theme.textTheme.headlineMedium?.copyWith(

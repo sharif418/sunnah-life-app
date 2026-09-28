@@ -1,7 +1,8 @@
-/// হোম — prayer hub: date bar (city + Gregorian + Bangla + Hijri), the
-/// countdown card (current waqt + HH:MM:SS), the 9-row schedule with per-row
-/// bells, the 3 forbidden-time cards, the post-prayer tristate prompt and the
-/// exact-alarm permission card.
+/// হোম — prayer hub: global header (C-W4a), the countdown ring hero
+/// (C-W4b) flying to the schedule, the 9-row schedule with per-row bells,
+/// the 3 forbidden-time cards, the post-prayer tristate prompt, the
+/// exact-alarm permission card, most-used amals, quick access, Ilm,
+/// today's amal preview and the live preview.
 library;
 
 import 'package:flutter/material.dart';
@@ -10,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bn_digits.dart';
 import '../../core/bell_schedule.dart';
-import '../../core/calendars.dart';
+import '../../core/calendars.dart' show formatTimeBn;
 import '../../core/cities.dart';
 import '../../core/date_keys.dart';
 import '../../core/prayer_engine.dart';
@@ -18,10 +19,10 @@ import '../../design/design_tokens.dart';
 import '../../state/amal_state.dart';
 import '../../state/prayer_state.dart';
 import '../../state/providers.dart';
-import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
 import '../shared/widgets.dart';
+import '../shared/global_header.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -202,14 +203,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       );
     }
 
-    final now = DateTime.now();
-    final bnDate = banglaDate(now);
-    // C-W3g: user ±2 + admin /api/config ±2 (clamped ±4) — the admin's
-    // moon-sighting correction propagates to every rendered Hijri date.
-    final hijri = hijriDate(
-      now,
-      adjustDays: ref.watch(effectiveHijriAdjustProvider),
-    );
     final city = findCity(profile.city);
 
     return Scaffold(
@@ -223,34 +216,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SLSpacing.s24,
           ),
           children: [
-            // ── Date bar ──
-            Row(
-              children: [
-                Icon(
-                  Icons.location_on_outlined,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    city?.nameBn ?? profile.city,
-                    style: Theme.of(context).textTheme.titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ),
-                SyncBadge(),
-              ],
-            ),
-            const SizedBox(height: SLSpacing.s4),
-            Text(
-              '${bn ? toBn(now.day) : now.day} ${S.tr(lang, 'month_${now.month}')} '
-              '${bn ? toBn(now.year) : now.year} · ${bnDate.formatted} · ${hijri.formatted}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-            ),
-            const SizedBox(height: SLSpacing.s16),
+            // ── Global header (C-W4a): logo, location, triple calendar,
+            // notification/reminder/profile actions, sync badge. The date-bar
+            // logic that used to live here moved into it — no duplication.
+            const GlobalHeader(),
 
             // ── Countdown card ──
             _CountdownCard(prayer: prayer, lang: lang, bn: bn),

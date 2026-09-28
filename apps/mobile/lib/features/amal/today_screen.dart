@@ -18,6 +18,7 @@ import '../../state/amal_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
+import '../shared/global_header.dart';
 import 'amal_widgets.dart';
 
 class AmalHubScreen extends ConsumerWidget {
@@ -29,13 +30,23 @@ class AmalHubScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: defsAsync.when(
-          loading: () => const Skeleton(height: 72, count: 6),
-          error: (e, _) => ErrorState(
-            message: '$e',
-            onRetry: () => ref.invalidate(amalDefinitionsProvider),
-          ),
-          data: (defs) => _TodayView(defs: defs),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // C-W4a: the shared global header (logo, location, triple
+            // calendar, notification/reminder/profile, sync badge).
+            const GlobalHeader(),
+            Expanded(
+              child: defsAsync.when(
+                loading: () => const Skeleton(height: 72, count: 6),
+                error: (e, _) => ErrorState(
+                  message: '$e',
+                  onRetry: () => ref.invalidate(amalDefinitionsProvider),
+                ),
+                data: (defs) => _TodayView(defs: defs),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -128,8 +139,6 @@ class _TodayView extends ConsumerWidget {
               ),
             ),
             StreakBadge(days: streak, bengali: bn),
-            const SizedBox(width: SLSpacing.s8),
-            SyncBadge(),
           ],
         ),
         const SizedBox(height: SLSpacing.s8),
