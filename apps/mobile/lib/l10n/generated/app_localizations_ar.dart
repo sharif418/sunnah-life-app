@@ -1294,4 +1294,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bell_minutes_done => 'حسنًا';
+
+  @override
+  String get sync_sheet_title => 'حالة المزامنة';
+
+  @override
+  String get sync_now => 'زامِن الآن';
+
+  @override
+  String get sync_last_synced => 'آخر مزامنة';
+
+  @override
+  String get sync_never => 'لم تتم المزامنة بعد';
+
+  @override
+  String get sync_failed_entries => 'إدخالات فاشلة';
+
+  @override
+  String get sync_failed_short => 'فشل';
+
+  @override
+  String get sync_dead_discard => 'تجاهل';
+
+  @override
+  String get sync_error_unexpected => 'خطأ غير متوقع — أعد المحاولة';
 }

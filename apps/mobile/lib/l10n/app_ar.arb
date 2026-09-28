@@ -419,5 +419,13 @@
   "bell_minutes_before": "دقائق قبل الوقت",
   "bell_minutes_after": "دقائق بعد الصلاة",
   "bell_minutes_reset": "إعادة تعيين",
-  "bell_minutes_done": "حسنًا"
+  "bell_minutes_done": "حسنًا",
+  "sync_sheet_title": "حالة المزامنة",
+  "sync_now": "زامِن الآن",
+  "sync_last_synced": "آخر مزامنة",
+  "sync_never": "لم تتم المزامنة بعد",
+  "sync_failed_entries": "إدخالات فاشلة",
+  "sync_failed_short": "فشل",
+  "sync_dead_discard": "تجاهل",
+  "sync_error_unexpected": "خطأ غير متوقع — أعد المحاولة"
 }

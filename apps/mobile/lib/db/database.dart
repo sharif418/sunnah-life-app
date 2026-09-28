@@ -40,6 +40,13 @@ class Outbox extends Table {
   TextColumn get source => text()();
   DateTimeColumn get clientUpdatedAt => dateTime()();
   IntColumn get attempts => integer().withDefault(const Constant(0))();
+
+  /// Last server rejection reason (C-W3d) — shown on the dead-rows list.
+  TextColumn get lastError => text().nullable()();
+
+  /// Set when the row must never re-POST again (converged via serverValue,
+  /// or attempts exhausted). Nullable — null while the row is alive.
+  DateTimeColumn get deadAt => dateTime().nullable()();
 }
 
 @DataClassName('GuestProfile')
@@ -110,7 +117,20 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  /// v1 → v2 (C-W3d): outbox gained `last_error` + `dead_at`. Existing user
+  /// data survives — additive ALTER TABLEs only (drift's addColumn).
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    onUpgrade: (m, from, to) async {
+      if (from < 2) {
+        await m.addColumn(outbox, outbox.lastError);
+        await m.addColumn(outbox, outbox.deadAt);
+      }
+    },
+  );
 
   // ── Guest profile (single row, id=1) ────────────────────────────────────────
 
@@ -246,17 +266,20 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> pendingSyncCount() async {
     final count = countAll();
-    final row = await (selectOnly(outbox)..addColumns([count])).getSingle();
+    final q = selectOnly(outbox)
+      ..addColumns([count])
+      ..where(outbox.deadAt.isNull());
+    final row = await q.getSingle();
     return row.read(count) ?? 0;
   }
 
-  /// Snapshot of the pending outbox as domain entries (sync batch payload).
+  /// Snapshot of the ALIVE outbox (dead rows are skipped by flush).
   Future<List<domain.AmalEntry>> pendingEntries({int limit = 500}) async {
-    final rows =
-        await (select(outbox)
-              ..orderBy([(t) => OrderingTerm(expression: t.id)])
-              ..limit(limit))
-            .get();
+    final rows = await (select(outbox)
+          ..where((t) => t.deadAt.isNull())
+          ..orderBy([(t) => OrderingTerm(expression: t.id)])
+          ..limit(limit))
+        .get();
     return rows
         .map(
           (r) => domain.AmalEntry(
@@ -269,6 +292,85 @@ class AppDatabase extends _$AppDatabase {
         )
         .toList();
   }
+
+  /// Alive outbox rows with their [OutboxRow.attempts] counters — flush()
+  /// needs both to apply the reject policy (cap = kMaxOutboxAttempts).
+  Future<List<(OutboxRow, domain.AmalEntry)>> pendingOps({int limit = 500}) async {
+    final rows = await (select(outbox)
+          ..where((t) => t.deadAt.isNull())
+          ..orderBy([(t) => OrderingTerm(expression: t.id)])
+          ..limit(limit))
+        .get();
+    return [
+      for (final r in rows)
+        (
+          r,
+          domain.AmalEntry(
+            amalKey: r.amalKey,
+            date: r.date,
+            clientUpdatedAt: r.clientUpdatedAt.toIso8601String(),
+            value: _decodeValue(r.valueJson),
+            source: r.source,
+          ),
+        ),
+    ];
+  }
+
+  /// Record one server rejection on the (amalKey, date) outbox op: attempts
+  /// +1, reason captured, deadAt set when the policy says stop retrying.
+  /// No-op when the row is already gone (accepted concurrently/discarded).
+  Future<void> recordRejection({
+    required String amalKey,
+    required String date,
+    required String reason,
+    required bool dead,
+    DateTime? now,
+  }) async {
+    final row = await (select(outbox)
+          ..where((t) => t.amalKey.equals(amalKey) & t.date.equals(date)))
+        .getSingleOrNull();
+    if (row == null) return;
+    await (update(outbox)
+          ..where((t) => t.amalKey.equals(amalKey) & t.date.equals(date)))
+        .write(
+      OutboxCompanion(
+        attempts: Value(row.attempts + 1),
+        lastError: Value(reason),
+        deadAt: Value(dead ? (now ?? DateTime.now()) : null),
+      ),
+    );
+  }
+
+  /// Dead rows (never re-POSTed) — the sync sheet's problem list.
+  Future<List<OutboxRow>> deadRows() =>
+      (select(outbox)
+            ..where((t) => t.deadAt.isNotNull())
+            ..orderBy([(t) => OrderingTerm(expression: t.id)]))
+          .get();
+
+  Future<int> deadCount() async {
+    final count = countAll();
+    final q = selectOnly(outbox)
+      ..addColumns([count])
+      ..where(outbox.deadAt.isNotNull());
+    final row = await q.getSingle();
+    return row.read(count) ?? 0;
+  }
+
+  /// Retry-again (sync sheet): revive a dead row for the next flush.
+  Future<void> retryDeadRow(int id) =>
+      (update(outbox)..where((t) => t.id.equals(id))).write(
+        const OutboxCompanion(
+          attempts: Value(0),
+          lastError: Value(null),
+          deadAt: Value(null),
+        ),
+      );
+
+  /// Discard (sync sheet): drop a dead row without ever re-POSTing it. The
+  /// local AmalEntry itself is kept — only the sync attempt is abandoned.
+  Future<void> discardDeadRow(int id) =>
+      (delete(outbox)..where((t) => t.id.equals(id))).go();
 
   /// Latest clientUpdatedAt wins — merge of server entries into local storage
   /// (pure merge logic lives in core/sync_merge.dart, unit-tested there).

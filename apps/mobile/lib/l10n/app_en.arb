@@ -419,5 +419,13 @@
   "bell_minutes_before": "Minutes before waqt",
   "bell_minutes_after": "Minutes after prayer",
   "bell_minutes_reset": "Reset",
-  "bell_minutes_done": "Done"
+  "bell_minutes_done": "Done",
+  "sync_sheet_title": "Sync status",
+  "sync_now": "Sync now",
+  "sync_last_synced": "Last synced",
+  "sync_never": "Never synced",
+  "sync_failed_entries": "Failed entries",
+  "sync_failed_short": "failed",
+  "sync_dead_discard": "Discard",
+  "sync_error_unexpected": "Unexpected error — try again"
 }

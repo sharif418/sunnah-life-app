@@ -10,6 +10,7 @@ import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../state/amal_state.dart';
 import '../../state/providers.dart';
+import 'sync_sheet.dart';
 
 extension L10nX on BuildContext {
   Lang get lang => LangX.fromCode(
@@ -227,38 +228,68 @@ class _SkeletonState extends State<Skeleton>
 
 class SyncBadge extends ConsumerWidget {
   const SyncBadge({super.key});
+
+  /// idle / syncing / pending N / dead M (error accent, only when M > 0).
+  /// Tapping opens the sync sheet (counts, last sync, dead entries, sync now).
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sync = ref.watch(syncProvider);
-    if (sync.pending == 0 && !sync.syncing) {
-      return Icon(
+    final theme = Theme.of(context);
+    final hasDead = sync.dead > 0;
+    final hasPending = sync.pending > 0;
+
+    final Widget indicator;
+    if (sync.syncing) {
+      indicator = const SizedBox(
+        width: 14,
+        height: 14,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      );
+    } else if (hasDead) {
+      indicator = Icon(
+        Icons.cloud_off_outlined,
+        size: 18,
+        color: theme.colorScheme.error,
+      );
+    } else if (hasPending) {
+      indicator = Icon(
+        Icons.cloud_upload_outlined,
+        size: 18,
+        color: theme.colorScheme.tertiary,
+      );
+    } else {
+      indicator = Icon(
         Icons.check_circle_outline,
         size: 18,
-        color: Theme.of(context).colorScheme.outline,
+        color: theme.colorScheme.outline,
       );
     }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 14,
-          height: 14,
-          child: sync.syncing
-              ? const CircularProgressIndicator(strokeWidth: 2)
-              : Icon(
-                  Icons.cloud_upload_outlined,
-                  size: 16,
-                  color: Theme.of(context).colorScheme.tertiary,
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(SLRadius.sm),
+      onTap: () => showSyncSheet(context),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: SLSpacing.s4,
+          vertical: SLSpacing.s4,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            indicator,
+            if (!sync.syncing && (hasDead || hasPending)) ...[
+              const SizedBox(width: 4),
+              Text(
+                '${toBn(hasDead ? sync.dead : sync.pending)}'
+                '${hasDead ? ' ${context.t('sync_failed_short')}' : ''}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: hasDead ? theme.colorScheme.error : null,
                 ),
+              ),
+            ],
+          ],
         ),
-        const SizedBox(width: 4),
-        Text(
-          sync.syncing
-              ? '…'
-              : '${toBn(sync.pending)} ${context.t('amal_sync_pending')}',
-          style: Theme.of(context).textTheme.bodySmall,
-        ),
-      ],
+      ),
     );
   }
 }

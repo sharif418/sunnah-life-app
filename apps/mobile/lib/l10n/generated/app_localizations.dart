@@ -2619,6 +2619,54 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'ঠিক আছে'**
   String get bell_minutes_done;
+
+  /// No description provided for @sync_sheet_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'সিঙ্ক অবস্থা'**
+  String get sync_sheet_title;
+
+  /// No description provided for @sync_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনই সিঙ্ক করুন'**
+  String get sync_now;
+
+  /// No description provided for @sync_last_synced.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ সিঙ্ক'**
+  String get sync_last_synced;
+
+  /// No description provided for @sync_never.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো সিঙ্ক হয়নি'**
+  String get sync_never;
+
+  /// No description provided for @sync_failed_entries.
+  ///
+  /// In bn, this message translates to:
+  /// **'সমস্যায় পড়া এন্ট্রি'**
+  String get sync_failed_entries;
+
+  /// No description provided for @sync_failed_short.
+  ///
+  /// In bn, this message translates to:
+  /// **'সমস্যা'**
+  String get sync_failed_short;
+
+  /// No description provided for @sync_dead_discard.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাদ দিন'**
+  String get sync_dead_discard;
+
+  /// No description provided for @sync_error_unexpected.
+  ///
+  /// In bn, this message translates to:
+  /// **'অপ্রত্যাশিত সমস্যা — আবার চেষ্টা করুন'**
+  String get sync_error_unexpected;
 }
 
 class _AppLocalizationsDelegate

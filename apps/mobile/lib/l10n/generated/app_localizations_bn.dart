@@ -1303,4 +1303,28 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get bell_minutes_done => 'ঠিক আছে';
+
+  @override
+  String get sync_sheet_title => 'সিঙ্ক অবস্থা';
+
+  @override
+  String get sync_now => 'এখনই সিঙ্ক করুন';
+
+  @override
+  String get sync_last_synced => 'সর্বশেষ সিঙ্ক';
+
+  @override
+  String get sync_never => 'এখনো সিঙ্ক হয়নি';
+
+  @override
+  String get sync_failed_entries => 'সমস্যায় পড়া এন্ট্রি';
+
+  @override
+  String get sync_failed_short => 'সমস্যা';
+
+  @override
+  String get sync_dead_discard => 'বাদ দিন';
+
+  @override
+  String get sync_error_unexpected => 'অপ্রত্যাশিত সমস্যা — আবার চেষ্টা করুন';
 }

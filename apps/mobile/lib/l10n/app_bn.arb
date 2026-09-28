@@ -419,5 +419,13 @@
   "bell_minutes_before": "ওয়াক্তের আগে (মিনিট)",
   "bell_minutes_after": "নামাজের পরে (মিনিট)",
   "bell_minutes_reset": "রিসেট",
-  "bell_minutes_done": "ঠিক আছে"
+  "bell_minutes_done": "ঠিক আছে",
+  "sync_sheet_title": "সিঙ্ক অবস্থা",
+  "sync_now": "এখনই সিঙ্ক করুন",
+  "sync_last_synced": "সর্বশেষ সিঙ্ক",
+  "sync_never": "এখনো সিঙ্ক হয়নি",
+  "sync_failed_entries": "সমস্যায় পড়া এন্ট্রি",
+  "sync_failed_short": "সমস্যা",
+  "sync_dead_discard": "বাদ দিন",
+  "sync_error_unexpected": "অপ্রত্যাশিত সমস্যা — আবার চেষ্টা করুন"
 }

@@ -481,6 +481,14 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'bell_minutes_after' => l.bell_minutes_after,
   'bell_minutes_reset' => l.bell_minutes_reset,
   'bell_minutes_done' => l.bell_minutes_done,
+  'sync_sheet_title' => l.sync_sheet_title,
+  'sync_now' => l.sync_now,
+  'sync_last_synced' => l.sync_last_synced,
+  'sync_never' => l.sync_never,
+  'sync_failed_entries' => l.sync_failed_entries,
+  'sync_failed_short' => l.sync_failed_short,
+  'sync_dead_discard' => l.sync_dead_discard,
+  'sync_error_unexpected' => l.sync_error_unexpected,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

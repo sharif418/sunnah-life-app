@@ -1301,4 +1301,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bell_minutes_done => 'Done';
+
+  @override
+  String get sync_sheet_title => 'Sync status';
+
+  @override
+  String get sync_now => 'Sync now';
+
+  @override
+  String get sync_last_synced => 'Last synced';
+
+  @override
+  String get sync_never => 'Never synced';
+
+  @override
+  String get sync_failed_entries => 'Failed entries';
+
+  @override
+  String get sync_failed_short => 'failed';
+
+  @override
+  String get sync_dead_discard => 'Discard';
+
+  @override
+  String get sync_error_unexpected => 'Unexpected error — try again';
 }

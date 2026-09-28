@@ -189,15 +189,23 @@ class AmalRejectInfo {
     required this.date,
     required this.amalKey,
     required this.reason,
+    this.serverValue,
   });
   final String date;
   final String amalKey;
   final String reason;
 
+  /// Present only on a `newerVersion` rejection (W2g): the server's winning
+  /// value, echoed so the client can converge instead of re-posting forever.
+  /// `null` ⇒ validation/lock/unknown-amal rejection (retryable) or a
+  /// newerVersion rejection whose server value was unnormalizable.
+  final Object? serverValue;
+
   factory AmalRejectInfo.fromJson(Map<String, dynamic> j) => AmalRejectInfo(
     date: j['date'] as String? ?? '',
     amalKey: j['amalKey'] as String? ?? '',
     reason: j['reason'] as String? ?? '',
+    serverValue: j['serverValue'],
   );
 }
 
