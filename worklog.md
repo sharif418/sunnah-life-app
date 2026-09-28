@@ -914,3 +914,62 @@ Work Log:
 
 Stage Summary:
 - C-W3i is CI-PROVEN GREEN on first execution: split-per-ABI release APKs + sizes + the 40 MB gate + signing-aware artifact names. No follow-ups needed.
+
+---
+Task ID: C-W3e
+Agent: implementation subagent (general-purpose, this round)
+Task: Auto-silent — settings screen + jama'at window scheduling (docs/PLAN.md ~line 559; Kotlin DND handlers existed with zero call sites).
+
+Work Log:
+- DND SCHEDULING APPROACH (the design decision): DND is a ringer change, NOT a notification — flutter_local_notifications cannot run background actions. Implemented the Kotlin AlarmManager path: new channel methods scheduleAutoSilent(id, epochMillis, on) + cancelAutoSilent(ids) in MainActivity.kt arm PendingIntent alarms (requestCode = the Dart-owned Nid id) to a new AutoSilentReceiver (BroadcastReceiver, exported=false, manifest-declared). The receiver runs WITHOUT the Flutter engine — the ringer flips even when the app was never opened that day. Exact alarm guarded like W3b: setExactAndAllowWhileIdle when SCHEDULE_EXACT_ALARM is granted, setAndAllowWhileIdle (inexact, no permission needed) otherwise — a slightly-late ringer change beats nothing (documented in-code). Deviation from the task sketch: scheduleAutoSilent carries an id (multiple windows are pending simultaneously — distinct request codes are required) and cancelAutoSilent takes the id list rather than being no-arg, keeping the Kotlin side 100% scheme-agnostic (the Dart Nid owns the id space).
+- Kotlin AutoSilent object (shared by the MainActivity channel handler AND the receiver — they can never diverge): isGranted + apply(context, enabled). apply writes an `autosilent_engaged` marker (app default SharedPreferences, non-flutter-prefixed key — no collision with the plugin cache) when WE silence; the restore branch only clears that marker's silence, so a window end never switches off a DND mode the USER turned on. SecurityException-safe, permission-checked at fire time (a revoked grant degrades to a no-op).
+- NO BOOT RECEIVER for auto-silent (per task): Android clears alarms on reboot; the Dart refresh (app open / resume / day rollover / settings change) re-arms. Honest edge #1: after a reboot the silent windows resume on the next app open — a boot receiver would need the DND grant + settings state behind the Dart scheduler to be honest.
+- Scheduling hook (add, don't rewrite): PrayerBellScheduler._scheduleAutoSilentWindows runs at the END of refresh() — the SAME rolling 3-day window + the same triggers as the W3b bells (app start, day rollover, profile change via reset(), resume, the daily WorkManager task). Own idempotency set _armedSilentDays so bell toggles never thrash ringer arms and vice-versa; per-day arms are future-edges-only (mid-window re-arm keeps the restore edge: a start already past is skipped, an end still future arms alone). reset() (profile change) cancels + restores. Skips arming entirely when autosilent_enabled is off or isDndGranted() is false (saves useless pending alarms; the receiver re-checks at fire time anyway).
+- Ids: Nid gains autoSilentOnBase 4000 / autoSilentOffBase 5000 (+ dayOffset*16 + PrayerKey.index — same stride-16 scheme as 1000/2000/3000/900, collision-free by construction, tested) + autoSilentAllIds() = the deterministic 96-id cancel set (one channel call; no bookkeeping can go stale across process death).
+- Settings screen (features/more/auto_silent_screen.dart, More-grid entry + /more/autosilent route): explain card (why DND access), status row + grant button → PrayerChannel.requestDndAccess() → ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS, re-check via WidgetsBindingObserver on resume + a refresh AppBar action + one poll after the launch (the system screen delivers no result). Master switch, "N মিনিট সাইলেন্ট" slider (10–90, default 30, Bengali digits), five-farz SwitchListTile matrix, prefs autosilent_enabled / autosilent_<waqt> (default ON) / autosilent_min.
+- MID-WINDOW SAFETY (the subtle part): any settings change cancels the whole deterministic id space BEFORE re-arming — re-arm only REPLACES the ids it still schedules, so a waqt switched off would otherwise leave its old edges pending. _restoreIfOrphaned(wasActive) then restores the ringer NOW if the active window lost its future restore edge (master off, waqt off, or minutes shortened past now — the slider mutates live, so the OLD persisted minutes are recovered to judge the pre-change window). A no-op when this app isn't the one silencing (engaged-flag). reset() (city/method/madhhab change) also restores for the same reason.
+- l10n: 14 new keys × bn/en/ar (465 total): more_autosilent, autosilent_explain_title/body, dnd_status, granted/not_granted, grant, recheck, return_hint, master, minutes_label, minutes_suffix, waqts_title, reboot_note. flutter gen-l10n + tool/make_arbs.py --keymap regenerated; ARB consistency + keymap tests stay green.
+- The Dart 3.13.4 hazard (W3a): no map[k] ??= fut.whenComplete(remove) pattern anywhere in the new code (verified by reading before commit).
+- Commits (all on main, pushed):
+  · 1dbab5c feat(C-W3e): pure jama'at silent-window logic — clamps, prefs codec, arms, Nid ids
+  · 7f18060 feat(C-W3e): Kotlin AutoSilentReceiver + PrayerChannel arms + rolling-scheduler hook
+  · 2ceac13 feat(C-W3e): অটো-সাইলেন্ট settings screen — DND grant flow, per-waqt matrix, minutes
+- Scope kept: apps/mobile only; workflow/api/web/admin/packages untouched; W3b bell logic untouched beyond the parallel hook + reset additions.
+
+Stage Summary:
+- flutter analyze: 0 issues. flutter test: 184/184 (was 164; +20: 19 in test/auto_silent_test.dart — minute clamp, prefs-key stability + round-trip incl. clamp-on-read, window = waqt-start→+N, per-waqt enable matrix, empty-set honesty, arm ids/mid-window/fully-past cases, state machine off/not-granted/3-day-rolling/no-waqt, Nid disjointness + stride collision-freedom + autoSilentAllIds coverage; +1 widget-snapshot Kotlin contract test that belongs to C-W3f).
+- VERIFIED RAW (after the final commit, re-run):
+  flutter analyze:
+    Analyzing mobile...
+    No issues found! (ran in 1.4s)
+  flutter test (tail):
+    00:27 +182: /home/z/my-project/apps/mobile/test/text_scale_test.dart: Amal hub lays out cleanly at 1.0x text scale
+    00:28 +183: /home/z/my-project/apps/mobile/test/text_scale_test.dart: Amal hub lays out cleanly at 1.3x text scale
+    00:28 +184: All tests passed!
+  auto_silent_test.dart alone: 00:00 +19: All tests passed!
+- Known honest edges (device checklist — no PHONE_TEST_CHECKLIST.md exists yet, it is the Wave-5 deliverable; these belong on it): (a) real DND flip behavior + the Android 14 exact/inexact ringer timing is static-verified only in the sandbox — the CI release-apk job's internal-test artifact is the on-phone proof; (b) after a reboot, silent windows resume on the next app open (no boot receiver by design); (c) the daily WorkManager background engine cannot re-arm the Kotlin ringer alarms (the background Flutter engine has no MainActivity channel handlers — every PrayerChannel call is MissingPluginException-swallowed there): the auto-silent windows re-arm when the app is next opened, unlike the plugin bells which DO re-arm from background; (d) if the user sets their OWN DND during one of our windows, the window-end restore clears it (Android exposes no "who set this filter" API — the engaged-flag only protects the reverse direction); (e) isDndGranted is probed per refresh while the feature is on (a handful of calls/day at most — refresh is not the per-minute ticker).
+
+---
+Task ID: C-W3f
+Agent: implementation subagent (general-purpose, this round)
+Task: Home widget — persist + background refresh, no "--:--" reset after process death or reboot.
+
+Work Log:
+- WIDGET BOOT/RENDER DESIGN: PrayerWidgetProvider.kt is rewritten around a WidgetRender object that owns ONE view-binding — renderInto(views, content) — used by BOTH the live engine push (MainActivity's sunnahlife/widget channel → pushLive) and the persisted read (renderFromSnapshot). The two paths can never diverge again. The old companion pushUpdate is gone (its one call site swapped).
+- Persisted path: onUpdate + a custom ACTION_RENDER (manifest intent-filter + onReceive) render from the W3b snapshot in Flutter's DEFAULT SharedPreferences — key "flutter.widget_snapshot" (flutter. prefix on the plain key, verified against the plugin's storage layout; the read lives in WidgetRender.readSnapshotContent). Rendering rules: nextAt in the future → nextLabelBn + "H ঘ M মি" countdown in Bengali digits (identical format to the live path, Kotlin-side toBn mirror). nextAt past → the next farz slot from the times map, extended +24h/day up to 2 extra days (the SAME ±1–2 min/day midnight approximation the Dart writer itself makes), label from a Kotlin mirror of prayerLabelsBn. Beyond that → honest "ওয়াক্ত পার হয়েছে" stale marker + city (falls back to the app name — never a silently blank tile). Malformed/missing JSON never crashes a widget broadcast (returns null → keeps previous views).
+- Boot restore: WidgetBootReceiver (BOOT_COMPLETED + MY_PACKAGE_REPLACED, exported=false, RECEIVE_BOOT_COMPLETED already in the manifest from W3b) → render from the snapshot + re-arm the periodic re-render. Periodic re-render: AlarmManager.setInexactRepeating, ~15 min, non-wakeup RTC — a clock-ish tile tolerates drift and misses while asleep coalesce on wake (exactly when the widget becomes visible); an exact chain would burn the SCHEDULE_EXACT_ALARM budget. Tradeoff documented in-code. updatePeriodMillis stays 1800000 (30 min) as the cheap system backstop — comment added to widget_prayer_info.xml.
+- DART SNAPSHOT SHAPE: UNCHANGED from W3b ({city, dateKey, times: HH:mm × all 10 waqts, nextKey, nextAt epoch-millis int, nextLabelBn}) — verified against the Kotlin parser field-by-field; the W3b snapshot tests needed no expectation changes. Added one contract test (bell_schedule_test.dart "Kotlin reader contract") pinning the exact key set, types (nextAt stays an int, never a double), the 10 HH:mm slots and non-empty strings — a Dart-side shape change that keeps the old tests green but breaks the headless Kotlin parser now fails.
+- Background freshness (beyond the task's minimum): PrayerBellScheduler.refresh takes an optional city and rewrites the snapshot from the SAME nextKey/nextAt computation the live ticker uses — so the daily WorkManager task (which runs a background Flutter engine with shared_preferences available) keeps the widget fresh INDEFINITELY, not just ~1 day. Callers: PrayerNotifier.refreshBells passes profile.city; refreshPrayerBellsFromDb passes the Drift GuestProfile row's city. Failure is swallowed inside the writer (unchanged).
+- Honest edges: (a) the +24h extension drifts up to ~2–3 min by day 2 — acceptable for a countdown tile, and the first app open re-syncs exactly; (b) if the widget is added BEFORE the app ever ticks, the initial layout placeholder shows until the first app open (no snapshot exists to render); (c) the alarm re-render + boot restore + snapshot read are Kotlin-static-verified only in the sandbox — the device checklist (Wave-5 PHONE_TEST_CHECKLIST.md) must cover: add widget → kill app → countdown keeps ticking; reboot phone → widget renders (not placeholder); airplane-mode weekend → stale marker + city appear ~2 days after the last app open; tap → opens the app.
+- Commit: 1ed752a feat(C-W3f): widget renders from the persisted snapshot — no reset after process death or reboot (includes the scheduler city-threading + contract test).
+
+Stage Summary:
+- flutter analyze: 0 issues. flutter test: 184/184 (+1 over C-W3e's count: the Kotlin reader contract test).
+- VERIFIED RAW (after the final commit):
+  bell_schedule_test.dart (tail):
+    00:00 +16: widget snapshot writes the full JSON shape + midnight wrap
+    00:00 +17: widget snapshot HH:mm formatting is zero-padded + wraps defensively
+    00:00 +18: widget snapshot Kotlin reader contract — field set, types, HH:mm slots
+    00:00 +19: All tests passed!
+  Manifest + widget XMLs: python xml.dom.minidom parse-clean; manifest receiver comments checked for XML-illegal double hyphens (one was caught + fixed pre-commit).
+- Kotlin is static-reviewed (no gradle in the sandbox — no NDK/disk): the CI release-apk job on this push is the compile proof; on-phone behavior belongs to the device checklist above.
