@@ -849,3 +849,16 @@ Stage Summary:
 - Commits 4c3f52e + a139a24, pushed.
 - VERIFIED RAW (after final polish): flutter analyze → "No issues found! (ran in 1.4s)"; flutter test → "+138: All tests passed!" (was 117; +21: retry/dead policy matrix, watermark math, flush-finally semantics, pull idempotence, v1→v2 migration, sheet golden ×1).
 - Golden VLM-verified (Bengali readable, sync-now + failed-entries visible).
+
+---
+Task ID: C-W3i
+Agent: lead-architect (main session)
+Task: APK size + release CI — split-per-ABI release APK job so the owner can test a release build on the phone.
+
+Work Log:
+- apps/mobile/android/app/build.gradle.kts: the debug-only keepDebugSymbols escape hatch REMOVED (PLAN item) — CI runners provide the NDK so debug APKs strip normally now (artifact shrinks from the 1.1 GB universal); the defaultConfig ndk.abiFilters arm64-v8a line removed too — it was a misleading NO-OP (run #25's debug artifact shipped all 3 engine ABIs despite it; the flutter tool owns ABI selection, and a stray filter can only confuse the release split). R8/minify deliberately NOT enabled this round: the split alone meets the < 40 MB arm64 target, and shrinking needs a device smoke before trusting plugin reflection (workmanager, notification receivers) — decision documented in the gradle comment.
+- .github/workflows/ci.yml NEW JOB release-apk (NOT secrets-gated — the whole point is the owner tests a release build TODAY): JDK 21 + Flutter 3.47.5 (same pins as mobile) + gradle cache → decode keystore IF secrets exist (absence = ::notice::, not a skip) → flutter build apk --release --split-per-abi --target-platform android-arm,android-arm64 → sizes table into $GITHUB_STEP_SUMMARY → HARD gate: arm64-v8a ≥ 40 MB fails the job (PLAN W3i target) → two artifacts with signing-aware names: mobile-release-<abi> (store-signed) or internal-test-<abi> (debug-signed via the build.gradle fallback — installable on a phone, not uploadable to Play).
+- report job needs + summary table extended with the release-apk row.
+
+Stage Summary:
+- Commit ee50630, pushed. YAML parse-clean (python yaml.safe_load). Gradle is static-verified only in the sandbox (no NDK/disk) — the CI run IS the proof (docker-job precedent): run for ee50630 started; verdict to be appended when complete. NOTE: concurrency cancel-in-progress cancels superseded runs — only the FINAL push's run carries the full proof (W3a + W3d + W3i together).
