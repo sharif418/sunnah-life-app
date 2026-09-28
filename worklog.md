@@ -973,3 +973,66 @@ Stage Summary:
     00:00 +19: All tests passed!
   Manifest + widget XMLs: python xml.dom.minidom parse-clean; manifest receiver comments checked for XML-illegal double hyphens (one was caught + fixed pre-commit).
 - Kotlin is static-reviewed (no gradle in the sandbox — no NDK/disk): the CI release-apk job on this push is the compile proof; on-phone behavior belongs to the device checklist above.
+
+---
+Task ID: C-W3g
+Agent: implementation subagent (general-purpose, this round)
+Task: Hijri adjust + donation — admin /api/config hijri ±1 applied to the mobile date bar; donation link opens in-app browser (Custom Tabs) (docs/PLAN.md ~line 564).
+
+Work Log:
+- VERIFIED the stated current state first: home date bar used ONLY profile.hijriAdjust (local ±2 from the profile screen); configProvider parses GET /api/config's hijriAdjust but it was consumed NOWHERE; the zakat CTA copied donationUrl to the clipboard (no url_launcher); no Donate entry on More; offline fallback hardcoded nisab 11500/135 while packages/content/app-config.json says 16500/220.
+- effectiveHijriAdjust(user, admin) in core/calendars.dart — pure SUM of the two ±day corrections (user ±2 profile + admin ±2 config, both are corrections from different actors) clamped to −4..4. effectiveHijriAdjustProvider (remote_state.dart) combines profileProvider + configProvider (loading/offline config contributes 0). Wired into EVERY hijriDate consumer: home date bar (home_screen.dart) AND the ayyam-beez cadence (today_screen's isAmalDay — searched all call sites; month grid renders no Hijri dates). The admin's moon-sighting correction now propagates consistently.
+- Fallback alignment: kFallbackGoldPerGramBdt 11500→16500, kFallbackSilverPerGramBdt 135→220, kFallbackDonationUrl 'https://sunnahlife.app/donate'→'https://as-sunnah.org/donation' (remote_state.dart, keep-in-sync comment). Mobile cannot import packages/content — the parity is pinned by a TEST that READS ../../packages/content/app-config.json (flutter test CWD = apps/mobile) and asserts equality, so drift fails CI. quran_golden_test's offline config now references the shared constants (can never drift again).
+- Donation in-app browser: url_launcher 6.3.2. core/external_urls.dart — isLaunchableHttpUrl (pure gate: http/https only; empty/whitespace/scheme-less and javascript:/intent:/ftp:/sunnahlife:/content: rejected) + openInAppBrowser (LaunchMode.inAppBrowserView = Chrome Custom Tabs on Android / SFSafariViewController on iOS; falls back to LaunchMode.externalApplication when the in-app view throws; never throws itself). Zakat CTA now OPENS the link (was clipboard copy); the copy affordance is KEPT as an icon button on the small link row (judged genuinely useful — sharing the link on; noted). New 'দান করুন' tile on the More grid beside zakat (entries restructured to (icon, title, onTap) records). Both affordances HIDDEN when the config carries no launchable http(s) URL; a failed launch shows a 'লিংক খোলা যায়নি' snackbar.
+- l10n: more_donate + donation_open_failed × bn/en/ar (468 keys × 3); flutter gen-l10n + tool/make_arbs.py --keymap regenerated; ARB consistency + keymap tests stay green (part of the suite).
+- The Dart 3.13.4 hazard (W3a): no map[k] ??= fut.whenComplete(remove) pattern anywhere in the new code (verified by scan before commit; the only matches in the repo are W3a's own regression test + its doc comment).
+- Commits (f53f897 → 29f01c7, all on main, pushed):
+  · f53f897 feat(C-W3g): admin hijri adjust applies everywhere — user ±2 + config ±2, clamped ±4
+  · c07a61c feat(C-W3g): donation opens in the in-app browser — zakat CTA + More tile
+  · 29f01c7 test(C-W3g): hijri-adjust matrix, pack parity, donation URL gating
+- Scope kept: apps/mobile only; workflow/api/web/admin/packages sources untouched (app-config.json only READ by a test).
+
+Stage Summary:
+- VERIFIED RAW (after the final commit, re-run):
+  flutter analyze:
+    Analyzing mobile...
+    No issues found! (ran in 4.2s)
+  flutter test (tail):
+    00:30 +225: ...text_scale_test.dart: Amal hub lays out cleanly at 1.3x text scale
+    00:30 +226: All tests passed!
+- 226/226 (was 184; +30 in test/hijri_donation_test.dart: the (user,admin)→clamped-sum matrix incl. out-of-range inputs (5+5→4, −9+9→0) + the full −2..2 × −2..2 sweep asserting sum-within-±4; the pack-parity test reading the committed JSON; the isLaunchableHttpUrl gating matrix ×13).
+- Honest edges: (a) the admin ±1 ask in PLAN became "sum the admin value with the user value, clamp ±4" per the task instructions — the profile screen still shows/edits only the USER's ±2 (its own ±N label unchanged); (b) openInAppBrowser's real-device Custom Tabs behavior is static-verified only in the sandbox — the CI release-apk job is the on-phone proof; (c) when the config is LOADING the donate tile/CTA is hidden for a frame (orElse '' → not launchable) — the fallback config surfaces immediately after the ApiException path, so offline users get the pack-aligned fallback URL.
+
+---
+Task ID: C-W3h
+Agent: implementation subagent (general-purpose, this round)
+Task: Referral links — web /join route + landing, assetlinks.json + apple-app-site-association, autoVerify intent filter + iOS associated-domains, app handles incoming link → onboarding pre-fills referred_by (docs/PLAN.md ~line 566).
+
+Work Log:
+- VERIFIED the stated current state first: dawah_screen shares https://sunnahlife.app/join/<memberCode>; api_client + AuthNotifier accept referredByCode on verifyOtp/socialSignIn but auth_screen passes NOTHING; sunnahlife:// scheme filter in the manifest, NO https autoVerify, no assetlinks.json, no app_links, no cold-start handling, no web /join route.
+- Web route (apps/web/src/app/join/[code]/page.tsx + join-landing.tsx): SERVER page (generateMetadata with bn og:title/description embedding the code — link-preview friendly; title template picks up "সুন্নাহ লাইফ-এ যোগ দিন · সুন্নাহ লাইফ") rendering a CLIENT landing: logo, title, the code prominent (card, tracking-wide), 'অ্যাপে খুলুন' (href sunnahlife://join/<code>), 'অ্যাপ ডাউনলোড করুন' (NEXT_PUBLIC_APP_DOWNLOAD_URL env with '#download' + TODO-comment fallback — no npm packages added), copy-code affordance (clipboard API + execCommand fallback), and localStorage persistence under 'sl_join_code' (web-only consumption path; no auth changes). Garbage codes AND bare /join redirect to '/' (page.tsx) — never 404. LIVE-VERIFIED on the dev server: /join/DS-000123 → 200 (title + og tags + sunnahlife:// href all present), /join → 307, /join/garbage → 307.
+- App-links site files: apps/web/public/.well-known/assetlinks.json (correct statement shape for bd.asunnah.sunnah_life, sha256_cert_fingerprints ["REPLACE_WITH_UPLOAD_CERT_SHA256"] — RELEASE.md §8.1 documents the owner's `keytool -list -v -keystore upload-keystore.jks` step + the adb verify-app-links commands). Apple: apple-app-site-association is a Next ROUTE HANDLER (apps/web/src/app/.well-known/apple-app-site-association/route.ts) with EXPLICIT content-type application/json — an extensionless static file serves as octet-stream (verified live on the dev server before the rewrite: Content-Type application/octet-stream), which Apple rejects. Route handler serves 200 + application/json (verified). RELEASE.md §8 App Links added: fingerprint step, TEAMID step, verify commands, debug-signed CI artifacts only get the chooser (expected), the install-boundary honesty.
+- Android manifest: NEW intent-filter android:autoVerify="true" on https host sunnahlife.app with pathPrefix /join (the existing sunnahlife:// scheme filter untouched — both work). XML parse-clean.
+- iOS entitlements edit WAS MADE: Runner.entitlements gains com.apple.developer.associated-domains = [applinks:sunnahlife.app] (the file structure was straightforward — a plain plist dict; plistlib parse-verified; the doc notes the capability must also be toggled on the App ID on the signing Mac).
+- Mobile deep-link handling: app_links 7.2.1. core/deep_links.dart extended with referralCodeFromLink — parses BOTH shapes (https://sunnahlife.app/join/CODE, www host tolerated, sunnahlife://join/CODE), validates the member-code regex ^ds-\d{6,}$ case-insensitive (mirrors apps/api nextMemberCode's 6-zero-padded DS codes; 6+ digits accepts a grown code space, rejects garbage) and normalizes to UPPERCASE; a single trailing slash is tolerated. deepLinkToRoute deliberately UNCHANGED for join links (they store, not navigate — pinned by test). services/app_link_service.dart follows PushService's lifecycle rules exactly (FLUTTER_TEST guard so the bootstrap never hangs in tests, single-shot, every failure swallowed + debugPrint). Cold start (getInitialLink) + warm stream (uriLinkStream; Android's double-delivery is harmless — idempotent write). bootstrapProvider wiring persists via PendingReferralStore (SharedPreferences 'pending_referral') and invalidates pendingReferralProvider.
+- Sign-in prefill: auth_screen watches pendingReferralProvider → subtle 'রেফার করেছেন: DS-XXXXXX' chip (primary-tinted bordered container, l10n referral_by × bn/en/ar) shown during onboarding's sign-in flow (onb_signin → /auth); _verify AND _signInSocial pass the stored code as referredByCode. AuthNotifier._consumePendingReferral clears the storage ONLY after a successful sign-in (both paths) and invalidates the provider — a failed verify keeps the code for the retry.
+- Tests: deep_links_test extended (4 new tests: both shapes + normalization + trailing slash; garbage codes; foreign hosts/paths/schemes incl. http vs https; join links never map to a navigation route). test/referral_test.dart (NEW, 10 tests): store round-trip / idempotent rewrite / restart-survival (fresh store over the same mock prefs) / clear; ApiClient.verifyOtp wire proof via http's MockClient (referredByCode present when passed, ABSENT from the body when null); AuthNotifier.signIn END-TO-END through a ProviderContainer over the mock client + in-memory Drift DB — the stored code reaches the /api/auth/otp/verify request body AND the storage is consumed on success, KEPT on a 400. (Bengali bodies need the charset=utf-8 content-type header in MockClient — http defaults to latin1 and throws; documented in the test helper.)
+- Commits (59715b0 → e9973eb, all on main, pushed):
+  · 59715b0 feat(C-W3h): /join deep links — pending referral from app links, consumed on sign-in
+  · 09badf2 feat(C-W3h): web /join/<code> referral landing + app-links site files
+  · e9973eb test(C-W3h): referral plumbing — link parsing, storage survival, wire plumbing
+- Scope kept: apps/mobile + apps/web only; workflow/api/admin untouched.
+
+Stage Summary:
+- VERIFIED RAW (after the final commit):
+  flutter analyze:
+    Analyzing mobile...
+    No issues found! (ran in 4.2s)
+  flutter test (tail):
+    00:30 +225: ...text_scale_test.dart: Amal hub lays out cleanly at 1.3x text scale
+    00:30 +226: All tests passed!
+  apps/web: bun run typecheck → clean; bun run lint → clean (no output = 0 issues). NOTE: the ROOT `bun run typecheck` script (tsc -p apps/web + apps/admin) cannot run in this sandbox — tsc is not on PATH at the repo root (no root node_modules/tsc); the equivalent proof ran from each workspace: apps/web `bun run typecheck` ✓ AND apps/admin `./node_modules/.bin/tsc --noEmit` ✓ — exactly the two projects the root script covers.
+  Dev-server smoke (live): /join/DS-000123 → 200; og:title 'সুন্নাহ লাইফ-এ যোগ দিন'; og:description embeds DS-000123; /join → 307; /join/garbage → 307; /.well-known/assetlinks.json → 200 application/json; /.well-known/apple-app-site-association → 200 application/json (route handler).
+- 226/226 mobile (was 184 at the C-W3f baseline; +30 from C-W3g's hijri_donation_test, +12 from C-W3h: +4 in deep_links_test.dart [join-link parsing group], +8 in the new referral_test.dart [4 store, 2 ApiClient wire, 2 AuthNotifier end-to-end]).
+- Web: no test infra exists for the new page (no test script in apps/web/package.json) — typecheck + lint + the live dev-server smoke above are the proof.
+- Honest edges: (a) THE INSTALL-BOUNDARY GAP (documented in RELEASE.md §8.3 + code comments): a guest who taps the link in a browser where the app is NOT installed gets the web landing; the code persists in the BROWSER's localStorage ('sl_join_code') which the MOBILE app cannot read — the code only reaches the app when a tap actually OPENS the app (custom scheme or verified App Link). The landing's 'অ্যাপে খুলুন' button is that bridge after install. (b) App-Links verification itself needs the owner's real upload-key SHA-256 (placeholder committed; RELEASE.md §8.1) and the iOS TEAMID (placeholder; §8.2) — until then Android shows the disambiguation chooser (the deep link still works through it) and iOS Universal Links don't auto-open (the sunnahlife:// scheme + the landing still work). (c) Debug-signed CI artifacts (internal-test-*) are debug-key-signed → App Links only verify for release-signed installs (expected, documented). (d) Real-device cold-start link behavior (app_links platform channels) is static-verified only — the CI release-apk job + the owner's phone checklist are the on-device proof.
