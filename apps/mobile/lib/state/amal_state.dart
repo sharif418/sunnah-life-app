@@ -358,11 +358,12 @@ class SyncNotifier extends Notifier<SyncState> {
       await ref.read(dbProvider).mergeServerEntries(rows);
       await prefs.setString(_pullCursorKey, today);
       await ref.read(amalProvider.notifier).hydrate();
+      // Success: only stamps the time. Messages are owned by the PUSH
+      // outcome — a successful pull must not hide a failed flush (the
+      // next fully-successful flush clears them).
       state = state.copyWith(
         syncing: false,
         lastSyncedAt: DateTime.now(),
-        lastMessage: null,
-        messageKey: null,
       );
     } on ApiException catch (e) {
       state = state.copyWith(

@@ -117,6 +117,11 @@ class SyncSheet extends ConsumerWidget {
             ],
 
             const SizedBox(height: SLSpacing.s16),
+            // NOTE: the label/header styles are derived from bodyLarge/bodyMedium
+            // — the theme overrides THOSE with Hind Siliguri. labelLarge/
+            // titleSmall are not in the app text theme, so a default-styled
+            // button label would render Bengali through the platform fallback
+            // (tofu boxes in the golden environment).
             FilledButton.icon(
               onPressed: sync.syncing
                   ? null
@@ -128,7 +133,11 @@ class SyncSheet extends ConsumerWidget {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : const Icon(Icons.sync, size: 18),
-              label: Text(context.t('sync_now')),
+              label: Text(
+                context.t('sync_now'),
+                style: theme.textTheme.bodyLarge
+                    ?.copyWith(fontWeight: FontWeight.w600),
+              ),
             ),
 
             // Dead entries: amal label + date + reason, retry + discard.
@@ -136,8 +145,10 @@ class SyncSheet extends ConsumerWidget {
               const SizedBox(height: SLSpacing.s16),
               Text(
                 '${context.t('sync_failed_entries')} (${toBn(deadRows.length)})',
-                style: theme.textTheme.titleSmall
-                    ?.copyWith(color: theme.colorScheme.error),
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.error,
+                ),
               ),
               const SizedBox(height: SLSpacing.s4),
               for (final row in deadRows)
