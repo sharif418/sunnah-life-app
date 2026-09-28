@@ -269,7 +269,6 @@ describe("RLS e2e — W2e tightening", () => {
   let rls: RlsService;
   let maleMember: User;
   let maleMemberToken: string;
-  let femaleMember: User;
   let adminToken: string;
 
   beforeAll(async () => {
@@ -277,7 +276,6 @@ describe("RLS e2e — W2e tightening", () => {
     adminToken = await signIn(FULL_ADMIN);
     maleMember = await signInUser(M_MEMBER);
     maleMemberToken = await signIn(M_MEMBER);
-    femaleMember = await signInUser(F_MEMBER);
   });
 
   it("(meta) the runtime connects as the restricted role — current_user + NO rolbypassrls", async () => {
@@ -425,7 +423,6 @@ describe("RLS e2e — W2e tightening", () => {
   });
 
   it("(g) reports + reviews of the member stay readable by the HEAD only ( tightened surface)", async () => {
-    const head = await signInUser(M_HEAD);
     // head CAN see the member's reviews through the standard endpoint
     await http()
       .get("/api/reviews")
