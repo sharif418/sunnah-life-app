@@ -105,6 +105,42 @@ class PrayerChannel {
       return false;
     }
   }
+
+  /// Arm one auto-silent ringer alarm (Kotlin AlarmManager →
+  /// AutoSilentReceiver). [id] is the deterministic request code
+  /// ([Nid.autoSilentOn]/[Nid.autoSilentOff]); [on] flips the ringer to
+  /// priority-only at [epochMillis], false restores it. Returns false when
+  /// the platform can't (iOS stub / tests).
+  static Future<bool> scheduleAutoSilent({
+    required int id,
+    required int epochMillis,
+    required bool on,
+  }) async {
+    try {
+      return await _ch.invokeMethod<bool>('scheduleAutoSilent', {
+            'id': id,
+            'epochMillis': epochMillis,
+            'on': on,
+          }) ??
+          false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  /// Cancel the armed auto-silent alarms by id (the deterministic full set
+  /// from [Nid.autoSilentAllIds] — one call, ids are Dart-owned).
+  static Future<void> cancelAutoSilent(List<int> ids) async {
+    try {
+      await _ch.invokeMethod<void>('cancelAutoSilent', {'ids': ids});
+    } on PlatformException {
+      // ignore — best effort
+    } on MissingPluginException {
+      // iOS stub / tests
+    }
+  }
 }
 
 class WidgetChannel {

@@ -72,6 +72,17 @@
             android:name=".PrayerAlarmReceiver"
             android:exported="false" />
 
+        <!-- C-W3e · auto-silent ringer flips at jama'at window edges — armed
+             by the Dart PrayerBellScheduler through MainActivity's
+             "sunnahlife/prayer" channel (AlarmManager → this receiver →
+             NotificationManager.setInterruptionFilter). No boot receiver by
+             design: Android clears alarms on reboot and the Dart refresh
+             (app open / resume / day rollover / daily WorkManager task)
+             re-arms them — documented honest edge. -->
+        <receiver
+            android:name=".AutoSilentReceiver"
+            android:exported="false" />
+
         <!-- flutter_local_notifications receiver surface (C-W3b): the plugin's
              own manifest declares only VIBRATE + POST_NOTIFICATIONS — without
              these explicit declarations in the app manifest, every

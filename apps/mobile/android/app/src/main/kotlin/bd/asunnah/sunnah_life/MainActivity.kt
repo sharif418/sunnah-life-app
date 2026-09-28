@@ -18,13 +18,17 @@ import io.flutter.plugin.common.MethodChannel
 /**
  * Sunnah Life platform surface:
  *  · "sunnahlife/prayer" — exact alarms (AlarmManager.setExactAndAllowWhileIdle +
- *    canScheduleExactAlarms + permission intent) and DND auto-silent
- *    (NotificationManager.setInterruptionFilter).
+ *    canScheduleExactAlarms + permission intent), DND auto-silent
+ *    (NotificationManager.setInterruptionFilter) and the jama'at auto-silent
+ *    window alarms (AutoSilentReceiver).
  *  · "sunnahlife/widget" — home-widget text updates (RemoteViews).
  *  · "sunnahlife/system" — native share sheet (ACTION_SEND), zero plugins.
  */
 /** Shared by MainActivity (channel plumbing) and PrayerAlarmReceiver (posting). */
 private const val NOTIFICATION_CHANNEL_ID = "sunnah_life_prayers"
+
+/** Intent action of every auto-silent ringer alarm (C-W3e). */
+private const val AUTO_SILENT_ACTION = "bd.asunnah.sunnah_life.AUTO_SILENT"
 
 class MainActivity : FlutterActivity() {
     companion object {
@@ -60,6 +64,20 @@ class MainActivity : FlutterActivity() {
                         "setAutoSilent" -> {
                             val enabled = call.argument<Boolean>("enabled") ?: false
                             result.success(setAutoSilent(enabled))
+                        }
+                        // C-W3e — arm one ringer edge of a jama'at silent
+                        // window (id = deterministic request code owned by
+                        // the Dart Nid scheme; on = silence or restore).
+                        "scheduleAutoSilent" -> {
+                            val id = call.argument<Int>("id") ?: 0
+                            val epochMillis = call.argument<Long>("epochMillis") ?: 0L
+                            val on = call.argument<Boolean>("on") ?: false
+                            result.success(scheduleAutoSilent(id, epochMillis, on))
+                        }
+                        "cancelAutoSilent" -> {
+                            val ids = call.argument<List<Int>>("ids") ?: emptyList()
+                            cancelAutoSilent(ids)
+                            result.success(true)
                         }
                         else -> result.notImplemented()
                     }
@@ -155,12 +173,12 @@ class MainActivity : FlutterActivity() {
         alarmManager().cancel(pending)
     }
 
-    // ── DND auto-silent ───────────────────────────────────────────────────────
+    // ── DND auto-silent (C-W3e) ───────────────────────────────────────────────
 
     private fun notificationManager(): NotificationManager =
         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-    fun isDndGranted(): Boolean = notificationManager().isNotificationPolicyAccessGranted
+    fun isDndGranted(): Boolean = AutoSilent.isGranted(this)
 
     /** Opens the DND-access settings; true when an intent was actually fired. */
     fun requestDndAccess(): Boolean {
@@ -170,19 +188,109 @@ class MainActivity : FlutterActivity() {
     }
 
     /** Priority-only during prayer windows; false when access is missing. */
-    fun setAutoSilent(enabled: Boolean): Boolean {
-        if (!isDndGranted()) return false
-        val filter = if (enabled) {
-            NotificationManager.INTERRUPTION_FILTER_PRIORITY
-        } else {
-            NotificationManager.INTERRUPTION_FILTER_ALL
+    fun setAutoSilent(enabled: Boolean): Boolean = AutoSilent.apply(this, enabled)
+
+    /**
+     * Arm one auto-silent ringer edge: at [epochMillis] the
+     * [AutoSilentReceiver] flips the ringer to priority-only ([on]) or
+     * restores it. Exact when the OS granted SCHEDULE_EXACT_ALARM (same
+     * guarded fallback as the W3b bells — a slightly-late ringer change
+     * beats nothing), inexact setAndAllowWhileIdle otherwise.
+     */
+    fun scheduleAutoSilent(id: Int, epochMillis: Long, on: Boolean): Boolean {
+        val intent = Intent(this, AutoSilentReceiver::class.java).apply {
+            action = AUTO_SILENT_ACTION
+            putExtra("id", id)
+            putExtra("on", on)
         }
+        val pending = PendingIntent.getBroadcast(
+            this,
+            id,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val am = alarmManager()
+        if (canScheduleExactAlarms()) {
+            am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, epochMillis, pending)
+        } else {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, epochMillis, pending)
+        }
+        return true
+    }
+
+    /** Cancel the armed auto-silent alarms by their Dart-owned ids. */
+    fun cancelAutoSilent(ids: List<Int>) {
+        val am = alarmManager()
+        for (id in ids) {
+            val intent = Intent(this, AutoSilentReceiver::class.java).apply {
+                action = AUTO_SILENT_ACTION
+            }
+            val pending = PendingIntent.getBroadcast(
+                this,
+                id,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            am.cancel(pending)
+        }
+    }
+}
+
+/**
+ * Shared DND auto-silent logic — used by BOTH the MainActivity channel
+ * handler (manual toggle / restore-on-disable) and the [AutoSilentReceiver]
+ * (alarm fires while the app is dead). The receiver must never depend on
+ * the Flutter engine being alive.
+ *
+ * Safety: the restore only clears a silence WE started (the
+ * `autosilent_engaged` marker in the app's default SharedPreferences), so a
+ * window ending never switches off a DND mode the user turned on
+ * themselves; a permission loss degrades to a no-op instead of a crash.
+ */
+object AutoSilent {
+    private const val ENGAGED_PREF = "autosilent_engaged"
+
+    private fun prefs(context: Context) =
+        context.getSharedPreferences("${context.packageName}_preferences", Context.MODE_PRIVATE)
+
+    fun isGranted(context: Context): Boolean =
+        (context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager)
+            .isNotificationPolicyAccessGranted
+
+    fun apply(context: Context, enabled: Boolean): Boolean {
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (!nm.isNotificationPolicyAccessGranted) return false
+        val prefs = prefs(context)
         return try {
-            notificationManager().setInterruptionFilter(filter)
+            if (enabled) {
+                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_PRIORITY)
+                prefs.edit().putBoolean(ENGAGED_PREF, true).apply()
+            } else if (prefs.getBoolean(ENGAGED_PREF, false)) {
+                // Only restore a silence this app set — never clobber the
+                // user's own DND.
+                nm.setInterruptionFilter(NotificationManager.INTERRUPTION_FILTER_ALL)
+                prefs.edit().putBoolean(ENGAGED_PREF, false).apply()
+            }
             true
         } catch (e: SecurityException) {
             false
         }
+    }
+}
+
+/**
+ * Fires the DND flip at a jama'at window edge (C-W3e). Armed by
+ * MainActivity.scheduleAutoSilent; runs without the Flutter engine, so the
+ * ringer flips even when the app was never opened that day. Honest edge:
+ * Android clears alarms on reboot — the Dart refresh (app open / resume /
+ * day rollover) re-arms them; there is deliberately no boot receiver here
+ * because the permission probe + settings state live behind the Dart
+ * scheduler.
+ */
+class AutoSilentReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        val on = intent.getBooleanExtra("on", false)
+        AutoSilent.apply(context, on)
     }
 }
 
