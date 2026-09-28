@@ -17,7 +17,9 @@
     "migrate": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "seed": "bun prisma/seed.ts",
-    "db:reset": "prisma migrate reset --force"
+    "db:reset": "prisma migrate reset --force",
+    "seed:reference": "bun prisma/seed.ts --reference-only",
+    "seed:demo": "SEED_DEMO=true bun prisma/seed.ts"
   },
   "prisma": {
     "schema": "prisma/schema.prisma",
@@ -73,19 +75,26 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "roots": ["<rootDir>/test"],
-    "testMatch": ["**/*.spec.ts"],
+    "roots": [
+      "<rootDir>/test"
+    ],
+    "testMatch": [
+      "**/*.spec.ts"
+    ],
     "moduleNameMapper": {
       "^src/(.*)$": "<rootDir>/src/$1"
     },
     "transform": {
-      "^.+\\.ts$": ["ts-jest", {
-        "isolatedModules": true,
-        "tsconfig": {
-          "experimentalDecorators": true,
-          "emitDecoratorMetadata": true
+      "^.+\\.ts$": [
+        "ts-jest",
+        {
+          "isolatedModules": true,
+          "tsconfig": {
+            "experimentalDecorators": true,
+            "emitDecoratorMetadata": true
+          }
         }
-      }]
+      ]
     },
     "testTimeout": 60000
   }

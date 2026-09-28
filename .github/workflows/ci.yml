@@ -127,6 +127,9 @@ jobs:
       REDIS_URL: redis://localhost:6379
       JWT_SECRET: ci-jwt-secret-not-used-in-assertions
       SMS_PROVIDER: mock
+      # Demo dataset (users/usrahs the RLS e2e signs in with): SEED_DEMO is
+      # refused when NODE_ENV=production; CI runs with NODE_ENV unset.
+      SEED_DEMO: "true"
       # MEILI_HOST stays unset — the api skips search indexing and the health
       # probe reports meilisearch "absent" instead of "down".
 

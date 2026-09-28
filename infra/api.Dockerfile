@@ -84,14 +84,17 @@ elif [ -d prisma/migrations ]; then
   bunx prisma migrate deploy
 fi
 
-# Seed is idempotent (upserts / deterministic demo data); a non-zero exit is
-# logged but does not block startup — e.g. when two replicas race the seed.
-if has seed; then
+# Phase C/W2a: boot seeds REFERENCE data only (amal catalog by key, the
+# farze_ain_v1.1 template, app config) — IDEMPOTENT upserts, never deletes.
+# Demo data (users/usrahs) requires SEED_DEMO=true AND NODE_ENV != production
+# and is never part of a production boot; a non-zero exit is logged but does
+# not block startup (two replicas may race the seed).
+if has seed:reference; then
+  log "seeding reference data (idempotent, non-destructive)"
+  bun run seed:reference || log "WARN: seed:reference exited non-zero — continuing"
+elif has seed; then
   log "seeding (idempotent)"
   bun run seed || log "WARN: seed exited non-zero — continuing"
-elif has db:seed; then
-  log "seeding (idempotent)"
-  bun run db:seed || log "WARN: seed exited non-zero — continuing"
 fi
 
 log "starting NestJS on :${PORT:-4000}"
