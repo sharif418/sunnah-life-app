@@ -6,21 +6,42 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../api/api_client.dart';
+import '../core/calendars.dart' show effectiveHijriAdjust;
 import '../models/content_models.dart' show ContentPack;
 import '../models/domain.dart';
 import 'providers.dart';
 
-/// Offline fallback for the nisab prices (only used when /api/config is
-/// unreachable — the real values come from the server).
-const double kFallbackGoldPerGramBdt = 11500;
-const double kFallbackSilverPerGramBdt = 135;
+/// Offline fallback for the nisab prices + donation URL (only used when
+/// /api/config is unreachable — the real values come from the server).
+///
+/// Keep in sync with packages/content/app-config.json (what the server
+/// actually serves): mobile cannot import packages/content, so the parity
+/// is pinned by a TEST that reads the committed JSON and asserts equality —
+/// drift between these constants and the pack fails CI.
+const double kFallbackGoldPerGramBdt = 16500;
+const double kFallbackSilverPerGramBdt = 220;
+const String kFallbackDonationUrl = 'https://as-sunnah.org/donation';
+
+/// Effective Hijri day-adjustment (C-W3g): the user's local ±2 (profile
+/// screen) PLUS the admin's ±2 from GET /api/config, clamped to ±4. Watch
+/// this everywhere a Hijri date is rendered — home date bar, ayyam-beez
+/// cadence — instead of `profile.hijriAdjust` alone, so the admin's
+/// correction propagates consistently. Loading/offline config contributes 0.
+final effectiveHijriAdjustProvider = Provider<int>((ref) {
+  final user = ref.watch(profileProvider).hijriAdjust;
+  final admin = ref.watch(configProvider).maybeWhen(
+    data: (c) => c.hijriAdjust,
+    orElse: () => 0,
+  );
+  return effectiveHijriAdjust(user, admin);
+});
 
 final configProvider = FutureProvider<AppConfig>((ref) async {
   try {
     return await ref.watch(apiProvider).config();
   } on ApiException {
     return const AppConfig(
-      donationUrl: 'https://sunnahlife.app/donate',
+      donationUrl: kFallbackDonationUrl,
       domain: 'sunnahlife.app',
       hijriAdjust: 0,
       goldPerGramBdt: kFallbackGoldPerGramBdt,

@@ -18,6 +18,7 @@ import '../../design/design_tokens.dart';
 import '../../state/amal_state.dart';
 import '../../state/prayer_state.dart';
 import '../../state/providers.dart';
+import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
 import '../shared/widgets.dart';
@@ -203,7 +204,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     final now = DateTime.now();
     final bnDate = banglaDate(now);
-    final hijri = hijriDate(now, adjustDays: profile.hijriAdjust);
+    // C-W3g: user ±2 + admin /api/config ±2 (clamped ±4) — the admin's
+    // moon-sighting correction propagates to every rendered Hijri date.
+    final hijri = hijriDate(
+      now,
+      adjustDays: ref.watch(effectiveHijriAdjustProvider),
+    );
     final city = findCity(profile.city);
 
     return Scaffold(

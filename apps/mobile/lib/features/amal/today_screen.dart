@@ -16,6 +16,7 @@ import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
 import '../../state/providers.dart';
+import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
 import 'amal_widgets.dart';
 
@@ -62,7 +63,15 @@ class _TodayView extends ConsumerWidget {
     }
 
     final todayDefs = defs
-        .where((d) => isAmalDay(d, today, hijriAdjust: profile.hijriAdjust))
+        .where(
+          (d) => isAmalDay(
+            d,
+            today,
+            // C-W3g: user ±2 + admin config ±2 — ayyam-beez dates follow the
+            // same effective adjustment as the rendered Hijri date bar.
+            hijriAdjust: ref.watch(effectiveHijriAdjustProvider),
+          ),
+        )
         .toList();
     final entries = [
       for (final day in amal.entries.keys)
