@@ -10,13 +10,39 @@ import {
   IsString,
   MaxLength,
   MinLength,
+  Validate,
   ValidateNested,
+  ValidatorConstraint,
+  ValidatorConstraintInterface,
 } from "class-validator";
 import { Type } from "class-transformer";
 import type { AmalValue } from "../../shared/domain";
 
 const phoneMsg = "সঠিক মোবাইল নম্বর দিন";
 const codeMsg = "নম্বর ও কোড দিন";
+
+/**
+ * Guest-entry value shape (Phase C/W2g): boolean | finite number | non-empty
+ * string ≤ 100 chars. A custom constraint — the union type can't be expressed
+ * with stock decorators, and WITHOUT any class-validator decorator the global
+ * whitelist pipe STRIPS the field (the W2g strip-bug: guest merges silently
+ * lost every entry in production). Type-tolerant on purpose: the amal value
+ * semantics (tri-state / count / boolean) are re-validated per definition in
+ * src/shared/conflict.ts decideEntry + the guest merge in AuthService.
+ */
+@ValidatorConstraint({ name: "isValidAmalValue", async: false })
+export class IsValidAmalValue implements ValidatorConstraintInterface {
+  validate(value: unknown): boolean {
+    if (typeof value === "boolean") return true;
+    if (typeof value === "number") return Number.isFinite(value);
+    if (typeof value === "string") return value.length > 0 && value.length <= 100;
+    return false;
+  }
+
+  defaultMessage(): string {
+    return "মান ঠিক নয়";
+  }
+}
 
 export class OtpRequestDto {
   @ApiProperty({ example: "01000000004" })
@@ -34,9 +60,11 @@ export class GuestEntryDto {
   date!: string;
 
   @ApiProperty({ example: "jamaat" })
+  @Validate(IsValidAmalValue, { message: "মান ঠিক নয়" })
   value!: AmalValue;
 
   @ApiProperty({ example: "2025-06-15T10:00:00.000Z" })
+  @IsString({ message: "সময় প্রয়োজন" })
   clientUpdatedAt!: string;
 
   @ApiProperty({ required: false, example: "manual" })

@@ -349,7 +349,7 @@ describe("RLS e2e — W2e tightening", () => {
   it("(b) DayUnlock: a member CANNOT insert an unlock row even for themself (DB-level)", async () => {
     await expect(
       rls.run(maleMember, (tx) =>
-        tx.dayUnlock.create({ data: { userId: maleMember.id, date: new Date().toISOString().slice(0, 10), reason: "self" } })
+        tx.dayUnlock.create({ data: { userId: maleMember.id, date: new Date().toISOString().slice(0, 10), byUserId: maleMember.id, reason: "self" } })
       )
     ).rejects.toThrow();
   });

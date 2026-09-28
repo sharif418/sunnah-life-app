@@ -1,7 +1,7 @@
 import { join } from "path";
 import { config as loadDotenv } from "dotenv";
-import { Module } from "@nestjs/common";
-import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from "@nestjs/core";
+import { Module, ValidationPipe } from "@nestjs/common";
+import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ThrottlerModule } from "@nestjs/throttler";
 import { validateEnv } from "./config/env.validation";
@@ -87,6 +87,13 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
     TestRlsModule, // test-only RLS probe (header-gated, non-production)
   ],
   providers: [
+    // GLOBAL ValidationPipe (Phase C/W2g): ONE pipeline shared by production
+    // (main.ts bootstrap) AND every e2e test app. Previously the pipe lived
+    // only in main.ts useGlobalPipes — test apps built via
+    // Test.createTestingModule never saw it, so whitelist-stripping bugs
+    // (GuestEntryDto.value/clientUpdatedAt had no validators → silently
+    // stripped in production, guest merge lost every entry) were invisible.
+    { provide: APP_PIPE, useValue: new ValidationPipe({ whitelist: true, transform: true, transformOptions: { enableImplicitConversion: true } }) },
     // AuthThrottlerGuard runs BEFORE JwtAuthGuard (guard order): unauthenticated
     // floods get 429 without touching auth at all. Per-phone on the OTP route,
     // per-IP everywhere else (Phase C/W2b).

@@ -5,6 +5,8 @@ import type { Prisma } from "../common/prisma-client";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { toDomainUser } from "../common/mappers";
+import { loadActiveDefinitions } from "../shared/amal";
+import { clampClientTs, guardSource, MAX_BATCH, normalizeValue } from "../shared/conflict";
 import type { User } from "../shared/domain";
 import type { GuestEntryDto } from "./dto/auth.dto";
 import { SmsService } from "./sms/sms.service";
@@ -379,39 +381,49 @@ export class AuthService {
    * Guest → account data merge (local amal diary entries), run with the new
    * user's own RLS context. Natural key (userId, amalKey, date); latest
    * clientUpdatedAt wins (offline-sync rule). Shared by OTP + social sign-in.
+   *
+   * Hardening (Phase C/W2g): the guest payload is fully CLIENT-controlled —
+   * every field is validated (known amal key from the active catalog,
+   * normalizable value, guarded source, clamped client timestamp), entries
+   * are imported oldest-first so the newest edit lands last, and the work is
+   * chunked into bounded transactions instead of one big one.
    */
   private async importGuestEntries(
     domain: User,
     guestEntries?: GuestEntryDto[]
   ): Promise<void> {
     if (!guestEntries?.length) return;
-    await this.rls.run(domain, async (tx) => {
-      for (const e of guestEntries.slice(0, 500)) {
-        const incoming = new Date(e.clientUpdatedAt);
-        if (isNaN(incoming.getTime())) continue;
-        const existing = await tx.amalEntry.findUnique({
-          where: { userId_amalKey_date: { userId: domain.id, amalKey: e.amalKey, date: e.date } },
-        });
-        if (!existing || existing.clientUpdatedAt < incoming) {
+    const now = new Date();
+    const parsed = guestEntries
+      .slice(0, MAX_BATCH)
+      .map((e) => ({ e, ts: new Date(e.clientUpdatedAt) }))
+      .filter((x) => !isNaN(x.ts.getTime()))
+      .sort((a, b) => a.ts.getTime() - b.ts.getTime()) // oldest first — newest lands last
+      .map((x) => ({ ...x, ts: clampClientTs(x.ts, now) }));
+    if (!parsed.length) return;
+    const defKeys = await this.rls.run(domain, (tx) =>
+      loadActiveDefinitions(tx).then((defs) => new Set((defs as { key: string }[]).map((d) => d.key)))
+    );
+    const CHUNK = 50; // bounded transactions, ordered chunks
+    for (let i = 0; i < parsed.length; i += CHUNK) {
+      const chunk = parsed.slice(i, i + CHUNK);
+      await this.rls.run(domain, async (tx) => {
+        for (const { e, ts } of chunk) {
+          if (!e.amalKey || !defKeys.has(e.amalKey)) continue; // guest payload is client-controlled
+          const value = normalizeValue(e.value);
+          if (value === null) continue;
+          const existing = await tx.amalEntry.findUnique({
+            where: { userId_amalKey_date: { userId: domain.id, amalKey: e.amalKey, date: e.date } },
+          });
+          if (existing && existing.clientUpdatedAt >= ts) continue;
           await tx.amalEntry.upsert({
             where: { userId_amalKey_date: { userId: domain.id, amalKey: e.amalKey, date: e.date } },
-            create: {
-              userId: domain.id,
-              amalKey: e.amalKey,
-              date: e.date,
-              valueJson: e.value as never,
-              source: e.source ?? "manual",
-              clientUpdatedAt: incoming,
-            },
-            update: {
-              valueJson: e.value as never,
-              source: e.source ?? "manual",
-              clientUpdatedAt: incoming,
-            },
+            create: { userId: domain.id, amalKey: e.amalKey, date: e.date, valueJson: value as never, source: guardSource(e.source ?? "manual"), clientUpdatedAt: ts },
+            update: { valueJson: value as never, source: guardSource(e.source ?? "manual"), clientUpdatedAt: ts },
           });
         }
-      }
-    });
+      });
+    }
   }
 
 

@@ -128,7 +128,9 @@ export interface AmalEntry {
 
 export interface AmalUpsertResult {
   accepted: AmalEntry[];
-  rejected: { date: string; amalKey: string; reason: string }[];
+  /** serverValue: on a newerVersion rejection, the server's winning value —
+   * lets the client reconcile instead of guessing (Phase C/W2g). */
+  rejected: { date: string; amalKey: string; reason: string; serverValue?: AmalValue }[];
 }
 
 export interface DayStatus {

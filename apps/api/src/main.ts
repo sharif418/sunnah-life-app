@@ -12,7 +12,7 @@
 // app.gender / app.usrah_id / app.role) so PostgreSQL itself enforces the
 // gender/usrah/downline visibility model — see prisma/migrations/*_rls.
 // ─────────────────────────────────────────────────────────────────────────────
-import { ValidationPipe, Logger } from "@nestjs/common";
+import { Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { IoAdapter } from "@nestjs/platform-socket.io";
@@ -46,13 +46,9 @@ async function bootstrap(): Promise<void> {
   });
 
   // DTO validation: strip unknown props, auto-transform payloads.
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      transform: true,
-      transformOptions: { enableImplicitConversion: true },
-    })
-  );
+  // (Phase C/W2g) The pipe is registered GLOBALLY in AppModule via
+  // { provide: APP_PIPE } so e2e test apps run the exact same pipeline —
+  // main.ts no longer registers a second one here.
 
   // CORS for the web PWA / mobile app (cookie-based flows need credentials).
   // Production: STRICTLY the CORS_ORIGINS list (env.validation refuses an

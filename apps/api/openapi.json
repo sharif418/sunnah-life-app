@@ -51,6 +51,46 @@
         ]
       }
     },
+    "/api/auth/providers": {
+      "get": {
+        "operationId": "AuthController_providers",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Enabled social sign-in providers (env-driven)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/social": {
+      "post": {
+        "operationId": "AuthController_socialSignIn",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SocialSignInDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Google/Apple social sign-in (JWKS-verified id_token)",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
     "/api/auth/refresh": {
       "post": {
         "operationId": "AuthController_refresh",
@@ -70,7 +110,7 @@
             "description": ""
           }
         },
-        "summary": "Rotate the refresh token (family revoke on reuse)",
+        "summary": "Rotate the refresh token (body token or sl_refresh cookie)",
         "tags": [
           "auth"
         ]
@@ -140,7 +180,7 @@
             "description": ""
           }
         },
-        "summary": "Public app configuration",
+        "summary": "Public app configuration (admin-editable)",
         "tags": [
           "config"
         ]
@@ -389,6 +429,21 @@
         ]
       }
     },
+    "/api/dawah/requirements": {
+      "get": {
+        "operationId": "DawahController_requirements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Live next-level checklist (progress chips + auto hint)",
+        "tags": [
+          "dawah"
+        ]
+      }
+    },
     "/api/usrah": {
       "get": {
         "operationId": "UsrahController_myUsrah",
@@ -569,7 +624,7 @@
             "description": ""
           }
         },
-        "summary": "full_admin: change role/gender/usrah/category (audited)",
+        "summary": "full_admin: change role/gender/usrah/category (audited; gender needs reason)",
         "tags": [
           "admin"
         ]
@@ -607,6 +662,21 @@
         ]
       }
     },
+    "/api/admin/level-transitions": {
+      "get": {
+        "operationId": "AdminController_levelTransitions",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Level promotion history (RLS-scoped: own/usrah/all)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/admin/promote": {
       "post": {
         "operationId": "AdminController_promote",
@@ -626,7 +696,7 @@
             "description": ""
           }
         },
-        "summary": "full_admin: promote a level (validates requirements)",
+        "summary": "full_admin: promote a level (reason required, validates requirements)",
         "tags": [
           "admin"
         ]
@@ -658,6 +728,19 @@
       }
     },
     "/api/admin/amal-catalog": {
+      "get": {
+        "operationId": "AdminController_listCatalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: whole amal catalog incl. inactive",
+        "tags": [
+          "admin"
+        ]
+      },
       "post": {
         "operationId": "AdminController_upsertCatalog",
         "parameters": [],
@@ -680,6 +763,379 @@
         "tags": [
           "admin"
         ]
+      },
+      "patch": {
+        "operationId": "AdminController_reorderCatalog",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmalCatalogReorderDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: reorder the catalog (array of keys)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/amal-catalog/{key}": {
+      "patch": {
+        "operationId": "AdminController_patchCatalog",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AmalCatalogPatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: partial update of one definition",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/assessment-templates": {
+      "get": {
+        "operationId": "AdminController_listTemplates",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: all template versions (active flag included)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "post": {
+        "operationId": "AdminController_createTemplate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: create a new template version",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/assessment-templates/{id}": {
+      "patch": {
+        "operationId": "AdminController_patchTemplate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplatePatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: activate/deactivate or edit an inactive version",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/usrah": {
+      "post": {
+        "operationId": "AdminController_createUsrah",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsrahCreateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: create an usrah (name + gender)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/usrah/{id}": {
+      "patch": {
+        "operationId": "AdminController_patchUsrah",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsrahPatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: rename / assign head + invigilator (gender-validated)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/usrah/{id}/members": {
+      "post": {
+        "operationId": "AdminController_addUsrahMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UsrahMemberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: add/move a member into the usrah (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/usrah/{id}/members/{userId}": {
+      "delete": {
+        "operationId": "AdminController_removeUsrahMember",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: remove a member from the usrah (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/live": {
+      "post": {
+        "operationId": "AdminController_createLive",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveProgramDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: schedule a live program (gender visibility)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/live/{id}": {
+      "patch": {
+        "operationId": "AdminController_patchLive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveProgramDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: update a live program (audited)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminController_deleteLive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: delete a live program (audited)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/config": {
+      "get": {
+        "operationId": "AdminController_appConfig",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: the live app configuration (CMS)",
+        "tags": [
+          "admin"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminController_updateAppConfig",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppConfigAdminDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: update the app configuration (audited)",
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/admin/audit": {
@@ -692,6 +1148,136 @@
           }
         },
         "summary": "full_admin: last 100 audit entries",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/push/token": {
+      "post": {
+        "operationId": "PushController_register",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPushTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Register device push token (auth)",
+        "tags": [
+          "push"
+        ]
+      },
+      "delete": {
+        "operationId": "PushController_unregister",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnregisterPushTokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Unregister device push token (auth)",
+        "tags": [
+          "push"
+        ]
+      }
+    },
+    "/api/admin/reports/generate": {
+      "post": {
+        "operationId": "ReportsController_generate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateReportDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "full_admin: render a member's monthly Muhasaba PDF now",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/reports": {
+      "get": {
+        "operationId": "ReportsController_list",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-09",
+              "type": "string"
+            }
+          },
+          {
+            "name": "take",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": 100,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Monthly report list (scoped by RLS)",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/admin/reports/{id}/download": {
+      "get": {
+        "operationId": "ReportsController_download",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Download a monthly report PDF",
         "tags": [
           "admin"
         ]
@@ -858,6 +1444,171 @@
         ]
       }
     },
+    "/api/courses": {
+      "get": {
+        "operationId": "CoursesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Course catalog with lesson counts + enrollment stats (public)",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/courses/{id}": {
+      "get": {
+        "operationId": "CoursesController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Course detail with lessons + my progress",
+        "tags": [
+          "courses"
+        ]
+      }
+    },
+    "/api/enrollments": {
+      "get": {
+        "operationId": "EnrollmentsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "My course enrollments with progress (login)",
+        "tags": [
+          "enrollments"
+        ]
+      }
+    },
+    "/api/quiz-attempts": {
+      "get": {
+        "operationId": "QuizAttemptsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "My quiz attempt history (login)",
+        "tags": [
+          "quiz-attempts"
+        ]
+      }
+    },
+    "/api/usrah-questions": {
+      "get": {
+        "operationId": "UsrahQuestionsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Own usrah's question board (RLS)",
+        "tags": [
+          "usrah-questions"
+        ]
+      },
+      "post": {
+        "operationId": "UsrahQuestionsController_ask",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AskUsrahQuestionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Ask a question inside own usrah (login)",
+        "tags": [
+          "usrah-questions"
+        ]
+      }
+    },
+    "/api/usrah-questions/{id}/answers": {
+      "post": {
+        "operationId": "UsrahQuestionsController_answer",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnswerUsrahQuestionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": ""
+          }
+        },
+        "summary": "Answer a question (usrah head, RLS)",
+        "tags": [
+          "usrah-questions"
+        ]
+      }
+    },
+    "/api/quiz/live-token": {
+      "get": {
+        "operationId": "QuizLiveController_token",
+        "parameters": [
+          {
+            "name": "quizId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Live-quiz room token (HMAC, 15 min) for the socket mini-service",
+        "tags": [
+          "quiz"
+        ]
+      }
+    },
     "/api/join": {
       "get": {
         "operationId": "JoinController_join",
@@ -953,7 +1704,7 @@
             "description": ""
           }
         },
-        "summary": "Update own profile (allowlisted fields)",
+        "summary": "Update own profile (allowlisted fields; gender one-time)",
         "tags": [
           "me"
         ]
@@ -978,6 +1729,30 @@
           }
         },
         "summary": "TEST-ONLY: raw unfiltered query under RLS context",
+        "tags": [
+          "test"
+        ]
+      }
+    },
+    "/api/test/rls-raw-device-tokens": {
+      "get": {
+        "operationId": "RlsRawTestController_rawDeviceTokens",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "TEST-ONLY: raw DeviceToken query under RLS context",
         "tags": [
           "test"
         ]
@@ -1086,16 +1861,56 @@
           "code"
         ]
       },
+      "SocialSignInDto": {
+        "type": "object",
+        "properties": {
+          "provider": {
+            "type": "string",
+            "example": "google",
+            "enum": [
+              "google",
+              "apple"
+            ]
+          },
+          "idToken": {
+            "type": "string",
+            "description": "Provider id_token (JWT)"
+          },
+          "name": {
+            "type": "string",
+            "example": "রাফিউল ইসলাম"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ],
+            "description": "Only applied at ACCOUNT CREATION (onboarding gender). Ignored for existing accounts — gender is locked afterwards."
+          },
+          "referredByCode": {
+            "type": "string",
+            "example": "DS-000004"
+          },
+          "guestEntries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GuestEntryDto"
+            }
+          }
+        },
+        "required": [
+          "provider",
+          "idToken"
+        ]
+      },
       "RefreshDto": {
         "type": "object",
         "properties": {
           "refreshToken": {
             "type": "string"
           }
-        },
-        "required": [
-          "refreshToken"
-        ]
+        }
       },
       "LogoutDto": {
         "type": "object",
@@ -1261,6 +2076,10 @@
               "hafez",
               "alim"
             ]
+          },
+          "reason": {
+            "type": "string",
+            "example": "ভুল তথ্য সংশোধন — সদস্য নিজে অনুরোধ করেছেন"
           }
         },
         "required": [
@@ -1281,11 +2100,19 @@
               "farze_ain_1",
               "farze_ain_2"
             ]
+          },
+          "outlineReviewed": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string",
+            "example": "তারবিয়াত পরিষদের সিদ্ধান্তে সকল শর্ত পূরণ হয়েছে"
           }
         },
         "required": [
           "userId",
-          "toLevel"
+          "toLevel",
+          "reason"
         ]
       },
       "BroadcastDto": {
@@ -1387,6 +2214,325 @@
           "key"
         ]
       },
+      "AmalCatalogReorderDto": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "example": [
+              "salat_fajr",
+              "tilawat"
+            ],
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "keys"
+        ]
+      },
+      "AmalCatalogPatchDto": {
+        "type": "object",
+        "properties": {
+          "titleBn": {
+            "type": "string"
+          },
+          "titleEn": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "salah",
+              "quran",
+              "dhikr",
+              "akhlaq",
+              "dawat",
+              "lifestyle",
+              "sunnah",
+              "personal"
+            ]
+          },
+          "inputType": {
+            "type": "string",
+            "enum": [
+              "tristate",
+              "boolean",
+              "count",
+              "quantity",
+              "text"
+            ]
+          },
+          "cadence": {
+            "type": "string",
+            "enum": [
+              "daily",
+              "weekly:any",
+              "weekly:fri",
+              "weekly:mon_thu",
+              "monthly:ayyam_beez"
+            ]
+          },
+          "target": {
+            "type": "object"
+          },
+          "unit": {
+            "type": "string"
+          },
+          "minLevel": {
+            "type": "string",
+            "enum": [
+              "none",
+              "muhibbus_sunnah",
+              "farze_ain_1",
+              "farze_ain_2"
+            ]
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "autoSource": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "TemplateCreateDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "farze_ain_v1"
+          },
+          "version": {
+            "type": "number",
+            "example": 2
+          },
+          "titleBn": {
+            "type": "string",
+            "example": "ফরযে আইন মূল্যায়ন (সংশোধিত)"
+          },
+          "titleEn": {
+            "type": "string"
+          },
+          "sections": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "key",
+          "titleBn",
+          "sections"
+        ]
+      },
+      "TemplatePatchDto": {
+        "type": "object",
+        "properties": {
+          "active": {
+            "type": "boolean"
+          },
+          "titleBn": {
+            "type": "string"
+          },
+          "titleEn": {
+            "type": "string"
+          },
+          "sections": {
+            "type": "object"
+          }
+        }
+      },
+      "UsrahCreateDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "উসরা আল-হুদা"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ]
+          },
+          "district": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "gender"
+        ]
+      },
+      "UsrahPatchDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "headUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "invigilatorUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "district": {
+            "type": "string"
+          }
+        }
+      },
+      "UsrahMemberDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "userId"
+        ]
+      },
+      "LiveProgramDto": {
+        "type": "object",
+        "properties": {
+          "titleBn": {
+            "type": "string",
+            "example": "সাপ্তাহিক তাফসীর মজলিস"
+          },
+          "descBn": {
+            "type": "string"
+          },
+          "hostName": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string",
+            "example": "2025-07-04T14:00:00.000Z"
+          },
+          "endsAt": {
+            "type": "string"
+          },
+          "youtubeId": {
+            "type": "string",
+            "example": "dQw4w9WgXcQ"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ]
+          },
+          "recordingUrl": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "titleBn",
+          "startsAt"
+        ]
+      },
+      "AppConfigAdminDto": {
+        "type": "object",
+        "properties": {
+          "donationUrl": {
+            "type": "string",
+            "example": "https://as-sunnah.org/donation"
+          },
+          "domain": {
+            "type": "string",
+            "example": "sunnahlife.app"
+          },
+          "hijriAdjust": {
+            "type": "number",
+            "example": -1,
+            "description": "Hijri ±adjust (−2..2)"
+          },
+          "nisab": {
+            "type": "object"
+          },
+          "contacts": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "audioBase": {
+            "type": "string"
+          },
+          "leaderboardEnabled": {
+            "type": "boolean",
+            "description": "gender-scoped leaderboard (scholars' decision pending)"
+          },
+          "detoxEnabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "RegisterPushTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "FCM registration token",
+            "example": "dKs8fQ…(opaque FCM token)…9x"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ],
+            "example": "android"
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "UnregisterPushTokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "example": "dKs8fQ…(opaque FCM token)…9x"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "GenerateReportDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "ckv4…",
+            "description": "target member id"
+          },
+          "month": {
+            "type": "string",
+            "example": "2026-09"
+          }
+        },
+        "required": [
+          "userId",
+          "month"
+        ]
+      },
       "MasalaDto": {
         "type": "object",
         "properties": {
@@ -1481,6 +2627,42 @@
           "id"
         ]
       },
+      "AskUsrahQuestionDto": {
+        "type": "object",
+        "properties": {
+          "question": {
+            "type": "string",
+            "example": "তাকদীরের বিশ্বাস কি আমলের ইচ্ছাশক্তি নষ্ট করে?"
+          },
+          "category": {
+            "type": "string",
+            "example": "aqeedah",
+            "enum": [
+              "general",
+              "aqeedah",
+              "salah",
+              "quran",
+              "muamalah",
+              "tarbiyah"
+            ]
+          }
+        },
+        "required": [
+          "question"
+        ]
+      },
+      "AnswerUsrahQuestionDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "type": "string",
+            "example": "না — তাকদীরে বিশ্বাস আমলের উদ্দেশ্য দৃঢ় করে…"
+          }
+        },
+        "required": [
+          "answer"
+        ]
+      },
       "NotifyLiveDto": {
         "type": "object",
         "properties": {
@@ -1544,6 +2726,14 @@
           },
           "department": {
             "type": "string"
+          },
+          "gender": {
+            "type": "string",
+            "enum": [
+              "M",
+              "F"
+            ],
+            "description": "One-time ONLY: completes gender onboarding for accounts created without it (social sign-in). Rejected once a gender is set."
           },
           "category": {
             "type": "string",

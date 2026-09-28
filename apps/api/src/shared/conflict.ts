@@ -10,6 +10,52 @@ import type { AmalValue } from "./domain";
 
 export const MAX_BATCH = 500;
 
+/** Max clock skew tolerated on clientUpdatedAt: incoming timestamps are
+ * clamped to now + 5 min (Phase C/W2g — a lying client clock a year in the
+ * future used to permanently win every future LWW conflict). */
+export const CLIENT_TS_MAX_SKEW_MS = 5 * 60_000;
+
+/** Clamp a client timestamp to now + CLIENT_TS_MAX_SKEW_MS (never in the
+ * deep future). Past timestamps pass through unchanged. */
+export function clampClientTs(ts: Date, now: Date): Date {
+  const cap = new Date(now.getTime() + CLIENT_TS_MAX_SKEW_MS);
+  return ts.getTime() > cap.getTime() ? cap : ts;
+}
+
+/** Allowed machine sources: literal "manual" or auto:<engine>(:<topic>)?
+ * (e.g. "auto:prayer:fajr"). Anything else — free text, HTML, junk — is
+ * stored as "manual" so the column can never become a client-controlled
+ * string sink (Phase C/W2g). */
+const AUTO_SOURCE_RE = /^auto:[a-z]+(:[a-z0-9_]+)?$/;
+
+/** Sanitize a client-supplied source string (≤ 64 chars, guard-listed
+ * shapes only); everything else degrades to "manual". */
+export function guardSource(source: string): string {
+  if (source === "manual") return "manual";
+  if (source.length <= 64 && AUTO_SOURCE_RE.test(source)) return source;
+  return "manual";
+}
+
+/** Value ↔ definition inputType check (catalog-driven, Phase C/W2g).
+ * Unknown inputType → accepted (catalog drift tolerance: an admin edit or a
+ * stale cached catalog must not brick sync). */
+function valueMatchesInputType(value: AmalValue, inputType: string | undefined): boolean {
+  switch (inputType) {
+    case "tri_state": // spec spelling
+    case "tri-state":
+    case "tristate": // content-pack / AmalInputType spelling
+      return value === "jamaat" || value === "alone" || value === "qaza";
+    case "boolean":
+      return typeof value === "boolean";
+    case "count":
+    case "quantity":
+    case "number":
+      return typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 1_000_000;
+    default:
+      return true;
+  }
+}
+
 export const REJECT_REASONS = {
   incomplete: "অসম্পূর্ণ এন্ট্রি",
   unknownAmal: "অজানা আমল",
@@ -31,11 +77,14 @@ export interface ExistingEntry {
   amalKey: string;
   date: string;
   clientUpdatedAt: Date;
+  /** Stored value (valueJson) — when present, a newerVersion rejection echoes
+   * it back as serverValue so the client can reconcile (Phase C/W2g). */
+  value?: unknown;
 }
 
 export type EntryDecision =
   | { ok: true; amalKey: string; date: string; value: AmalValue; clientUpdatedAt: Date; source: string }
-  | { ok: false; amalKey: string; date: string; reason: string };
+  | { ok: false; amalKey: string; date: string; reason: string; serverValue?: AmalValue };
 
 /** Coerce a JSON value to a storable amal value (tristate/boolean/number/string). */
 export function normalizeValue(v: unknown): AmalValue | null {
@@ -46,12 +95,13 @@ export function normalizeValue(v: unknown): AmalValue | null {
 }
 
 /**
- * Per-entry decision for the batch sync endpoint. `lockedByDate` and
- * `defKeys` are pre-computed by the caller (same as the web route).
+ * Per-entry decision for the batch sync endpoint. `lockedByDate`, `defKeys`
+ * and `defTypes` (amalKey → inputType) are pre-computed by the caller.
  */
 export function decideEntry(
   e: IncomingEntry,
   defKeys: Set<string>,
+  defTypes: Map<string, string>,
   today: string,
   lockedByDate: Map<string, boolean>,
   existing: ExistingEntry | null,
@@ -75,12 +125,27 @@ export function decideEntry(
   if (value === null) {
     return { ok: false, amalKey, date, reason: REJECT_REASONS.badValue };
   }
+  // catalog-driven value semantics (Phase C/W2g): a tri-state field must be
+  // jamaat/alone/qaza, a count must be a sane non-negative number, …
+  if (!valueMatchesInputType(value, defTypes.get(amalKey))) {
+    return { ok: false, amalKey, date, reason: REJECT_REASONS.badValue };
+  }
   const parsedCu = new Date(typeof e?.clientUpdatedAt === "string" ? e.clientUpdatedAt : NaN);
-  const clientUpdatedAt = isNaN(parsedCu.getTime()) ? now : parsedCu;
-  const source = typeof e?.source === "string" && e.source ? e.source : "manual";
-  // conflict rule: latest clientUpdatedAt wins
+  // invalid client timestamp → server now; anything parseable is clamped to
+  // now + CLIENT_TS_MAX_SKEW_MS (a lying future clock can't win forever).
+  const clientUpdatedAt = clampClientTs(isNaN(parsedCu.getTime()) ? now : parsedCu, now);
+  const source = guardSource(typeof e?.source === "string" && e.source ? e.source : "manual");
+  // conflict rule: latest clientUpdatedAt wins; the rejected entry carries
+  // the SERVER's winning value so the client can reconcile (Phase C/W2g).
   if (existing && existing.clientUpdatedAt >= clientUpdatedAt) {
-    return { ok: false, amalKey, date, reason: REJECT_REASONS.newerVersion };
+    const serverValue = existing.value === undefined ? null : normalizeValue(existing.value);
+    return {
+      ok: false,
+      amalKey,
+      date,
+      reason: REJECT_REASONS.newerVersion,
+      ...(serverValue === null ? {} : { serverValue }),
+    };
   }
   return { ok: true, amalKey, date, value, clientUpdatedAt, source };
 }

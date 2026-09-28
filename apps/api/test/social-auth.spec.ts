@@ -308,7 +308,7 @@ describe("POST /api/auth/social — happy paths", () => {
     const res = await social("google", token, {
       guestEntries: [
         { amalKey: "salat_fajr", date: today, value: "jamaat", clientUpdatedAt: new Date().toISOString() },
-        { amalKey: "quran_tilawat", date: today, value: 2, clientUpdatedAt: new Date().toISOString() },
+        { amalKey: "tilawat", date: today, value: 2, clientUpdatedAt: new Date().toISOString() },
       ],
     }).expect(200);
     const accessToken = res.body.accessToken as string;
@@ -318,7 +318,106 @@ describe("POST /api/auth/social — happy paths", () => {
       .set("Authorization", `Bearer ${accessToken}`)
       .expect(200);
     const keys = (entries.body.entries as { amalKey: string }[]).map((e) => e.amalKey);
-    expect(keys).toEqual(expect.arrayContaining(["salat_fajr", "quran_tilawat"]));
+    // THE STRIP-BUG PROOF: this whole request ran through the global
+    // whitelist ValidationPipe (APP_PIPE, Phase C/W2g) — `value` and
+    // `clientUpdatedAt` survive it only because GuestEntryDto now carries
+    // class-validator decorators. Pre-W2g they were silently stripped in
+    // production and the merge imported nothing.
+    expect(keys).toEqual(expect.arrayContaining(["salat_fajr", "tilawat"]));
+  });
+
+  it("clamps a far-future guest clientUpdatedAt to now+5min (no lying clock wins LWW)", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const token = await signToken(googleKey, "RS256", googleClaims({ sub: "google-guest-clamp" }));
+    const res = await social("google", token, {
+      guestEntries: [
+        {
+          amalKey: "salat_fajr",
+          date: today,
+          value: "jamaat",
+          // a year in the future — must NOT be stored as-is
+          clientUpdatedAt: new Date(Date.now() + 365 * 86_400_000).toISOString(),
+        },
+      ],
+    }).expect(200);
+    track(res.body);
+    const accessToken = res.body.accessToken as string;
+
+    const entries = await http()
+      .get(`/api/amal/entries?from=${today}&to=${today}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    const row = (entries.body.entries as { amalKey: string; clientUpdatedAt: string }[]).find(
+      (e) => e.amalKey === "salat_fajr"
+    );
+    expect(row).toBeTruthy();
+    // stored clientUpdatedAt ≤ now + 5 min + slack for request latency
+    expect(new Date(row!.clientUpdatedAt).getTime()).toBeLessThanOrEqual(Date.now() + 5 * 60_000 + 10_000);
+  });
+
+  it("does NOT import guest entries with UNKNOWN amal keys (client-controlled payload)", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    const token = await signToken(googleKey, "RS256", googleClaims({ sub: "google-guest-unknown-key" }));
+    const res = await social("google", token, {
+      guestEntries: [
+        { amalKey: "definitely_not_in_catalog", date: today, value: "jamaat", clientUpdatedAt: new Date().toISOString() },
+        { amalKey: "salat_fajr", date: today, value: "alone", clientUpdatedAt: new Date().toISOString() },
+      ],
+    }).expect(200);
+    track(res.body);
+    const accessToken = res.body.accessToken as string;
+
+    const entries = await http()
+      .get(`/api/amal/entries?from=${today}&to=${today}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    const keys = (entries.body.entries as { amalKey: string }[]).map((e) => e.amalKey);
+    expect(keys).toContain("salat_fajr"); // the known key made it
+    expect(keys).not.toContain("definitely_not_in_catalog"); // the unknown one did not
+  });
+
+  it("does NOT overwrite a newer SERVER row during the guest merge (LWW at merge)", async () => {
+    const today = new Date().toISOString().slice(0, 10);
+    // 1) create the account first — no guest entries yet
+    const token0 = await signToken(googleKey, "RS256", googleClaims({ sub: "google-guest-lww" }));
+    const first = await social("google", token0).expect(200);
+    track(first.body);
+    const accessToken = first.body.accessToken as string;
+
+    // 2) server row with a NEWER clientUpdatedAt via the real sync route
+    // (POST defaults to 201 Created — the body carries {accepted, rejected})
+    await http()
+      .post("/api/amal/entries")
+      .set("Authorization", `Bearer ${accessToken}`)
+      .send({
+        entries: [
+          { amalKey: "salat_fajr", date: today, value: "jamaat", clientUpdatedAt: new Date().toISOString(), source: "manual" },
+        ],
+      })
+      .expect(201);
+
+    // 3) re-sign-in with an OLDER guest entry — the server row must win
+    const token1 = await signToken(googleKey, "RS256", googleClaims({ sub: "google-guest-lww" }));
+    const res = await social("google", token1, {
+      guestEntries: [
+        {
+          amalKey: "salat_fajr",
+          date: today,
+          value: "qaza", // would be a regression if this overwrote "jamaat"
+          clientUpdatedAt: new Date(Date.now() - 86_400_000).toISOString(), // yesterday
+        },
+      ],
+    }).expect(200);
+    expect(res.body.user.id).toBe(first.body.user.id);
+
+    const entries = await http()
+      .get(`/api/amal/entries?from=${today}&to=${today}`)
+      .set("Authorization", `Bearer ${accessToken}`)
+      .expect(200);
+    const row = (entries.body.entries as { amalKey: string; value: string }[]).find(
+      (e) => e.amalKey === "salat_fajr"
+    );
+    expect(row?.value).toBe("jamaat"); // guest "qaza" did NOT overwrite the newer server row
   });
 
   it("applies referredByCode at creation (referral closure + referredById)", async () => {

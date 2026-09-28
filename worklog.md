@@ -714,3 +714,20 @@ Work Log:
 
 Stage Summary:
 - VERIFIED RAW: push spec 22/22; eslint 0/0 on src/push + test/push.spec.ts; full suite 218/218 (was 216).
+
+
+---
+Task ID: C-W2g
+Agent: lead-architect (main session) + implementation subagent
+Task: Sync & guest merge hardening (server side).
+
+Work Log:
+- THE STRIP BUG (production data loss): GuestEntryDto.value and .clientUpdatedAt carried no class-validator decorators, and production's whitelist ValidationPipe strips undecorated fields — every guest diary entry was silently dropped on sign-in in production. Tests never saw it: the pipe was registered only in main.ts useGlobalPipes, so e2e test apps ran with NO validation at all. Fix: pipe moved to AppModule via APP_PIPE (one pipeline for prod AND tests) + validators added (value: custom IsValidAmalValue union constraint; clientUpdatedAt: IsString). The existing guest-merge e2e test now runs through the real pipe — it is the strip-bug proof.
+- decideEntry: clientUpdatedAt clamped to now+5min (CLIENT_TS_MAX_SKEW_MS — a year-3000 stamp can no longer win forever); value validated against the amal definition's inputType (tristate/boolean/count matrix); guardSource (auto: allowlist regex, everything else → manual); newerVersion rejection now carries serverValue (the server's winning value so clients can converge).
+- upsertEntries: conditional/atomic write — updateMany WHERE clientUpdatedAt < incoming (strictly-newer-wins at write time, immune to the findUnique→upsert race), absent-row create wrapped in SAVEPOINT w2g_amal_create + ROLLBACK TO on P2002 (a caught P2002 otherwise poisons the whole interactive transaction — Prisma adds no per-statement savepoints; proven empirically by the implementing agent).
+- importGuestEntries: cap MAX_BATCH, unparseable-ts filtered, oldest-first ordering (newest lands last — deterministic final state), clamp, catalog-key + normalizeValue guards (guest payloads are client-controlled), guardSource, bounded 50-entry chunk transactions.
+- Test fix with a story: rls.e2e (b)-1's dayUnlock.create was missing byUserId — it would have been rejected by the NOT NULL constraint even WITHOUT the RLS policy (a test passing for the wrong reason). byUserId: maleMember.id added; now only the policy can reject it.
+- openapi.json + packages/shared-types/dist regenerated (previously-stale artifacts refreshed; GuestEntryDto now correctly lists clientUpdatedAt required). Known nit: POST /api/amal/entries response shape is untyped in swagger — serverValue reaches TS clients via AmalUpsertResult only (noted for W4/wave-5 hygiene).
+
+Stage Summary:
+- VERIFIED RAW: full suite 233/233 (was 218; +15 tests: clamp, inputType matrix, guardSource, serverValue, strip-bug-through-real-pipe, merge-clamp, unknown-key-dropped, merge-LWW); bunx tsc --noEmit clean; eslint 0 errors (4 pre-existing warnings in untouched files).

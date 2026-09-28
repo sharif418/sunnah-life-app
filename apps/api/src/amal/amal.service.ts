@@ -4,6 +4,7 @@ import path from "path";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
+import { Prisma } from "../common/prisma-client";
 import {
   todayForUser,
   isDateLocked,
@@ -16,8 +17,8 @@ import {
   invalidateDefinitionCache,
   type AmalDefRow,
 } from "../shared/amal";
-import { decideEntry, MAX_BATCH, type IncomingEntry } from "../shared/conflict";
-import type { User } from "../shared/domain";
+import { decideEntry, MAX_BATCH, REJECT_REASONS, type IncomingEntry } from "../shared/conflict";
+import type { AmalValue, User } from "../shared/domain";
 
 type EntryRow = {
   id: string; userId: string; amalKey: string; date: string; valueJson: unknown;
@@ -138,6 +139,7 @@ export class AmalService {
     const result = await this.rls.run(user, async (tx) => {
       const definitions = (await loadActiveDefinitions(tx)) as AmalDefRow[];
       const defKeys = new Set(definitions.map((d) => d.key));
+      const defTypes = new Map(definitions.map((d) => [d.key, d.inputType] as const));
       const today = todayForUser(user);
       const now = new Date();
 
@@ -155,36 +157,91 @@ export class AmalService {
       }
 
       const accepted: ReturnType<typeof mapEntry>[] = [];
-      const rejected: { date: string; amalKey: string; reason: string }[] = [];
+      const rejected: { date: string; amalKey: string; reason: string; serverValue?: AmalValue }[] = [];
 
       for (const e of incoming) {
+        // (a) read for the DECISION only — the write below re-checks the
+        // conflict atomically, so a concurrent writer between here and the
+        // write can never be overwritten by this (older) decision (W2g).
         const existing = await tx.amalEntry.findUnique({
           where: { userId_amalKey_date: { userId: user.id, amalKey: String(e?.amalKey ?? ""), date: String(e?.date ?? "") } },
         });
-        const decision = decideEntry(e, defKeys, today, lockedByDate, existing, now);
+        const decision = decideEntry(
+          e,
+          defKeys,
+          defTypes,
+          today,
+          lockedByDate,
+          existing && {
+            amalKey: existing.amalKey,
+            date: existing.date,
+            clientUpdatedAt: existing.clientUpdatedAt,
+            value: existing.valueJson,
+          },
+          now
+        );
         if (!decision.ok) {
-          rejected.push({ date: decision.date, amalKey: decision.amalKey, reason: decision.reason });
+          rejected.push(
+            decision.serverValue === undefined
+              ? { date: decision.date, amalKey: decision.amalKey, reason: decision.reason }
+              : { date: decision.date, amalKey: decision.amalKey, reason: decision.reason, serverValue: decision.serverValue }
+          );
           continue;
         }
-        const row = (await tx.amalEntry.upsert({
-          where: { userId_amalKey_date: { userId: user.id, amalKey: decision.amalKey, date: decision.date } },
-          create: {
+        // (b) CONDITIONAL ATOMIC WRITE: only overwrite when the stored row is
+        // strictly OLDER (lt) — "newest clientUpdatedAt wins" re-checked at
+        // write time, closing the findUnique→upsert race (W2g).
+        const updated = await tx.amalEntry.updateMany({
+          where: {
             userId: user.id,
             amalKey: decision.amalKey,
             date: decision.date,
+            clientUpdatedAt: { lt: decision.clientUpdatedAt },
+          },
+          data: {
             valueJson: decision.value as never,
             source: decision.source,
             clientUpdatedAt: decision.clientUpdatedAt,
             serverUpdatedAt: now,
           },
-          update: {
-            valueJson: decision.value as never,
-            source: decision.source,
-            clientUpdatedAt: decision.clientUpdatedAt,
-            serverUpdatedAt: now,
-          },
-        })) as unknown as EntryRow;
-        accepted.push(mapEntry(row));
+        });
+        if (updated.count === 0) {
+          // No row updated (absent, or a concurrent writer landed a newer
+          // one since the findUnique) → create. SAVEPOINT-wrapped: a P2002
+          // from a lost race must not abort the whole batch's transaction
+          // (Postgres aborts the tx on an uncaught constraint violation and
+          // Prisma adds no per-statement savepoints).
+          await tx.$executeRawUnsafe("SAVEPOINT w2g_amal_create");
+          try {
+            const row = await tx.amalEntry.create({
+              data: {
+                userId: user.id,
+                amalKey: decision.amalKey,
+                date: decision.date,
+                valueJson: decision.value as never,
+                source: decision.source,
+                clientUpdatedAt: decision.clientUpdatedAt,
+                serverUpdatedAt: now,
+              },
+            });
+            await tx.$executeRawUnsafe("RELEASE SAVEPOINT w2g_amal_create");
+            accepted.push(mapEntry(row as unknown as EntryRow));
+          } catch (err) {
+            await tx.$executeRawUnsafe("ROLLBACK TO SAVEPOINT w2g_amal_create");
+            await tx.$executeRawUnsafe("RELEASE SAVEPOINT w2g_amal_create");
+            if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
+              // a concurrent writer created the row first → they won (W2g)
+              rejected.push({ date: decision.date, amalKey: decision.amalKey, reason: REJECT_REASONS.newerVersion });
+            } else {
+              throw err;
+            }
+          }
+        } else {
+          const row = await tx.amalEntry.findUnique({
+            where: { userId_amalKey_date: { userId: user.id, amalKey: decision.amalKey, date: decision.date } },
+          });
+          accepted.push(mapEntry(row as unknown as EntryRow));
+        }
       }
 
       if (accepted.length) {

@@ -147,7 +147,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Public app configuration */
+        /** Public app configuration (admin-editable) */
         get: operations["ConfigApiController_getConfig"];
         put?: never;
         post?: never;
@@ -660,6 +660,24 @@ export interface paths {
         patch: operations["AdminController_patchLive"];
         trace?: never;
     };
+    "/admin/config": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** full_admin: the live app configuration (CMS) */
+        get: operations["AdminController_appConfig"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** full_admin: update the app configuration (audited) */
+        patch: operations["AdminController_updateAppConfig"];
+        trace?: never;
+    };
     "/admin/audit": {
         parameters: {
             query?: never;
@@ -1149,6 +1167,7 @@ export interface components {
             userId: string;
             /** @enum {string} */
             toLevel: "none" | "muhibbus_sunnah" | "farze_ain_1" | "farze_ain_2";
+            outlineReviewed?: boolean;
             /** @example তারবিয়াত পরিষদের সিদ্ধান্তে সকল শর্ত পূরণ হয়েছে */
             reason: string;
         };
@@ -1249,6 +1268,24 @@ export interface components {
             /** @enum {string} */
             gender?: "M" | "F";
             recordingUrl?: Record<string, never>;
+        };
+        AppConfigAdminDto: {
+            /** @example https://as-sunnah.org/donation */
+            donationUrl?: string;
+            /** @example sunnahlife.app */
+            domain?: string;
+            /**
+             * @description Hijri ±adjust (−2..2)
+             * @example -1
+             */
+            hijriAdjust?: number;
+            nisab?: Record<string, never>;
+            contacts?: Record<string, never>[];
+            groups?: Record<string, never>[];
+            audioBase?: string;
+            /** @description gender-scoped leaderboard (scholars' decision pending) */
+            leaderboardEnabled?: boolean;
+            detoxEnabled?: boolean;
         };
         RegisterPushTokenDto: {
             /**
@@ -2277,6 +2314,44 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["LiveProgramDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_appConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    AdminController_updateAppConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppConfigAdminDto"];
             };
         };
         responses: {
