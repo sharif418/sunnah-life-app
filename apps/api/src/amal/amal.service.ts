@@ -56,7 +56,7 @@ export class AmalService {
       });
       if (existing.length) return existing as unknown as AmalDefRow[];
 
-      let pack: { definitions?: unknown[] } = {};
+      let pack: { definitions?: unknown[] };
       try {
         const contentDir =
           process.env.CONTENT_DIR || path.resolve(process.cwd(), "..", "..", "packages", "content");

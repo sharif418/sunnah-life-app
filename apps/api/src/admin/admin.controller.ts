@@ -856,7 +856,8 @@ export class AdminService {
       const cadence = (dto.cadence ?? (existing?.cadence as AmalCadence) ?? "daily");
       if (!CADENCES.includes(cadence)) throw new ApiError(400, "পর্যায়ক্রম ঠিক নয়");
 
-      let targetJson: unknown = null;
+      // all three branches assign before use
+      let targetJson: unknown;
       if (dto.target && typeof dto.target === "object") {
         targetJson = dto.target;
       } else if (dto.target === null) {

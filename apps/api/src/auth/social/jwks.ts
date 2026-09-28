@@ -181,12 +181,9 @@ export async function verifyIdToken(v: JwtVerification): Promise<Record<string, 
   if (signature.length === 0) {
     throw new ApiError(400, "সাইন-ইন টোকেন যাচাই করা যায়নি — আবার চেষ্টা করুন");
   }
-  let ok = false;
-  try {
-    ok = await verifySignature(v.alg, await importVerifyKey(v.alg, jwk), signingInput, toArrayBuffer(signature));
-  } catch {
-    ok = false;
-  }
+  const ok = await verifySignature(
+    v.alg, await importVerifyKey(v.alg, jwk), signingInput, toArrayBuffer(signature)
+  ).catch(() => false);
   if (!ok) {
     throw new ApiError(400, "সাইন-ইন টোকেন যাচাই করা যায়নি — আবার চেষ্টা করুন");
   }

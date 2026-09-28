@@ -15,6 +15,9 @@ export default tseslint.config(
       "storage/**",
       "openapi.json",
       "prisma/migrations/**",
+      // Generated Prisma client (bun-workspaces layout generates into the
+      // package — see prisma/schema.prisma generator.output)
+      "src/generated/**",
     ],
   },
   eslint.configs.recommended,

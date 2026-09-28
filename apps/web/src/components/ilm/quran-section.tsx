@@ -193,8 +193,9 @@ function SurahReader({ number: surahNumber }: { number: number }) {
     saveLastRead({ surah: surahNumber, ayah, nameBn: surah.nameBn });
   };
 
-  const sessionMinutes = Math.max(0, Math.floor((Date.now() - sessionStart.current) / 60000));
   const maybePromptTilawat = () => {
+    // ref read at event time, not during render (react-hooks/refs)
+    const sessionMinutes = Math.max(0, Math.floor((Date.now() - sessionStart.current) / 60000));
     if (!sessionLogged.current && sessionMinutes >= 1) setTilawatOpen(true);
   };
 

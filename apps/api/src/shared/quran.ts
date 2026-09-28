@@ -39,7 +39,8 @@ export async function loadQuran(): Promise<QuranCache> {
   for (const s of rawBn.data.surahs) {
     bnBySurah.set(s.number, s.ayahs.map((a) => a.text));
   }
-  let bnNames: Record<number, string> | null = null;
+  // metadata is optional (old packs shipped without it) — null when absent
+  let bnNames: Record<number, string> | null;
   try {
     const meta = JSON.parse(await fs.readFile(path.join(dir, "quran-meta-bn.json"), "utf8")) as {
       surahs: { number: number; nameBn: string }[];

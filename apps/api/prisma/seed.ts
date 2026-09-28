@@ -345,7 +345,8 @@ async function main() {
           const hourOfDef = morningKeys.includes(def.key) ? 7 : eveningKeys.includes(def.key) ? (def.key.startsWith("salat_dhuhr") ? 13 : def.key.startsWith("salat_asr") ? 16 : def.key.startsWith("salat_maghrib") ? 18 : 20) : 21;
           if (nowHour < hourOfDef - 1) continue;
         }
-        let value: unknown = null;
+        // every branch assigns or continues before use
+        let value: unknown;
         if (def.inputType === "tristate") {
           if (r < u.devout * 0.92) value = rnd() < 0.8 ? "jamaat" : "alone";
           else if (r < u.devout * 0.92 + 0.06) value = "qaza";
@@ -403,7 +404,7 @@ async function main() {
     for (const e of wk) {
       const def = defs.find((dd) => dd.key === e.amalKey)!;
       const v: unknown = e.valueJson;
-      let p = 0;
+      let p: number;
       if (def.inputType === "tristate") p = v === "jamaat" || v === "alone" ? 1 : 0;
       else if (def.inputType === "boolean") p = v === true ? 1 : 0;
       else {
