@@ -53,6 +53,8 @@ dependencies:
   workmanager: ^0.10.10
   # Qur'an per-ayah recitation with on-disk caching (LockCachingAudioSource).
   just_audio: ^0.10.4
+  geolocator: ^14.0.2
+  flutter_compass: ^0.8.1
 
 dev_dependencies:
   flutter_test:
