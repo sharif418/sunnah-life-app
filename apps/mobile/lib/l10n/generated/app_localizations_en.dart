@@ -1088,12 +1088,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quiz_finish => 'See the result';
 
   @override
-  String get quiz_result_title => 'Quiz finished';
-
-  @override
-  String get quiz_your_score => 'Your score';
-
-  @override
   String get quiz_result_saved => 'Score saved to your account';
 
   @override
@@ -1104,9 +1098,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quiz_back_to_list => 'Back to the list';
-
-  @override
-  String get quiz_history_title => 'My quiz history';
 
   @override
   String get quizzes_empty_title => 'Quizzes coming soon, insha\'Allah';

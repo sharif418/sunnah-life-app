@@ -1089,12 +1089,6 @@ class AppLocalizationsBn extends AppLocalizations {
   String get quiz_finish => 'ফলাফল দেখুন';
 
   @override
-  String get quiz_result_title => 'কুইজ শেষ';
-
-  @override
-  String get quiz_your_score => 'আপনার স্কোর';
-
-  @override
   String get quiz_result_saved => 'স্কোর সার্ভারে সংরক্ষিত হয়েছে';
 
   @override
@@ -1105,9 +1099,6 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quiz_back_to_list => 'তালিকায় ফিরুন';
-
-  @override
-  String get quiz_history_title => 'আমার কুইজ ইতিহাস';
 
   @override
   String get quizzes_empty_title => 'কুইজ শীঘ্রই আসছে, ইনশাআল্লাহ';

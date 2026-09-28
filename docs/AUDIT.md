@@ -27,14 +27,14 @@ limitation. **Not done** = stated plainly. Last verified at commit below.
 | Gender-aware usrah broadcast fan-out | Done | `src/push/` sendToUsrah + RLS on DeviceToken | rls.e2e: cross-gender token SELECT = 0 |
 | Monthly Muhasaba PDF (paper-form layout, Bengali shaping) | Done | `apps/api/src/reports/`, `src/storage/`, processor | `pdftotext -l 1` output in this report; `curl POST /api/admin/reports/generate` → 200 |
 | PDF in MinIO/S3 + admin list + download + manual trigger | Partial | same + `apps/admin exports page` | download → 200 (local adapter; S3 adapter active when S3_* env set — MinIO not runnable in sandbox) |
-| Courses (2×5 Bengali lessons), enrollments, progress | Done | `packages/content/courses.json`, `src/engagement/` | `curl :3001/api/courses` → 2; detail → 5 lessons each |
-| Quizzes (3×10 MCQs + explanations), attempts with scoring | Done | `packages/content/quizzes.json`, `src/engagement/` | `curl :3001/api/content/quizzes` → 3×10; quiz-attempt 201 |
-| Usrah questions (head assigns/answers, RLS) | Done | `src/engagement/ilm.controllers.ts` | POST/GET usrah-questions → 201/list (this report) |
-| Live quiz over WebSocket + per-gender leaderboard | Done | `mini-services/quiz-service/` (:3030) | `bun run smoke.ts` → 13/13 PASS |
+| Courses (2×5 Bengali lessons), enrollments, progress | Done | `packages/content/courses.json`, `src/engagement/`, **mobile `apps/mobile/lib/features/ilm/courses_screen.dart`** (list → detail → lesson player, enroll + progress sync) | `curl :3001/api/courses` → 2; detail → 5 lessons each; `flutter analyze` 0 · `flutter test` 65/65 (fresh clone, this report) |
+| Quizzes (3×10 MCQs + explanations), attempts with scoring | Done | `packages/content/quizzes.json`, `src/engagement/`, **mobile `apps/mobile/lib/features/ilm/quizzes_screen.dart`** (player + attempt submit) | `curl :3001/api/content/quizzes` → 3×10; quiz-attempt 201; browser E2E: quiz played, answer locked + explanation shown (this report) |
+| Usrah questions (head assigns/answers, RLS) | Done | `src/engagement/ilm.controllers.ts`, **mobile `apps/mobile/lib/features/dawah/usrah_questions_screen.dart`** (ask + head answers in the Dawah tab) | POST/GET usrah-questions → 201/list; browser E2E: question asked + head answer published → both render (this report) |
+| Live quiz over WebSocket + per-gender leaderboard | Done | `apps/api/src/engagement/quiz.gateway.ts` — **folded INTO the NestJS process** (B9; the :3030 bun mini-service is deleted): one backend, one auth (HMAC room token minted by `GET /api/quiz/live-token` after JWT+RLS), same wire protocol; `usrah.controller.ts` also got `@Roles` | `cd apps/api && bun run smoke:quiz` → 21/21 PASS; socket through Caddy `/?XTransformPort=3001` path `/socket.io` (polling + websocket both); browser E2E: full host round (start → প্রথম প্রশ্ন → reveal → next → end) via the gateway (this report); **mobile `live_quiz_screen.dart`** on socket_io_client |
 | Google + Apple Sign-In (link by verified email) | Partial | `src/auth/social/`, mobile `social_signin_service.dart` | jest social-auth.spec green; LIVE needs GOOGLE_CLIENT_ID/APPLE_SERVICES_ID env (documented RELEASE.md) — not settable in sandbox |
 | Gender asked at onboarding, locked after (incl. social path) | Done | `me.controller` lock + `gender_completion_screen.dart` | social-auth.spec + flutter test |
 | Level automation (nightly rules → transition + audit + reminder) | Done | `src/levels/`, `src/queues/processors/levels.processor.ts` | worker log: levels-nightly registered; GET /api/dawah/requirements live checklist |
-| Dawah tab live requirements checklist ("৩/৫ জন…") | Done (web) | `apps/web/src/components/dawah/dawah-view.tsx` | browser: স্তরের প্রয়োজনীয়তা section renders live data |
+| Dawah tab live requirements checklist ("৩/৫ জন…") | Done (web **and mobile**) | `apps/web/src/components/dawah/dawah-view.tsx` + `apps/mobile/lib/features/dawah/dawah_requirements_screen.dart` (B9; entry from the Dawah overview section) | browser: স্তরের প্রয়োজনীয়তা renders live data; `flutter analyze` 0 (fresh clone) |
 | Amal catalog CRUD (create/update/reorder/disable) | Done | `src/admin/admin.controller.ts` + admin catalog page | PATCH /api/admin/amal-catalog/:key → 200; reorder → 200; audit rows written |
 | Versioned assessment templates | Done | `AssessmentTemplate` model + admin endpoints | prisma schema + admin templates UI |
 | Usrah management (create, assign head/invigilator, move members) | Done | same controller + admin usrah page | POST /api/admin/usrah → 201 (উসরা আল-ইখলাস) |
@@ -78,5 +78,14 @@ limitation. **Not done** = stated plainly. Last verified at commit below.
    available/downloadable within disk limits; the storage service uses the
    local-dir adapter here and the `minio` client adapter when `S3_*` env is
    present (compose wires MinIO in prod).
-5. **Mobile Dawah requirements checklist** — web only (the API endpoint is
-   surface-agnostic; the mobile screen keeps its existing summary view).
+
+## B9 close-out (surface parity + one-backend live quiz)
+
+The post-Phase-B audit found three gaps; all closed in this round:
+
+| Gap | Status now | Proof |
+|---|---|---|
+| Courses/quizzes/live-quiz/usrah-questions had NO Flutter UI | Done — mobile screens shipped (`apps/mobile/lib/features/ilm/courses_screen.dart`, `quizzes_screen.dart`, `live_quiz_screen.dart`, `dawah/usrah_questions_screen.dart`, `dawah/dawah_requirements_screen.dart`) | `flutter analyze` → No issues · `flutter test` → 65/65 · ARB parity 408/408/408 |
+| Live quiz was a separate bun mini-service (:3030) outside NestJS | Done — folded into the API (`quiz.gateway.ts`, `IoAdapter`); mini-service deleted | `bun run smoke:quiz` → 21/21; Caddy polling+ws both PASS; browser E2E full host round |
+| `usrah.controller.ts` lacked `@Roles` | Done — `@UseGuards(RolesGuard)` + `@Roles("user")` | `bun run test` → 133/133 (incl. usrah coverage) |
+| (found during B9 E2E) web আরও tab was unreachable; `QuizzesSection` was dead code; host panel could not advance past the lobby | Done — fixed (`ilm-view.tsx` routeIlm cases, extras wiring, API_PORT export, প্রথম প্রশ্ন button) | browser E2E in worklog B9-e: grid reachable, quiz played, live round completed |

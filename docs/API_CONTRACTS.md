@@ -81,6 +81,35 @@ boolean → `true/false`; count/quantity → number. `source` = `"manual"` or
 | GET | `/api/quran/surahs` | `{surahs: [{number,name,nameBn,englishName,englishNameTranslation,ayahCount,revelationType}]}` |
 | GET | `/api/quran/surah/[number]` | `{surah: {…, bismillahPre, ayahs: [{numberInSurah, text, translationBn?, page, juz}]}}` |
 
+## Live usrah quiz — socket.io gateway (inside the API, B9)
+
+The live quiz is a socket.io gateway **in the NestJS process**
+(`apps/api/src/engagement/quiz.gateway.ts`, path `/socket.io` on the same
+HTTP server — one backend, one auth, one deployment). The retired :3030 bun
+mini-service is deleted.
+
+- **Join:** `GET /api/quiz/live-token?quizId=…` (login; own usrah + real
+  gender required) → `{token, room, role, quizId, exp}` — a 15-min HMAC
+  token minted with `QUIZ_SECRET`. Connect with
+  `io(API_BASE || "/?XTransformPort=3001", { path: "/socket.io", auth: { token } })`
+  (sandbox: same-origin through the edge gateway; prod: the API origin).
+- **Wire protocol** (identical to the retired mini-service):
+  `room:state {room, role, phase, quizId, quizTitle, questionCount,
+  currentIndex, players, scoreboard}` on every join/leave/phase change;
+  `quiz:started {quizId, titleBn, questionCount}`;
+  `quiz:question {index, questionBn, options, seconds, endsAt}`;
+  `quiz:reveal {index, answerIndex, explanationBn, tally, scoreboard}`;
+  `quiz:ended {scoreboard}`; `quiz:error {messageBn}`.
+  Client → server: `host:start {quizId}`, `host:next` (during question =
+  early reveal), `host:end`, `player:answer {index, choice}`.
+- **Gender isolation:** the room id IS the usrah id (single-gender by
+  design); tokens are only minted for a user's OWN usrah. Leaderboard
+  carries first names + member codes only.
+- **Scoring:** correct = 100 + up to 40 speed bonus; one answer per
+  question; reconnecting players keep their score; rooms GC when empty.
+- **Smoke:** `cd apps/api && bun run smoke:quiz` (21 checks).
+
+
 ## Client utilities already provided
 - `src/lib/api.ts` — typed client for ALL endpoints above.
 - `src/lib/store.ts` — zustand store: `nav(tab, view, params)`, `back()`,

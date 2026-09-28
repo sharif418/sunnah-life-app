@@ -1082,12 +1082,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quiz_finish => 'اعرض النتيجة';
 
   @override
-  String get quiz_result_title => 'انتهى الاختبار';
-
-  @override
-  String get quiz_your_score => 'نتيجتك';
-
-  @override
   String get quiz_result_saved => 'حُفظت النتيجة في حسابك';
 
   @override
@@ -1098,9 +1092,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quiz_back_to_list => 'العودة إلى القائمة';
-
-  @override
-  String get quiz_history_title => 'سجل اختباراتي';
 
   @override
   String get quizzes_empty_title => 'الاختبارات قادمة قريبًا إن شاء الله';

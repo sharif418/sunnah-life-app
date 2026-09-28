@@ -2212,18 +2212,6 @@ abstract class AppLocalizations {
   /// **'ফলাফল দেখুন'**
   String get quiz_finish;
 
-  /// No description provided for @quiz_result_title.
-  ///
-  /// In bn, this message translates to:
-  /// **'কুইজ শেষ'**
-  String get quiz_result_title;
-
-  /// No description provided for @quiz_your_score.
-  ///
-  /// In bn, this message translates to:
-  /// **'আপনার স্কোর'**
-  String get quiz_your_score;
-
   /// No description provided for @quiz_result_saved.
   ///
   /// In bn, this message translates to:
@@ -2247,12 +2235,6 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'তালিকায় ফিরুন'**
   String get quiz_back_to_list;
-
-  /// No description provided for @quiz_history_title.
-  ///
-  /// In bn, this message translates to:
-  /// **'আমার কুইজ ইতিহাস'**
-  String get quiz_history_title;
 
   /// No description provided for @quizzes_empty_title.
   ///
