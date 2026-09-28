@@ -61,6 +61,7 @@ dependencies:
   # https://sunnahlife.app/join/* + sunnahlife://join/* referral deep links
   # (cold start + warm stream, C-W3h).
   app_links: ^7.2.1
+  phosphor_flutter: ^2.1.0
 
 dev_dependencies:
   flutter_test:

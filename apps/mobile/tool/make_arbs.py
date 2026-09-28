@@ -375,6 +375,126 @@ NEW_KEYS = {
         "en": "programs",
         "ar": "برنامجًا",
     },
+    # ── C-W4a: global chrome (header panels, contact, bottom bar) ──────────
+    "header_notifications": {
+        "bn": "নোটিফিকেশন",
+        "en": "Notifications",
+        "ar": "الإشعارات",
+    },
+    "header_reminders": {"bn": "রিমাইন্ডার", "en": "Reminders", "ar": "تذكيرات"},
+    "notifications_guest_hint": {
+        "bn": "সাইন ইন করলে উসরা ঘোষণা, সাপ্তাহিক রিভিউ ও লাইভ রিমাইন্ডার এখানে দেখা যাবে।",
+        "en": "Sign in to see usrah announcements, weekly reviews and live reminders here.",
+        "ar": "سجّل الدخول لعرض إعلانات الأسرة والمراجعات الأسبوعية وتذكيرات البث هنا.",
+    },
+    "notifications_empty": {
+        "bn": "এখনো কোনো ঘোষণা নেই",
+        "en": "No announcements yet",
+        "ar": "لا توجد إعلانات بعد",
+    },
+    "notifications_announcements": {
+        "bn": "ঘোষণা",
+        "en": "Announcements",
+        "ar": "إعلانات",
+    },
+    "notifications_live": {
+        "bn": "লাইভ অনুষ্ঠান",
+        "en": "Live programs",
+        "ar": "برامج مباشرة",
+    },
+    "reminders_empty": {
+        "bn": "এখনো কোনো রিমাইন্ডার নেই",
+        "en": "No reminders yet",
+        "ar": "لا توجد تذكيرات بعد",
+    },
+    "reminder_mark_done": {
+        "bn": "সম্পন্ন করুন",
+        "en": "Mark done",
+        "ar": "وضع علامة تم",
+    },
+    "reminder_due": {"bn": "এখন", "en": "Due", "ar": "الآن"},
+    "reminder_overdue": {
+        "bn": "মেয়াদ পেরিয়েছে",
+        "en": "Overdue",
+        "ar": "متأخر",
+    },
+    "reminder_upcoming": {"bn": "আসছে", "en": "Upcoming", "ar": "قادم"},
+    "contact_title": {"bn": "যোগাযোগ", "en": "Contact us", "ar": "تواصل معنا"},
+    "contact_call": {"bn": "কল করুন", "en": "Call", "ar": "اتصال"},
+    "contact_website": {
+        "bn": "ওয়েবসাইট",
+        "en": "Website",
+        "ar": "الموقع الإلكتروني",
+    },
+    "contact_call_failed": {
+        "bn": "কল করা যায়নি",
+        "en": "Could not place the call",
+        "ar": "تعذّر إجراء الاتصال",
+    },
+    # ── C-W4b: home sections per spec order ─────────────────────────────────
+    "quick_access": {"bn": "দ্রুত প্রবেশ", "en": "Quick access", "ar": "وصول سريع"},
+    "quick_quran_desc": {
+        "bn": "সূরা ও অনুবাদ",
+        "en": "Surahs & translation",
+        "ar": "السور والترجمة",
+    },
+    "quick_duas_desc": {
+        "bn": "দৈনন্দিন দোয়া",
+        "en": "Everyday duas",
+        "ar": "أدعية يومية",
+    },
+    "quick_amal_desc": {
+        "bn": "মুহাসাবা ডায়েরি",
+        "en": "Muhasaba diary",
+        "ar": "يومية المحاسبة",
+    },
+    "quick_live_desc": {
+        "bn": "সরাসরি অনুষ্ঠান",
+        "en": "Live programs",
+        "ar": "برامج مباشرة",
+    },
+    "most_used": {
+        "bn": "সর্বাধিক ব্যবহৃত",
+        "en": "Most used",
+        "ar": "الأكثر استخدامًا",
+    },
+    "most_used_empty": {
+        "bn": "গত ৩০ দিনে সবচেয়ে বেশি লেখা আমলগুলো এখানে দেখা যাবে — আজকের ডায়েরি থেকে শুরু করুন",
+        "en": "Your most-logged amals of the last 30 days appear here — start from today's diary",
+        "ar": "تظهر هنا أكثر عباداتك تسجيلًا خلال آخر ٣٠ يومًا — ابدأ بيومية اليوم",
+    },
+    "most_used_log_today": {
+        "bn": "আজ লিখুন",
+        "en": "Log today",
+        "ar": "سجّل اليوم",
+    },
+    "most_used_days": {"bn": "দিন", "en": "days", "ar": "يوم"},
+    "countdown_to_schedule": {
+        "bn": "সময়সূচি দেখুন",
+        "en": "View schedule",
+        "ar": "عرض المواقيت",
+    },
+    "next_bell_chip": {
+        "bn": "পরবর্তী বেল",
+        "en": "Next bell",
+        "ar": "الجرس القادم",
+    },
+    "live_next": {"bn": "পরবর্তী লাইভ", "en": "Next live", "ar": "البث القادم"},
+    "live_join_hint": {
+        "bn": "দেখতে ট্যাপ করুন",
+        "en": "Tap to watch",
+        "ar": "اضغط للمشاهدة",
+    },
+    "ilm_courses_desc": {
+        "bn": "শেখার কোর্স ও লেসন",
+        "en": "Courses & lessons",
+        "ar": "دروس ومقررات",
+    },
+    "ilm_quizzes_desc": {
+        "bn": "আত্মমূল্যায়ন কুইজ",
+        "en": "Self-assessment quizzes",
+        "ar": "اختبارات ذاتية",
+    },
 }
 
 

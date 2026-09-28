@@ -1456,4 +1456,96 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get referral_by => 'রেফার করেছেন';
+
+  @override
+  String get header_notifications => 'নোটিফিকেশন';
+
+  @override
+  String get header_reminders => 'রিমাইন্ডার';
+
+  @override
+  String get notifications_guest_hint =>
+      'সাইন ইন করলে উসরা ঘোষণা, সাপ্তাহিক রিভিউ ও লাইভ রিমাইন্ডার এখানে দেখা যাবে।';
+
+  @override
+  String get notifications_empty => 'এখনো কোনো ঘোষণা নেই';
+
+  @override
+  String get notifications_announcements => 'ঘোষণা';
+
+  @override
+  String get notifications_live => 'লাইভ অনুষ্ঠান';
+
+  @override
+  String get reminders_empty => 'এখনো কোনো রিমাইন্ডার নেই';
+
+  @override
+  String get reminder_mark_done => 'সম্পন্ন করুন';
+
+  @override
+  String get reminder_due => 'এখন';
+
+  @override
+  String get reminder_overdue => 'মেয়াদ পেরিয়েছে';
+
+  @override
+  String get reminder_upcoming => 'আসছে';
+
+  @override
+  String get contact_title => 'যোগাযোগ';
+
+  @override
+  String get contact_call => 'কল করুন';
+
+  @override
+  String get contact_website => 'ওয়েবসাইট';
+
+  @override
+  String get contact_call_failed => 'কল করা যায়নি';
+
+  @override
+  String get quick_access => 'দ্রুত প্রবেশ';
+
+  @override
+  String get quick_quran_desc => 'সূরা ও অনুবাদ';
+
+  @override
+  String get quick_duas_desc => 'দৈনন্দিন দোয়া';
+
+  @override
+  String get quick_amal_desc => 'মুহাসাবা ডায়েরি';
+
+  @override
+  String get quick_live_desc => 'সরাসরি অনুষ্ঠান';
+
+  @override
+  String get most_used => 'সর্বাধিক ব্যবহৃত';
+
+  @override
+  String get most_used_empty =>
+      'গত ৩০ দিনে সবচেয়ে বেশি লেখা আমলগুলো এখানে দেখা যাবে — আজকের ডায়েরি থেকে শুরু করুন';
+
+  @override
+  String get most_used_log_today => 'আজ লিখুন';
+
+  @override
+  String get most_used_days => 'দিন';
+
+  @override
+  String get countdown_to_schedule => 'সময়সূচি দেখুন';
+
+  @override
+  String get next_bell_chip => 'পরবর্তী বেল';
+
+  @override
+  String get live_next => 'পরবর্তী লাইভ';
+
+  @override
+  String get live_join_hint => 'দেখতে ট্যাপ করুন';
+
+  @override
+  String get ilm_courses_desc => 'শেখার কোর্স ও লেসন';
+
+  @override
+  String get ilm_quizzes_desc => 'আত্মমূল্যায়ন কুইজ';
 }

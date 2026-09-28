@@ -1445,4 +1445,96 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get referral_by => 'المُحيل';
+
+  @override
+  String get header_notifications => 'الإشعارات';
+
+  @override
+  String get header_reminders => 'تذكيرات';
+
+  @override
+  String get notifications_guest_hint =>
+      'سجّل الدخول لعرض إعلانات الأسرة والمراجعات الأسبوعية وتذكيرات البث هنا.';
+
+  @override
+  String get notifications_empty => 'لا توجد إعلانات بعد';
+
+  @override
+  String get notifications_announcements => 'إعلانات';
+
+  @override
+  String get notifications_live => 'برامج مباشرة';
+
+  @override
+  String get reminders_empty => 'لا توجد تذكيرات بعد';
+
+  @override
+  String get reminder_mark_done => 'وضع علامة تم';
+
+  @override
+  String get reminder_due => 'الآن';
+
+  @override
+  String get reminder_overdue => 'متأخر';
+
+  @override
+  String get reminder_upcoming => 'قادم';
+
+  @override
+  String get contact_title => 'تواصل معنا';
+
+  @override
+  String get contact_call => 'اتصال';
+
+  @override
+  String get contact_website => 'الموقع الإلكتروني';
+
+  @override
+  String get contact_call_failed => 'تعذّر إجراء الاتصال';
+
+  @override
+  String get quick_access => 'وصول سريع';
+
+  @override
+  String get quick_quran_desc => 'السور والترجمة';
+
+  @override
+  String get quick_duas_desc => 'أدعية يومية';
+
+  @override
+  String get quick_amal_desc => 'يومية المحاسبة';
+
+  @override
+  String get quick_live_desc => 'برامج مباشرة';
+
+  @override
+  String get most_used => 'الأكثر استخدامًا';
+
+  @override
+  String get most_used_empty =>
+      'تظهر هنا أكثر عباداتك تسجيلًا خلال آخر ٣٠ يومًا — ابدأ بيومية اليوم';
+
+  @override
+  String get most_used_log_today => 'سجّل اليوم';
+
+  @override
+  String get most_used_days => 'يوم';
+
+  @override
+  String get countdown_to_schedule => 'عرض المواقيت';
+
+  @override
+  String get next_bell_chip => 'الجرس القادم';
+
+  @override
+  String get live_next => 'البث القادم';
+
+  @override
+  String get live_join_hint => 'اضغط للمشاهدة';
+
+  @override
+  String get ilm_courses_desc => 'دروس ومقررات';
+
+  @override
+  String get ilm_quizzes_desc => 'اختبارات ذاتية';
 }

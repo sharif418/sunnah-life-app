@@ -1453,4 +1453,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referral_by => 'Referred by';
+
+  @override
+  String get header_notifications => 'Notifications';
+
+  @override
+  String get header_reminders => 'Reminders';
+
+  @override
+  String get notifications_guest_hint =>
+      'Sign in to see usrah announcements, weekly reviews and live reminders here.';
+
+  @override
+  String get notifications_empty => 'No announcements yet';
+
+  @override
+  String get notifications_announcements => 'Announcements';
+
+  @override
+  String get notifications_live => 'Live programs';
+
+  @override
+  String get reminders_empty => 'No reminders yet';
+
+  @override
+  String get reminder_mark_done => 'Mark done';
+
+  @override
+  String get reminder_due => 'Due';
+
+  @override
+  String get reminder_overdue => 'Overdue';
+
+  @override
+  String get reminder_upcoming => 'Upcoming';
+
+  @override
+  String get contact_title => 'Contact us';
+
+  @override
+  String get contact_call => 'Call';
+
+  @override
+  String get contact_website => 'Website';
+
+  @override
+  String get contact_call_failed => 'Could not place the call';
+
+  @override
+  String get quick_access => 'Quick access';
+
+  @override
+  String get quick_quran_desc => 'Surahs & translation';
+
+  @override
+  String get quick_duas_desc => 'Everyday duas';
+
+  @override
+  String get quick_amal_desc => 'Muhasaba diary';
+
+  @override
+  String get quick_live_desc => 'Live programs';
+
+  @override
+  String get most_used => 'Most used';
+
+  @override
+  String get most_used_empty =>
+      'Your most-logged amals of the last 30 days appear here — start from today\'s diary';
+
+  @override
+  String get most_used_log_today => 'Log today';
+
+  @override
+  String get most_used_days => 'days';
+
+  @override
+  String get countdown_to_schedule => 'View schedule';
+
+  @override
+  String get next_bell_chip => 'Next bell';
+
+  @override
+  String get live_next => 'Next live';
+
+  @override
+  String get live_join_hint => 'Tap to watch';
+
+  @override
+  String get ilm_courses_desc => 'Courses & lessons';
+
+  @override
+  String get ilm_quizzes_desc => 'Self-assessment quizzes';
 }

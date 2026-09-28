@@ -2907,6 +2907,186 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'রেফার করেছেন'**
   String get referral_by;
+
+  /// No description provided for @header_notifications.
+  ///
+  /// In bn, this message translates to:
+  /// **'নোটিফিকেশন'**
+  String get header_notifications;
+
+  /// No description provided for @header_reminders.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিমাইন্ডার'**
+  String get header_reminders;
+
+  /// No description provided for @notifications_guest_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাইন ইন করলে উসরা ঘোষণা, সাপ্তাহিক রিভিউ ও লাইভ রিমাইন্ডার এখানে দেখা যাবে।'**
+  String get notifications_guest_hint;
+
+  /// No description provided for @notifications_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো ঘোষণা নেই'**
+  String get notifications_empty;
+
+  /// No description provided for @notifications_announcements.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঘোষণা'**
+  String get notifications_announcements;
+
+  /// No description provided for @notifications_live.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ অনুষ্ঠান'**
+  String get notifications_live;
+
+  /// No description provided for @reminders_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো রিমাইন্ডার নেই'**
+  String get reminders_empty;
+
+  /// No description provided for @reminder_mark_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন করুন'**
+  String get reminder_mark_done;
+
+  /// No description provided for @reminder_due.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন'**
+  String get reminder_due;
+
+  /// No description provided for @reminder_overdue.
+  ///
+  /// In bn, this message translates to:
+  /// **'মেয়াদ পেরিয়েছে'**
+  String get reminder_overdue;
+
+  /// No description provided for @reminder_upcoming.
+  ///
+  /// In bn, this message translates to:
+  /// **'আসছে'**
+  String get reminder_upcoming;
+
+  /// No description provided for @contact_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোগাযোগ'**
+  String get contact_title;
+
+  /// No description provided for @contact_call.
+  ///
+  /// In bn, this message translates to:
+  /// **'কল করুন'**
+  String get contact_call;
+
+  /// No description provided for @contact_website.
+  ///
+  /// In bn, this message translates to:
+  /// **'ওয়েবসাইট'**
+  String get contact_website;
+
+  /// No description provided for @contact_call_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'কল করা যায়নি'**
+  String get contact_call_failed;
+
+  /// No description provided for @quick_access.
+  ///
+  /// In bn, this message translates to:
+  /// **'দ্রুত প্রবেশ'**
+  String get quick_access;
+
+  /// No description provided for @quick_quran_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূরা ও অনুবাদ'**
+  String get quick_quran_desc;
+
+  /// No description provided for @quick_duas_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'দৈনন্দিন দোয়া'**
+  String get quick_duas_desc;
+
+  /// No description provided for @quick_amal_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুহাসাবা ডায়েরি'**
+  String get quick_amal_desc;
+
+  /// No description provided for @quick_live_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'সরাসরি অনুষ্ঠান'**
+  String get quick_live_desc;
+
+  /// No description provided for @most_used.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বাধিক ব্যবহৃত'**
+  String get most_used;
+
+  /// No description provided for @most_used_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'গত ৩০ দিনে সবচেয়ে বেশি লেখা আমলগুলো এখানে দেখা যাবে — আজকের ডায়েরি থেকে শুরু করুন'**
+  String get most_used_empty;
+
+  /// No description provided for @most_used_log_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ লিখুন'**
+  String get most_used_log_today;
+
+  /// No description provided for @most_used_days.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিন'**
+  String get most_used_days;
+
+  /// No description provided for @countdown_to_schedule.
+  ///
+  /// In bn, this message translates to:
+  /// **'সময়সূচি দেখুন'**
+  String get countdown_to_schedule;
+
+  /// No description provided for @next_bell_chip.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরবর্তী বেল'**
+  String get next_bell_chip;
+
+  /// No description provided for @live_next.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরবর্তী লাইভ'**
+  String get live_next;
+
+  /// No description provided for @live_join_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'দেখতে ট্যাপ করুন'**
+  String get live_join_hint;
+
+  /// No description provided for @ilm_courses_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'শেখার কোর্স ও লেসন'**
+  String get ilm_courses_desc;
+
+  /// No description provided for @ilm_quizzes_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'আত্মমূল্যায়ন কুইজ'**
+  String get ilm_quizzes_desc;
 }
 
 class _AppLocalizationsDelegate
