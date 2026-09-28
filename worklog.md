@@ -1076,3 +1076,15 @@ Work Log:
 
 Stage Summary:
 - C-W4b status: **Partial — logic + tests only**; UI rewiring is the next unit. flutter analyze 0 / 236/236 after the final commit (raw tails in this file's C-W4a section lineage).
+
+---
+Task ID: C-W4a-CI
+Agent: lead-architect (main session)
+Task: CI verification + fix for the Wave-4 first units.
+
+Work Log:
+- Run 36489423278 (c385203) FAILED one job: mobile debug-APK packaging — :app:packageDebug / PackageAndroidArtifact$IncrementalSplitterRunnable. Root cause: the vendored Phosphor TTF filenames were UPPERCASE (Phosphor.ttf, Phosphor-Fill.ttf, Phosphor-Bold.ttf) and Android resource names must be [a-z0-9_] — AAPT2 rejects them at package time. Every Dart-side gate (analyze, 236 tests) passed; only the gradle packaging step caught it — exactly why the CI debug/release APK jobs exist.
+- 975ed3c: fonts renamed lowercase (phosphor-regular/fill/bold.ttf + phosphor-license.txt), pubspec family entries repointed, doc refs updated. analyze 0, 236/236 after the rename (raw tails in the C-W4a section lineage).
+
+Stage Summary:
+- Run 36490403860 (975ed3c): ALL JOBS SUCCESS — the Wave-4-first-units state is CI-proven (mobile incl. debug APK, release-apk split-per-ABI gate, docker compose smoke, web incl. /join routes, api 248-suite, admin, tokens, report).
