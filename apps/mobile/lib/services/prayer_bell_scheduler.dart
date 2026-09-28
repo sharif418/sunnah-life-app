@@ -15,6 +15,8 @@
 library;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart'
+    show AndroidNotificationAction;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../core/bn_digits.dart';
@@ -167,6 +169,17 @@ class PrayerBellScheduler {
               dateKey: dayKey,
               amalKey: salatAmalKey(key),
             ).encode(),
+            // Diary write buttons — tapped from the notification without
+            // opening the app; handled by the background isolate (see
+            // amalActionBackgroundResponse in notification_service.dart).
+            actions: [
+              const AndroidNotificationAction(
+                'amal_jamaat',
+                'জামাতে',
+              ),
+              const AndroidNotificationAction('amal_ekai', 'একা'),
+              const AndroidNotificationAction('amal_qaza', 'কাযা'),
+            ],
           );
           _armedIds.add(id);
         }

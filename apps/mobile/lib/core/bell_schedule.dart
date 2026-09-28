@@ -39,6 +39,7 @@ abstract final class Nid {
   static const int waqtBellBase = 1000; // + dayOffset*16 + PrayerKey.index
   static const int postPrayerBase = 2000; // + dayOffset*16 + PrayerKey.index
   static const int exactAlarmBase = 900; // + PrayerKey.index (Kotlin path)
+  static const int amalConfirmBase = 3000; // + PrayerKey.index (diary-write ack)
 
   static const int _dayStride = 16;
 
@@ -52,6 +53,9 @@ abstract final class Nid {
 
   /// Exact-alarm (Kotlin AlarmManager) id for [key].
   static int exactAlarm(PrayerKey key) => exactAlarmBase + key.index;
+
+  /// Confirmation id for a diary write triggered by the [key] prompt.
+  static int amalConfirm(PrayerKey key) => amalConfirmBase + key.index;
 }
 
 /// The profile slice that feeds PrayerEngine.compute — any change to these
@@ -177,3 +181,19 @@ String salatAmalKey(PrayerKey key) => 'salat_${key.name}';
 /// autoSource for the five farz prayers and the server's AUTO_SOURCE_RE
 /// allowlist (`^auto:[a-z]+(:[a-z0-9_]+)?$`).
 String salatAutoSource(PrayerKey key) => 'auto:prayer:${key.name}';
+
+/// [salatAutoSource] from a diary amalKey ('salat_fajr' →
+/// 'auto:prayer:fajr'); null for non-salat keys (never written by bells).
+String? autoSourceFromAmalKey(String amalKey) =>
+    amalKey.startsWith('salat_')
+        ? 'auto:prayer:${amalKey.substring(6)}'
+        : null;
+
+/// Bengali labels of the tristate values for the headless confirmation
+/// notification (the notification layer is Bengali-first like every other
+/// notification string; widgets go through l10n).
+const Map<String, String> kAmalValueLabelsBn = {
+  'jamaat': 'জামাতে',
+  'alone': 'একা',
+  'qaza': 'কাযা',
+};

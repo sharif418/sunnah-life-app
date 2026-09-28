@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'design/design_tokens.dart';
+import 'core/bell_schedule.dart';
 import 'features/amal/habit_screen.dart';
 import 'features/amal/month_screen.dart';
 import 'features/amal/self_test_screen.dart';
@@ -48,6 +49,7 @@ import 'features/shared/widgets.dart';
 import 'l10n/app_strings.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/domain.dart';
+import 'services/notification_service.dart';
 import 'services/push_service.dart';
 import 'state/amal_state.dart';
 import 'state/prayer_state.dart';
@@ -61,6 +63,21 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   ref.read(profileProvider.notifier).hydrateFrom(row);
   // Offline-first background sync: 60s outbox flush (see SyncNotifier).
   ref.read(syncProvider.notifier).startPeriodicFlush();
+  // Post-prayer জামাতে/একা/কাযা action taps that reach the FOREGROUND
+  // callback go through the same Riverpod flow as the in-app prompt
+  // (optimistic state + shared DB connection + debounced sync flush);
+  // taps while the app is dead are handled on the plugin's background
+  // isolate by handleAmalNotificationAction.
+  NotificationService.instance.onAmalAction = (actionId, payload) async {
+    final value = kAmalActionValues[actionId];
+    if (value == null) return;
+    await ref.read(amalProvider.notifier).write(
+          payload.amalKey,
+          payload.dateKey,
+          value,
+          autoSourceFromAmalKey(payload.amalKey) ?? 'manual',
+        );
+  };
   // Push (B2): FCM handlers + deep-link navigation; registration follows the
   // auth session. Everything degrades to local-only when Firebase is
   // unavailable (placeholder options / no Play Services / widget tests).

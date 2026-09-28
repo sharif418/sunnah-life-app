@@ -13,6 +13,10 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../core/bell_schedule.dart';
+import '../core/prayer_engine.dart';
+import '../db/database.dart';
+
 class NotificationService {
   NotificationService._();
   static final NotificationService instance = NotificationService._();
@@ -26,6 +30,14 @@ class NotificationService {
   /// payload; push payloads carry the sunnahlife:// deep link, local ones
   /// ('local'/'prayer') are ignored by the mapper.
   void Function(String payload)? onNotificationTap;
+
+  /// Foreground amal-action handler — set by the app bootstrap (app.dart):
+  /// routes post-prayer জামাতে/একা/কাযা taps through the SAME Riverpod
+  /// flow the in-app prompt uses (optimistic state + shared DB + sync
+  /// flush). When null (app headless), the standalone background write in
+  /// [handleAmalNotificationAction] covers it.
+  Future<void> Function(String actionId, PostPrayerActionPayload payload)?
+      onAmalAction;
 
   Future<void> init() async {
     if (_initialized) return;
@@ -43,12 +55,12 @@ class NotificationService {
     await _plugin.initialize(
       initSettings,
       onDidReceiveNotificationResponse: (response) {
-        debugPrint('notification tap: ${response.payload}');
-        final payload = response.payload;
-        if (payload != null && payload.isNotEmpty) {
-          onNotificationTap?.call(payload);
-        }
+        _onNotificationResponse(response);
       },
+      // Post-prayer action buttons tapped while the app is DEAD arrive
+      // here, on the plugin's background isolate — the top-level handler
+      // below writes the diary from a fresh Drift connection.
+      onDidReceiveBackgroundNotificationResponse: amalActionBackgroundResponse,
     );
     final androidImpl = _plugin
         .resolvePlatformSpecificImplementation<
@@ -56,6 +68,33 @@ class NotificationService {
         >();
     await androidImpl?.requestNotificationsPermission();
     _initialized = true;
+  }
+
+  /// Foreground taps: amal action buttons go through [onAmalAction] (the
+  /// in-app Riverpod flow); everything else keeps the push deep-link path.
+  void _onNotificationResponse(NotificationResponse response) {
+    final actionId = response.actionId;
+    if (actionId != null && actionId.isNotEmpty) {
+      final payload = PostPrayerActionPayload.decode(response.payload);
+      if (payload != null && kAmalActionValues.containsKey(actionId)) {
+        final hook = onAmalAction;
+        if (hook != null) {
+          hook(actionId, payload);
+          return;
+        }
+        // No app wiring (e.g. very early tap) — the standalone write.
+        handleAmalNotificationAction(
+          actionId: actionId,
+          payload: response.payload,
+        );
+        return;
+      }
+    }
+    debugPrint('notification tap: ${response.payload}');
+    final payload = response.payload;
+    if (payload != null && payload.isNotEmpty) {
+      onNotificationTap?.call(payload);
+    }
   }
 
   /// zonedSchedule() interprets its trigger in [tz.local]; leaving it at the
@@ -120,6 +159,7 @@ class NotificationService {
 
   /// Zoned schedule — used for the per-waqt bell and the post-prayer
   /// prompt. [when] must be a future tz datetime in the city timezone.
+  /// [actions] renders as the post-prayer জামাতে/একা/কাযা buttons.
   ///
   /// Android 12+/14 exact-alarm policy: SCHEDULE_EXACT_ALARM is denied by
   /// default, so query [AndroidFlutterLocalNotificationsPlugin
@@ -134,6 +174,7 @@ class NotificationService {
     String channel = 'sunnah_life_prayers',
     DateTimeComponents? matchComponents,
     String payload = 'prayer',
+    List<AndroidNotificationAction>? actions,
   }) async {
     if (when.isBefore(DateTime.now())) return;
     await _channel(channel, 'নামাজের সময়', Importance.high);
@@ -148,6 +189,7 @@ class NotificationService {
           'নামাজের সময়',
           importance: Importance.high,
           priority: Priority.high,
+          actions: actions,
         ),
         iOS: const DarwinNotificationDetails(),
       ),
@@ -180,4 +222,70 @@ class NotificationService {
   Future<void> cancel(int id) => _plugin.cancel(id);
 
   Future<void> cancelAll() => _plugin.cancelAll();
+}
+
+// ── Post-prayer diary actions (background-safe) ──────────────────────
+
+/// Background-isolate entry point — flutter_local_notifications invokes
+/// this when a post-prayer action button is tapped while the app is not
+/// running. MUST stay top-level with the vm:entry-point pragma.
+@pragma('vm:entry-point')
+Future<void> amalActionBackgroundResponse(NotificationResponse response) async {
+  await handleAmalNotificationAction(
+    actionId: response.actionId,
+    payload: response.payload,
+  );
+}
+
+/// Standalone diary write for a post-prayer action tap: decodes the
+/// payload + action id, opens a FRESH Drift connection to the same sqlite
+/// file (no Riverpod in a background isolate), writes the AmalEntry +
+/// outbox row exactly like the in-app prompt (writeEntry does both), then
+/// posts a small confirmation on the general channel. The outbox drains
+/// through the 60s sync flush the next time the app is alive. Failure is
+/// always swallowed — a broken button must never crash a headless app.
+Future<void> handleAmalNotificationAction({
+  required String? actionId,
+  required String? payload,
+}) async {
+  try {
+    final value = actionId == null ? null : kAmalActionValues[actionId];
+    final data = PostPrayerActionPayload.decode(payload);
+    if (value == null || data == null) return;
+
+    final source = autoSourceFromAmalKey(data.amalKey) ?? 'manual';
+    final db = AppDatabase();
+    try {
+      await db.writeEntry(
+        amalKey: data.amalKey,
+        date: data.dateKey,
+        value: value,
+        source: source,
+        clientUpdatedAt: DateTime.now(),
+      );
+    } finally {
+      try {
+        await db.close();
+      } catch (_) {}
+    }
+
+    // ছোট্ট কনফার্মেশন — "আমলনামায় দাখিল হয়েছে"।
+    final waqtName = data.amalKey.startsWith('salat_')
+        ? data.amalKey.substring(6)
+        : '';
+    PrayerKey? key;
+    for (final k in PrayerKey.values) {
+      if (k.name == waqtName) key = k;
+    }
+    final label = key == null
+        ? data.amalKey
+        : (prayerLabelsBn[key] ?? data.amalKey);
+    await NotificationService.instance.showNow(
+      id: key == null ? Nid.amalConfirmBase : Nid.amalConfirm(key),
+      title: 'আমলনামায় দাখিল হয়েছে',
+      body: '$label নামাজ — ${kAmalValueLabelsBn[value] ?? value} ✓',
+    );
+  } catch (e) {
+    debugPrint('amal notification action failed: $e');
+  }
 }
