@@ -11,6 +11,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
   private readonly logger = new Logger(AllExceptionsFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
+    // Socket.io gateway errors: there is no HTTP response object to write —
+    // log (the gateway already emitted a Bengali quiz:error to the socket).
+    if (host.getType() === "ws") {
+      this.logger.warn(
+        `ws error: ${exception instanceof Error ? exception.message : String(exception)}`,
+      );
+      return;
+    }
     const ctx = host.switchToHttp();
     const res = ctx.getResponse<Response>();
 

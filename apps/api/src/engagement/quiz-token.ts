@@ -1,11 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// Live-quiz HMAC token (Task B4).
+// Live-quiz HMAC token (Task B4; folded in-process in B9).
 //
-// The NestJS API MINTS a short-lived token for the socket.io mini-service
-// (mini-services/quiz-service); the service VERIFIES it with the same
-// QUIZ_SECRET. This file is deliberately dependency-free (node:crypto only)
-// so the bun mini-service can import `verifyQuizToken` directly from here —
-// single source of truth for the wire format.
+// The NestJS API MINTS a short-lived token (GET /api/quiz/live-token) and the
+// QuizGateway in this same process VERIFIES it with the same QUIZ_SECRET —
+// one backend, one auth path, one deployment. This file stays dependency-free
+// (node:crypto only) so the smoke script (src/scripts/quiz-smoke.ts) can mint
+// tokens with the exact same module the API uses.
 //
 //   payload = { u: userId, s: usrahId (room), r: "host"|"player", g: gender,
 //               n: first name, m: memberCode, q: quizId, e: exp epoch-ms }

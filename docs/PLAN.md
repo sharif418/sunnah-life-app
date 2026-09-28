@@ -337,7 +337,8 @@ and pushes after every wave.
   `content/faq.json`: ≥15 Bengali FAQs.
 - API: enrollment progress, quiz attempts with scoring, upcoming/recorded
   lists, usrah questions (head assigns, members answer, RLS-scoped).
-- Live quiz over WebSocket (socket.io mini-service) with per-gender
+- Live quiz over WebSocket (socket.io gateway INSIDE the NestJS API —
+  folded in from the retired :3030 mini-service in B9) with per-gender
   leaderboard.
 
 ## B5 — Social auth
@@ -376,5 +377,30 @@ and pushes after every wave.
   Cloudflare, health checks, seed, rollback).
 - `docs/AUDIT.md`: master-prompt §4–9 requirement table —
   Done/Partial/Not done + implementing files + proving command. Honest only.
+
+## B9 — Surface parity: mobile Ilm/Dawah screens + one-backend live quiz
+
+**Trigger:** post-Phase-B audit found three gaps: the courses/quizzes/live
+quiz/usrah-questions/dawah-checklist features existed only on the web; the
+live quiz ran as a separate bun mini-service (:3030) outside NestJS; and
+`usrah.controller.ts` lacked `@Roles` for consistency.
+
+- Fold the live quiz INTO the API: `apps/api/src/engagement/quiz.gateway.ts`
+  (socket.io gateway on the API's own HTTP server, path `/socket.io`), same
+  HMAC room-token auth minted by `GET /api/quiz/live-token`, same wire
+  protocol. `WsAdapter` in main.ts; `JwtAuthGuard` + `AllExceptionsFilter`
+  made ws-context safe (global guards/filters also run on gateways).
+  `mini-services/quiz-service` deleted. Web connects via the same base as
+  REST (sandbox `/?XTransformPort=3001` → Caddy → API :3001; prod
+  `NEXT_PUBLIC_API_BASE`). Smoke: `bun run smoke:quiz` (apps/api).
+- `@Roles("user")` + `@UseGuards(RolesGuard)` on `usrah.controller.ts`.
+- Mobile Flutter UI for everything the web already had:
+  - Ilm tab: course list → detail → lesson player with per-lesson progress
+    (POST /api/enroll, PATCH /api/enroll progress), self-paced quiz player
+    (10 MCQs, explanations, POST /api/quiz-attempt, attempt history),
+    live quiz screen on socket_io_client (same protocol).
+  - Dawah tab: usrah question board (ask + head answers, RLS) and the live
+    level-requirements checklist (GET /api/dawah/requirements).
+  - ARB strings bn/en/ar for every new screen (gen-l10n).
 
 *Commit + push after every wave. Git is the safety net.*

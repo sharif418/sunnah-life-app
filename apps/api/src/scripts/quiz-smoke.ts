@@ -1,11 +1,12 @@
-// Smoke test for the live quiz mini-service (bun run smoke.ts):
-// one host + two players join a room with manually-minted HMAC tokens,
-// run a full question round and assert the leaderboard. Exits non-zero on
-// any failure. Tokens are minted with the same module the API uses.
+// Smoke test for the in-process live-quiz gateway (bun run smoke:quiz):
+// one host + two players join a room with manually-minted HMAC tokens (the
+// same module the API uses), run a full question round and assert the
+// leaderboard. Exits non-zero on any failure. Run the API first:
+//   DATABASE_URL=… QUIZ_SECRET=… bun run start  (or start:dev)
 import { io } from "socket.io-client";
-import { mintQuizToken } from "../../apps/api/src/engagement/quiz-token";
+import { mintQuizToken } from "../engagement/quiz-token";
 
-const URL = "http://127.0.0.1:3030";
+const URL = process.env.QUIZ_SMOKE_URL || "http://127.0.0.1:3001";
 const ROOM = "usrah-smoke-001";
 
 const hostToken = mintQuizToken({ u: "u-host", s: ROOM, r: "host", g: "M", n: "ইউসুফ", m: "DS-000003", q: "quiz-salah", e: Date.now() + 5 * 60_000 });
@@ -14,7 +15,7 @@ const p2Token = mintQuizToken({ u: "u-p2", s: ROOM, r: "player", g: "M", n: "ম
 const badToken = "AAAA.BBBB";
 
 function connect(token: string) {
-  return io(URL, { path: "/", auth: { token }, transports: ["websocket"], reconnection: false, timeout: 5000 });
+  return io(URL, { path: "/socket.io", auth: { token }, transports: ["websocket"], reconnection: false, timeout: 5000 });
 }
 
 const log: string[] = [];
@@ -128,7 +129,7 @@ const main = async () => {
   p1.close();
   p2.close();
   console.log(log.join("\n"));
-  console.log(`\n${failures === 0 ? "SMOKE OK — all checks passed" : `SMOKE FAILED (${failures})`}`);
+  console.log(`\n${failures === 0 ? "SMOKE OK — all checks passed (gateway on the NestJS API process)" : `SMOKE FAILED (${failures})`}`);
   process.exit(failures === 0 ? 0 : 1);
 };
 

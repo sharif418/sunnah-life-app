@@ -18,6 +18,7 @@ import {
   UsrahQuestionsController,
   UsrahQuestionsService,
 } from "./ilm.controllers";
+import { QuizGateway } from "./quiz.gateway";
 
 @Module({
   controllers: [
@@ -39,6 +40,8 @@ import {
     EngagementHistoryService,
     UsrahQuestionsService,
     QuizLiveService,
+    // Task B9 — live quiz socket.io gateway (folded into the API process)
+    QuizGateway,
   ],
 })
 export class EngagementModule {}

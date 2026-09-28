@@ -15,6 +15,7 @@
 import { ValidationPipe, Logger } from "@nestjs/common";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
+import { IoAdapter } from "@nestjs/platform-socket.io";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
@@ -24,6 +25,10 @@ async function bootstrap(): Promise<void> {
 
   // Product routes under /api (web + mobile contract); infra endpoints bare.
   app.setGlobalPrefix("api", { exclude: ["health", "metrics"] });
+
+  // socket.io gateways (live usrah quiz) mount on the SAME HTTP server at
+  // /socket.io — one backend, one auth, one deployment.
+  app.useWebSocketAdapter(new IoAdapter(app));
 
   // Request access log — one line per /api hit (method, route, status, ms).
   // This is the operator-facing proof that web/mobile traffic reaches the

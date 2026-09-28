@@ -480,3 +480,25 @@ Work Log:
 
 Stage Summary:
 - Phase B code-complete and pushed. CI is configured to prove everything the audit demanded but its RESULTS could not be observed from the sandbox (PAT limitation) — flagged honestly instead of claimed.
+
+---
+Task ID: B9-a
+Agent: lead-architect (main session)
+Task: Fold the live-quiz mini-service into the NestJS API as a socket.io gateway (one backend / one auth / one deployment) + @Roles on usrah.controller.
+
+Work Log:
+- Restored the reset sandbox toolchain: portable Postgres 16.10 (github.com theseus-rs binaries → /home/z/opt/pg16, initdb, :5433), Redis 7.0.15 debs → /home/z/opt/redis (:6380, liblzf from pool), `bun install` in apps/api + apps/web. Meilisearch NOT restored (API skips indexing without MEILI_HOST — health shows "absent", tests unaffected).
+- prisma migrate deploy + seed against the fresh DB (15 users, 2 usrahs, 6796 amal entries…).
+- apps/api: added @nestjs/websockets, @nestjs/platform-socket.io, socket.io (runtime) + socket.io-client (dev, for the smoke script).
+- NEW apps/api/src/engagement/quiz.gateway.ts — the retired mini-service logic as a NestJS @WebSocketGateway on the API's own HTTP server (path /socket.io): same HMAC token auth (verifyQuizToken, same QUIZ_SECRET, minted by GET /api/quiz/live-token AFTER JwtAuthGuard+RLS checks), same wire protocol (room:state / quiz:started / quiz:question / quiz:reveal / quiz:ended / quiz:error; player:accepted), same scoring (100 + ≤40 speed bonus, reconnect-safe scores, one-answer rule, empty-room GC). Room state stays in-memory (ephemeral game state; durable writes stay behind RLS).
+- main.ts: IoAdapter (NOT WsAdapter — that's the raw-ws package; first boot caught it). Global JwtAuthGuard + AllExceptionsFilter made ws-context safe (guards/filters also run on gateway message handlers; without the fix they'd crash on a Socket).
+- usrah.controller.ts: @UseGuards(RolesGuard) + @Roles("user") on GET /api/usrah (consistency with reviews/dawah/admin).
+- Web live-quiz-section.tsx now connects to the API's own gateway: `io(API_BASE || "/?XTransformPort=3001", { path: "/socket.io" })` — no more :3030.
+- Deleted mini-services/quiz-service entirely (repo has zero bun mini-services now).
+- Smoke ported to apps/api/src/scripts/quiz-smoke.ts (`bun run smoke:quiz`), package.json script added.
+- PLAN.md: B9 section added (audit gaps + fixes).
+
+Stage Summary:
+- VERIFIED RAW: `bun run smoke:quiz` → 21/21 PASS against the in-process gateway (websocket direct :3001). Socket through Caddy `/?XTransformPort=3001` path `/socket.io`: polling PASS + websocket-upgrade PASS (room:state received on both). `bun run test` (apps/api) → 9 suites, 133/133 PASS. eslint clean (api files + web app).
+- One backend stands again: web+mobile both reach NestJS :3001 for REST and WS.
+- API dev boot: `DATABASE_URL=postgresql://sunnah_app:sunnah_app_dev@127.0.0.1:5433/sunnahlife DIRECT_URL=postgresql://postgres@127.0.0.1:5433/sunnahlife QUIZ_SECRET=dev-quiz-secret JWT_SECRET=… JWT_REFRESH_SECRET=… REDIS_URL=redis://127.0.0.1:6380 SMS_PROVIDER=mock PORT=3001 bun src/main.ts`

@@ -1,10 +1,12 @@
-import { Req, Controller, Get } from "@nestjs/common";
+import { Req, Controller, Get, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
 import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
+import { Roles } from "../common/roles.decorator";
+import { RolesGuard } from "../common/roles.guard";
 import { completion7dForUsers } from "../shared/amal";
 import type { Announcement, Gender, Level, User, UserCategory, Usrah, UsrahMember } from "../shared/domain";
 
@@ -84,10 +86,12 @@ export class UsrahService {
 
 @ApiTags("usrah")
 @Controller("usrah")
+@UseGuards(RolesGuard)
 export class UsrahController {
   constructor(private readonly service: UsrahService) {}
 
   @Get()
+  @Roles("user") // any signed-in member (rank 0 floor); RLS scopes the rows
   @ApiOperation({ summary: "Own usrah: members (7-day completion) + announcements" })
   myUsrah(@Req() req: AuthedRequest) {
     return this.service.myUsrah(currentUser(req));

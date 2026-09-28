@@ -34,6 +34,10 @@ export class JwtAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
+    // WS gateways (socket.io) authenticate with their own HMAC room token in
+    // handleConnection — the JWT layer is HTTP-only. Guards/interceptors also
+    // run in the "ws" context, so bail before touching an express Request.
+    if (context.getType() !== "http") return true;
     const req = context.switchToHttp().getRequest<AuthedRequest>();
     req.user = null;
     const header = req.headers.authorization;
