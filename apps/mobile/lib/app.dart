@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'design/phosphor_icons.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'design/design_tokens.dart';
@@ -48,6 +49,8 @@ import 'features/more/qibla_screen.dart';
 import 'features/more/zakat_screen.dart';
 import 'features/onboarding/gender_completion_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/shared/contact_fab.dart';
+import 'features/shared/sl_bottom_bar.dart';
 import 'features/shared/widgets.dart';
 import 'l10n/app_strings.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -453,10 +456,15 @@ class _SplashLogo extends StatelessWidget {
 
 /// Bottom-nav shell: 5 destinations for daee+ (হোম / আমল / দাওয়াত / ইলম /
 /// আরও), 4 for everyone else (the Da'wah branch is hidden, not merely
-/// gated). Always-visible labels, 44dp targets.
+/// gated). Token-built SLBottomBar (C-W4a) + the floating contact button on
+/// the five root tab paths only.
 class AppShellScaffold extends ConsumerWidget {
   const AppShellScaffold({super.key, required this.navigationShell});
   final StatefulNavigationShell navigationShell;
+
+  /// The five root tab paths — where the floating contact button (C-W4a)
+  /// may appear. Sub-screens keep their own chrome, no overlapping FAB.
+  static const _rootTabPaths = {'/', '/amal', '/dawah', '/ilm', '/more'};
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -469,6 +477,7 @@ class AppShellScaffold extends ConsumerWidget {
     // the role doesn't qualify).
     final current = navigationShell.currentIndex;
     final selectedTab = !canSeeDawah && current > 2 ? current - 1 : current;
+    final onRootTab = _rootTabPaths.contains(GoRouterState.of(context).uri.path);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -479,8 +488,21 @@ class AppShellScaffold extends ConsumerWidget {
             : Brightness.dark,
       ),
       child: Scaffold(
-        body: navigationShell,
-        bottomNavigationBar: NavigationBar(
+        body: Stack(
+          children: [
+            navigationShell,
+            // C-W4a: floating contact (five institutions) — bottom-END above
+            // the nav bar, never over the SyncBadge (header trailing) or a
+            // CTA. Hidden when the config carries no contacts.
+            if (onRootTab)
+              PositionedDirectional(
+                bottom: SLSpacing.s16,
+                end: SLSpacing.s16,
+                child: const ContactFab(),
+              ),
+          ],
+        ),
+        bottomNavigationBar: SLBottomBar(
           selectedIndex: selectedTab,
           onDestinationSelected: (tab) {
             final branch = !canSeeDawah && tab >= 2 ? tab + 1 : tab;
@@ -490,30 +512,30 @@ class AppShellScaffold extends ConsumerWidget {
             );
           },
           destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.mosque_outlined),
-              selectedIcon: const Icon(Icons.mosque),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.starAndCrescent,
+              selectedIcon: PhosphorIconsFill.starAndCrescent,
               label: S.tr(lang, 'tab_home'),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.menu_book_outlined),
-              selectedIcon: const Icon(Icons.menu_book),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.bookOpen,
+              selectedIcon: PhosphorIconsFill.bookOpen,
               label: S.tr(lang, 'tab_amal'),
             ),
             if (canSeeDawah)
-              NavigationDestination(
-                icon: const Icon(Icons.campaign_outlined),
-                selectedIcon: const Icon(Icons.campaign),
+              SLBottomBarItem(
+                icon: PhosphorIconsRegular.megaphone,
+                selectedIcon: PhosphorIconsFill.megaphone,
                 label: S.tr(lang, 'tab_dawah'),
               ),
-            NavigationDestination(
-              icon: const Icon(Icons.auto_stories_outlined),
-              selectedIcon: const Icon(Icons.auto_stories),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.graduationCap,
+              selectedIcon: PhosphorIconsFill.graduationCap,
               label: S.tr(lang, 'tab_ilm'),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.grid_view_rounded),
-              selectedIcon: const Icon(Icons.grid_view),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.squaresFour,
+              selectedIcon: PhosphorIconsFill.squaresFour,
               label: S.tr(lang, 'tab_more'),
             ),
           ],
