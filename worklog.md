@@ -624,3 +624,22 @@ Work Log:
 Stage Summary:
 - CI fully green end-to-end with a verified downloadable debug APK artifact. Commits: 7056ca3 (zod schema + gradle script fixes + JDK 21), 3d632c0 (--runInBand + updateMany race fix), plus AUDIT/worklog docs.
 - The whole chain of latent bugs (workflow compiler → billing → schema default → gradle DSL/cast → jest worker race) is fixed at the ROOT of each; every fix carries a local reproduction + verification except task-execution (proven by CI itself).
+
+---
+Task ID: C-W1 (a,b,c,d)
+Agent: lead-architect (main session, Phase C round 1)
+Task: Phase C Wave 1 — shared plumbing: monorepo hygiene (W1d), content pipeline + Part D verbatim client forms (W1c), per-user time zones (W1a), consolidated editable app config (W1b).
+
+Work Log:
+- Tagged v0.9-pre-phase-c (pushed) before any change; Phase C plan written into docs/PLAN.md.
+- W1d: bun workspaces (root bun.lock only, per-app locks deleted); prisma client generated into apps/api/src/generated/prisma with src/common/prisma-client.ts re-export (the .bun store made node_modules/.prisma unreachable — 12 import sites rewritten; CI runs prisma:generate explicitly); phantom deps declared (dotenv, fontkit, @eslint/js); sandbox leftovers deleted (.zscripts, mini-services, examples, download, root tests/*.sh, root Caddyfile, apps/worker dev twin, pnpm-workspace.yaml, turbo.json); XTransformPort removed from web/admin (NEXT_PUBLIC_API_BASE is the one variable); CI permissions: contents read at top level and the report job no longer pushes ci-status.md commits to main (writes the job summary instead — it had twice collided with my pushes); ignoreBuildErrors:false both Next apps (tsc clean); react-hooks pinned 7.0.1 (7.1.1's new set-state-in-effect rule fires on ~22 pre-existing sites — TODO W4f); 5 real no-useless-assignment lint findings fixed.
+- W1c: quran-meta-bn.json was {"surahs":[]} in BOTH copies (phone showed an EMPTY Qur'an list) — generated complete 114-surah metadata (Bengali+Arabic+English names, মাক্কী/মাদানী, 6236 ayahs) via packages/content/scripts/gen-quran-meta.mjs; farze_ain_v1.1 with ALL 23 criteria + instructions + both category descriptions + scale + signatures VERBATIM (stored in new AssessmentTemplate.metaJson, migration 20260928170000); level-rules.json = client's ~34-goal Muhibbus outline verbatim + LADDER FIX (Muhibbus = 4 months + head outline review (outlineReviewed attestation on POST /admin/promote) + 5 people, NO assessment; farze_ain_1/2 = the 23-criterion assessment) — loadLevelRules is per-level now; diary-instructions.json (rules 1–6 + cover quote verbatim); sync-mobile.mjs copy gate + CI 'Content parity gate' (byte-identical + non-empty packs); mobile faq/mosques {} fixed, amal-catalog/level-rules/diary-instructions copies added; seed UsrahQuestion FK crash fixed (missing table in wipe order).
+- W1a: User.tz (IANA, default Asia/Dhaka; migration 20260928180000; PATCH /api/me allowlist); src/shared/tz.ts (Intl-only, DST-correct: tzOffsetMs/wallTime/wallTimeToEpoch/todayInTz/weekStartInTz/tzOffsetHoursFor); prayer-push stores REAL epochs (was Dhaka wall-as-UTC → ~6 h late pushes), per-user 'tomorrow', prayer engine fed per-user offsets; weekStartOf(tz) (was server-LOCAL); computeLockDeadline real-epoch per-user zone; streaks/entries POST/week summaries per-member today.
+- W1b: AppConfigRow (migration 20260928190000) — GET /api/config serves DB row → content pack defaults → fallback; mergeConfig validates both read+write paths; GET/PATCH /api/admin/config (full_admin, audited, cache-invalidating); AppConfig gains leaderboardEnabled (scholars' gate) + detoxEnabled; mobile AppConfig model extended (ConfigContact/ConfigGroup/flags).
+
+Stage Summary:
+- Wave 1 complete + W2a (seed split) landed. Commits eb84286..0ff3079 + build fix e9d69b7.
+- jest grew 133→191 (content-packs 30, tz 14, config 6, seed-split 4, corrected ladder/muhibbus tests); flutter test 69/69 (quran_meta canary 4); flutter analyze 0.
+- Known deferred: set-state-in-effect refactor → W4f (rule off, TODO noted in eslint config).
+- CI note: three mid-wave red web-build runs (36417635477/36418459317/36419173409) were all the same single root cause (orphaned sessionMinutes after the refs fix) — fixed in e9d69b7; both web+admin next builds verified locally after.
+
