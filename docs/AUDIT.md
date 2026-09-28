@@ -54,7 +54,7 @@ limitation. **Not done** = stated plainly. Last verified at commit below.
 | WCAG AA contrast both themes | Done | tokens.json fixes (gold-text, alert) | `docs/A11Y_CONTRAST.md` — 14 pairs PASS |
 | API lint/tests/typecheck | Done | apps/api | `bun run lint` 0 · `bunx tsc --noEmit` 0 · `bun run test` 133/133 (9 suites) |
 | Mobile analyze/tests | Done | apps/mobile | `flutter analyze` → No issues · `flutter test` → 65/65 |
-| Web typecheck | Done | apps/web | `bunx tsc --noEmit` → exit 0 |
+| Web typecheck | Done | apps/web | `bunx tsc --noEmit` → exit 0 (verified on a FRESH CLONE — the generated `packages/shared-types/dist/schema.d.ts` is committed; found un-committed by B9 fresh-clone verification) |
 | Swagger/OpenAPI | Done | `src/main.ts` DocumentBuilder | `GET :3001/openapi.json` |
 | CI green (lint/test/build on GitHub runners) | Partial | `.github/workflows/ci.yml` (7 jobs incl. ci-status self-report) | every gate passes locally on a fresh clone (analyze 0 · flutter 65/65 · jest 133/133 · nest build · next build); the sandbox PAT cannot read the Actions API (403, fine-grained token) and no run result was observable within an hour of pushing — Actions tab: https://github.com/sharif418/sunnah-life-app/actions — likely queued (private-repo minutes quota) or Actions disabled for the repo; the `report` job writes `.github/ci-status.md` back to main on every completed run so results become visible in git |
 | Debug APK artifact on CI | Done | mobile job | artifact `mobile-debug-apk` (7-day retention) |

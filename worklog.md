@@ -566,3 +566,21 @@ Work Log:
 Stage Summary:
 - VERIFIED RAW: `flutter analyze` → "Analyzing mobile... No issues found! (ran in 2.1s)"; `flutter test` → "00:23 +65: All tests passed!" (65/65). One mid-run analyze showed a transient unused_local_variable warning in B9-c's in-flight courses_screen.dart; it cleared on the ~35s re-run with no action from me — final tree clean with both agents' files.
 - B9 mobile parity complete end-to-end: the live quiz speaks the API gateway's exact wire protocol (one backend, /socket.io, HMAC room token), the usrah board rides the RLS-scoped REST endpoints, and the level checklist renders the live rules engine with the overview snapshot as offline fallback.
+
+---
+Task ID: B9-e
+Agent: lead-architect (main session)
+Task: B9 verification + audit/docs close-out — browser E2E, fresh-clone gates, AUDIT corrections, push.
+
+Work Log:
+- Browser E2E (agent-browser, through Caddy :81 like the preview): signed in as the male usrah head → Ilm → আরও → লাইভ কুইজ → room joined via the NESTJS gateway (api.log: "[QuizGateway] host মাওলানা (DS-000003) joined room …"), full host round played (start → প্রথম প্রশ্ন → reveal with correct answer + tally → next → end → leave). Self-paced কুইজ played (answer locked, explanation, next). উসরার প্রশ্নোত্তর: question asked + head answer published → both render (API log POST 201 /answers 201).
+- FOUR latent web bugs found & fixed by that E2E (commit 3ba9fa6): routeIlm had no "more" case (আরও tab unreachable → showed live programs); QuizzesSection was dead code (never imported — now wired with a কুইজ card + quiz deep link); API_PORT was not exported from api-base.ts (socket URL became /?XTransformPort=undefined); the host panel had no transition out of the lobby after quiz:started (host could never reach the first question) — added the প্রথম প্রশ্ন button.
+- 3 dead ARB keys removed (408/408/408 parity), gen-l10n regenerated, key-usage audit script confirmed every context.t() key in the new screens resolves.
+- AUDIT.md: live-quiz row → in-process gateway (mini-service deleted) with smoke 21/21 + Caddy + browser proofs; mobile-surface rows (courses/quizzes/usrah-questions/checklist) now Done with the mobile files listed; known-gap #5 (mobile checklist web-only) REMOVED; B9 close-out table added (the 3 audit gaps + the 4 E2E-found bugs).
+- API_CONTRACTS.md: "Live usrah quiz — socket.io gateway (inside the API, B9)" section (protocol, auth, isolation, scoring, smoke).
+- FRESH-CLONE verification (/tmp/sl-clone, raw outputs in the session report): flutter pub get / analyze "No issues found!" / test 65/65; apps/api bun install + jest 9 suites 133/133; apps/web bun install + eslint clean + `bunx tsc --noEmit` exit 0 + `bun run build` exit 0.
+- Found by that fresh-clone run: packages/shared-types/dist was gitignored → the web tsc gate could NOT pass on a fresh clone (the main checkout had a local dist; CI was saved only by typescript.ignoreBuildErrors). Fixed by committing dist/schema.d.ts (75KB, 60 paths, regenerated via nest build + bun run generate — deterministic) with precise .gitignore negation. Fresh-clone tsc now passes. (commit 6d311a3)
+
+Stage Summary:
+- All three audit gaps closed and machine-verified; two EXTRA repo-integrity bugs (dead web code, un-committed generated types) found and fixed along the way.
+- Every gate re-verified on a fresh clone at the final commit.
