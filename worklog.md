@@ -834,3 +834,18 @@ Stage Summary:
 - VERIFIED RAW (after final commit): flutter analyze → "No issues found! (ran in 1.7s)"; flutter test → "+117: All tests passed!" (was 87 after W3b; +30: reader unit suite incl. the Dart-hazard regression group, +3 goldens... final count 117).
 - The Dart 3.13.4 hazard is the headline: caught before shipping because the subagent's own test suite hung and the lead bisected instead of dismissing it as test flakiness.
 - Known honest edges: audio quality/latency on a real phone NOT device-verified (CI builds prove compile; audio play needs the owner's phone); goldens are Linux-rendered and pinned to Flutter 3.47.5 == CI's pin — if CI flakes on font rasterization the fallback is regenerating on a runner and committing those.
+
+---
+Task ID: C-W3d
+Agent: lead-architect (main session) + implementation subagent (context cap hit during final verification; lead finished the last polish + verified)
+Task: Sync pull client side — cursor pull on login/app-start, bounded outbox retries, unstuck syncing, visible sync state.
+
+Work Log:
+- 4c3f52e (subagent): cursor-based pull on login + app-start-after-hydration (guest→signedIn auth listener) + manual sync-now; watermark in SharedPreferences 'sync_pull_cursor' (from = watermark − 3d overlap, bounded 95d first pull); merges through the existing client-side LWW mergeServerEntries; kept OUT of the 60s loop. Rejected entries stop retrying: attempts incremented (the column finally used), reason captured (AmalRejectInfo parses the W2g serverValue); serverValue present ⇒ converge locally through the merge path + dead in one round, else kMaxOutboxAttempts=5 then dead. Outbox schema v1→v2 (last_error, dead_at — additive ALTERs via MigrationStrategy). flush() try/finally resets syncing on EVERY error path (was only ApiException — a TypeError stuck the spinner and blocked all future flushes until restart). SyncBadge: idle/syncing/pending-N/dead-M(error) + tap opens the new sync sheet (counts, last-sync, dead list w/ retry+discard, sync now); 8 new ARB keys ×3 locales.
+- a139a24 (lead): golden of the sync sheet (bn light, pending=2 + dead=1, pinned clock so the relative-time label never drifts; determinism mirrors the quran golden — fonts warmed through google_fonts' own loadFontIfNecessary); raw v1→v2 outbox migration test through the REAL MigrationStrategy on a raw sqlite file (sqlite3 dev-dep, drift generates only the latest schema); sheet label styles pinned to the overridden body styles (titleSmall/labelLarge are not in the app text theme → tofu in golden env); pull() success no longer clears push error messages; dispose()→close() drift deprecation; removed the tmp_probe scratch dir.
+- Known honest edges: pull window is date-based (watermark = dateKey, overlap 3d) rather than a server-issued cursor token — the server's /api/amal/entries is range-based (from/to), so the watermark IS the cursor; entries older than the first-pull bound (95d) never backfill — documented in sync_policy.dart.
+
+Stage Summary:
+- Commits 4c3f52e + a139a24, pushed.
+- VERIFIED RAW (after final polish): flutter analyze → "No issues found! (ran in 1.4s)"; flutter test → "+138: All tests passed!" (was 117; +21: retry/dead policy matrix, watermark math, flush-finally semantics, pull idempotence, v1→v2 migration, sheet golden ×1).
+- Golden VLM-verified (Bengali readable, sync-now + failed-entries visible).
