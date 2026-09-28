@@ -281,3 +281,82 @@ the Xcode capability); the button is hidden on Android.
       set in `.env` → `GET /api/auth/providers` reports them true → Google
       sign-in on an Android device returns a session; the app build carries
       `--dart-define=GOOGLE_SERVER_CLIENT_ID=<same value>`
+
+---
+
+## 8. App Links — referral deep links (C-W3h)
+
+`https://sunnahlife.app/join/DS-000123` (shared from the Dawah tab) opens the
+app with the inviter's code stored as the *pending referral* — the auth screen
+shows a "রেফার করেছেন: DS-000123" chip and the code rides along on the next
+OTP/social sign-in as `referredByCode` (the server creates the
+ReferralClosure rows). The `sunnahlife://join/DS-000123` custom scheme works
+too (QR codes, older shares). The web fallback for browsers/never-installed
+devices is the branded landing at the same https URL
+(`apps/web/src/app/join/[code]`).
+
+Three one-time owner steps make the https variant open *directly* (no
+disambiguation sheet) — until then Android shows the chooser, and the landing
+page still works everywhere:
+
+### 8.1 Android — the SHA-256 fingerprint (assetlinks.json)
+
+The statement file is committed at
+`apps/web/public/.well-known/assetlinks.json` with the placeholder
+`REPLACE_WITH_UPLOAD_CERT_SHA256`. Replace it with the **upload key's** cert
+fingerprint (Play App Signing signs releases with the upload key):
+
+```bash
+keytool -list -v -keystore upload-keystore.jks -alias upload
+# copy "SHA256: " line's hex (drop the "SHA256:" prefix), lowercase A-F is fine
+```
+
+Deploy the web app after editing. Verify (must return the JSON with a 200 and
+`content-type: application/json`):
+
+```bash
+curl -s https://sunnahlife.app/.well-known/assetlinks.json | head
+adb shell pm verify-app-links --re-verify bd.asunnah.sunnah_life
+adb shell pm get-app-links bd.asunnah.sunnah_life   # state: verified
+```
+
+Notes: the manifest intent-filter (`apps/mobile/android/app/src/main/
+AndroidManifest.xml`) scopes verification to `pathPrefix="/join"` — the rest
+of sunnahlife.app stays a normal website. Debug builds are signed with the
+debug key, so App Links only verify for release-signed installs
+(`internal-test-*` CI artifacts are debug-signed → they get the chooser,
+not direct open — expected).
+
+### 8.2 iOS — associated domains (apple-app-site-association)
+
+`apps/mobile/ios/Runner/Runner.entitlements` already declares
+`applinks:sunnahlife.app`. On the signing Mac (once per Apple developer
+account):
+
+1. [developer.apple.com](https://developer.apple.com) → Certificates,
+   Identifiers & Profiles → Identifiers → the app id
+   (`bd.asunnah.sunnahLife`) → **Associated Domains** capability on.
+2. Copy the 10-character **Team ID** (Membership page) into
+   `apps/web/src/app/.well-known/apple-app-site-association/route.ts` →
+   `appIDs: ["TEAMID.bd.asunnah.sunnahLife"]` (placeholder
+   `REPLACE_WITH_TEAM_ID`) and deploy the web app.
+3. Verify: `curl -s https://sunnahlife.app/.well-known/apple-app-site-association`
+   — must be the JSON **with `content-type: application/json`**. (It is a
+   Next route handler, NOT a static file, precisely so the extensionless
+   file can never be served as octet-stream — Apple requires the JSON
+   content type.)
+4. Rebuild + reinstall the app (the entitlement must be in the provisioning
+   profile — a rebuild picks up the refreshed profile automatically).
+   Test in Notes/WhatsApp: long-press the join link → "Open in Sunnah Life".
+
+### 8.3 The honest edges
+
+- **Install-boundary gap:** a guest who taps the link in a browser where the
+  app is NOT installed sees the landing; the code is persisted in the
+  browser's `localStorage` (`sl_join_key`) for a future *web* sign-up — the
+  Android/iOS app cannot read the browser's storage. The code only reaches
+  the app when a tap actually opens the app (scheme link or verified App
+  Link). On the landing, "অ্যাপে খুলুন" (the `sunnahlife://` button) is that
+  bridge after an install.
+- The pending referral survives app restarts (SharedPreferences) and is
+  consumed only on a successful sign-in; a failed verify keeps it.
