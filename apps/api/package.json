@@ -4,7 +4,7 @@
   "description": "Sunnah Life — NestJS modular monolith (Prisma PostgreSQL + RLS, JWT auth, BullMQ queues)",
   "private": true,
   "scripts": {
-    "build": "nest build",
+    "build": "nest build && cp -R src/generated dist/",
     "start": "node dist/main.js",
     "start:worker": "node dist/worker.js",
     "start:dev": "nest start --watch",

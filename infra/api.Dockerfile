@@ -35,6 +35,12 @@ RUN bun install --frozen-lockfile || bun install
 COPY apps/api/ .
 
 # Prisma client (no-op if bun's postinstall already generated it) + build.
+# NOTE: the client is plain JS under src/generated/prisma — tsc/nest build
+# compiles only .ts and does NOT emit it into dist/, yet the compiled
+# dist/common/prisma-client.js requires "../generated/prisma". The build
+# script therefore copies src/generated → dist/generated after nest build
+# (the CI compose smoke crashed on "Cannot find module '../generated/prisma'"
+# before this copy existed).
 RUN bunx prisma generate
 RUN bun run build
 
