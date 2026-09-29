@@ -42,6 +42,8 @@ import 'features/ilm/quizzes_screen.dart';
 import 'features/ilm/sunnahs_screen.dart';
 import 'features/more/about_screen.dart';
 import 'features/more/auto_silent_screen.dart';
+import 'features/more/detox_screen.dart';
+import 'features/more/faq_screen.dart';
 import 'features/more/live_screen.dart';
 import 'features/more/masala_screen.dart';
 import 'features/more/more_screen.dart';
@@ -314,6 +316,14 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'autosilent',
                     builder: (c, s) => const AutoSilentScreen(),
                   ),
+                  // W4d: সোশ্যাল মিডিয়া ডিটক্স — Guard-module seed (the
+                  // More tile itself is config-gated; the screen also gates).
+                  GoRoute(
+                    path: 'detox',
+                    builder: (c, s) => const DetoxScreen(),
+                  ),
+                  // W4d: জিজ্ঞাসা (FAQ) — bundled faq.json, expandable.
+                  GoRoute(path: 'faq', builder: (c, s) => const FaqScreen()),
                   GoRoute(
                     path: 'mosques',
                     builder: (c, s) => const MosquesScreen(),
