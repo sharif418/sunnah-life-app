@@ -321,7 +321,9 @@ function MobileMenuSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-[19.5rem] p-0 flex flex-col">
+      {/* side is physical in shadcn Sheet — flip for RTL so the sheet opens
+          from the same edge as the hamburger button. */}
+      <SheetContent side={lang === "ar" ? "left" : "right"} className="w-[19.5rem] p-0 flex flex-col">
         <SheetHeader className="border-b border-border pb-4">
           <SheetTitle className="flex items-center gap-2.5 text-start">
             <LogoMark size={30} />
