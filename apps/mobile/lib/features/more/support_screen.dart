@@ -332,7 +332,9 @@ class _ThreadRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: SLSpacing.s8),
-              SupportStatusChip(status: thread.status),
+              // W4f overflow sweep — the chip flexes + shrinks (identity
+              // whenever it fits) so 360dp @1.3× never spills the row.
+              Flexible(child: SupportStatusChip(status: thread.status)),
               const SizedBox(width: SLSpacing.s4),
               const DirectionalIcon(PhosphorIconsRegular.caretRight),
             ],
@@ -371,11 +373,17 @@ class SupportStatusChip extends StatelessWidget {
         color: fg.withValues(alpha: 0.12),
         borderRadius: SLRadius.brSm,
       ),
-      child: Text(
-        context.t(labelKey),
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: fg,
-          fontWeight: FontWeight.w700,
+      // W4f overflow sweep — single-line, shrink-to-fit (never wraps a
+      // two-word status, never spills its row).
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          context.t(labelKey),
+          maxLines: 1,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: fg,
+            fontWeight: FontWeight.w700,
+          ),
         ),
       ),
     );
@@ -465,7 +473,9 @@ class _SupportThreadScreenState extends ConsumerState<SupportThreadScreen> {
                       ),
                     ),
                     const SizedBox(width: SLSpacing.s8),
-                    SupportStatusChip(status: thread.status),
+                    Flexible(
+                      child: SupportStatusChip(status: thread.status),
+                    ),
                   ],
                 ),
               ),

@@ -139,7 +139,15 @@ class _MaduNodeRow extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 2),
-                      Row(
+                      // W4f overflow sweep — level pill + last-active flow
+                      // as a Wrap: natural sizes whenever they fit (the w4e
+                      // golden is unchanged) and the ago simply wraps under
+                      // the pill on deep indents at 360dp @1.3× instead of
+                      // spilling the row.
+                      Wrap(
+                        spacing: SLSpacing.s8,
+                        runSpacing: 2,
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -155,7 +163,6 @@ class _MaduNodeRow extends StatelessWidget {
                             child: Text(
                               context.t(node.level.labelKey),
                               maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 fontWeight: FontWeight.w600,
                                 color: dark
@@ -164,19 +171,15 @@ class _MaduNodeRow extends StatelessWidget {
                               ),
                             ),
                           ),
-                          if (ago != null) ...[
-                            const SizedBox(width: SLSpacing.s8),
-                            Expanded(
-                              child: Text(
-                                ago,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onSurfaceVariant,
-                                ),
+                          if (ago != null)
+                            Text(
+                              ago,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
-                          ],
                         ],
                       ),
                     ],

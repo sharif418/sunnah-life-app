@@ -142,23 +142,30 @@ class _IlmScreenState extends State<IlmScreen> {
                   child: Stack(
                     children: [
                       Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              e.icon,
-                              size: 28,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(height: SLSpacing.s4 + 2),
-                            Text(
-                              e.title,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                        // W4f overflow sweep — the fixed aspect-ratio cell
+                        // can't grow with 1.3× text (longest labels wrap
+                        // to three lines); the tile shrinks to fit instead
+                        // of spilling (identity at normal sizes).
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                e.icon,
+                                size: 28,
+                                color: theme.colorScheme.primary,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: SLSpacing.s4 + 2),
+                              Text(
+                                e.title,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       if (e.badge)

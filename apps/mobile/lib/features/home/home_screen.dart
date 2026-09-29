@@ -960,11 +960,19 @@ class _ForbiddenTimes extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: alertFg,
-                    fontWeight: FontWeight.w600,
+                // W4f overflow sweep — at 360dp/1.3× the time range no
+                // longer fits next to the label; it shrinks to fit instead
+                // of spilling (the times are the point — never clipped).
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: alertFg,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
