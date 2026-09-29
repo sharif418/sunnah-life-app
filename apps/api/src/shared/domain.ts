@@ -244,6 +244,12 @@ export interface LevelRequirement {
   detail: string;
 }
 
+/** W4i — the assessee-acknowledgment lifecycle of one assessment's
+ * result. Submitted scores start pending_confirmation; the final result
+ * only becomes effective (counts toward level transitions) once the
+ * ASSESSEE confirms it with their own OTP. */
+export type AssessmentStatus = "pending_confirmation" | "confirmed" | "declined";
+
 export interface AssessmentSummary {
   id: string;
   templateKey: string;
@@ -253,6 +259,12 @@ export interface AssessmentSummary {
   assesseeSignedAt: string | null;
   participantCategory: number;
   scorePct: number | null;
+  /** W4i — final only when "confirmed" (see AssessmentStatus). */
+  status: AssessmentStatus;
+  confirmedAt: string | null;
+  declinedAt: string | null;
+  /** The assessee's decline reason (status "declined" only). */
+  decisionNote: string | null;
 }
 
 export interface DawahOverview {

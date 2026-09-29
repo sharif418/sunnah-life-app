@@ -59,7 +59,8 @@ export class DawahService {
 
       const requirements = await computeRequirements(tx, user);
 
-      // assessment summaries with score %
+      // assessment summaries with score % + the W4i acknowledgment status
+      // (the dawah tab's assessment cards render the status chips)
       const assessmentRows = await tx.assessment.findMany({
         where: { assesseeId: user.id },
         orderBy: { createdAt: "desc" },
@@ -78,6 +79,12 @@ export class DawahService {
           assesseeSignedAt: a.assesseeSignedAt?.toISOString() ?? null,
           participantCategory: a.participantCategory,
           scorePct,
+          status: (a.status === "confirmed" || a.status === "declined"
+            ? a.status
+            : "pending_confirmation") as AssessmentSummary["status"],
+          confirmedAt: a.confirmedAt?.toISOString() ?? null,
+          declinedAt: a.declinedAt?.toISOString() ?? null,
+          decisionNote: a.decisionNote ?? null,
         };
       });
 

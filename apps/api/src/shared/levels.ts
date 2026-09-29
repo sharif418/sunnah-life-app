@@ -356,8 +356,11 @@ export async function gatherLevelFacts(
 ): Promise<LevelFacts> {
   const months = monthsInLevelOf(user);
 
+  // W4i read-path fix: ONLY a CONFIRMED (assessee-acknowledged) passed
+  // assessment satisfies the rule — a pending_confirmation or declined
+  // result is not final and must never gate/promote a level transition.
   const passed = await tx.assessment.findFirst({
-    where: { assesseeId: user.id, result: "passed" },
+    where: { assesseeId: user.id, result: "passed", status: "confirmed" },
     select: { id: true },
   });
 
