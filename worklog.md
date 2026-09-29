@@ -1432,3 +1432,19 @@ Work Log:
 
 Stage Summary:
 - W4f CORE complete: one icon set everywhere (goldens prove the glyphs), one transition everywhere pushed, the hero texture, motion tokens in real use. Remaining for W4f-b (next): illustrated empty/error/offline states, dark-mode tuning pass, explicit 360×640 + 1.3× overflow sweep, Widgetbook entries.
+
+---
+Task ID: W4f-b (agent landed all 5 commits clean; the lead verified gates + wrote this section — the agent's context died before logging)
+Agent: W4f-b + lead
+Task: Design-system craft second half — illustrated states, dark-mode token sweep, 360×640 @1.3× overflow proof, debug gallery.
+
+Work Log:
+- 68d4f9b: illustrated EmptyState/ErrorState — painted khatam-language vignettes (CustomPainter, no assets), ErrorState on the calm alert-tinted idiom (#FCE4E4/#C0392B light, darkAlertSoft/darkAlert dark); optional CTA action on EmptyState; every existing call site still compiles (icon param kept).
+- 3a37350: the support thread list's empty state now carries the create-thread CTA.
+- 6b77ad7: dark-mode token sweep — the two raw Color(0x…) values in features/ (referral card) moved to tokens.
+- a643114: /__gallery — the debug-only in-app kit gallery (lib/catalog/kit_gallery.dart): AppCard/SectionHeader/states/OfflineBanner/TriStateChips/CountStepper/QuantityInput/StreakBadge/CompletionRing/LeaderboardBandCard/the khatam texture over the hero gradient/button states + dark toggle; registered only when !kReleaseMode — never in release.
+- 9772951: the 360×640 @1.3× overflow sweep — test/w4f_overflow_test.dart (562 lines) pumps the key screens (Home, Today, Dawah overview+tree, Ilm, More, Support list+thread, Detox, FAQ, referral sheet) at the small surface × 1.3 text and asserts takeException() == null; FOUR real spills found + fixed (the commit's lib diffs).
+- Gates (verbatim, apps/mobile, run by the lead): flutter analyze → "No issues found! (ran in 2.4s)"; flutter test → "01:16 +313: All tests passed!" (313 = 303 + 10 overflow tests; all existing goldens byte-identical — no regeneration needed).
+
+Stage Summary:
+- W4f COMPLETE (a + b): one icon set, one transition, hero texture, illustrated states, tokenized dark, overflow-proof small-screen + large-text behavior, debug gallery. Heads: ca91715 → 9772951.
