@@ -299,6 +299,11 @@ class _ProposeSheetState extends ConsumerState<_ProposeSheet> {
               ),
               const SizedBox(height: SLSpacing.s12),
               DropdownButtonFormField<String>(
+                // isExpanded wraps the closed button's IndexedStack of
+                // item texts in an Expanded — without it the stack sizes to
+                // the WIDEST catalog title's intrinsic width and overflows
+                // on small widths (195px at 800 logical px in tests).
+                isExpanded: true,
                 initialValue: _amalKey,
                 decoration: InputDecoration(
                   labelText: context.t('goals_amal_picker'),
@@ -307,7 +312,11 @@ class _ProposeSheetState extends ConsumerState<_ProposeSheet> {
                   for (final d in defs)
                     DropdownMenuItem(
                       value: d.key,
-                      child: Text(d.titleBn, overflow: TextOverflow.ellipsis),
+                      child: Text(
+                        d.titleBn,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                 ],
                 validator: (v) => v == null ? context.t('goals_amal_picker') : null,
