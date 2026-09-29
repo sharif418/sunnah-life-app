@@ -1621,4 +1621,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get goals_rejected_toast => 'تم الرفض';
+
+  @override
+  String get checklist_title => 'قائمتي';
+
+  @override
+  String get checklist_hint => 'أضف مهمة';
+
+  @override
+  String get checklist_add => 'إضافة';
+
+  @override
+  String get checklist_remove => 'حذف';
+
+  @override
+  String get checklist_remove_confirm => 'حذف هذا البند؟';
+
+  @override
+  String get checklist_local_note => 'يبقى على هذا الجهاز فقط';
 }

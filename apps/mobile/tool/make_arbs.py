@@ -604,6 +604,29 @@ NEW_KEYS = {
         "en": "Rejected",
         "ar": "تم الرفض",
     },
+    # ── W4c: custom checklist (local, per-day) ─────────────────────────────────
+    "checklist_title": {
+        "bn": "নিজের তালিকা",
+        "en": "My checklist",
+        "ar": "قائمتي",
+    },
+    "checklist_hint": {
+        "bn": "নতুন কাজ লিখুন",
+        "en": "Add a task",
+        "ar": "أضف مهمة",
+    },
+    "checklist_add": {"bn": "যোগ করুন", "en": "Add", "ar": "إضافة"},
+    "checklist_remove": {"bn": "মুছুন", "en": "Delete", "ar": "حذف"},
+    "checklist_remove_confirm": {
+        "bn": "কাজটি মুছে ফেলা হবে?",
+        "en": "Delete this item?",
+        "ar": "حذف هذا البند؟",
+    },
+    "checklist_local_note": {
+        "bn": "শুধু এই ডিভাইসে সংরক্ষিত",
+        "en": "Stays on this device only",
+        "ar": "يبقى على هذا الجهاز فقط",
+    },
 }
 
 

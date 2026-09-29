@@ -587,6 +587,12 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'goals_proposed_toast' => l.goals_proposed_toast,
   'goals_approved_toast' => l.goals_approved_toast,
   'goals_rejected_toast' => l.goals_rejected_toast,
+  'checklist_title' => l.checklist_title,
+  'checklist_hint' => l.checklist_hint,
+  'checklist_add' => l.checklist_add,
+  'checklist_remove' => l.checklist_remove,
+  'checklist_remove_confirm' => l.checklist_remove_confirm,
+  'checklist_local_note' => l.checklist_local_note,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

@@ -1630,4 +1630,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get goals_rejected_toast => 'Rejected';
+
+  @override
+  String get checklist_title => 'My checklist';
+
+  @override
+  String get checklist_hint => 'Add a task';
+
+  @override
+  String get checklist_add => 'Add';
+
+  @override
+  String get checklist_remove => 'Delete';
+
+  @override
+  String get checklist_remove_confirm => 'Delete this item?';
+
+  @override
+  String get checklist_local_note => 'Stays on this device only';
 }

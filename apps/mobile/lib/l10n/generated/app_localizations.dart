@@ -3255,6 +3255,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'বাতিল হয়েছে'**
   String get goals_rejected_toast;
+
+  /// No description provided for @checklist_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজের তালিকা'**
+  String get checklist_title;
+
+  /// No description provided for @checklist_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'নতুন কাজ লিখুন'**
+  String get checklist_hint;
+
+  /// No description provided for @checklist_add.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোগ করুন'**
+  String get checklist_add;
+
+  /// No description provided for @checklist_remove.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুছুন'**
+  String get checklist_remove;
+
+  /// No description provided for @checklist_remove_confirm.
+  ///
+  /// In bn, this message translates to:
+  /// **'কাজটি মুছে ফেলা হবে?'**
+  String get checklist_remove_confirm;
+
+  /// No description provided for @checklist_local_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'শুধু এই ডিভাইসে সংরক্ষিত'**
+  String get checklist_local_note;
 }
 
 class _AppLocalizationsDelegate

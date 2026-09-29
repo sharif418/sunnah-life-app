@@ -525,5 +525,11 @@
   "goals_remove_confirm": "إزالة هذا الهدف من القائمة؟",
   "goals_proposed_toast": "تم الاقتراح — بانتظار اعتماد رئيس الأسر",
   "goals_approved_toast": "تم الاعتماد",
-  "goals_rejected_toast": "تم الرفض"
+  "goals_rejected_toast": "تم الرفض",
+  "checklist_title": "قائمتي",
+  "checklist_hint": "أضف مهمة",
+  "checklist_add": "إضافة",
+  "checklist_remove": "حذف",
+  "checklist_remove_confirm": "حذف هذا البند؟",
+  "checklist_local_note": "يبقى على هذا الجهاز فقط"
 }

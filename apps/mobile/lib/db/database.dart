@@ -101,6 +101,19 @@ class AyahBookmarks extends Table {
   Set<Column> get primaryKey => {surah, ayah};
 }
 
+/// W4c: per-day custom checklist items — LOCAL only (offline-first by
+/// design; no API surface exists). dateKey scopes the list to one diary
+/// day; sortOrder keeps the user's insertion order stable.
+@DataClassName('CustomChecklistItem')
+class CustomChecklistItems extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get dateKey => text()(); // YYYY-MM-DD
+  TextColumn get title => text()();
+  BoolColumn get done => boolean().withDefault(const Constant(false))();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+}
+
 @DriftDatabase(
   tables: [
     AmalEntries,
@@ -109,6 +122,7 @@ class AyahBookmarks extends Table {
     SettingsTable,
     LastRead,
     AyahBookmarks,
+    CustomChecklistItems,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -117,10 +131,12 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   /// v1 → v2 (C-W3d): outbox gained `last_error` + `dead_at`. Existing user
   /// data survives — additive ALTER TABLEs only (drift's addColumn).
+  /// v2 → v3 (C-W4c): the local custom-checklist table — pure CREATE TABLE,
+  /// no existing column touched.
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -128,6 +144,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 2) {
         await m.addColumn(outbox, outbox.lastError);
         await m.addColumn(outbox, outbox.deadAt);
+      }
+      if (from < 3) {
+        await m.createTable(customChecklistItems);
       }
     },
   );
@@ -450,6 +469,40 @@ class AppDatabase extends _$AppDatabase {
     final rows = await select(ayahBookmarks).get();
     return rows.map((r) => (r.surah, r.ayah)).toSet();
   }
+
+  // ── Custom checklist (W4c — local-only, per-day) ─────────────────────────
+
+  /// One day's items in insertion order (sortOrder, then id).
+  Future<List<CustomChecklistItem>> checklistFor(String dateKey) =>
+      (select(customChecklistItems)
+            ..where((t) => t.dateKey.equals(dateKey))
+            ..orderBy([
+              (t) => OrderingTerm(expression: t.sortOrder),
+              (t) => OrderingTerm(expression: t.id),
+            ]))
+          .get();
+
+  /// Append one item after the day's current tail.
+  Future<void> addChecklistItem({
+    required String dateKey,
+    required String title,
+    required int sortOrder,
+  }) =>
+      into(customChecklistItems).insert(
+        CustomChecklistItemsCompanion.insert(
+          dateKey: dateKey,
+          title: title,
+          sortOrder: Value(sortOrder),
+        ),
+      );
+
+  Future<void> setChecklistDone(int id, {required bool done}) =>
+      (update(customChecklistItems)..where((t) => t.id.equals(id))).write(
+        CustomChecklistItemsCompanion(done: Value(done)),
+      );
+
+  Future<void> deleteChecklistItem(int id) =>
+      (delete(customChecklistItems)..where((t) => t.id.equals(id))).go();
 }
 
 LazyDatabase _openConnection() {

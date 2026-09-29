@@ -1634,4 +1634,22 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get goals_rejected_toast => 'বাতিল হয়েছে';
+
+  @override
+  String get checklist_title => 'নিজের তালিকা';
+
+  @override
+  String get checklist_hint => 'নতুন কাজ লিখুন';
+
+  @override
+  String get checklist_add => 'যোগ করুন';
+
+  @override
+  String get checklist_remove => 'মুছুন';
+
+  @override
+  String get checklist_remove_confirm => 'কাজটি মুছে ফেলা হবে?';
+
+  @override
+  String get checklist_local_note => 'শুধু এই ডিভাইসে সংরক্ষিত';
 }

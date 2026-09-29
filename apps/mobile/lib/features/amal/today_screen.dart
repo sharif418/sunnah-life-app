@@ -13,8 +13,10 @@ import '../../core/bn_digits.dart';
 import '../../core/calendars.dart';
 import '../../core/date_keys.dart';
 import '../../design/design_tokens.dart';
+import '../../db/database.dart' show CustomChecklistItem;
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
+import '../../state/checklist_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
@@ -240,6 +242,11 @@ class _TodayView extends ConsumerWidget {
           const SizedBox(height: SLSpacing.s4),
         ],
 
+        // W4c: নিজের তালিকা — per-day custom checklist (local-only,
+        // offline-first; no API surface by design).
+        SectionHeader(context.t('checklist_title'), icon: Icons.checklist),
+        _CustomChecklistSection(today: today, bn: bn),
+
         const SizedBox(height: SLSpacing.s8),
         Text(
           context.t('amal_locked_msg'),
@@ -382,4 +389,143 @@ class _AmalRow extends ConsumerWidget {
         'monthly:ayyam_beez' => context.t('cadence_ayyam_beez'),
         _ => '',
       };
+}
+
+/// W4c: নিজের তালিকা — one day's custom checklist. Add-field + check-off
+/// rows + delete on long-press; per-day filtering by dateKey (only today's
+/// items ever render here). Rows carry the 44dp minimum tap target.
+class _CustomChecklistSection extends ConsumerStatefulWidget {
+  const _CustomChecklistSection({required this.today, required this.bn});
+  final String today;
+  final bool bn;
+
+  @override
+  ConsumerState<_CustomChecklistSection> createState() =>
+      _CustomChecklistSectionState();
+}
+
+class _CustomChecklistSectionState extends ConsumerState<_CustomChecklistSection> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _add() async {
+    final title = _controller.text.trim();
+    if (title.isEmpty) return;
+    _controller.clear();
+    await ref.read(checklistProvider.notifier).add(title);
+  }
+
+  Future<void> _confirmRemove(
+    BuildContext context,
+    CustomChecklistItem item,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(dialogContext.t('checklist_remove_confirm')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(dialogContext.t('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(dialogContext.t('checklist_remove')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(checklistProvider.notifier).remove(item);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final notifier = ref.read(checklistProvider.notifier);
+    final items = ref.watch(
+      checklistProvider.select((s) => s[widget.today] ?? const []),
+    );
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const ValueKey('checklist_add_field'),
+                  controller: _controller,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _add(),
+                  decoration: InputDecoration(
+                    hintText: context.t('checklist_hint'),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: SLSpacing.s8),
+              IconButton.filledTonal(
+                key: const ValueKey('checklist_add_button'),
+                tooltip: context.t('checklist_add'),
+                icon: const Icon(Icons.add),
+                onPressed: _add,
+              ),
+            ],
+          ),
+          const SizedBox(height: SLSpacing.s4),
+          for (final item in items)
+            Semantics(
+              button: true,
+              toggled: item.done,
+              label: item.title,
+              child: InkWell(
+                key: ValueKey('checklist_item_${item.id}'),
+                onTap: () => notifier.toggle(item),
+                onLongPress: () => _confirmRemove(context, item),
+                borderRadius: SLRadius.brMd,
+                child: SizedBox(
+                  height: SLSpacing.minTapTarget,
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: item.done,
+                        onChanged: (_) => notifier.toggle(item),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: item.done
+                                ? theme.colorScheme.onSurfaceVariant
+                                : theme.colorScheme.onSurface,
+                            decoration: item.done
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: SLSpacing.s4),
+          Text(
+            context.t('checklist_local_note'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

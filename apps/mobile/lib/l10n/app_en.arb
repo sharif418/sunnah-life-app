@@ -525,5 +525,11 @@
   "goals_remove_confirm": "Remove this goal from your list?",
   "goals_proposed_toast": "Proposed — awaiting your usrah head's approval",
   "goals_approved_toast": "Approved",
-  "goals_rejected_toast": "Rejected"
+  "goals_rejected_toast": "Rejected",
+  "checklist_title": "My checklist",
+  "checklist_hint": "Add a task",
+  "checklist_add": "Add",
+  "checklist_remove": "Delete",
+  "checklist_remove_confirm": "Delete this item?",
+  "checklist_local_note": "Stays on this device only"
 }
