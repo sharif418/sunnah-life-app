@@ -1691,4 +1691,157 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get last_updated => 'آخر تحديث';
+
+  @override
+  String get more_section_foundation => 'المؤسسة';
+
+  @override
+  String get contact_email => 'البريد الإلكتروني';
+
+  @override
+  String get more_section_worship => 'العبادات والأدوات';
+
+  @override
+  String get more_section_knowledge => 'المعرفة';
+
+  @override
+  String get more_section_support => 'الدعم';
+
+  @override
+  String get more_section_app => 'التطبيق';
+
+  @override
+  String get more_support => 'الدعم المباشر';
+
+  @override
+  String get support_signin_needed => 'سجّل الدخول لاستخدام الدعم المباشر';
+
+  @override
+  String get support_new_thread => 'ابدأ محادثة';
+
+  @override
+  String get support_subject => 'الموضوع';
+
+  @override
+  String get support_subject_hint => 'اكتب الموضوع بإيجاز';
+
+  @override
+  String get support_message_hint => 'اكتب رسالتك…';
+
+  @override
+  String get support_empty => 'لا محادثات بعد — ابدأ واحدة عند الحاجة';
+
+  @override
+  String get support_status_open => 'مفتوحة';
+
+  @override
+  String get support_status_answered => 'تم الرد';
+
+  @override
+  String get support_status_closed => 'مغلقة';
+
+  @override
+  String get support_team => 'فريق الدعم';
+
+  @override
+  String get support_you => 'أنت';
+
+  @override
+  String get support_created_toast => 'بدأت المحادثة';
+
+  @override
+  String get support_sent_toast => 'أُرسل الرد';
+
+  @override
+  String get support_closed_toast => 'هذه المحادثة مغلقة — ابدأ محادثة جديدة';
+
+  @override
+  String get more_usrah_join => 'الانضمام إلى أُسرة';
+
+  @override
+  String get usrah_join_hint =>
+      'لست في أُسرة بعد؟ أرسل طلبًا — وسيلحقك قسم التربية بأُسرة، إن شاء الله';
+
+  @override
+  String get usrah_join_message_hint => 'أضف ما تشاء (اختياري)';
+
+  @override
+  String get usrah_join_send => 'أرسل الطلب';
+
+  @override
+  String get usrah_join_pending => 'الطلب قيد الانتظار';
+
+  @override
+  String get usrah_join_rejected => 'رُفض الطلب';
+
+  @override
+  String get usrah_join_reason_label => 'السبب';
+
+  @override
+  String get usrah_join_in_usrah => 'أنت بالفعل في أُسرة';
+
+  @override
+  String get usrah_join_sent_toast =>
+      'أُرسل الطلب — سيتم إشعارك عند الموافقة، إن شاء الله';
+
+  @override
+  String get usrah_join_signin_needed => 'سجّل الدخول للانضمام إلى أُسرة';
+
+  @override
+  String get more_detox => 'حمية وسائل التواصل';
+
+  @override
+  String get detox_explain_title => 'وعي وقت الشاشة';
+
+  @override
+  String get detox_explain_body =>
+      'الوقت أمانة. كل دقيقة على وسائل التواصل تُنقص من رصيد الآخرة. امنح إذن الاستخدام لعرض وقت الشاشة اليوم وأكثر التطبيقات استخدامًا — المحاسبة أسهل حين تكون أمامك، إن شاء الله.';
+
+  @override
+  String get detox_perm_status => 'إذن الاستخدام';
+
+  @override
+  String get detox_perm_granted => 'ممنوح';
+
+  @override
+  String get detox_perm_not_granted => 'غير ممنوح';
+
+  @override
+  String get detox_grant => 'امنح الإذن';
+
+  @override
+  String get detox_return_hint => 'امنح الإذن ثم عُد إلى التطبيق';
+
+  @override
+  String get detox_android_only => 'يعمل هذا التتبع على أندرويد فقط';
+
+  @override
+  String get detox_today_total => 'إجمالي وقت الشاشة اليوم';
+
+  @override
+  String get detox_top_apps => 'أكثر التطبيقات استخدامًا';
+
+  @override
+  String get detox_minutes_short => 'دقيقة';
+
+  @override
+  String get detox_no_usage => 'لا شيء يُذكر بعد اليوم';
+
+  @override
+  String get detox_reminder => 'تذكير يومي';
+
+  @override
+  String get detox_reminder_time => 'وقت التذكير';
+
+  @override
+  String get detox_notif_title => 'محاسبة وقت الشاشة';
+
+  @override
+  String get detox_notif_body => 'كم قضيت اليوم أمام الشاشة؟ ألقِ نظرة.';
+
+  @override
+  String get more_groups => 'مجموعاتنا';
+
+  @override
+  String get group_open_failed => 'تعذّر الفتح';
 }

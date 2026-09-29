@@ -1700,4 +1700,160 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get last_updated => 'Last updated';
+
+  @override
+  String get more_section_foundation => 'Foundation';
+
+  @override
+  String get contact_email => 'Email';
+
+  @override
+  String get more_section_worship => 'Worship & tools';
+
+  @override
+  String get more_section_knowledge => 'Knowledge';
+
+  @override
+  String get more_section_support => 'Support';
+
+  @override
+  String get more_section_app => 'App';
+
+  @override
+  String get more_support => 'Live support';
+
+  @override
+  String get support_signin_needed => 'Sign in to use live support';
+
+  @override
+  String get support_new_thread => 'Start a conversation';
+
+  @override
+  String get support_subject => 'Subject';
+
+  @override
+  String get support_subject_hint => 'Briefly state the subject';
+
+  @override
+  String get support_message_hint => 'Write your message…';
+
+  @override
+  String get support_empty =>
+      'No conversations yet — start one if you need help';
+
+  @override
+  String get support_status_open => 'Open';
+
+  @override
+  String get support_status_answered => 'Answered';
+
+  @override
+  String get support_status_closed => 'Closed';
+
+  @override
+  String get support_team => 'Support team';
+
+  @override
+  String get support_you => 'You';
+
+  @override
+  String get support_created_toast => 'Conversation started';
+
+  @override
+  String get support_sent_toast => 'Reply sent';
+
+  @override
+  String get support_closed_toast =>
+      'This conversation is closed — please start a new one';
+
+  @override
+  String get more_usrah_join => 'Join an usrah';
+
+  @override
+  String get usrah_join_hint =>
+      'Not in an usrah yet? Send a request — the tarbiyah office will assign you one, in shaa Allah';
+
+  @override
+  String get usrah_join_message_hint => 'Anything to add? (optional)';
+
+  @override
+  String get usrah_join_send => 'Send request';
+
+  @override
+  String get usrah_join_pending => 'Request pending — awaiting approval';
+
+  @override
+  String get usrah_join_rejected => 'Request rejected';
+
+  @override
+  String get usrah_join_reason_label => 'Reason';
+
+  @override
+  String get usrah_join_in_usrah => 'You are already in an usrah';
+
+  @override
+  String get usrah_join_sent_toast =>
+      'Request sent — you\'ll be notified once approved, in shaa Allah';
+
+  @override
+  String get usrah_join_signin_needed => 'Sign in to join an usrah';
+
+  @override
+  String get more_detox => 'Social media detox';
+
+  @override
+  String get detox_explain_title => 'Screen-time awareness';
+
+  @override
+  String get detox_explain_body =>
+      'Time is a trust. Every minute spent on social media is subtracted from the capital of the Hereafter. Grant usage access to see today\'s screen time and most-used apps — the reckoning is easier when it is in front of you, in shaa Allah.';
+
+  @override
+  String get detox_perm_status => 'Usage access';
+
+  @override
+  String get detox_perm_granted => 'Granted';
+
+  @override
+  String get detox_perm_not_granted => 'Not granted';
+
+  @override
+  String get detox_grant => 'Grant access';
+
+  @override
+  String get detox_return_hint => 'Grant, then return to the app';
+
+  @override
+  String get detox_android_only => 'This tracking works on Android only';
+
+  @override
+  String get detox_today_total => 'Today\'s total screen time';
+
+  @override
+  String get detox_top_apps => 'Most-used apps';
+
+  @override
+  String get detox_minutes_short => 'min';
+
+  @override
+  String get detox_no_usage => 'Nothing notable yet today';
+
+  @override
+  String get detox_reminder => 'Daily reminder';
+
+  @override
+  String get detox_reminder_time => 'Reminder time';
+
+  @override
+  String get detox_notif_title => 'Screen-time check';
+
+  @override
+  String get detox_notif_body =>
+      'How long was today on the screen? Take a look.';
+
+  @override
+  String get more_groups => 'Our groups';
+
+  @override
+  String get group_open_failed => 'Could not open';
 }
