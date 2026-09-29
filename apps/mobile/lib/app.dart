@@ -6,6 +6,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +16,7 @@ import 'design/phosphor_icons.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'catalog/kit_gallery.dart';
 import 'design/design_tokens.dart';
 import 'core/bell_schedule.dart';
 import 'core/referral.dart';
@@ -423,6 +425,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      // W4f — the designer's kit gallery. Debug/profile builds only: the
+      // route never exists in release (tree-shaken — nothing inside the
+      // gallery can ship), and nothing in the UI links to it. Open by
+      // pushing '/__gallery' in a debug run (see lib/catalog/kit_gallery.dart).
+      if (!kReleaseMode)
+        GoRoute(
+          path: '/__gallery',
+          pageBuilder: (c, s) =>
+              slFadePage(child: const KitGalleryScreen()),
+        ),
     ],
   );
 });
