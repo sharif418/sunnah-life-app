@@ -1938,4 +1938,17 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get assessment_result_not_yet => 'আরও উন্নতি প্রয়োজন';
+
+  @override
+  String get search_title => 'অনুসন্ধান';
+
+  @override
+  String get search_hint => 'দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…';
+
+  @override
+  String get search_no_results => 'কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন';
+
+  @override
+  String get search_offline_note =>
+      'অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল';
 }

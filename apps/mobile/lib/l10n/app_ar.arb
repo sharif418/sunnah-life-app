@@ -623,5 +623,9 @@
   "assessment_result_label": "النتيجة",
   "assessment_score_label": "الدرجة",
   "assessment_result_passed": "ناجح",
-  "assessment_result_not_yet": "يحتاج تحسينًا"
+  "assessment_result_not_yet": "يحتاج تحسينًا",
+  "search_title": "بحث",
+  "search_hint": "ابحث في الأدعية والأذكار والأسماء أو المقالات…",
+  "search_no_results": "لا نتائج — جرّب كلمة أخرى",
+  "search_offline_note": "غير متصل — نتائج من المحتوى المحفوظ في التطبيق"
 }

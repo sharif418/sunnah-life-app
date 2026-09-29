@@ -623,5 +623,9 @@
   "assessment_result_label": "Result",
   "assessment_score_label": "Score",
   "assessment_result_passed": "Passed",
-  "assessment_result_not_yet": "Needs improvement"
+  "assessment_result_not_yet": "Needs improvement",
+  "search_title": "Search",
+  "search_hint": "Search duas, adhkar, names or articles…",
+  "search_no_results": "Nothing found — try another word",
+  "search_offline_note": "Offline — results from the app's saved content"
 }

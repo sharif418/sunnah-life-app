@@ -685,6 +685,10 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'assessment_decline_label' => l.assessment_decline_label,
   'assessment_declined_toast' => l.assessment_declined_toast,
   'assessment_decision_note_label' => l.assessment_decision_note_label,
+  'search_title' => l.search_title,
+  'search_hint' => l.search_hint,
+  'search_no_results' => l.search_no_results,
+  'search_offline_note' => l.search_offline_note,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

@@ -1921,4 +1921,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get assessment_result_not_yet => 'يحتاج تحسينًا';
+
+  @override
+  String get search_title => 'بحث';
+
+  @override
+  String get search_hint => 'ابحث في الأدعية والأذكار والأسماء أو المقالات…';
+
+  @override
+  String get search_no_results => 'لا نتائج — جرّب كلمة أخرى';
+
+  @override
+  String get search_offline_note =>
+      'غير متصل — نتائج من المحتوى المحفوظ في التطبيق';
 }

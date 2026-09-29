@@ -1935,4 +1935,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get assessment_result_not_yet => 'Needs improvement';
+
+  @override
+  String get search_title => 'Search';
+
+  @override
+  String get search_hint => 'Search duas, adhkar, names or articles…';
+
+  @override
+  String get search_no_results => 'Nothing found — try another word';
+
+  @override
+  String get search_offline_note =>
+      'Offline — results from the app\'s saved content';
 }

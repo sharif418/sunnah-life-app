@@ -3843,6 +3843,30 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আরও উন্নতি প্রয়োজন'**
   String get assessment_result_not_yet;
+
+  /// No description provided for @search_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুসন্ধান'**
+  String get search_title;
+
+  /// No description provided for @search_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…'**
+  String get search_hint;
+
+  /// No description provided for @search_no_results.
+  ///
+  /// In bn, this message translates to:
+  /// **'কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন'**
+  String get search_no_results;
+
+  /// No description provided for @search_offline_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল'**
+  String get search_offline_note;
 }
 
 class _AppLocalizationsDelegate

@@ -623,5 +623,9 @@
   "assessment_result_label": "ফলাফল",
   "assessment_score_label": "স্কোর",
   "assessment_result_passed": "উত্তীর্ণ",
-  "assessment_result_not_yet": "আরও উন্নতি প্রয়োজন"
+  "assessment_result_not_yet": "আরও উন্নতি প্রয়োজন",
+  "search_title": "অনুসন্ধান",
+  "search_hint": "দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…",
+  "search_no_results": "কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন",
+  "search_offline_note": "অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল"
 }
