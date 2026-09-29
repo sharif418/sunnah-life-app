@@ -3735,6 +3735,114 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'কার্ড শেয়ার করা হয়েছে — জাযাকুমুল্লাহু খাইরান'**
   String get dawah_card_shared_toast;
+
+  /// No description provided for @assessment_status_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিশ্চয়ন বাকি'**
+  String get assessment_status_pending;
+
+  /// No description provided for @assessment_status_confirmed.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিশ্চিত হয়েছে'**
+  String get assessment_status_confirmed;
+
+  /// No description provided for @assessment_status_declined.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল করেছেন'**
+  String get assessment_status_declined;
+
+  /// No description provided for @assessment_confirm_cta.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিশ্চিত করুন'**
+  String get assessment_confirm_cta;
+
+  /// No description provided for @assessment_confirm_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'মূল্যায়ন নিশ্চিত করুন'**
+  String get assessment_confirm_title;
+
+  /// No description provided for @assessment_confirm_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল দেখে নিন। আপনার মোবাইল নম্বরে কোড পাঠানো হবে — কোড দিয়ে সই দিলেই ফলাফল চূড়ান্ত হবে।'**
+  String get assessment_confirm_body;
+
+  /// No description provided for @assessment_confirmed_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'আলহামদুলিল্লাহ — মূল্যায়ন নিশ্চিত হয়েছে'**
+  String get assessment_confirmed_toast;
+
+  /// No description provided for @assessment_decline_cta.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল বাতিল করুন'**
+  String get assessment_decline_cta;
+
+  /// No description provided for @assessment_decline_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল বাতিল করবেন?'**
+  String get assessment_decline_title;
+
+  /// No description provided for @assessment_decline_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল করলে মূল্যায়নকারীকে জানানো হবে এবং পুনরায় মূল্যায়নের ব্যবস্থা হবে, ইনশাআল্লাহ।'**
+  String get assessment_decline_body;
+
+  /// No description provided for @assessment_decline_reason_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'কারণ (ঐচ্ছিক)'**
+  String get assessment_decline_reason_hint;
+
+  /// No description provided for @assessment_decline_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল করুন'**
+  String get assessment_decline_label;
+
+  /// No description provided for @assessment_declined_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'মূল্যায়ন বাতিল করা হয়েছে — মূল্যায়নকারীকে জানানো হয়েছে'**
+  String get assessment_declined_toast;
+
+  /// No description provided for @assessment_decision_note_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার কারণ'**
+  String get assessment_decision_note_label;
+
+  /// No description provided for @assessment_result_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল'**
+  String get assessment_result_label;
+
+  /// No description provided for @assessment_score_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'স্কোর'**
+  String get assessment_score_label;
+
+  /// No description provided for @assessment_result_passed.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তীর্ণ'**
+  String get assessment_result_passed;
+
+  /// No description provided for @assessment_result_not_yet.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও উন্নতি প্রয়োজন'**
+  String get assessment_result_not_yet;
 }
 
 class _AppLocalizationsDelegate

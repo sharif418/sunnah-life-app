@@ -1865,4 +1865,60 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dawah_card_shared_toast => 'تمت مشاركة البطاقة — جزاكم الله خيرًا';
+
+  @override
+  String get assessment_status_pending => 'بانتظار التأكيد';
+
+  @override
+  String get assessment_status_confirmed => 'مؤكَّد';
+
+  @override
+  String get assessment_status_declined => 'مرفوض';
+
+  @override
+  String get assessment_confirm_cta => 'أكِّد';
+
+  @override
+  String get assessment_confirm_title => 'أكِّد التقييم';
+
+  @override
+  String get assessment_confirm_body =>
+      'اطّلع على نتيجتك. سيُرسَل رمز إلى هاتفك — التوقيع به يجعل النتيجة نهائية.';
+
+  @override
+  String get assessment_confirmed_toast => 'الحمد لله — تم تأكيد التقييم';
+
+  @override
+  String get assessment_decline_cta => 'ارفض النتيجة';
+
+  @override
+  String get assessment_decline_title => 'أترفض النتيجة؟';
+
+  @override
+  String get assessment_decline_body =>
+      'الرفض يُخطر مُقيِّمك لترتيب تقييم جديد، إن شاء الله.';
+
+  @override
+  String get assessment_decline_reason_hint => 'السبب (اختياري)';
+
+  @override
+  String get assessment_decline_label => 'ارفض';
+
+  @override
+  String get assessment_declined_toast => 'تم رفض التقييم — تم إخطار مُقيِّمك';
+
+  @override
+  String get assessment_decision_note_label => 'سببك';
+
+  @override
+  String get assessment_result_label => 'النتيجة';
+
+  @override
+  String get assessment_score_label => 'الدرجة';
+
+  @override
+  String get assessment_result_passed => 'ناجح';
+
+  @override
+  String get assessment_result_not_yet => 'يحتاج تحسينًا';
 }

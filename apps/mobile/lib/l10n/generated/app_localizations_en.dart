@@ -1877,4 +1877,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dawah_card_shared_toast => 'Card shared — Jazakumullahu khairan';
+
+  @override
+  String get assessment_status_pending => 'Awaiting confirmation';
+
+  @override
+  String get assessment_status_confirmed => 'Confirmed';
+
+  @override
+  String get assessment_status_declined => 'Declined';
+
+  @override
+  String get assessment_confirm_cta => 'Confirm';
+
+  @override
+  String get assessment_confirm_title => 'Confirm the assessment';
+
+  @override
+  String get assessment_confirm_body =>
+      'Review your result. A code is sent to your own phone — signing with it makes the result final.';
+
+  @override
+  String get assessment_confirmed_toast =>
+      'Alhamdulillah — assessment confirmed';
+
+  @override
+  String get assessment_decline_cta => 'Decline the result';
+
+  @override
+  String get assessment_decline_title => 'Decline the result?';
+
+  @override
+  String get assessment_decline_body =>
+      'Declining notifies your assessor so a new assessment can be arranged, insha\'Allah.';
+
+  @override
+  String get assessment_decline_reason_hint => 'Reason (optional)';
+
+  @override
+  String get assessment_decline_label => 'Decline';
+
+  @override
+  String get assessment_declined_toast =>
+      'Assessment declined — your assessor has been notified';
+
+  @override
+  String get assessment_decision_note_label => 'Your reason';
+
+  @override
+  String get assessment_result_label => 'Result';
+
+  @override
+  String get assessment_score_label => 'Score';
+
+  @override
+  String get assessment_result_passed => 'Passed';
+
+  @override
+  String get assessment_result_not_yet => 'Needs improvement';
 }

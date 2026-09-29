@@ -18,6 +18,7 @@ import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
+import 'assessment_confirm_sheet.dart';
 import 'madu_tree.dart';
 import 'referral_share_sheet.dart';
 import '../../design/phosphor_icons.dart';
@@ -166,26 +167,24 @@ class _DawahOverviewTab extends ConsumerWidget {
           );
         }
         final overview = remote.data;
-        final memberName =
-            ref.watch(authProvider).userOrNull?.name ?? '';
+        final memberName = ref.watch(authProvider).userOrNull?.name ?? '';
 
         String joinLink(String code) => 'https://sunnahlife.app/join/$code';
 
         // W4e — the branded referral card preview (renders the PNG on
         // share). The sheet resolves all its strings from the locale.
         void openCardSheet() => showReferralCardSheet(
-              context,
-              memberName: memberName,
-              memberCode: overview.memberCode,
-              joinLink: joinLink(overview.memberCode),
-            );
+          context,
+          memberName: memberName,
+          memberCode: overview.memberCode,
+          joinLink: joinLink(overview.memberCode),
+        );
 
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
           children: [
             // W4-fix4: cache-served snapshot — subtle banner + the stamp.
-            if (remote.stale)
-              OfflineBanner(fetchedAt: remote.fetchedAt),
+            if (remote.stale) OfflineBanner(fetchedAt: remote.fetchedAt),
             // Member code + referral
             AppCard(
               child: Column(
@@ -329,7 +328,10 @@ class _DawahOverviewTab extends ConsumerWidget {
             // Madu tree — W4e: the flat depth-sorted downline rendered as
             // an indented tree with connector rails (read-only — the API
             // carries depth but no parentage; madu_tree.dart notes why).
-            SectionHeader(context.t('dawah_madu'), icon: PhosphorIconsRegular.gitFork),
+            SectionHeader(
+              context.t('dawah_madu'),
+              icon: PhosphorIconsRegular.gitFork,
+            ),
             if (overview.downline.isEmpty)
               EmptyState(
                 message: overview.level == Level.none
@@ -340,7 +342,10 @@ class _DawahOverviewTab extends ConsumerWidget {
             else
               MaduTree(nodes: overview.downline),
 
-            // Assessments
+            // Assessments — W4i: every row carries the acknowledgment STATUS
+            // (pending_confirmation | confirmed | declined); a pending result
+            // only becomes final after the member's own OTP confirmation, so
+            // those rows get the নিশ্চিত করুন CTA that opens the OTP sheet.
             SectionHeader(
               context.t('dawah_assessments'),
               icon: PhosphorIconsRegular.clipboardText,
@@ -352,31 +357,88 @@ class _DawahOverviewTab extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
-                    for (final a in overview.assessments)
+                    for (final a in overview.assessments) ...[
                       ListTile(
                         dense: true,
+                        key: ValueKey('assessment_row_${a.id}'),
                         leading: Icon(
-                          a.result == 'passed'
+                          a.status == AssessmentStatus.declined
+                              ? PhosphorIconsRegular.warningCircle
+                              : a.result == 'passed'
                               ? PhosphorIconsRegular.sealCheck
                               : PhosphorIconsRegular.hourglass,
-                          color: a.result == 'passed'
+                          color: a.status == AssessmentStatus.declined
+                              ? theme.colorScheme.error
+                              : a.result == 'passed'
                               ? theme.colorScheme.primary
                               : theme.colorScheme.tertiary,
                         ),
                         title: Text(a.templateKey),
-                        subtitle: Text(a.createdAt.substring(0, 10)),
-                        trailing: a.scorePct == null
-                            ? null
-                            : Text(
-                                '${bn ? toBn(a.scorePct!) : a.scorePct}%',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: a.result == 'passed'
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.tertiary,
+                        subtitle:
+                            a.status == AssessmentStatus.declined &&
+                                (a.decisionNote ?? '').isNotEmpty
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(a.createdAt.substring(0, 10)),
+                                  Text(
+                                    '${context.t('assessment_decision_note_label')}: ${a.decisionNote}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(a.createdAt.substring(0, 10)),
+                        trailing: FittedBox(
+                          // Score + chip never overflow the row when the
+                          // subtitle wraps to two lines (declined reason).
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (a.scorePct != null)
+                                Text(
+                                  '${bn ? toBn(a.scorePct!) : a.scorePct}%',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: a.result == 'passed'
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
+                              AssessmentStatusChip(status: a.status),
+                            ],
+                          ),
+                        ),
+                        onTap: a.status == AssessmentStatus.pendingConfirmation
+                            ? () => showAssessmentConfirmSheet(context, a)
+                            : null,
                       ),
+                      if (a.status == AssessmentStatus.pendingConfirmation)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            SLSpacing.s16,
+                            0,
+                            SLSpacing.s16,
+                            SLSpacing.s8,
+                          ),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: FilledButton.tonalIcon(
+                              key: ValueKey('assessmentConfirmCta_${a.id}'),
+                              onPressed: () =>
+                                  showAssessmentConfirmSheet(context, a),
+                              icon: const Icon(
+                                PhosphorIconsRegular.sealCheck,
+                                size: 18,
+                              ),
+                              label: Text(context.t('assessment_confirm_cta')),
+                            ),
+                          ),
+                        ),
+                    ],
                   ],
                 ),
               ),
@@ -481,7 +543,10 @@ class _UsrahTab extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(PhosphorIconsRegular.usersThree, color: theme.colorScheme.primary),
+                        Icon(
+                          PhosphorIconsRegular.usersThree,
+                          color: theme.colorScheme.primary,
+                        ),
                         const SizedBox(width: SLSpacing.s8),
                         Expanded(
                           child: Text(
@@ -549,7 +614,7 @@ class _UsrahTab extends ConsumerWidget {
                         context.t('usrah_q_title'),
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                      ),
+                        ),
                       ),
                     ),
                     const DirectionalIcon(PhosphorIconsRegular.caretRight),
@@ -674,7 +739,10 @@ class _GoalQueueCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(PhosphorIconsRegular.flagBanner, color: theme.colorScheme.primary),
+                Icon(
+                  PhosphorIconsRegular.flagBanner,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: SLSpacing.s8),
                 Expanded(
                   child: Column(
@@ -733,16 +801,13 @@ class _GoalQueueCard extends ConsumerWidget {
       ref.invalidate(goalQueueProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t('goals_approved_toast')),
-          ),
+          SnackBar(content: Text(context.t('goals_approved_toast'))),
         );
       }
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -792,9 +857,8 @@ class _RejectReasonSheetState extends ConsumerState<_RejectReasonSheet> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }

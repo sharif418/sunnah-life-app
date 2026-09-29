@@ -1880,4 +1880,62 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get dawah_card_shared_toast =>
       'কার্ড শেয়ার করা হয়েছে — জাযাকুমুল্লাহু খাইরান';
+
+  @override
+  String get assessment_status_pending => 'নিশ্চয়ন বাকি';
+
+  @override
+  String get assessment_status_confirmed => 'নিশ্চিত হয়েছে';
+
+  @override
+  String get assessment_status_declined => 'বাতিল করেছেন';
+
+  @override
+  String get assessment_confirm_cta => 'নিশ্চিত করুন';
+
+  @override
+  String get assessment_confirm_title => 'মূল্যায়ন নিশ্চিত করুন';
+
+  @override
+  String get assessment_confirm_body =>
+      'ফলাফল দেখে নিন। আপনার মোবাইল নম্বরে কোড পাঠানো হবে — কোড দিয়ে সই দিলেই ফলাফল চূড়ান্ত হবে।';
+
+  @override
+  String get assessment_confirmed_toast =>
+      'আলহামদুলিল্লাহ — মূল্যায়ন নিশ্চিত হয়েছে';
+
+  @override
+  String get assessment_decline_cta => 'ফলাফল বাতিল করুন';
+
+  @override
+  String get assessment_decline_title => 'ফলাফল বাতিল করবেন?';
+
+  @override
+  String get assessment_decline_body =>
+      'বাতিল করলে মূল্যায়নকারীকে জানানো হবে এবং পুনরায় মূল্যায়নের ব্যবস্থা হবে, ইনশাআল্লাহ।';
+
+  @override
+  String get assessment_decline_reason_hint => 'কারণ (ঐচ্ছিক)';
+
+  @override
+  String get assessment_decline_label => 'বাতিল করুন';
+
+  @override
+  String get assessment_declined_toast =>
+      'মূল্যায়ন বাতিল করা হয়েছে — মূল্যায়নকারীকে জানানো হয়েছে';
+
+  @override
+  String get assessment_decision_note_label => 'আপনার কারণ';
+
+  @override
+  String get assessment_result_label => 'ফলাফল';
+
+  @override
+  String get assessment_score_label => 'স্কোর';
+
+  @override
+  String get assessment_result_passed => 'উত্তীর্ণ';
+
+  @override
+  String get assessment_result_not_yet => 'আরও উন্নতি প্রয়োজন';
 }

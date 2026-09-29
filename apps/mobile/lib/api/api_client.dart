@@ -637,6 +637,58 @@ class ApiClient {
           .map((e) => WeeklyReview.fromJson(e.cast<String, dynamic>()))
           .toList();
 
+  // ── Assessments (W4i — the assessee's own acknowledgment flow) ──────────────
+
+  /// GET /api/assessments/me — own (assessee) assessments, every status,
+  /// with scores. The dawah tab's assessment cards read this.
+  Future<List<AssessmentDetail>> myAssessments() async {
+    final j = await _req('GET', '/api/assessments/me');
+    return ((j['assessments'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => AssessmentDetail.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/assessments/:id/confirm-request — issue the OTP to the
+  /// ASSESSEE's own phone (the auth OTP service, same throttle + hashing).
+  Future<OtpResponse> assessmentConfirmRequest(String id) async {
+    final j = await _req('POST', '/api/assessments/$id/confirm-request');
+    return OtpResponse(
+      ok: j['ok'] as bool? ?? false,
+      devCode: j['devCode'] as String?,
+    );
+  }
+
+  /// POST /api/assessments/:id/confirm {code} — verify → the result becomes
+  /// FINAL (status confirmed + the OTP-confirmed signature).
+  Future<AssessmentDetail> assessmentConfirm({
+    required String id,
+    required String code,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/assessments/$id/confirm',
+      body: {'code': code},
+    );
+    return AssessmentDetail.fromJson(j['assessment'] as Map<String, dynamic>);
+  }
+
+  /// POST /api/assessments/:id/decline {reason?} — the assessee refuses the
+  /// result (the invigilator is notified server-side).
+  Future<AssessmentDetail> assessmentDecline({
+    required String id,
+    String? reason,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/assessments/$id/decline',
+      body: {
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      },
+    );
+    return AssessmentDetail.fromJson(j['assessment'] as Map<String, dynamic>);
+  }
+
   // ── Reminders / live / misc ─────────────────────────────────────────────────
 
   Future<List<ReminderItem>> reminders() async {
