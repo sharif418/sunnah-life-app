@@ -164,6 +164,12 @@ export const STRINGS: Dict = {
   "more.desc.about": { bn: "সংস্করণ ও মতামত", en: "Version & feedback", ar: "الإصدار والملاحظات" },
   "more.settings": { bn: "সেটিংস", en: "Settings", ar: "الإعدادات" },
   "more.about": { bn: "আমাদের সম্পর্কে", en: "About", ar: "حول" },
+  // W4j — the Ilm unified search (register mirrors the mobile arb keys)
+  "search.title": { bn: "অনুসন্ধান", en: "Search", ar: "بحث" },
+  "search.hint": { bn: "দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…", en: "Search duas, adhkar, names or articles…", ar: "ابحث في الأدعية والأذكار والأسماء أو المقالات…" },
+  "search.clear": { bn: "মুছুন", en: "Clear", ar: "مسح" },
+  "search.noResults": { bn: "কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন", en: "Nothing found — try another word", ar: "لا نتائج — جرّب كلمة أخرى" },
+  "search.offlineNote": { bn: "অফলাইন — সংরক্ষিত কন্টেন্ট থেকে ফলাফল", en: "Offline — results from saved content", ar: "بلا اتصال — نتائج من المحتوى المحفوظ" },
   "theme.light": { bn: "লাইট", en: "Light", ar: "فاتح" },
   "theme.dark": { bn: "ডার্ক", en: "Dark", ar: "داكن" },
 };
