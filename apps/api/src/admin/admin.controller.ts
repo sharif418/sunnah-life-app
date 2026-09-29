@@ -1,6 +1,8 @@
 import { Req, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
+import { promises as fsPromises } from "fs";
+import path from "path";
 import {
   IsArray,
   IsBoolean,
@@ -29,12 +31,14 @@ import { Roles } from "../common/roles.decorator";
 import { RolesGuard } from "../common/roles.guard";
 import { LevelsService, requireBengaliReason } from "../levels/levels.service";
 import {
+  contentDir,
   invalidateLevelRulesCache,
   loadLevelRulesDoc,
   validateLevelRulesNode,
   LevelRulesValidationError,
   type LevelKey,
 } from "../shared/levels";
+import { invalidatePackCache, PACK_FILES, type PackKey } from "../shared/quran";
 import { SupportReplyDto } from "../support/support.controller";
 import {
   bdToday,
@@ -65,6 +69,16 @@ import type {
 
 const INACTIVE_DAYS = 3;
 const REVIEW_WINDOW_DAYS = 27; // last 4 Saturday-started weeks
+
+/** W4h — the pack keys the admin CMS may edit (the spec's CMS list). The
+ * Qur'an packs and the reference packs (adhkar/names99/…) are NOT editable. */
+const CMS_PACKS: PackKey[] = ["courses", "quizzes", "duas", "articles", "faq", "mosques"];
+/** W4h — size cap for one pack write (serialized). Deliberately below the
+ * express JSON body limit (100kb) so the write can never be rejected by the
+ * parser before validation runs; every current CMS pack fits with headroom
+ * (largest: duas.json ≈ 42kb). A pack that outgrows this wants a richer
+ * editor + a deliberate body-limit decision, not a silent bump. */
+const CMS_PACK_MAX_BYTES = 90_000;
 
 const ROLES: Role[] = ["user", "daee", "usrah_head", "invigilator", "full_admin"];
 const GENDERS: Gender[] = ["M", "F"];
@@ -1893,6 +1907,65 @@ export class AdminService {
     });
   }
 
+  // ── W4h: content pack CMS — narrow full_admin write ──────────────────────
+
+  /**
+   * PUT /api/admin/content/:pack — full_admin. Replaces a CMS pack file
+   * (courses/quizzes/duas/articles/faq/mosques) in the content dir with the
+   * submitted document, ATOMICALLY (tmp file + rename) so a torn write can
+   * never serve a half pack. Validation is deliberately minimal and honest:
+   * the pack file IS the storage (GET /api/content/:pack serves it as-is),
+   * so we only check object shape + at least one non-empty array property +
+   * the size cap — no invented per-item schema. Audited
+   * (content_pack_update with the pack's byte size + item count).
+   *
+   * NOTE (honest limitation, documented): the write goes to the API's content
+   * dir — in a container deployment that is the container's writable layer,
+   * so a redeploy restores the pack baked into the image. The packs in git
+   * remain the seed; a lasting edit wants a redeploy-time sync or a DB-backed
+   * pack table (follow-up mission decision).
+   */
+  async updateContentPack(viewer: User | null, pack: string, body: unknown) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    const key = pack as PackKey;
+    if (!CMS_PACKS.includes(key)) {
+      throw new ApiError(404, "এই কন্টেন্ট প্যাকটি সম্পাদনাযোগ্য নয়");
+    }
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      throw new ApiError(400, "প্যাকটি অবজেক্ট আকারে দিন (যেমন { items: […] })");
+    }
+    const arrays = Object.values(body as Record<string, unknown>).filter(
+      (v): v is unknown[] => Array.isArray(v)
+    );
+    if (!arrays.some((a) => a.length > 0)) {
+      throw new ApiError(400, "প্যাকে অন্তত একটি অ-খালি তালিকা থাকতে হবে");
+    }
+    const serialized = JSON.stringify(body, null, 2);
+    if (serialized.length > CMS_PACK_MAX_BYTES) {
+      throw new ApiError(400, "প্যাকটি খুব বড় — ছোট করে দিন");
+    }
+
+    const file = PACK_FILES[key];
+    const target = path.join(contentDir(), file);
+    // atomic: write beside the target, then rename over it
+    const tmp = `${target}.admin-tmp`;
+    await fsPromises.writeFile(tmp, `${serialized}\n`, "utf8");
+    await fsPromises.rename(tmp, target);
+    invalidatePackCache(key);
+
+    const itemCount = arrays.reduce((s, a) => s + a.length, 0);
+    await this.guard.audit(user.id, "content_pack_update", "content_pack", key, {
+      pack: key,
+      bytes: serialized.length,
+      itemCount,
+    });
+
+    return { pack: key, itemCount, bytes: serialized.length };
+  }
+
   /** GET /api/admin/audit — full_admin: last 100 audit entries with actor names. */
   async audit(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -2413,6 +2486,19 @@ export class AdminController {
     @Req() req: AuthedRequest
   ) {
     return this.service.referralTree(currentUser(req), { userId, cursor, limit });
+  }
+
+  // ── W4h: content pack CMS — narrow full_admin write ──────────────────────
+
+  @Put("content/:pack")
+  @ApiOperation({ summary: "full_admin: replace a CMS pack (courses/quizzes/duas/articles/faq/mosques; audited)" })
+  @Roles("full_admin")
+  updateContentPack(
+    @Param("pack") pack: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest
+  ) {
+    return this.service.updateContentPack(currentUser(req), pack, body);
   }
 
   @Get("support")
