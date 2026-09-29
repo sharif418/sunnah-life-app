@@ -447,6 +447,80 @@ export interface UsrahJoinRequestItem {
   createdAt: string;
 }
 
+/** W4h — GET /api/usrah/goals row (the supervisor approval queue). */
+export interface GoalQueueItem extends GoalItem {
+  status: "proposed" | "approved" | "rejected" | "completed" | "withdrawn";
+  decidedById: string | null;
+  decidedAt: string | null;
+  reason: string | null;
+  userName: string;
+}
+
+/** W4h — GET /api/admin/level-rules row: the raw merged node + its origin. */
+export interface LevelRulesLevelInfo {
+  node: Record<string, unknown>;
+  source: "db" | "pack" | "default";
+}
+export interface LevelRulesDoc {
+  levels: Record<string, LevelRulesLevelInfo>;
+  packNote: string | null;
+}
+
+/** W4h — GET /api/admin/invigilator-health row (mirror of the API type). */
+export interface InvigilatorHealthRow {
+  id: string;
+  name: string;
+  memberCode: string | null;
+  gender: Gender;
+  usrahNames: string[];
+  memberCount: number;
+  reviewPct: number | null;
+  amalPct: number | null;
+  activePct: number | null;
+  overdueCount: number;
+  assessments30d: number;
+  unsignedAssessments: number;
+  score: number | null;
+}
+
+/** W4h — one node of the cursor-paged referral forest. */
+export interface ReferralTreeNode {
+  id: string;
+  name: string;
+  gender: Gender;
+  level: Level;
+  memberCode: string | null;
+  role: Role;
+  lastActiveAt: string;
+  joinedAt: string;
+  childCount: number;
+}
+export interface ReferralTreePage {
+  nodes: ReferralTreeNode[];
+  nextCursor: string | null;
+  remaining: number;
+}
+
+/** W4h — the admin-editable app configuration (GET/PATCH /api/admin/config). */
+export interface AdminAppConfig {
+  donationUrl: string;
+  domain: string;
+  hijriAdjust: number;
+  nisab: { goldPerGramBdt: number; silverPerGramBdt: number };
+  contacts: {
+    org: string;
+    descBn: string;
+    phone?: string;
+    email?: string;
+    website?: string;
+    address?: string;
+  }[];
+  groups: { titleBn: string; url: string; descBn?: string }[];
+  audioBase: string;
+  leaderboardEnabled: boolean;
+  detoxEnabled: boolean;
+}
+
 export interface MonthlyReportItem {
   id: string;
   userId: string;
@@ -626,6 +700,57 @@ export const api = {
       method: "POST",
       json: reason ? { reason } : {},
     }),
+
+  // W4h: goal approval queue (usrah_head+; RLS scopes whose goals appear)
+  goalQueue: () => call<{ queue: GoalQueueItem[] }>("/api/usrah/goals"),
+  approveGoal: (id: string) =>
+    call<{ goal: GoalQueueItem }>(`/api/goals/${id}/approve`, { method: "POST" }),
+  rejectGoal: (id: string, reason?: string) =>
+    call<{ goal: GoalQueueItem }>(`/api/goals/${id}/reject`, {
+      method: "POST",
+      json: reason ? { reason } : {},
+    }),
+
+  // W4h: level-rules editor (full_admin)
+  levelRules: () => call<LevelRulesDoc>("/api/admin/level-rules"),
+  updateLevelRules: (level: string, patch: Record<string, unknown>) =>
+    call<{ level: string; node: Record<string, unknown>; changed: string[] }>(
+      `/api/admin/level-rules/${encodeURIComponent(level)}`,
+      { method: "PUT", json: patch }
+    ),
+  resetLevelRules: (level: string) =>
+    call<{ level: string; reset: boolean }>(`/api/admin/level-rules/${encodeURIComponent(level)}`, {
+      method: "DELETE",
+    }),
+
+  // W4h: invigilator health (full_admin: all; invigilator: self)
+  invigilatorHealth: () => call<{ invigilators: InvigilatorHealthRow[] }>("/api/admin/invigilator-health"),
+
+  // W4h: referral forest, cursor-paged (full_admin)
+  referralTree: (opts: { userId?: string; cursor?: string; limit?: number } = {}) => {
+    const qs = new URLSearchParams();
+    if (opts.userId) qs.set("userId", opts.userId);
+    if (opts.cursor) qs.set("cursor", opts.cursor);
+    if (opts.limit) qs.set("limit", String(opts.limit));
+    const q = qs.toString();
+    return call<ReferralTreePage>(`/api/admin/referral-tree${q ? `?${q}` : ""}`);
+  },
+
+  // W4h: content pack CMS (full_admin write; the read is the public pack route)
+  contentPack: (pack: string) =>
+    call<{ pack: string; data: unknown }>(`/api/content/${encodeURIComponent(pack)}`),
+  updateContentPack: (pack: string, doc: Record<string, unknown>) =>
+    call<{ pack: string; itemCount: number; bytes: number }>(
+      `/api/admin/content/${encodeURIComponent(pack)}`,
+      { method: "PUT", json: doc }
+    ),
+
+  // W4h: app configuration CMS (full_admin)
+  adminConfig: () => call<AdminAppConfig>("/api/admin/config"),
+  updateAdminConfig: (dto: Partial<Omit<AdminAppConfig, "nisab">> & {
+    nisab?: { goldPerGramBdt?: number; silverPerGramBdt?: number };
+  }) =>
+    call<AdminAppConfig>("/api/admin/config", { method: "PATCH", json: dto }),
 
   // usrah
   myUsrah: () => call<{ usrah: (Usrah & { members: UsrahMember[] }) | null; announcements: Announcement[] }>(

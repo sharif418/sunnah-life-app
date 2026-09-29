@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
+  BookOpen,
   FileCheck2,
   ClipboardCheck,
   Download,
@@ -18,6 +19,7 @@ import {
   Network,
   Radio,
   ScrollText,
+  Settings,
   Sun,
   TrendingUp,
   UserCog,
@@ -37,6 +39,12 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+// W4h — role-based nav, mirroring the API's actual role floors:
+//   • the তত্ত্বাবধায়ক group is supervisor-floor (usrah_head AND invigilator
+//     share rank 2 — the API differs only in RLS data scope, never by route);
+//   • the প্রধান অ্যাডমিন group lists the pages whose whole surface is
+//     @Roles("full_admin"). The usrah JOIN queue lives inside /usrah as a
+//     full_admin section (heads never assign membership — W4d boundary).
 const COMMON_NAV: NavItem[] = [
   { href: "/", label: "ড্যাশবোর্ড", icon: LayoutDashboard },
   { href: "/usrah", label: "উসরা", icon: Users },
@@ -53,6 +61,8 @@ const FULL_ADMIN_NAV: NavItem[] = [
   { href: "/users", label: "ব্যবহারকারী", icon: UserCog },
   { href: "/referrals", label: "রেফারেল ট্রি", icon: Network },
   { href: "/catalog", label: "আমল ক্যাটালগ", icon: ListChecks },
+  { href: "/content", label: "কন্টেন্ট ম্যানেজমেন্ট", icon: BookOpen },
+  { href: "/settings", label: "অ্যাপ কনফিগারেশন", icon: Settings },
   { href: "/audit", label: "অডিট লগ", icon: ScrollText },
 ];
 
@@ -68,6 +78,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/users": "ব্যবহারকারী ব্যবস্থাপনা",
   "/referrals": "রেফারেল ট্রি",
   "/catalog": "আমল ক্যাটালগ",
+  "/content": "কন্টেন্ট ম্যানেজমেন্ট",
+  "/settings": "অ্যাপ কনফিগারেশন",
   "/audit": "অডিট লগ",
   "/support": "সাপোর্ট ইনবক্স",
 };

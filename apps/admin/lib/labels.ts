@@ -100,6 +100,11 @@ export const AUDIT_ACTION_LABELS_BN: Record<string, string> = {
   support_close: "সাপোর্ট বন্ধ",
   join_request_approve: "উসরা অনুরোধ অনুমোদন",
   join_request_reject: "উসরা অনুরোধ বাতিল",
+  approve_goal: "লক্ষ্য অনুমোদন",
+  reject_goal: "লক্ষ্য বাতিল",
+  update_app_config: "অ্যাপ কনফিগ হালনাগাদ",
+  level_rules_update: "স্তরের নিয়ম সম্পাদনা",
+  content_pack_update: "কন্টেন্ট প্যাক হালনাগাদ",
 };
 
 export function auditActionLabel(action: string): string {
