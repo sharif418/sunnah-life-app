@@ -186,6 +186,31 @@ export function isDateLocked(user: LockUser, date: string): boolean {
   return computeLockDeadline(date, user) < Date.now();
 }
 
+/**
+ * Fajr (real epoch) of `date` at the user's location — the "tomorrow
+ * morning" target for goal-approval reminders (Phase C/W4c): the reminder
+ * lands as the member's prayer-day starts, not at an arbitrary hour.
+ */
+export function fajrOf(date: string, user: LockUser): number {
+  const [y, m, d] = date.split("-").map(Number);
+  const times = computePrayerTimes(
+    { y, m, d },
+    {
+      lat: user.lat ?? DHAKA_LAT,
+      lng: user.lng ?? DHAKA_LNG,
+      tzOffsetHours: tzOffsetHoursFor(date, user.tz),
+      method: user.calcMethod,
+      madhhab: user.madhhab,
+    }
+  );
+  return wallTimeToEpoch(date, Math.round(times.fajr), user.tz ?? "Asia/Dhaka").getTime();
+}
+
+/** Fajr of the user's NEXT day (their zone) — the goal-reminder schedule. */
+export function fajrOfNextDay(user: LockUser & { tz?: string | null }): Date {
+  return new Date(fajrOf(addDays(todayForUser(user), 1), user));
+}
+
 // ── Completion maths ──────────────────────────────────────────────────────────
 
 /**

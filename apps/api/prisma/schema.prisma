@@ -79,6 +79,11 @@ model User {
   feedbacks             Feedback[]
   usrahQuestions        UsrahQuestion[]  @relation("UsrahQuestionAuthor")
   usrahAnswers          UsrahQuestion[]  @relation("UsrahQuestionAnswerer")
+
+  // Lookup index for the social sign-in find-by-email path — created in raw
+  // SQL by *_social_auth; declared here (Phase C/W4c) so `prisma migrate dev`
+  // no longer diffs it away as drift.
+  @@index([email])
 }
 
 model Session {
@@ -203,17 +208,27 @@ model DayUnlock {
   @@unique([userId, date])
 }
 
+// Phase C/W4c: the goal lifecycle — set → mentor approve → remind → review.
+// A member PROPOSES (status "proposed"); the usrah head/invigilator approves
+// (which fires a Reminder for the member) or rejects with a reason. Terminal
+// statuses (rejected|completed|withdrawn) stay for history — `active` is kept
+// in sync (true only while proposed/approved) so the max-14 cap and the
+// legacy client field keep their meaning.
 model PersonalGoal {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  amalKey   String
-  title     String
-  note      String? // reviewer notes
-  target    String? // free-form target description
-  startDate String
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amalKey     String
+  title       String
+  note        String? // reviewer notes
+  target      String? // free-form target description
+  startDate   String
+  active      Boolean   @default(true)
+  status      String    @default("proposed") // proposed | approved | rejected | completed | withdrawn
+  decidedById String? // the head/invigilator/admin who approved or rejected
+  decidedAt   DateTime?
+  reason      String? // head's note on rejection
+  createdAt   DateTime  @default(now())
 }
 
 // ─────────────────────────── Monthly Muhasaba report ───────────────────────────
