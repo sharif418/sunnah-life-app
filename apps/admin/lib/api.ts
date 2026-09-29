@@ -392,6 +392,61 @@ export interface GoalItem {
   createdAt: string;
 }
 
+/** W4d — support inbox row (GET /api/admin/support). */
+export interface SupportThreadItem {
+  id: string;
+  userId: string;
+  userName: string;
+  userMemberCode: string | null;
+  userGender: Gender;
+  subject: string;
+  status: "open" | "answered" | "closed";
+  messageCount: number;
+  lastMessageAt: string | null;
+  lastPreview: string | null;
+  lastFromAdmin: boolean;
+  createdAt: string;
+  closedAt: string | null;
+}
+
+/** W4d — one thread + full history (GET /api/admin/support/:id). */
+export interface SupportThreadDetail {
+  thread: {
+    id: string;
+    userId: string;
+    subject: string;
+    status: "open" | "answered" | "closed";
+    createdAt: string;
+    updatedAt: string;
+    closedAt: string | null;
+  };
+  messages: {
+    id: string;
+    threadId: string;
+    authorId: string;
+    authorName: string | null;
+    isAdmin: boolean;
+    body: string;
+    createdAt: string;
+  }[];
+}
+
+/** W4d — usrah join-request queue row (GET /api/usrah/join-requests). */
+export interface UsrahJoinRequestItem {
+  id: string;
+  userId: string;
+  userName: string;
+  userGender: Gender;
+  message: string | null;
+  status: "pending" | "approved" | "rejected";
+  handledById: string | null;
+  handledAt: string | null;
+  usrahId: string | null;
+  usrahName: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+
 export interface MonthlyReportItem {
   id: string;
   userId: string;
@@ -543,6 +598,34 @@ export const api = {
   deleteLiveProgram: (id: string) =>
     call<{ ok: boolean }>(`/api/admin/live/${id}`, { method: "DELETE" }),
   audit: () => call<{ entries: AuditEntry[] }>("/api/admin/audit"),
+
+  // W4d: live support inbox (full_admin)
+  supportInbox: (status?: string) =>
+    call<{ threads: SupportThreadItem[] }>(
+      `/api/admin/support${status ? `?status=${encodeURIComponent(status)}` : ""}`
+    ),
+  supportThread: (id: string) => call<SupportThreadDetail>(`/api/admin/support/${id}`),
+  supportReply: (id: string, message: string) =>
+    call<{ message: SupportThreadDetail["messages"][number] }>(`/api/admin/support/${id}/messages`, {
+      method: "POST",
+      json: { message },
+    }),
+  supportClose: (id: string) => call<{ thread: SupportThreadDetail["thread"] }>(`/api/admin/support/${id}/close`, {
+    method: "POST",
+  }),
+
+  // W4d: usrah join-request queue (full_admin)
+  joinRequests: () => call<{ requests: UsrahJoinRequestItem[] }>("/api/usrah/join-requests"),
+  approveJoinRequest: (id: string, usrahId: string) =>
+    call<{ request: UsrahJoinRequestItem }>(`/api/usrah/join-requests/${id}/approve`, {
+      method: "POST",
+      json: { usrahId },
+    }),
+  rejectJoinRequest: (id: string, reason?: string) =>
+    call<{ request: UsrahJoinRequestItem }>(`/api/usrah/join-requests/${id}/reject`, {
+      method: "POST",
+      json: reason ? { reason } : {},
+    }),
 
   // usrah
   myUsrah: () => call<{ usrah: (Usrah & { members: UsrahMember[] }) | null; announcements: Announcement[] }>(

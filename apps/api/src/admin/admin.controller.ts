@@ -1659,6 +1659,47 @@ export class AdminService {
   }
 
   /**
+   * GET /api/admin/support/:id — full_admin: one thread + its full message
+   * history (authorName resolved — the admin context may read every author).
+   */
+  async supportThreadDetail(viewer: User | null, id: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const thread = await tx.supportThread.findUnique({ where: { id } });
+      if (!thread) throw new ApiError(404, "আলাপনাটি পাওয়া যায়নি");
+
+      const messages = await tx.supportMessage.findMany({
+        where: { threadId: id },
+        orderBy: { createdAt: "asc" },
+        take: 200,
+        include: { author: { select: { name: true } } },
+      });
+      return {
+        thread: {
+          id: thread.id,
+          userId: thread.userId,
+          subject: thread.subject,
+          status: thread.status,
+          createdAt: thread.createdAt.toISOString(),
+          updatedAt: thread.updatedAt.toISOString(),
+          closedAt: thread.closedAt ? thread.closedAt.toISOString() : null,
+        },
+        messages: messages.map((m) => ({
+          id: m.id,
+          threadId: m.threadId,
+          authorId: m.authorId,
+          authorName: m.author?.name ?? null,
+          isAdmin: m.isAdmin,
+          body: m.body,
+          createdAt: m.createdAt.toISOString(),
+        })),
+      };
+    });
+  }
+
+  /**
    * POST /api/admin/support/:id/messages — full_admin: reply (isAdmin=true,
    * status → answered, audited as support_reply). Replying to a CLOSED thread
    * is refused — reopen deliberately (a new thread) instead.
@@ -1998,6 +2039,13 @@ export class AdminController {
   @Roles("full_admin")
   supportReply(@Param("id") id: string, @Body() dto: SupportReplyDto, @Req() req: AuthedRequest) {
     return this.service.supportReply(currentUser(req), id, dto);
+  }
+
+  @Get("support/:id")
+  @ApiOperation({ summary: "full_admin: one support thread + full message history" })
+  @Roles("full_admin")
+  supportThreadDetail(@Param("id") id: string, @Req() req: AuthedRequest) {
+    return this.service.supportThreadDetail(currentUser(req), id);
   }
 
   @Post("support/:id/close")

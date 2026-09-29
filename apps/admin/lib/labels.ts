@@ -69,6 +69,20 @@ export const REVIEW_STATUS_LABELS_BN: Record<string, string> = {
   overdue: "বিলম্বিত",
 };
 
+/** W4d — support-thread lifecycle labels. */
+export const SUPPORT_STATUS_LABELS_BN: Record<string, string> = {
+  open: "উত্তর বাকি",
+  answered: "উত্তর দেওয়া হয়েছে",
+  closed: "বন্ধ",
+};
+
+/** W4d — usrah join-request lifecycle labels. */
+export const JOIN_STATUS_LABELS_BN: Record<string, string> = {
+  pending: "অপেক্ষমাণ",
+  approved: "অনুমোদিত",
+  rejected: "বাতিল",
+};
+
 export const ASSESSMENT_RESULT_LABELS_BN: Record<string, string> = {
   passed: "উত্তীর্ণ",
   not_yet: "আরও উন্নতি প্রয়োজন",
@@ -82,6 +96,10 @@ export const AUDIT_ACTION_LABELS_BN: Record<string, string> = {
   broadcast: "ঘোষণা প্রেরণ",
   create_assessment: "মূল্যায়ন সম্পন্ন",
   sign_assessment: "মূল্যায়ন স্বাক্ষর",
+  support_reply: "সাপোর্ট উত্তর",
+  support_close: "সাপোর্ট বন্ধ",
+  join_request_approve: "উসরা অনুরোধ অনুমোদন",
+  join_request_reject: "উসরা অনুরোধ বাতিল",
 };
 
 export function auditActionLabel(action: string): string {
