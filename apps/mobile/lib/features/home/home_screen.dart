@@ -7,6 +7,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bn_digits.dart';
@@ -14,8 +15,11 @@ import '../../core/bell_schedule.dart';
 import '../../core/calendars.dart' show formatTimeBn;
 import '../../core/cities.dart';
 import '../../core/date_keys.dart';
+import '../../core/most_used.dart';
 import '../../core/prayer_engine.dart';
 import '../../design/design_tokens.dart';
+import '../../design/phosphor_icons.dart';
+import '../../models/domain.dart';
 import '../../state/amal_state.dart';
 import '../../state/prayer_state.dart';
 import '../../state/providers.dart';
@@ -285,6 +289,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: SLSpacing.s12),
               _ExactAlarmCard(onGrant: _checkExactAlarms),
             ],
+
+            // ── সর্বাধিক ব্যবহৃত (C-W4b) ──
+            // Offline-first: ranked from the LOCAL Drift window (no API);
+            // guests see their own history, quick-log writes locally.
+            const _MostUsedSection(),
+
+            // ── দ্রুত প্রবেশ (C-W4b) ──
+            const _QuickAccessGrid(),
+
             const SizedBox(height: SLSpacing.s24),
             Center(
               child: Text(
@@ -298,6 +311,131 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ── সর্বাধিক ব্যবহৃত (most-used) ───────────────────────────────────────────
+
+class _MostUsedSection extends ConsumerWidget {
+  const _MostUsedSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(profileProvider);
+    final defs =
+        ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
+    final amal = ref.watch(amalProvider);
+    final lang = context.lang;
+    final today = dateKey(DateTime.now());
+    // Flatten the provider's date→(key→entry) window — mostUsedAmals itself
+    // windows to the last 30 days and counts DISTINCT full-point days.
+    final entries = [
+      for (final day in amal.entries.keys)
+        for (final e in (amal.entries[day] ?? const {}).values) e,
+    ];
+    final ranked = mostUsedAmals(
+      entries,
+      defs,
+      category: profile.category,
+      today: today,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(context.t('most_used'), icon: PhosphorIconsFill.fire),
+        if (ranked.isEmpty)
+          EmptyState(
+            message: context.t('most_used_empty'),
+            icon: PhosphorIconsRegular.listChecks,
+          )
+        else
+          SizedBox(
+            height: 176,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: ranked.length,
+              separatorBuilder: (_, _) => const SizedBox(width: SLSpacing.s8),
+              itemBuilder: (context, i) {
+                final item = ranked[i];
+                return MostUsedCard(
+                  item: item,
+                  currentValue: amal.entry(today, item.def.key)?.value,
+                  lang: lang,
+                  onQuickLog: (value) => ref
+                      .read(amalProvider.notifier)
+                      .write(item.def.key, today, value, 'quick:home'),
+                );
+              },
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ── দ্রুত প্রবেশ (quick access) ───────────────────────────────────────────
+
+class _QuickAccessGrid extends StatelessWidget {
+  const _QuickAccessGrid();
+
+  @override
+  Widget build(BuildContext context) {
+    final tiles = <({IconData icon, String title, String subtitle, String route})>[
+      (
+        icon: PhosphorIconsFill.bookOpenText,
+        title: context.t('ilm_quran'),
+        subtitle: context.t('quick_quran_desc'),
+        route: '/ilm/quran',
+      ),
+      (
+        icon: PhosphorIconsFill.handHeart,
+        title: context.t('ilm_duas'),
+        subtitle: context.t('quick_duas_desc'),
+        route: '/ilm/duas',
+      ),
+      (
+        icon: PhosphorIconsFill.clipboardText,
+        title: context.t('tab_amal'),
+        subtitle: context.t('quick_amal_desc'),
+        route: '/amal',
+      ),
+      (
+        icon: PhosphorIconsRegular.broadcast,
+        title: context.t('more_live'),
+        subtitle: context.t('quick_live_desc'),
+        route: '/more/live',
+      ),
+    ];
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          context.t('quick_access'),
+          icon: PhosphorIconsRegular.squaresFour,
+        ),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: SLSpacing.s8,
+            crossAxisSpacing: SLSpacing.s8,
+            childAspectRatio: 1.0,
+          ),
+          itemCount: tiles.length,
+          itemBuilder: (context, i) {
+            final tile = tiles[i];
+            return QuickAccessTile(
+              icon: tile.icon,
+              title: tile.title,
+              subtitle: tile.subtitle,
+              onTap: () => context.push(tile.route),
+            );
+          },
+        ),
+      ],
     );
   }
 }
