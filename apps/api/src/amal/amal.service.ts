@@ -36,7 +36,7 @@ export class AmalService {
    * GET /api/amal/definitions — active catalog (public: guests keep a local
    * diary). The AmalDefinition table IS the storage (admin-configurable per
    * PLAN.md §9); if it is empty (fresh install / wiped catalog) it is seeded
-   * once from the content pack (amal-catalog.json, 31 items) so the pack
+   * once from the content pack (amal-catalog.json, 35 items) so the pack
    * remains the fallback of record.
    */
   async definitions(): Promise<{ definitions: ReturnType<typeof mapDefinition>[] }> {
