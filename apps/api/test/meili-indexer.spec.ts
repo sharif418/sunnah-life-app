@@ -42,12 +42,16 @@ function stubFetch(respond: (call: Call) => StubResponse | undefined): Call[] {
   return calls;
 }
 
-/** happy-path meili: create → 202 task, add documents → 202 task */
+/** happy-path meili: create → 202 task, settings PATCH → 202 task,
+ * add documents → 202 task */
 const happy = (call: Call): StubResponse | undefined => {
   if (call.url === `${HOST}/indexes` && call.method === "POST") {
     return { status: 202, body: '{"taskUid":1,"indexUid":"x","type":"indexCreation","enqueuedAt":"2026-10-01T00:00:00Z"}' };
   }
-  if (/\/indexes\/[a-z0-9_]+\/documents\?primaryKey=id$/.test(call.url) && call.method === "POST") {
+  if (/\/indexes\/[a-z0-9_-]+\/settings\/?$/.test(call.url) && call.method === "PATCH") {
+    return { status: 202, body: '{"taskUid":3,"type":"settingsUpdate","enqueuedAt":"2026-10-01T00:00:00Z"}' };
+  }
+  if (/\/indexes\/[a-z0-9_-]+\/documents\?primaryKey=id$/.test(call.url) && call.method === "POST") {
     return { status: 202, body: '{"taskUid":2,"type":"documentAdditionOrUpdate","enqueuedAt":"2026-10-01T00:00:00Z"}' };
   }
   return undefined;
@@ -67,23 +71,23 @@ describe("MeiliIndexer — Meilisearch v1.x routes [C/W5-ops]", () => {
     await syncAll(new MeiliIndexer(), HOST);
 
     const creates = calls.filter((c) => c.url === `${HOST}/indexes` && c.method === "POST");
-    expect(creates).toHaveLength(3); // duas, names99, articles
+    expect(creates).toHaveLength(5); // duas, adhkar, names99, islamic-names, articles [W4j]
     for (const c of creates) {
       const body = JSON.parse(c.body ?? "");
       expect(typeof body.uid).toBe("string");
       expect(body.primaryKey).toBe("id");
     }
     // the route Meilisearch answers with 405 must appear NOWHERE
-    const badRoute = calls.filter((c) => c.method === "POST" && /\/indexes\/[a-z0-9_]+\/?$/.test(c.url));
+    const badRoute = calls.filter((c) => c.method === "POST" && /\/indexes\/[a-z0-9_-]+\/?$/.test(c.url));
     expect(badRoute).toEqual([]);
   });
 
-  it("adds the documents of every index after create (3 adds, primaryKey=id in the query)", async () => {
+  it("adds the documents of every index after create (5 adds, primaryKey=id in the query)", async () => {
     const calls = stubFetch(happy);
     await syncAll(new MeiliIndexer(), HOST);
 
     const adds = calls.filter((c) => c.method === "POST" && c.url.includes("/documents?primaryKey=id"));
-    expect(adds).toHaveLength(3);
+    expect(adds).toHaveLength(5);
     for (const c of adds) {
       const docs = JSON.parse(c.body ?? "");
       expect(Array.isArray(docs)).toBe(true);
@@ -115,7 +119,7 @@ describe("MeiliIndexer — Meilisearch v1.x routes [C/W5-ops]", () => {
       return happy(call);
     });
     await syncAll(new MeiliIndexer(), HOST);
-    expect(calls.filter((c) => c.method === "POST" && c.url.includes("/documents?primaryKey=id"))).toHaveLength(3);
+    expect(calls.filter((c) => c.method === "POST" && c.url.includes("/documents?primaryKey=id"))).toHaveLength(5);
   });
 
   it("any other create failure (e.g. 401) skips the document add for that index", async () => {
@@ -131,8 +135,8 @@ describe("MeiliIndexer — Meilisearch v1.x routes [C/W5-ops]", () => {
       return happy(call);
     });
     await syncAll(new MeiliIndexer(), HOST);
-    // only the two successful creates got their documents added
-    expect(calls.filter((c) => c.method === "POST" && c.url.includes("/documents?primaryKey=id"))).toHaveLength(2);
+    // only the four successful creates got their documents added
+    expect(calls.filter((c) => c.method === "POST" && c.url.includes("/documents?primaryKey=id"))).toHaveLength(4);
   });
 
   it("sends the MEILI_KEY bearer when configured", async () => {
@@ -142,5 +146,35 @@ describe("MeiliIndexer — Meilisearch v1.x routes [C/W5-ops]", () => {
     for (const c of calls) {
       expect((c.headers ?? {}).Authorization).toBe("Bearer master-key-for-test");
     }
+  });
+
+  it("[W4j] PATCHes Bengali typo tolerance + ranked searchableAttributes on every index", async () => {
+    const calls = stubFetch(happy);
+    await syncAll(new MeiliIndexer(), HOST);
+
+    const patches = calls.filter((c) => c.method === "PATCH" && /\/indexes\/[a-z0-9_-]+\/settings\/?$/.test(c.url));
+    expect(patches).toHaveLength(5);
+    for (const c of patches) {
+      const body = JSON.parse(c.body ?? "");
+      // Bengali adjustment: one typo allowed from 4-code-point words
+      expect(body.typoTolerance.minWordSizeForTypos.oneTypo).toBe(4);
+      expect(body.typoTolerance.minWordSizeForTypos.twoTypos).toBe(8);
+      // ranked searchable attributes — the display title first
+      expect(Array.isArray(body.searchableAttributes)).toBe(true);
+      expect(body.searchableAttributes.length).toBeGreaterThan(0);
+    }
+    const duas = patches.find((c) => c.url.includes("/indexes/duas/"));
+    expect(JSON.parse(duas!.body ?? "").searchableAttributes[0]).toBe("titleBn");
+  });
+
+  it("[W4j] a settings failure only warns — the documents still sync", async () => {
+    const calls = stubFetch((call) => {
+      if (/\/indexes\/[a-z0-9_-]+\/settings\/?$/.test(call.url) && call.method === "PATCH") {
+        return { status: 500, body: JSON.stringify({ message: "boom", code: "internal" }) };
+      }
+      return happy(call);
+    });
+    await syncAll(new MeiliIndexer(), HOST);
+    expect(calls.filter((c) => c.method === "POST" && c.url.includes("/documents?primaryKey=id"))).toHaveLength(5);
   });
 });
