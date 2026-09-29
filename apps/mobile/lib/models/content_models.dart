@@ -5,6 +5,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:flutter/services.dart' show rootBundle;
 
 // ── Pack models (mirror domain.ts content interfaces) ────────────────────────
@@ -472,11 +473,55 @@ const List<Map<String, dynamic>> kFallbackQuizzes = [
 class ContentPack {
   const ContentPack._();
 
-  static Future<Map<String, dynamic>> _load(String file) async {
-    final raw = await rootBundle.loadString('assets/content/$file');
-    final decoded = jsonDecode(raw);
-    if (decoded is Map<String, dynamic>) return decoded;
-    return <String, dynamic>{};
+  static Future<String> Function(String path) _loadAsset = rootBundle.loadString;
+
+  /// Completed cache — decoded DATA per file, zone-free (the FaqRepository/
+  /// QuranRepository lesson: memoizing the FUTURE instead breaks fake-zone
+  /// listeners, because a future completed inside runAsync's real-async zone
+  /// never resolves them). Production wins too: reopening a pack screen
+  /// resolves on the next microtask instead of re-reading + re-decoding.
+  static final Map<String, Map<String, dynamic>> _cache = {};
+
+  /// Single-flight for concurrent same-zone opens.
+  static final Map<String, Future<Map<String, dynamic>>> _loading = {};
+
+  /// Test seam (the FaqRepository pattern): rootBundle platform-channel
+  /// loads cannot complete inside the fake-async zone — tests inject a
+  /// File-based loader and prewarm the pack cache under runAsync.
+  @visibleForTesting
+  static set assetLoaderForTesting(Future<String> Function(String path) loader) {
+    _loadAsset = loader;
+    _cache.clear();
+    _loading.clear();
+  }
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _loadAsset = rootBundle.loadString;
+    _cache.clear();
+    _loading.clear();
+  }
+
+  static Future<Map<String, dynamic>> _load(String file) {
+    final cached = _cache[file];
+    if (cached != null) return Future.value(cached);
+    return _loading[file] ??= () async {
+      try {
+        final raw = await _loadAsset('assets/content/$file');
+        final decoded = jsonDecode(raw);
+        final data =
+            decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
+        _cache[file] = data;
+        _loading.remove(file);
+        return data;
+      } catch (e) {
+        debugPrint('$file load failed: $e');
+        // A failed load must not poison future opens — drop the in-flight
+        // memo so the next caller refetches.
+        _loading.remove(file);
+        rethrow;
+      }
+    }();
   }
 
   static List<T> _list<T>(

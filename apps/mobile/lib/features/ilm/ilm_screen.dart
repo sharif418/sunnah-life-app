@@ -115,6 +115,39 @@ class _IlmScreenState extends State<IlmScreen> {
               ),
             ),
             const SizedBox(height: SLSpacing.s16),
+            // W4j — the search entry: a field-shaped card (the tab has no
+            // AppBar — the global header owns the top chrome).
+            Padding(
+              padding: const EdgeInsets.only(bottom: SLSpacing.s16),
+              child: AppCard(
+                onTap: () => context.push('/ilm/search'),
+                child: Row(
+                  children: [
+                    Icon(
+                      PhosphorIconsRegular.magnifyingGlass,
+                      size: 22,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: SLSpacing.s12),
+                    Expanded(
+                      child: Text(
+                        context.t('search_hint'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      PhosphorIconsRegular.caretRight,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),

@@ -36,6 +36,7 @@ import 'features/ilm/courses_screen.dart';
 import 'features/ilm/duas_screen.dart';
 import 'features/ilm/iman_branches_screen.dart';
 import 'features/ilm/islamic_names_screen.dart';
+import 'features/ilm/ilm_search_screen.dart';
 import 'features/ilm/ilm_screen.dart';
 import 'features/ilm/live_quiz_screen.dart';
 import 'features/ilm/names99_screen.dart';
@@ -320,6 +321,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'adhkar',
                     pageBuilder: (c, s) =>
                         slFadePage(child: const AdhkarScreen()),
+                  ),
+                  // W4j: the unified content search — the Ilm tab's entry
+                  // (public + its own offline fallback over the bundled packs).
+                  GoRoute(
+                    path: 'search',
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const IlmSearchScreen()),
                   ),
                   GoRoute(path: 'duas', builder: (c, s) => const DuasScreen()),
                   GoRoute(
