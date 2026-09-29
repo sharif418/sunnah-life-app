@@ -164,7 +164,9 @@ class AmalToggle extends StatelessWidget {
   }
 }
 
-/// Count stepper with the quick-১০০ action (durood / istighfar).
+/// Count stepper with the quick-১০০ action (durood / istighfar) — a
+/// compact trailing cluster for the one-line diary rows: [−] value [+]
+/// with the target under the value and the quick button at the end.
 class CountStepper extends StatelessWidget {
   const CountStepper({
     super.key,
@@ -204,14 +206,27 @@ class CountStepper extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                '${_n(value)} ${reached ? '✔' : ''}',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: reached
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface,
-                  fontWeight: FontWeight.w700,
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    _n(value),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: reached
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (reached) ...[
+                    const SizedBox(width: 2),
+                    Icon(
+                      Icons.check_circle,
+                      size: 16,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ],
+                ],
               ),
               Text(
                 '${_n(target)} $unit',
@@ -236,7 +251,7 @@ class CountStepper extends StatelessWidget {
                     onChanged(quickCount);
                   }
                 : null,
-            child: Text('${_n(quickCount)} ✔'),
+            child: Text(_n(quickCount)),
           ),
         ],
       ],
@@ -268,7 +283,10 @@ class CountStepper extends StatelessWidget {
   }
 }
 
-/// Quantity input (tilawat: পৃষ্ঠা / পারা) with target context.
+/// Quantity input (tilawat পৃষ্ঠা/পারা, minutes) — a compact, NORMAL-height
+/// numeric field that always shows the current value with the unit inline,
+/// between − / + steppers. The value is editable directly (tap → keyboard);
+/// steppers nudge by a half unit (0.5).
 class QuantityInput extends StatefulWidget {
   const QuantityInput({
     super.key,
@@ -292,34 +310,48 @@ class QuantityInput extends StatefulWidget {
 
 class _QuantityInputState extends State<QuantityInput> {
   late final TextEditingController _controller;
+  late final FocusNode _focus;
 
   @override
   void initState() {
     super.initState();
-    _controller = TextEditingController(
-      text: widget.value == 0 ? '' : toBn(widget.value),
-    );
+    _controller = TextEditingController(text: _fmt(widget.value));
+    _focus = FocusNode();
+    // Commit on blur as well as on submit — a stray keyboard dismissal
+    // must not swallow a typed number.
+    _focus.addListener(() {
+      if (!_focus.hasFocus) _commit(_controller.text);
+    });
+  }
+
+  /// 1.0 renders as ১ (not ১.০); halves keep their fraction (০.৫).
+  String _fmt(double v) {
+    final s = v == v.truncateToDouble() ? v.toInt().toString() : v.toString();
+    return widget.bengali ? toBn(s) : s;
   }
 
   @override
   void didUpdateWidget(covariant QuantityInput old) {
     super.didUpdateWidget(old);
-    if (old.value != widget.value &&
-        toEnDigits(_controller.text) !=
-            (widget.value == 0 ? '' : widget.value.toString())) {
-      _controller.text = widget.value == 0 ? '' : toBn(widget.value);
+    // Steppers wrote a new value (or a sync landed): refresh the field
+    // unless the user is mid-edit (focus) with the same digits typed.
+    final typed = double.tryParse(toEnDigits(_controller.text)) ?? 0;
+    if (!_focus.hasFocus && typed != widget.value) {
+      _controller.text = _fmt(widget.value);
     }
   }
 
   @override
   void dispose() {
     _controller.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
   void _commit(String raw) {
     final parsed = double.tryParse(toEnDigits(raw)) ?? 0;
-    widget.onChanged(parsed.clamp(0, 999));
+    final clamped = parsed.clamp(0.0, 999.0);
+    if (clamped != widget.value) widget.onChanged(clamped);
   }
 
   @override
@@ -334,29 +366,68 @@ class _QuantityInputState extends State<QuantityInput> {
           Icons.remove,
           () => widget.onChanged(math.max(0, widget.value - 0.5)),
         ),
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: SLSpacing.s8),
-          width: 84,
-          child: TextField(
-            enabled: widget.enabled,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textAlign: TextAlign.center,
-            controller: _controller,
-            style: theme.textTheme.titleMedium,
-            onSubmitted: _commit,
-            decoration: InputDecoration(
-              suffixText: widget.unit,
-              suffixStyle: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              isDense: true,
+        const SizedBox(width: SLSpacing.s8),
+        // The compact field: fixed normal height, value + unit inline.
+        GestureDetector(
+          onTap: widget.enabled ? _focus.requestFocus : null,
+          child: Container(
+            height: 44,
+            padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s8),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.surfaceContainerHighest,
+              borderRadius: SLRadius.brMd,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: TextField(
+                    enabled: widget.enabled,
+                    focusNode: _focus,
+                    controller: _controller,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                    onSubmitted: (raw) {
+                      _commit(raw);
+                      _focus.unfocus();
+                    },
+                    decoration: const InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    widget.unit,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                if (reached) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.check_circle,
+                    color: theme.colorScheme.primary,
+                    size: 16,
+                  ),
+                ],
+              ],
             ),
           ),
         ),
+        const SizedBox(width: SLSpacing.s8),
         _btn(context, Icons.add, () => widget.onChanged(widget.value + 0.5)),
-        const SizedBox(width: SLSpacing.s4),
-        if (reached)
-          Icon(Icons.check_circle, color: theme.colorScheme.primary, size: 20),
       ],
     );
   }
@@ -390,6 +461,21 @@ String toEnDigits(String raw) => raw.replaceAllMapped(
   RegExp('[০-৯]'),
   (m) => '${'০১২৩৪৫৬৭৮৯'.indexOf(m.group(0)!)}',
 );
+
+/// The SHORT inline unit for a quantity/count amal row — the catalog's unit
+/// carries the full teaching note ("পৃষ্ঠা/পারা — হাফেজ: ১ পারা …"), which is
+/// right for the diary hint but must not be stuffed into a compact control.
+/// হাফেজ counts পারা; everyone else পৃষ্ঠা; beginners use the
+/// tilawat-minutes ramp (মিনিট) — the unit switch stays the ramp card.
+String displayUnitFor(AmalDefinition def, UserCategory category) {
+  final raw = def.unit ?? '';
+  if (raw.isEmpty) return '';
+  if (raw.contains('পৃষ্ঠা/পারা')) {
+    return category == UserCategory.hafez ? 'পারা' : 'পৃষ্ঠা';
+  }
+  final head = raw.split('—').first.trim();
+  return head.isEmpty ? raw : head;
+}
 
 /// W4c tilawat beginner card — shown for the tilawat_minutes amal while
 /// the user has <7 days of tilawat-minutes history (computed locally):

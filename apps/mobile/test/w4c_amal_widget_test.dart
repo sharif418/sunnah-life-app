@@ -35,7 +35,7 @@ import 'package:sunnah_life/features/amal/goals_screen.dart'
 import 'package:sunnah_life/features/amal/today_screen.dart';
 import 'package:sunnah_life/features/dawah/dawah_screen.dart';
 import 'package:sunnah_life/features/shared/widgets.dart'
-    show AppCard, SectionHeader;
+    show SectionHeader;
 import 'package:sunnah_life/l10n/app_strings.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/amal_state.dart';
@@ -967,18 +967,12 @@ void main() {
 
       await scrollTo(tester, find.text('তিলাওয়াত (মিনিট)'));
       expect(find.byType(TilawatBeginnerCard), findsNothing);
-      // The normal quantity control carries the amal instead — the
-      // QuantityInput is a SIBLING of the title inside the same _AmalRow
-      // AppCard (title left, control below), not an ancestor.
-      final tilawatCard = find
-          .ancestor(
-            of: find.text('তিলাওয়াত (মিনিট)').first,
-            matching: find.byType(AppCard),
-          )
-          .first;
+      // The normal quantity control carries the amal instead — V2 group
+      // cards put one row per amal (keyed amal_row_<key>) inside ONE card
+      // per category, so the control is scoped to the ROW, not the card.
       expect(
         find.descendant(
-          of: tilawatCard,
+          of: find.byKey(const ValueKey('amal_row_$kTilawatMinutesKey')),
           matching: find.byType(QuantityInput),
         ),
         findsOneWidget,
