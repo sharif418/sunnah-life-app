@@ -1484,3 +1484,31 @@ Work Log:
 Stage Summary:
 - W4h COMPLETE (API by the previous agent + this UI tail): the four W4h endpoints now all have admin surfaces — /level-rules editor (DB override over the pack seed, audit-visible), /referrals (paginated forest browser), dash-home invigilator health (self + per-invigilator list with the Bengali formula labels), /content CMS pack editors + /settings app-config/contacts. Both previously-dead full_admin nav links (কন্টেন্ট ম্যানেজমেন্ট, অ্যাপ কনফিগারেশন) now resolve to real pages.
 - Honest gaps: (a) courses/quizzes packs are read-only in /content — nested lessons/questions need a dedicated form pass (PUT endpoint already supports them); (b) no member-profile deep-link from the referral tree; (c) no automated admin tests exist (lint+build are the gates — the repo's admin testing story), so the pages are verified by compile + the API's own 51 W4h jest tests pinning the contracts; (d) the container-redeploy-restores-pack limitation is inherent to the API design (documented on the page); (e) content-pack edits are whole-doc PUTs — no per-item diffing/undo, and concurrent two-admin edits last-write-win.
+
+---
+Task ID: W4i (agent landed the 4 API commits + the mobile files; the lead finished the test tail + two real fixes and shipped)
+Agent: W4i + lead
+Task: Assessment signature — the assessee's own OTP-confirmed acknowledgment makes the farze-ain result final.
+
+Work Log:
+- API (agent): 2f639b0 schema (status pending_confirmation/confirmed/declined + confirmedAt/declinedAt/decisionNote + signed-row backfill + demo seed), ede0f06 consumeOtpCode (the shared atomic OTP verify+consume, extracted from auth for non-sign-in flows), b1082db the flow (submit starts pending + Fajr reminder to the assessee, GET /api/assessments/me RLS-scoped, confirm-request/confirm over the auth OTP, decline + invigilator reminder, level facts read confirmed-only), 5ead9e7 e2e jest (pending+reminder, /me scoping, OTP issue + wrong-code 400, confirm + audit + level gate, decline + reminder).
+- Mobile (agent files + lead finish): the dawah assessments section shows status chips + the confirm sheet (OTP request → entry → confirm; decline with reason). Lead repairs: AssessmentStatus.json is snake_case on the wire (pending_confirmation — the API column; the enum-name getter broke the chip keys), the trailing score+chip column overflowed 5px on two-line declined reasons (FittedBox scaleDown), the tests needed the below-the-fold scroll (overviewScroll — the w4e lesson) + method-prefixed wire expectations.
+- Gates (verbatim): apps/api lint 0 errors + tsc clean + jest 372/372; apps/mobile analyze No issues + 319/319 (6 new); apps/admin untouched (the assessments page's status display was already landed by the agent's diff? — VERIFY: the agent's commits touched only api+mobile+admin? the status column: admin shows the status in the existing page read-only — noted honest).
+- Reminder panel: the assessee's reminder rides the existing assessment kind (verified mapping).
+
+Stage Summary:
+- W4i COMPLETE: the farze-ain result is final only after the member's own OTP confirmation; every path tested.
+
+---
+Task ID: W4i (agent: the 4 API commits + the mobile files; the lead: the test tail, two real fixes, the admin column, this section)
+Agent: W4i + lead
+Task: Assessment signature — the farze-ain result is final only after the member's own OTP-confirmed acknowledgment.
+
+Work Log:
+- API (agent commits 2f639b0, ede0f06, b1082db, 5ead9e7): schema status pending_confirmation|confirmed|declined (+confirmedAt/declinedAt/decisionNote, signed-row backfill, coherent demo seed); consumeOtpCode — the shared atomic OTP verify+consume extracted from auth; the flow — submit starts pending + a Fajr reminder to the assessee, GET /api/assessments/me (RLS), confirm-request/confirm over the auth OTP machinery (audit assessment_confirm), decline + invigilator reminder; the level engine reads confirmed-only. jest 372/372 (the e2e: pending+reminder, /me scoping, OTP issue + wrong-code 400, confirm + audit + the level gate, decline + reminder).
+- Mobile (agent files + lead finish): the dawah assessments section renders AssessmentStatusChip + score per row; pending rows carry the CTA; the confirm sheet = OTP request → entry (devCode auto-fills in debug) → confirm; decline with reason. Lead repairs: (1) AssessmentStatus.json is snake_case on the wire (pending_confirmation — the API column; the enum-name getter broke every chip key), (2) the trailing score+chip Column overflowed 5px on two-line declined reasons (FittedBox scaleDown), (3) test tail — the below-the-fold scroll (overviewScroll) + method-prefixed wire expectations.
+- Admin (lead): the assessment history's নিশ্চয়ন column (read-only) + the CSV column — the confirm stays the member's own action.
+- Gates (verbatim): api lint 0 errors / tsc clean / jest 372/372; mobile analyze No issues / 319/319 (6 new in test/w4i_assessment_confirm_test.dart); admin lint 0 / build ✓.
+
+Stage Summary:
+- W4i COMPLETE end to end: score → the member is reminded → sees the score in the app → OTP-confirms (or declines with a reason) → only then final for level transitions.
