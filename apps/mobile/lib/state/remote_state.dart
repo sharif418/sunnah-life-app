@@ -175,3 +175,22 @@ final dawahRequirementsProvider = FutureProvider<DawahRequirements?>((ref) async
   if (user == null || !user.canSeeDawah) return null;
   return ref.watch(apiProvider).dawahRequirements();
 });
+
+/// Own gender-scoped leaderboard band (W4c) — the scholars' config gate:
+/// hidden entirely (null) while the flag is off (including while the
+/// config is still loading), for guests, on the server's 404 (flag off
+/// server-side too) and on any network failure. Never an error wall.
+final leaderboardMeProvider = FutureProvider<LeaderboardMe?>((ref) async {
+  final enabled = ref.watch(configProvider).maybeWhen(
+    data: (c) => c.leaderboardEnabled,
+    orElse: () => false,
+  );
+  if (!enabled) return null;
+  final auth = ref.watch(authProvider);
+  if (!auth.signedIn) return null;
+  try {
+    return await ref.watch(apiProvider).leaderboardMe();
+  } on ApiException {
+    return null;
+  }
+});

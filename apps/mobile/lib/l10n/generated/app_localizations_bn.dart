@@ -1674,4 +1674,28 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get tilawat_begin_minutes => 'মিনিট';
+
+  @override
+  String get leaderboard_title => 'লিডারবোর্ড';
+
+  @override
+  String get leaderboard_points => 'পয়েন্ট';
+
+  @override
+  String get leaderboard_window_days => 'দিনের হিসাব';
+
+  @override
+  String get leaderboard_band_top10 => 'শীর্ষ ১০%';
+
+  @override
+  String get leaderboard_band_top25 => 'শীর্ষ ২৫%';
+
+  @override
+  String get leaderboard_band_top50 => 'শীর্ষ ৫০%';
+
+  @override
+  String get leaderboard_band_top75 => 'শীর্ষ ৭৫%';
+
+  @override
+  String get leaderboard_band_bottom => 'নিচের ২৫%';
 }

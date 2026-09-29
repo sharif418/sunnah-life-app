@@ -441,6 +441,11 @@ class ApiClient {
     );
   }
 
+  /// GET /api/leaderboard/me — own gender-scoped percentile band
+  /// (config-gated; 404 while the flag is off server-side).
+  Future<LeaderboardMe> leaderboardMe() async =>
+      LeaderboardMe.fromJson(await _req('GET', '/api/leaderboard/me'));
+
   // ── Dawah engine ────────────────────────────────────────────────────────────
 
   Future<DawahOverview> dawahOverview() async =>

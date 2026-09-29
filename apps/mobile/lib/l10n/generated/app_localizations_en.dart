@@ -1670,4 +1670,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tilawat_begin_minutes => 'minutes';
+
+  @override
+  String get leaderboard_title => 'Leaderboard';
+
+  @override
+  String get leaderboard_points => 'points';
+
+  @override
+  String get leaderboard_window_days => 'days window';
+
+  @override
+  String get leaderboard_band_top10 => 'Top 10%';
+
+  @override
+  String get leaderboard_band_top25 => 'Top 25%';
+
+  @override
+  String get leaderboard_band_top50 => 'Top 50%';
+
+  @override
+  String get leaderboard_band_top75 => 'Top 75%';
+
+  @override
+  String get leaderboard_band_bottom => 'Bottom 25%';
 }

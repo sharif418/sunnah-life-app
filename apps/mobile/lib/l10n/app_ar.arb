@@ -538,5 +538,13 @@
   "tilawat_begin_chip": "بداية",
   "tilawat_begin_copy": "ابدأ بخمس دقائق اليوم — ستصبح عادة بإذن الله",
   "tilawat_ramp_day": "يوم",
-  "tilawat_begin_minutes": "دقائق"
+  "tilawat_begin_minutes": "دقائق",
+  "leaderboard_title": "لوحة الصدارة",
+  "leaderboard_points": "نقطة",
+  "leaderboard_window_days": "أيام الحساب",
+  "leaderboard_band_top10": "أعلى ١٠٪",
+  "leaderboard_band_top25": "أعلى ٢٥٪",
+  "leaderboard_band_top50": "أعلى ٥٠٪",
+  "leaderboard_band_top75": "أعلى ٧٥٪",
+  "leaderboard_band_bottom": "أدنى ٢٥٪"
 }

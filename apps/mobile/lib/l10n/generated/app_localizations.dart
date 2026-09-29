@@ -3333,6 +3333,54 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'মিনিট'**
   String get tilawat_begin_minutes;
+
+  /// No description provided for @leaderboard_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'লিডারবোর্ড'**
+  String get leaderboard_title;
+
+  /// No description provided for @leaderboard_points.
+  ///
+  /// In bn, this message translates to:
+  /// **'পয়েন্ট'**
+  String get leaderboard_points;
+
+  /// No description provided for @leaderboard_window_days.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিনের হিসাব'**
+  String get leaderboard_window_days;
+
+  /// No description provided for @leaderboard_band_top10.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ১০%'**
+  String get leaderboard_band_top10;
+
+  /// No description provided for @leaderboard_band_top25.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ২৫%'**
+  String get leaderboard_band_top25;
+
+  /// No description provided for @leaderboard_band_top50.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ৫০%'**
+  String get leaderboard_band_top50;
+
+  /// No description provided for @leaderboard_band_top75.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ৭৫%'**
+  String get leaderboard_band_top75;
+
+  /// No description provided for @leaderboard_band_bottom.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিচের ২৫%'**
+  String get leaderboard_band_bottom;
 }
 
 class _AppLocalizationsDelegate

@@ -7,11 +7,13 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../design/design_tokens.dart';
 import '../../core/bn_digits.dart';
 import '../../core/amal_engine.dart';
 import '../../models/domain.dart';
+import '../../state/remote_state.dart' show leaderboardMeProvider;
 import '../shared/widgets.dart';
 
 /// জামাতে / একা / কাযা — the salat tristate chip row (44dp targets).
@@ -728,3 +730,82 @@ class _RingPainter extends CustomPainter {
 /// Compute display points for one cell (used by grids + tests).
 double cellPoints(Object? value, AmalDefinition def, UserCategory category) =>
     amalPoints(value, def, category);
+
+/// W4c leaderboard band card — the member's gender-scoped percentile band
+/// (config-gated). Consumes leaderboardMeProvider: while the flag is off,
+/// the user is a guest, the server 404s (flag off) or the network fails,
+/// the provider is null and this renders NOTHING (never an error wall).
+class LeaderboardBandCard extends ConsumerWidget {
+  const LeaderboardBandCard({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final bn = context.isBn;
+    return ref.watch(leaderboardMeProvider).when(
+      data: (me) {
+        if (me == null) return const SizedBox.shrink();
+        final color = switch (me.band) {
+          LeaderboardBand.top10 => SLColors.goldDeep,
+          LeaderboardBand.top25 => theme.colorScheme.primary,
+          LeaderboardBand.top50 => theme.colorScheme.tertiary,
+          LeaderboardBand.top75 => theme.colorScheme.secondary,
+          LeaderboardBand.bottom => theme.colorScheme.onSurfaceVariant,
+        };
+        return Padding(
+          padding: const EdgeInsets.only(top: SLSpacing.s8),
+          child: AppCard(
+            key: const ValueKey('leaderboard_band_card'),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.leaderboard_outlined,
+                  color: theme.colorScheme.primary,
+                ),
+                const SizedBox(width: SLSpacing.s12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.t('leaderboard_title'),
+                        style: theme.textTheme.bodySmall,
+                      ),
+                      Text(
+                        '${context.t('leaderboard_points')}: ${bn ? toBn(me.myPointsDisplay) : me.myPointsDisplay} · '
+                        '${bn ? toBn(me.windowDays) : me.windowDays} ${context.t('leaderboard_window_days')}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  key: ValueKey('leaderboard_band_chip_${me.band.json}'),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: SLRadius.brPill,
+                  ),
+                  child: Text(
+                    context.t(me.band.labelKey),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: color,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+    );
+  }
+}

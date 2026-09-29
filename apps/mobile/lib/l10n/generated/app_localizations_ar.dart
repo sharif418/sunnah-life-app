@@ -1661,4 +1661,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get tilawat_begin_minutes => 'دقائق';
+
+  @override
+  String get leaderboard_title => 'لوحة الصدارة';
+
+  @override
+  String get leaderboard_points => 'نقطة';
+
+  @override
+  String get leaderboard_window_days => 'أيام الحساب';
+
+  @override
+  String get leaderboard_band_top10 => 'أعلى ١٠٪';
+
+  @override
+  String get leaderboard_band_top25 => 'أعلى ٢٥٪';
+
+  @override
+  String get leaderboard_band_top50 => 'أعلى ٥٠٪';
+
+  @override
+  String get leaderboard_band_top75 => 'أعلى ٧٥٪';
+
+  @override
+  String get leaderboard_band_bottom => 'أدنى ٢٥٪';
 }

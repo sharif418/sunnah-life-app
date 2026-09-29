@@ -538,5 +538,13 @@
   "tilawat_begin_chip": "শুরু",
   "tilawat_begin_copy": "আজ ৫ মিনিট দিয়ে শুরু করুন — ধীরে ধীরে অভ্যাস হয়ে যাবে ইনশাআল্লাহ",
   "tilawat_ramp_day": "দিন",
-  "tilawat_begin_minutes": "মিনিট"
+  "tilawat_begin_minutes": "মিনিট",
+  "leaderboard_title": "লিডারবোর্ড",
+  "leaderboard_points": "পয়েন্ট",
+  "leaderboard_window_days": "দিনের হিসাব",
+  "leaderboard_band_top10": "শীর্ষ ১০%",
+  "leaderboard_band_top25": "শীর্ষ ২৫%",
+  "leaderboard_band_top50": "শীর্ষ ৫০%",
+  "leaderboard_band_top75": "শীর্ষ ৭৫%",
+  "leaderboard_band_bottom": "নিচের ২৫%"
 }

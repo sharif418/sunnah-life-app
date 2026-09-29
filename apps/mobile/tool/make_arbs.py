@@ -655,6 +655,47 @@ NEW_KEYS = {
         "en": "minutes",
         "ar": "دقائق",
     },
+    # ── W4c: leaderboard percentile bands (config-gated) ───────────────────────
+    "leaderboard_title": {
+        "bn": "লিডারবোর্ড",
+        "en": "Leaderboard",
+        "ar": "لوحة الصدارة",
+    },
+    "leaderboard_points": {
+        "bn": "পয়েন্ট",
+        "en": "points",
+        "ar": "نقطة",
+    },
+    "leaderboard_window_days": {
+        "bn": "দিনের হিসাব",
+        "en": "days window",
+        "ar": "أيام الحساب",
+    },
+    "leaderboard_band_top10": {
+        "bn": "শীর্ষ ১০%",
+        "en": "Top 10%",
+        "ar": "أعلى ١٠٪",
+    },
+    "leaderboard_band_top25": {
+        "bn": "শীর্ষ ২৫%",
+        "en": "Top 25%",
+        "ar": "أعلى ٢٥٪",
+    },
+    "leaderboard_band_top50": {
+        "bn": "শীর্ষ ৫০%",
+        "en": "Top 50%",
+        "ar": "أعلى ٥٠٪",
+    },
+    "leaderboard_band_top75": {
+        "bn": "শীর্ষ ৭৫%",
+        "en": "Top 75%",
+        "ar": "أعلى ٧٥٪",
+    },
+    "leaderboard_band_bottom": {
+        "bn": "নিচের ২৫%",
+        "en": "Bottom 25%",
+        "ar": "أدنى ٢٥٪",
+    },
 }
 
 

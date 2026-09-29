@@ -600,6 +600,14 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'tilawat_begin_copy' => l.tilawat_begin_copy,
   'tilawat_ramp_day' => l.tilawat_ramp_day,
   'tilawat_begin_minutes' => l.tilawat_begin_minutes,
+  'leaderboard_title' => l.leaderboard_title,
+  'leaderboard_points' => l.leaderboard_points,
+  'leaderboard_window_days' => l.leaderboard_window_days,
+  'leaderboard_band_top10' => l.leaderboard_band_top10,
+  'leaderboard_band_top25' => l.leaderboard_band_top25,
+  'leaderboard_band_top50' => l.leaderboard_band_top50,
+  'leaderboard_band_top75' => l.leaderboard_band_top75,
+  'leaderboard_band_bottom' => l.leaderboard_band_bottom,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

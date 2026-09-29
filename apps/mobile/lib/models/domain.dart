@@ -11,6 +11,7 @@ export 'assessment.dart';
 export 'dawah.dart';
 export 'goal.dart';
 export 'ilm_engagement.dart';
+export 'leaderboard.dart';
 export 'live.dart';
 export 'review.dart';
 export 'user.dart';

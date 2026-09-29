@@ -538,5 +538,13 @@
   "tilawat_begin_chip": "Start",
   "tilawat_begin_copy": "Start with 5 minutes today — it will become a habit, in shaa Allah",
   "tilawat_ramp_day": "Day",
-  "tilawat_begin_minutes": "minutes"
+  "tilawat_begin_minutes": "minutes",
+  "leaderboard_title": "Leaderboard",
+  "leaderboard_points": "points",
+  "leaderboard_window_days": "days window",
+  "leaderboard_band_top10": "Top 10%",
+  "leaderboard_band_top25": "Top 25%",
+  "leaderboard_band_top50": "Top 50%",
+  "leaderboard_band_top75": "Top 75%",
+  "leaderboard_band_bottom": "Bottom 25%"
 }

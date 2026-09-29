@@ -148,6 +148,10 @@ class _TodayView extends ConsumerWidget {
             StreakBadge(days: streak, bengali: bn),
           ],
         ),
+
+        // W4c: gender-scoped percentile band — compact card under the streak
+        // header; hidden entirely while the flag is off / guest / 404.
+        const LeaderboardBandCard(),
         const SizedBox(height: SLSpacing.s8),
 
         // Quick links
