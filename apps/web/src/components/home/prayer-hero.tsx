@@ -13,11 +13,14 @@ import { PRAYER_LABELS_BN } from "@/types/domain";
 import type { PrayerKey } from "@/types/domain";
 import { MapPin, ChevronDown, Sun, MoonStar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { translate } from "@/lib/i18n";
 
 export function PrayerHero() {
   const now = useNow(1000);
   const { times, next } = usePrayerDay(now);
   const city = useApp((s) => s.profile.city);
+  const lang = useApp((s) => s.profile.language);
+  const t = (k: string) => translate(lang, k);
   const [sheetOpen, setSheetOpen] = React.useState(false);
   const [hijriAdjust, setHijriAdjust] = React.useState(0);
 
@@ -50,13 +53,13 @@ export function PrayerHero() {
       <div className="bg-pattern-islamic px-4 pt-4 sm:px-6 sm:pt-5">
         <div className="flex items-center justify-between gap-3">
           <h1 id="prayer-hero-title" className="sr-only">
-            আজকের নামাজের সময়সূচি
+            {t("home.todaySchedule")}
           </h1>
           <Button
             variant="ghost"
             onClick={() => setSheetOpen(true)}
             className="tap-target h-11 rounded-full bg-primary-foreground/10 hover:bg-primary-foreground/20 hover:text-primary-foreground px-4 gap-1.5"
-            aria-label="শহর পরিবর্তন করুন"
+            aria-label={t("home.changeCity")}
           >
             <MapPin className="size-4" />
             <span className="text-sm font-semibold">{cityLabelBn(city)}</span>
@@ -64,7 +67,7 @@ export function PrayerHero() {
           </Button>
           <div className="text-end leading-tight" aria-live="off">
             <p className="text-base sm:text-lg font-bold tabular-nums tracking-wide">{clock}</p>
-            <p className="sr-only">বর্তমান সময়</p>
+            <p className="sr-only">{t("home.currentTime")}</p>
           </div>
         </div>
         <p className="mt-1.5 text-[12.5px] leading-relaxed text-primary-foreground/75">
@@ -76,17 +79,17 @@ export function PrayerHero() {
       <div className="bg-pattern-islamic px-4 pb-5 sm:px-6 sm:pb-6 pt-4">
         <div className="flex items-center justify-between gap-2">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-gold px-3 py-1 text-xs font-bold text-gold-text-foreground">
-            চলছে: {PRAYER_LABELS_BN[next.current]}
+            {t("home.ongoing")}: {PRAYER_LABELS_BN[next.current]}
           </span>
           {next.key === "fajr" ? <MoonStar className="size-4 text-primary-foreground/70" /> : <Sun className="size-4 text-primary-foreground/70" />}
         </div>
         <p className="mt-3 text-sm text-primary-foreground/85">
-          পরবর্তী ওয়াক্ত — <strong className="text-primary-foreground">{nextLabel}</strong>
+          {t("home.nextWaqt")} — <strong className="text-primary-foreground">{nextLabel}</strong>
         </p>
         <p
           className="mt-1 text-5xl sm:text-6xl font-extrabold text-gold-text tabular-nums leading-tight"
           aria-live="polite"
-          aria-label={`পরবর্তী নামাজ ${nextLabel}, বাকি সময় ${countdown}`}
+          aria-label={`${t("home.nextWaqt")} ${nextLabel} — ${countdown}`}
         >
           {countdown}
         </p>
@@ -97,7 +100,7 @@ export function PrayerHero() {
 
       {/* ── আজকের সময়সূচি ── */}
       <div className="bg-card text-foreground p-2.5 sm:p-3">
-        <ol className="grid gap-0.5" aria-label="আজকের সময়সূচি">
+        <ol className="grid gap-0.5" aria-label={t("home.todaySchedule")}>
           {SCHEDULE_ROWS.map((key) => (
             <ScheduleRow
               key={key}
@@ -113,7 +116,7 @@ export function PrayerHero() {
           {formatTimeBn(times.tahajjud)}
         </p>
         <p className="px-3 pb-1 pt-0.5 text-[11px] text-muted-foreground/70 text-center">
-          সব হিসাব অফলাইনে আপনার ডিভাইসেই হয় · {dateKey(now)}
+          {t("home.offlineNote")} · {dateKey(now)}
         </p>
       </div>
 
@@ -133,6 +136,8 @@ function ScheduleRow({
   isCurrent: boolean;
   isNext: boolean;
 }) {
+  const lang = useApp((s) => s.profile.language);
+  const t = (k: string) => translate(lang, k);
   const label = PRAYER_LABELS_BN[waqt];
   const isSunrise = waqt === "sunrise";
   return (
@@ -160,12 +165,12 @@ function ScheduleRow({
       </span>
       {isNext && (
         <span className="rounded-full border border-primary/30 px-2 py-0.5 text-[10.5px] font-semibold text-primary">
-          পরবর্তী
+          {t("home.next")}
         </span>
       )}
       {isCurrent && (
         <span className="rounded-full bg-primary px-2 py-0.5 text-[10.5px] font-semibold text-primary-foreground">
-          চলছে
+          {t("home.ongoing")}
         </span>
       )}
       <span
