@@ -507,6 +507,87 @@ class ApiClient {
   Future<LeaderboardMe> leaderboardMe() async =>
       LeaderboardMe.fromJson(await _req('GET', '/api/leaderboard/me'));
 
+  // ── Live support threads (W4d) ───────────────────────────────────────────
+
+  /// GET /api/support — own threads (newest activity first).
+  Future<List<SupportThread>> supportThreads() async {
+    final j = await _req('GET', '/api/support');
+    return ((j['threads'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => SupportThread.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/support — open a support thread (subject + first message;
+  /// max 5 non-closed threads server-side).
+  Future<SupportThread> supportCreate({
+    required String subject,
+    required String message,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/support',
+      body: {'subject': subject, 'message': message},
+    );
+    return SupportThread.fromJson(
+      (j['thread'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// GET /api/support/:id — own thread + its messages (asc).
+  Future<(SupportThread, List<SupportMessage>)> supportThread(String id) async {
+    final j = await _req('GET', '/api/support/$id');
+    return (
+      SupportThread.fromJson(
+        (j['thread'] as Map).cast<String, dynamic>(),
+      ),
+      ((j['messages'] as List?) ?? [])
+          .whereType<Map>()
+          .map((e) => SupportMessage.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+    );
+  }
+
+  /// POST /api/support/:id/messages — append (400 once the thread is closed).
+  Future<SupportMessage> supportAppend({
+    required String id,
+    required String message,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/support/$id/messages',
+      body: {'message': message},
+    );
+    return SupportMessage.fromJson(
+      (j['message'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  // ── Usrah join requests (W4d) ────────────────────────────────────────────
+
+  /// POST /api/usrah/join-request — ask for an usrah assignment. 409 when the
+  /// member is already in one; idempotent while a request is pending (the
+  /// same pending row is returned).
+  Future<UsrahJoinRequest> joinRequestCreate({String? message}) async {
+    final j = await _req(
+      'POST',
+      '/api/usrah/join-request',
+      body: {
+        if (message != null && message.isNotEmpty) 'message': message,
+      },
+    );
+    return UsrahJoinRequest.fromJson(
+      (j['request'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// GET /api/usrah/join-request — own current/last request (null when none).
+  Future<UsrahJoinRequest?> joinRequestStatus() async {
+    final j = await _req('GET', '/api/usrah/join-request');
+    final raw = j['request'];
+    return raw is Map<String, dynamic> ? UsrahJoinRequest.fromJson(raw) : null;
+  }
+
   // ── Dawah engine ────────────────────────────────────────────────────────────
 
   /// GET /api/dawah — cached offline (W4-fix4). [scope] = user id so one

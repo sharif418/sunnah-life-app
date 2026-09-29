@@ -111,3 +111,54 @@ class Announcement {
     createdAt: j['createdAt'] as String? ?? '',
   );
 }
+
+/// Usrah join-request lifecycle (W4d): a usrah-less member asks → full_admin
+/// approves into an usrah (the assignment) or rejects with a reason.
+enum JoinRequestStatus { pending, approved, rejected }
+
+extension JoinRequestStatusJson on JoinRequestStatus {
+  String get json => name;
+
+  static JoinRequestStatus fromJson(String v) => switch (v) {
+    'approved' => JoinRequestStatus.approved,
+    'rejected' => JoinRequestStatus.rejected,
+    _ => JoinRequestStatus.pending,
+  };
+}
+
+/// Own current/last join request (GET /api/usrah/join-request → request|null).
+class UsrahJoinRequest {
+  const UsrahJoinRequest({
+    required this.id,
+    required this.userId,
+    required this.status,
+    required this.createdAt,
+    this.message,
+    this.handledById,
+    this.handledAt,
+    this.usrahId,
+    this.reason,
+  });
+
+  final String id;
+  final String userId;
+  final String? message; // the member's note to the tarbiyah office
+  final JoinRequestStatus status;
+  final String? handledById; // the admin who decided
+  final String? handledAt; // ISO
+  final String? usrahId; // the usrah assigned on approve
+  final String? reason; // admin's note on rejection
+  final String createdAt; // ISO
+
+  factory UsrahJoinRequest.fromJson(Map<String, dynamic> j) => UsrahJoinRequest(
+    id: j['id'] as String,
+    userId: j['userId'] as String? ?? '',
+    message: j['message'] as String?,
+    status: JoinRequestStatusJson.fromJson(j['status'] as String? ?? 'pending'),
+    handledById: j['handledById'] as String?,
+    handledAt: j['handledAt'] as String?,
+    usrahId: j['usrahId'] as String?,
+    reason: j['reason'] as String?,
+    createdAt: j['createdAt'] as String? ?? '',
+  );
+}
