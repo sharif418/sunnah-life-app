@@ -1,72 +1,112 @@
 "use client";
 
-// রেফারেল ট্রি — full_admin: the whole referral forest (built client-side from
-// /api/admin/users, which carries referredById on every user). Supervisors
-// (usrah_head / invigilator / daee) see their OWN downline via /api/dawah
-// (RLS-scoped to their gender + tree). Expandable nodes with level + last-active.
+// রেফারেল ট্রি — full_admin: সার্ভার-পেজিনেটেড পুরো দাওয়াত ফরেস্ট
+// (GET /api/admin/referral-tree, W4h)। এক রিকোয়েস্টে এক পাতা: মূল সদস্য
+// (userId ছাড়া) বা এক পিতার সরাসরি মাদউ — নোড খুললে সন্তান আসে, প্রতি নোডে
+// childCount ব্যাজ, আরও থাকলে "আরও" বাটন (কার্সর পেজিনেশন)। সুপারভাইজার/দায়ী
+// আগের মতোই নিজের ডাউনলাইন দেখেন (/api/dawah, RLS-স্কোপড)।
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ChevronDown, ChevronRight, Link2, Network, Users2 } from "lucide-react";
-import { api, type DownlineNode, type User } from "@/lib/api";
+import { AlertTriangle, ChevronDown, ChevronRight, Link2, Network, Users2 } from "lucide-react";
+import { api, type DownlineNode, type ReferralTreeNode } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { relativeBn, toBn } from "@/lib/bn";
-import { LEVEL_LABELS_BN, isFullAdmin, isSupervisor } from "@/lib/labels";
+import { LEVEL_LABELS_BN, ROLE_LABELS_BN, isFullAdmin, isSupervisor } from "@/lib/labels";
 import { GenderBadge, LevelBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageHeading, RoleGate, EmptyState } from "@/components/ui/states";
+import { EmptyState, PageHeading, RoleGate } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
+import { cn } from "@/lib/utils";
 
-interface TreeNode {
-  user: User;
-  children: TreeNode[];
-  depth: number;
-}
+const PAGE_LIMIT = 50;
 
-function buildForest(users: User[]): TreeNode[] {
-  const byId = new Map<string, TreeNode>();
-  for (const u of users) byId.set(u.id, { user: u, children: [], depth: 0 });
-  const roots: TreeNode[] = [];
-  for (const node of byId.values()) {
-    const parent = node.user.referredById ? byId.get(node.user.referredById) : undefined;
-    if (parent) {
-      node.depth = parent.depth + 1;
-      parent.children.push(node);
-    } else {
-      roots.push(node);
+/** এক পিতার সন্তানদের এক পাতা + "আরও" — parentId null = মূল (রেফারেকারহীন) পাতা। */
+function TreeChildren({ parentId }: { parentId: string | null }) {
+  const [pages, setPages] = React.useState<ReferralTreeNode[]>([]);
+  const [cursor, setCursor] = React.useState<string | null>(null);
+  const [remaining, setRemaining] = React.useState(0);
+  const [status, setStatus] = React.useState<"loading" | "ok" | "error">("loading");
+  const [loadingMore, setLoadingMore] = React.useState(false);
+
+  // মাউন্টেই প্রথম পাতা আনে (status ইতিমধ্যেই "loading" দিয়ে শুরু)।
+  React.useEffect(() => {
+    let alive = true;
+    api
+      .referralTree({ ...(parentId ? { userId: parentId } : {}), limit: PAGE_LIMIT })
+      .then((page) => {
+        if (!alive) return;
+        setPages(page.nodes);
+        setCursor(page.nextCursor);
+        setRemaining(page.remaining);
+        setStatus("ok");
+      })
+      .catch(() => {
+        if (alive) setStatus("error");
+      });
+    return () => {
+      alive = false;
+    };
+  }, [parentId]);
+
+  const loadMore = async () => {
+    if (!cursor || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const page = await api.referralTree({
+        ...(parentId ? { userId: parentId } : {}),
+        cursor,
+        limit: PAGE_LIMIT,
+      });
+      setPages((prev) => [...prev, ...page.nodes]);
+      setCursor(page.nextCursor);
+      setRemaining(page.remaining);
+    } finally {
+      setLoadingMore(false);
     }
+  };
+
+  if (status === "loading") {
+    return <p className="py-3 text-sm text-muted-foreground">লোড হচ্ছে…</p>;
   }
-  const sortTree = (nodes: TreeNode[]) => {
-    nodes.sort((a, b) => a.user.name.localeCompare(b.user.name, "bn"));
-    for (const n of nodes) sortTree(n.children);
-  };
-  sortTree(roots);
-  return roots;
+  if (status === "error") {
+    return (
+      <p className="py-3 text-sm text-alert" role="alert">
+        তথ্য আনা যায়নি — শাখা বন্ধ করে আবার খুলুন
+      </p>
+    );
+  }
+  if (pages.length === 0) {
+    return <p className="py-2 text-sm text-muted-foreground">কোনো সরাসরি মাদউ নেই।</p>;
+  }
+
+  return (
+    <>
+      <ul
+        className="space-y-0.5"
+        role="group"
+        aria-label={parentId ? "সরাসরি মাদউ" : "মূল সদস্য"}
+      >
+        {pages.map((node) => (
+          <TreeNodeRow key={node.id} node={node} />
+        ))}
+      </ul>
+      {cursor ? (
+        <Button variant="ghost" size="sm" className="mt-1" onClick={loadMore} loading={loadingMore}>
+          আরও দেখুন {remaining > 0 ? `(${toBn(remaining)} জন বাকি)` : ""}
+        </Button>
+      ) : null}
+    </>
+  );
 }
 
-function countTree(nodes: TreeNode[]): { total: number; maxDepth: number } {
-  let total = 0;
-  let maxDepth = 0;
-  const walk = (list: TreeNode[]) => {
-    for (const n of list) {
-      total += 1;
-      maxDepth = Math.max(maxDepth, n.depth + 1);
-      walk(n.children);
-    }
-  };
-  walk(nodes);
-  return { total, maxDepth };
-}
+function TreeNodeRow({ node }: { node: ReferralTreeNode }) {
+  const [open, setOpen] = React.useState(false);
+  const hasChildren = node.childCount > 0;
+  const inactiveDays = Math.floor((Date.now() - new Date(node.lastActiveAt).getTime()) / 86_400_000);
 
-function TreeRow({ node, initialOpen }: { node: TreeNode; initialOpen: number }) {
-  const [open, setOpen] = React.useState(node.depth < initialOpen);
-  const hasChildren = node.children.length > 0;
-  const inactiveDays = (() => {
-    const last = new Date(node.user.lastActiveAt).getTime();
-    return Math.floor((Date.now() - last) / 86_400_000);
-  })();
   return (
     <li className="min-w-0">
       <div className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-primary-soft/40">
@@ -75,39 +115,63 @@ function TreeRow({ node, initialOpen }: { node: TreeNode; initialOpen: number })
             type="button"
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
-            aria-label={`${node.user.name}-এর মাদউ দেখুন`}
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
+            aria-label={`${node.name}-এর মাদউ দেখুন`}
+            className="focus-ring relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-card hover:text-foreground"
           >
             {open ? <ChevronDown className="h-4 w-4" aria-hidden /> : <ChevronRight className="h-4 w-4" aria-hidden />}
+            {node.childCount > 99 ? null : (
+              <span
+                className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[9px] font-bold leading-none text-primary-foreground"
+                aria-hidden
+              >
+                {toBn(node.childCount)}
+              </span>
+            )}
           </button>
         ) : (
           <span className="inline-block h-8 w-8 shrink-0" aria-hidden />
         )}
+        {/* লিঙ্গ-টিন্ট: পুরুষ = সবুজ, নারী = সোনালি */}
+        <span
+          className={cn(
+            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold",
+            node.gender === "F"
+              ? "bg-gold-soft text-gold-foreground dark:text-gold"
+              : "bg-primary-soft text-primary"
+          )}
+          aria-hidden
+        >
+          {node.name.slice(0, 1)}
+        </span>
         <span className="flex min-w-0 flex-wrap items-center gap-2">
-          <span className="font-semibold text-foreground">{node.user.name}</span>
-          {node.user.memberCode ? (
-            <span className="font-mono text-xs text-muted-foreground">{node.user.memberCode}</span>
+          <span className="font-semibold text-foreground">{node.name}</span>
+          {node.memberCode ? (
+            <span className="font-mono text-xs text-muted-foreground">{node.memberCode}</span>
           ) : null}
-          <GenderBadge gender={node.user.gender} />
-          <LevelBadge level={node.user.level} />
-          {node.user.role !== "user" ? <Badge variant="outline">{node.user.role}</Badge> : null}
+          <LevelBadge level={node.level} />
+          <GenderBadge gender={node.gender} />
+          {node.role !== "user" ? (
+            <Badge variant="outline">{ROLE_LABELS_BN[node.role]}</Badge>
+          ) : null}
+          {node.childCount > 0 ? (
+            <Badge variant="muted">{toBn(node.childCount)} মাদউ</Badge>
+          ) : null}
           <span className="text-xs text-muted-foreground">
             {inactiveDays > 7 ? (
               <span className="text-alert" title="৭ দিনের বেশি নিষ্ক্রিয়">
-                ⚠ {relativeBn(node.user.lastActiveAt)}
+                <AlertTriangle className="mr-0.5 inline h-3 w-3" aria-hidden />
+                {relativeBn(node.lastActiveAt)}
               </span>
             ) : (
-              relativeBn(node.user.lastActiveAt)
+              relativeBn(node.lastActiveAt)
             )}
           </span>
         </span>
       </div>
       {hasChildren && open ? (
-        <ul className="ml-[18px] border-l border-border pl-2" role="group" aria-label={`${node.user.name}-এর মাদউ`}>
-          {node.children.map((c) => (
-            <TreeRow key={c.user.id} node={c} initialOpen={initialOpen} />
-          ))}
-        </ul>
+        <div className="ml-[18px] border-l border-border pl-2">
+          <TreeChildren parentId={node.id} />
+        </div>
       ) : null}
     </li>
   );
@@ -159,21 +223,12 @@ export default function ReferralsPage() {
   const fullAdmin = isFullAdmin(user?.role);
   const supervisor = isSupervisor(user?.role) || user?.role === "daee";
 
-  // Full admin: the whole forest from the scoped users list.
-  const users = useQuery({
-    queryKey: ["admin-users", ""],
-    queryFn: () => api.users(""),
-    enabled: fullAdmin,
-  });
   // Everyone else (daee+): own downline via the dawah dashboard.
   const dawah = useQuery({
     queryKey: ["dawah"],
     queryFn: () => api.dawah(),
     enabled: !fullAdmin && supervisor,
   });
-
-  const forest = React.useMemo(() => (users.data ? buildForest(users.data.users) : []), [users.data]);
-  const stats = React.useMemo(() => countTree(forest), [forest]);
 
   const copyLink = async (link: string) => {
     try {
@@ -192,7 +247,7 @@ export default function ReferralsPage() {
           title="রেফারেল ট্রি"
           description={
             fullAdmin
-              ? "পুরো দাওয়াত নেটওয়ার্ক — যে কে কাকে এনেছে, কার কোন স্তরে আছে, কে নিষ্ক্রিয় হয়ে পড়েছে।"
+              ? "পুরো দাওয়াত নেটওয়ার্ক — শাখা খুললে সরাসরি মাদউ আসে (পাতায় পাতায়), ব্যাজে মোট মাদউ সংখ্যা।"
               : "আপনার মাদউ (রেফার করা মানুষজন) — স্তর ও সক্রিয়তা সহ।"
           }
         />
@@ -202,26 +257,15 @@ export default function ReferralsPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users2 className="h-[18px] w-[18px] text-primary" aria-hidden />
-                মোট {toBn(stats.total)} জন · সর্বোচ্চ {toBn(stats.maxDepth)} ধাপ গভীর
+                মূল সদস্য থেকে পুরো ফরেস্ট
               </CardTitle>
-              <CardDescription>নামের পাশের তীর চেপে প্রতিটি শাখা খুলে দেখুন। ⚠ চিহ্ন = ৭ দিনের বেশি নিষ্ক্রিয়।</CardDescription>
+              <CardDescription>
+                নামের পাশের তীর চেপে প্রতিটি শাখা খুলে দেখুন · ⚠ চিহ্ন = ৭ দিনের বেশি নিষ্ক্রিয় ·
+                প্রতি পাতায় {toBn(PAGE_LIMIT)} জন করে, বড় শাখায় «আরও দেখুন»।
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              {users.isLoading ? (
-                <p className="py-8 text-center text-sm text-muted-foreground">লোড হচ্ছে…</p>
-              ) : users.error ? (
-                <p className="py-8 text-center text-sm text-alert" role="alert">
-                  তথ্য আনা যায়নি — আবার চেষ্টা করুন
-                </p>
-              ) : forest.length === 0 ? (
-                <EmptyState title="কোনো রেফারেল নেই" hint="এখনও কেউ কাউকে রেফার করেনি।" />
-              ) : (
-                <ul className="space-y-0.5">
-                  {forest.map((root) => (
-                    <TreeRow key={root.user.id} node={root} initialOpen={1} />
-                  ))}
-                </ul>
-              )}
+              <TreeChildren parentId={null} />
             </CardContent>
           </Card>
         ) : (
