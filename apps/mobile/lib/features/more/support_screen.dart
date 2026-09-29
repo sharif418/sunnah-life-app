@@ -216,6 +216,10 @@ class _ThreadList extends ConsumerWidget {
                 EmptyState(
                   message: context.t('support_empty'),
                   icon: PhosphorIconsRegular.headset,
+                  // W4f — the illustrated state's CTA: the same sheet the
+                  // FAB opens (the empty list hides nothing).
+                  actionLabel: context.t('support_new_thread'),
+                  onAction: () => _showCreateSheet(context, ref),
                 ),
               ],
             );
