@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
+  Activity,
   ChevronRight,
   ClipboardCheck,
   FileCheck2,
@@ -14,7 +15,7 @@ import {
   Users,
   UserRoundCheck,
 } from "lucide-react";
-import { api, type UsrahHealth } from "@/lib/api";
+import { api, type InvigilatorHealthRow, type UsrahHealth } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { toBn, relativeBn, todayLineBn, bdToday } from "@/lib/bn";
 import { auditActionLabel, pctBn, ROLE_LABELS_BN } from "@/lib/labels";
@@ -173,6 +174,150 @@ function UsrahHealthCard({ usrahs, fullAdmin }: { usrahs: UsrahHealth[] | undefi
   );
 }
 
+/** W4h — পরিদর্শকের তত্ত্বাবধান স্বাস্থ্য: score = 0.35·রিভিউ + 0.35·আমল +
+ *  0.20·সক্রিয়তা + 0.10·সময়মতো (বিলম্বিত রিভিউ লাল পতাকা)। full_admin সব
+ *  পরিদর্শকের তালিকা পান; পরিদর্শক শুধু নিজের স্কোর। */
+function ScoreBadge({ score }: { score: number | null }) {
+  if (score === null) return <Badge variant="muted">পরিসর খালি</Badge>;
+  if (score >= 70) return <Badge variant="success">স্কোর {toBn(score)}</Badge>;
+  if (score >= 40) return <Badge variant="warning">স্কোর {toBn(score)}</Badge>;
+  return <Badge variant="alert">স্কোর {toBn(score)}</Badge>;
+}
+
+function HealthComponents({ h }: { h: InvigilatorHealthRow }) {
+  return (
+    <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-4">
+      <HealthBar pct={h.reviewPct ?? 0} label="সাপ্তাহিক রিভিউ (৩৫%)" />
+      <HealthBar pct={h.amalPct ?? 0} label="আমল সম্পূর্ণতা (৩৫%)" />
+      <HealthBar pct={h.activePct ?? 0} label="সক্রিয় সদস্য (২০%)" />
+      <div className="flex min-w-28 flex-col gap-1" aria-label={`বিলম্বিত রিভিউ: ${toBn(h.overdueCount)}`}>
+        <span className="text-xs text-muted-foreground">বিলম্বিত রিভিউ (১০%)</span>
+        <span
+          className={cn(
+            "text-sm font-bold tabular-nums",
+            h.overdueCount > 0 ? "text-alert" : "text-success"
+          )}
+        >
+          {h.overdueCount > 0 ? `${toBn(h.overdueCount)}টি` : "নেই ✓"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function InvigilatorHealthSection({ role }: { role: string }) {
+  const health = useQuery({
+    queryKey: ["invigilator-health"],
+    queryFn: () => api.invigilatorHealth(),
+    enabled: role === "invigilator" || role === "full_admin",
+  });
+
+  if (!health.data) return null;
+  const rows = health.data.invigilators;
+  if (rows.length === 0) return null;
+
+  // পরিদর্শক নিজে — একটাই কার্ড, নিজের স্কোর।
+  if (role === "invigilator") {
+    const self = rows[0];
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex flex-wrap items-center gap-2">
+            <Activity className="h-[18px] w-[18px] text-primary" aria-hidden />
+            আমার তত্ত্বাবধান স্বাস্থ্য
+            <ScoreBadge score={self.score} />
+          </CardTitle>
+          <CardDescription>
+            স্কোর = ০.৩৫×সাপ্তাহিক রিভিউ + ০.৩৫×আমল সম্পূর্ণতা + ০.২০×সক্রিয়তা + ০.১০×সময়মতো —
+            আপনার লিঙ্গ-পরিসরের সদস্যদের ওপর হিসাব ({toBn(self.memberCount)} সদস্য)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {self.score === null ? (
+            <p className="rounded-md border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
+              আপনার পরিসরে এখনো কোনো উসরা নেই।
+            </p>
+          ) : (
+            <>
+              <HealthComponents h={self} />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                গত ৩০ দিনে মূল্যায়ন {toBn(self.assessments30d)}টি
+                {self.unsignedAssessments > 0 ? ` · অস্বাক্ষরিত ${toBn(self.unsignedAssessments)}টি` : " · সব স্বাক্ষরিত"}
+                {self.usrahNames.length > 0 ? ` · উসরা: ${self.usrahNames.join(" · ")}` : ""}
+              </p>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // full_admin — প্রতি পরিদর্শকের সারি, খুললে উপাদানগুলো।
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Activity className="h-[18px] w-[18px] text-primary" aria-hidden />
+          পরিদর্শকদের তত্ত্বাবধান স্বাস্থ্য ({toBn(rows.length)} জন)
+        </CardTitle>
+        <CardDescription>
+          সারিতে চাপ দিয়ে উপাদান দেখুন — স্কোর = ০.৩৫×রিভিউ + ০.৩৫×আমল + ০.২০×সক্রিয়তা + ০.১০×সময়মতো
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {rows.map((h) => (
+          <InvigilatorHealthRowView key={h.id} h={h} />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+function InvigilatorHealthRowView({ h }: { h: InvigilatorHealthRow }) {
+  const [open, setOpen] = React.useState(false);
+  return (
+    <div className="rounded-md border border-border bg-card">
+      <button
+        className="focus-ring grid w-full grid-cols-1 items-center gap-3 rounded-md p-3.5 text-left transition-colors duration-200 hover:bg-primary-soft/40 sm:grid-cols-[1fr_auto_auto]"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+      >
+        <span className="flex min-w-0 items-center gap-2">
+          <ChevronRight
+            className={cn("h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200", open && "rotate-90")}
+            aria-hidden
+          />
+          <span className="min-w-0">
+            <span className="block truncate font-semibold text-foreground">{h.name}</span>
+            <span className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <GenderBadge gender={h.gender} />
+              <span>{toBn(h.memberCount)} সদস্য</span>
+              {h.usrahNames.length > 0 ? <span>· {toBn(h.usrahNames.length)} উসরা</span> : null}
+            </span>
+          </span>
+        </span>
+        {h.unsignedAssessments > 0 ? (
+          <Badge variant="alert">অস্বাক্ষরিত {toBn(h.unsignedAssessments)}</Badge>
+        ) : null}
+        <ScoreBadge score={h.score} />
+      </button>
+      {open ? (
+        <div className="space-y-3 border-t border-border p-3.5">
+          {h.score === null ? (
+            <p className="text-sm text-muted-foreground">এই পরিদর্শকের পরিসরে কোনো উসরা নেই।</p>
+          ) : (
+            <HealthComponents h={h} />
+          )}
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            গত ৩০ দিনে মূল্যায়ন {toBn(h.assessments30d)}টি · অস্বাক্ষরিত {toBn(h.unsignedAssessments)}টি
+            {h.usrahNames.length > 0 ? ` · উসরা: ${h.usrahNames.join(" · ")}` : ""}
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function OverviewPage() {
   const { user, fullAdmin } = useSession();
 
@@ -231,6 +376,11 @@ export default function OverviewPage() {
           />
         </section>
       )}
+
+      {/* W4h — পরিদর্শক স্ব-স্কোর / প্রধান অ্যাডমিনের পরিদর্শক তালিকা */}
+      {user && (user.role === "invigilator" || user.role === "full_admin") ? (
+        <InvigilatorHealthSection role={user.role} />
+      ) : null}
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.6fr_1fr]">
         {overview.isError ? (
