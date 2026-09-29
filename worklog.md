@@ -1530,3 +1530,18 @@ Work Log:
 Stage Summary:
 - W4j COMPLETE: the plan's C-W4j item is done end to end — the meili endpoint (Bengali typo-tolerant, grouped, public), the mobile search screen with the honest offline fallback, AND the web usage with its own offline fallback + SW persistence. All four gates green (api 383/383, mobile 330/330, web lint/tsc/build, browser E2E).
 - Honest gaps: (a) the meili ONLINE query is proven by jest stubs + CI, not against a live meili instance (none in the sandbox — the owner's staging redeploy runs the real indexer); (b) the SW pack cache has no automated test (no web test infra — the repo's web story: lint+typecheck+build+browser smoke); (c) the offline matcher is deliberately NOT typo-tolerant (documented on both platforms — the banner tells the user which corpus answered); (d) the dev-run.cjs shim is a local-monorepo convenience, not a product path.
+
+---
+Task ID: W4j-CI-FIX (found while closing W4j — a W4e regression)
+Agent: lead
+Task: The APK CI jobs had been RED since W4e — every push from 1cae221 (W4d docs) through 160254f (W4i) failed "Build debug APK"/"Build release APKs" with MainActivity.kt:499 "Syntax error: Unclosed comment".
+
+Work Log:
+- Found by reading the runs list before reporting the W4j head (the discipline that was missing from the W4e..W4i closes): runs 36567327689 (1cae221), 36577878577, 36583178635, 36587229096, 36590645367, 36597585832 (W4g..W4h heads), 36602057408 (160254f, W4i) — all failure, both APK jobs.
+- Root cause: 6e5bd71 (W4e shareFile channel) wrote "as image/* + EXTRA_STREAM" INSIDE the class KDoc. Kotlin NESTS block comments — the 'image/*' opened a second level, the block's closing '*/' closed the NESTED one, and the outer comment swallowed the rest of the file to EOF (the 499:1 error). A one-phrase KDoc reword fixes it ("with an any-image MIME type").
+- Proof available locally (no Android SDK): a nesting-aware comment scan — final depth 0, and NO other .kt file has a nested open (a second scan asserts none swallow code). The real proof is the APK job on the new head.
+- Record correction: the W4e..W4i worklog "gates" lines were true for the local gates those sessions ran but overstated CI — the APK jobs rode red. Nothing else in those waves is affected (analyze/test/jest/api/admin/web jobs were green throughout; the Kotlin file only gates the APK builds).
+- The W4j close-out verification (this session) re-ran every local gate on the FINAL head AND checks the CI runs — the standard going forward.
+
+Stage Summary:
+- 11ff487 fixes the only W4e..W4i CI regression; the APK jobs should go green on the run it triggers. The audit trail above is the honest correction of the W4e..W4i CI claims.
