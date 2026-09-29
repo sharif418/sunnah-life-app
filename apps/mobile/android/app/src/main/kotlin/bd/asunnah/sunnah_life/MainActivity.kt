@@ -308,22 +308,26 @@ class MainActivity : FlutterActivity() {
      * mirroring the Settings toggle's own truth.
      */
     fun hasUsagePermission(): Boolean {
-        val appOps = getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
-        val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            appOps.unsafeCheckOpNoThrow(
-                android.app.AppOpsManager.OPSTR_USAGE_ACCESS,
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // OPSTR_GET_USAGE_STATS ("android:get_usage_stats") is the PUBLIC
+            // app-op behind the Settings "usage access" toggle.
+            val appOps = getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
+            return appOps.unsafeCheckOpNoThrow(
+                android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
                 Process.myUid(),
                 packageName
-            )
-        } else {
-            @Suppress("DEPRECATION")
-            appOps.checkOpNoThrow(
-                android.app.AppOpsManager.OPSTR_USAGE_ACCESS,
-                Process.myUid(),
-                packageName
-            )
+            ) == android.app.AppOpsManager.MODE_ALLOWED
         }
-        return mode == android.app.AppOpsManager.MODE_ALLOWED
+        // Pre-Q: the String-op AppOps checks are API-29; the one public
+        // truth older platforms offer is the events query itself — without
+        // the grant the system answers an EMPTY stream. A granted phone
+        // queried over the past hours has foreground events (the only false
+        // negative is the first minutes after a boot — the settings CTA
+        // stays correct meanwhile).
+        val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val end = System.currentTimeMillis()
+        val events = usm.queryEvents(end - 12 * 60 * 60 * 1000L, end)
+        return events.hasNextEvent()
     }
 
     /** Opens the system "apps with usage access" screen; true when fired. */
@@ -356,8 +360,10 @@ class MainActivity : FlutterActivity() {
         var currentPkg: String? = null
         var currentStart = 0L
         val events = usm.queryEvents(start, end)
-        while (events.hasNextEvent()) {
-            val event = events.nextEvent()
+        // UsageEvents fills a MUTABLE out-event per step — nextEvent(event)
+        // returns Boolean; there is no zero-arg variant returning an event.
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent() && events.nextEvent(event)) {
             val type = event.eventType
             val resumed = type == UsageEvents.Event.MOVE_TO_FOREGROUND ||
                 type == UsageEvents.Event.ACTIVITY_RESUMED
