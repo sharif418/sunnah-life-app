@@ -1545,4 +1545,89 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ilm_quizzes_desc => 'Self-assessment quizzes';
+
+  @override
+  String get goals_title => 'My Goals';
+
+  @override
+  String get goals_new => 'New goal';
+
+  @override
+  String get goals_amal_picker => 'Choose an amal';
+
+  @override
+  String get goals_amal_short => 'Amal';
+
+  @override
+  String get goals_title_label => 'Goal title';
+
+  @override
+  String get goals_target_label => 'Target (optional)';
+
+  @override
+  String get goals_note_label => 'Note (optional)';
+
+  @override
+  String get goals_submit => 'Propose';
+
+  @override
+  String get goals_signin_needed => 'Sign in to set and track goals';
+
+  @override
+  String get goals_empty => 'No goals yet — set your first one';
+
+  @override
+  String get goals_open_label => 'Open goals';
+
+  @override
+  String get goal_status_proposed => 'Pending review';
+
+  @override
+  String get goal_status_approved => 'Approved';
+
+  @override
+  String get goal_status_rejected => 'Rejected';
+
+  @override
+  String get goal_status_completed => 'Completed';
+
+  @override
+  String get goal_status_withdrawn => 'Withdrawn';
+
+  @override
+  String get goals_reject_reason_label => 'Reason';
+
+  @override
+  String get goals_queue_title => 'Goal approvals';
+
+  @override
+  String get goals_queue_empty => 'No pending goals';
+
+  @override
+  String get goals_approve => 'Approve';
+
+  @override
+  String get goals_reject => 'Reject';
+
+  @override
+  String get goals_reject_hint => 'Reject reason (optional)';
+
+  @override
+  String get goals_member_label => 'Member';
+
+  @override
+  String get goals_remove => 'Remove';
+
+  @override
+  String get goals_remove_confirm => 'Remove this goal from your list?';
+
+  @override
+  String get goals_proposed_toast =>
+      'Proposed — awaiting your usrah head\'s approval';
+
+  @override
+  String get goals_approved_toast => 'Approved';
+
+  @override
+  String get goals_rejected_toast => 'Rejected';
 }

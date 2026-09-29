@@ -1537,4 +1537,88 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ilm_quizzes_desc => 'اختبارات ذاتية';
+
+  @override
+  String get goals_title => 'أهدافي';
+
+  @override
+  String get goals_new => 'هدف جديد';
+
+  @override
+  String get goals_amal_picker => 'اختر عبادة';
+
+  @override
+  String get goals_amal_short => 'العبادة';
+
+  @override
+  String get goals_title_label => 'عنوان الهدف';
+
+  @override
+  String get goals_target_label => 'الهدف (اختياري)';
+
+  @override
+  String get goals_note_label => 'ملاحظة (اختياري)';
+
+  @override
+  String get goals_submit => 'اقترح';
+
+  @override
+  String get goals_signin_needed => 'سجّل الدخول لتحديد الأهداف ومتابعتها';
+
+  @override
+  String get goals_empty => 'لا أهداف بعد — حدّد هدفك الأول';
+
+  @override
+  String get goals_open_label => 'أهداف مفتوحة';
+
+  @override
+  String get goal_status_proposed => 'بانتظار المراجعة';
+
+  @override
+  String get goal_status_approved => 'معتمد';
+
+  @override
+  String get goal_status_rejected => 'مرفوض';
+
+  @override
+  String get goal_status_completed => 'مكتمل';
+
+  @override
+  String get goal_status_withdrawn => 'مسحوب';
+
+  @override
+  String get goals_reject_reason_label => 'السبب';
+
+  @override
+  String get goals_queue_title => 'طلبات اعتماد الأهداف';
+
+  @override
+  String get goals_queue_empty => 'لا أهداف بانتظار الاعتماد';
+
+  @override
+  String get goals_approve => 'اعتماد';
+
+  @override
+  String get goals_reject => 'رفض';
+
+  @override
+  String get goals_reject_hint => 'سبب الرفض (اختياري)';
+
+  @override
+  String get goals_member_label => 'العضو';
+
+  @override
+  String get goals_remove => 'إزالة';
+
+  @override
+  String get goals_remove_confirm => 'إزالة هذا الهدف من القائمة؟';
+
+  @override
+  String get goals_proposed_toast => 'تم الاقتراح — بانتظار اعتماد رئيس الأسر';
+
+  @override
+  String get goals_approved_toast => 'تم الاعتماد';
+
+  @override
+  String get goals_rejected_toast => 'تم الرفض';
 }

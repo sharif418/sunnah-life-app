@@ -1548,4 +1548,90 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get ilm_quizzes_desc => 'আত্মমূল্যায়ন কুইজ';
+
+  @override
+  String get goals_title => 'আমার লক্ষ্য';
+
+  @override
+  String get goals_new => 'নতুন লক্ষ্য';
+
+  @override
+  String get goals_amal_picker => 'আমল নির্বাচন করুন';
+
+  @override
+  String get goals_amal_short => 'আমল';
+
+  @override
+  String get goals_title_label => 'লক্ষ্যের নাম';
+
+  @override
+  String get goals_target_label => 'লক্ষ্য মাত্রা (ঐচ্ছিক)';
+
+  @override
+  String get goals_note_label => 'নোট (ঐচ্ছিক)';
+
+  @override
+  String get goals_submit => 'প্রস্তাব করুন';
+
+  @override
+  String get goals_signin_needed =>
+      'লক্ষ্য সংরক্ষণ ও অনুমোদনের জন্য সাইন-ইন দরকার';
+
+  @override
+  String get goals_empty => 'এখনো কোনো লক্ষ্য নেই — প্রথম লক্ষ্য ঠিক করুন';
+
+  @override
+  String get goals_open_label => 'খোলা লক্ষ্য';
+
+  @override
+  String get goal_status_proposed => 'অপেক্ষমাণ';
+
+  @override
+  String get goal_status_approved => 'অনুমোদিত';
+
+  @override
+  String get goal_status_rejected => 'বাতিল';
+
+  @override
+  String get goal_status_completed => 'সম্পন্ন';
+
+  @override
+  String get goal_status_withdrawn => 'প্রত্যাহৃত';
+
+  @override
+  String get goals_reject_reason_label => 'কারণ';
+
+  @override
+  String get goals_queue_title => 'লক্ষ্য অনুমোদনের অপেক্ষায়';
+
+  @override
+  String get goals_queue_empty => 'কোনো অপেক্ষমাণ লক্ষ্য নেই';
+
+  @override
+  String get goals_approve => 'অনুমোদন';
+
+  @override
+  String get goals_reject => 'বাতিল';
+
+  @override
+  String get goals_reject_hint => 'বাতিলের কারণ লিখুন (ঐচ্ছিক)';
+
+  @override
+  String get goals_member_label => 'সদস্য';
+
+  @override
+  String get goals_remove => 'সরান';
+
+  @override
+  String get goals_remove_confirm => 'লক্ষ্যটি তালিকা থেকে সরানো হবে?';
+
+  @override
+  String get goals_proposed_toast =>
+      'লক্ষ্য প্রস্তাবিত — উসরা প্রধানের অনুমোদনের অপেক্ষায়';
+
+  @override
+  String get goals_approved_toast => 'অনুমোদিত হয়েছে';
+
+  @override
+  String get goals_rejected_toast => 'বাতিল হয়েছে';
 }

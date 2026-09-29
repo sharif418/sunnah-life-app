@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'design/design_tokens.dart';
 import 'core/bell_schedule.dart';
 import 'core/referral.dart';
+import 'features/amal/goals_screen.dart';
 import 'features/amal/habit_screen.dart';
 import 'features/amal/month_screen.dart';
 import 'features/amal/self_test_screen.dart';
@@ -192,6 +193,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'self-test',
                     builder: (c, s) => const SelfTestScreen(),
+                  ),
+                  // W4c: আমার লক্ষ্য — personal-goal lifecycle (propose →
+                  // head approval → status chips).
+                  GoRoute(
+                    path: 'goals',
+                    builder: (c, s) => const GoalsScreen(),
                   ),
                 ],
               ),

@@ -166,6 +166,12 @@ class _TodayView extends ConsumerWidget {
               label: Text(context.t('amal_self_test')),
               onPressed: () => context.push('/amal/self-test'),
             ),
+            // W4c: আমার লক্ষ্য — propose → head approval → status chips.
+            ActionChip(
+              avatar: const Icon(Icons.flag_outlined, size: 18),
+              label: Text(context.t('goals_title')),
+              onPressed: () => context.push('/amal/goals'),
+            ),
           ],
         ),
         const SizedBox(height: SLSpacing.s8),

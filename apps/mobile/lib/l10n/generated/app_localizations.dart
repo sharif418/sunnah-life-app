@@ -3087,6 +3087,174 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আত্মমূল্যায়ন কুইজ'**
   String get ilm_quizzes_desc;
+
+  /// No description provided for @goals_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার লক্ষ্য'**
+  String get goals_title;
+
+  /// No description provided for @goals_new.
+  ///
+  /// In bn, this message translates to:
+  /// **'নতুন লক্ষ্য'**
+  String get goals_new;
+
+  /// No description provided for @goals_amal_picker.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল নির্বাচন করুন'**
+  String get goals_amal_picker;
+
+  /// No description provided for @goals_amal_short.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল'**
+  String get goals_amal_short;
+
+  /// No description provided for @goals_title_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্যের নাম'**
+  String get goals_title_label;
+
+  /// No description provided for @goals_target_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য মাত্রা (ঐচ্ছিক)'**
+  String get goals_target_label;
+
+  /// No description provided for @goals_note_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'নোট (ঐচ্ছিক)'**
+  String get goals_note_label;
+
+  /// No description provided for @goals_submit.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রস্তাব করুন'**
+  String get goals_submit;
+
+  /// No description provided for @goals_signin_needed.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য সংরক্ষণ ও অনুমোদনের জন্য সাইন-ইন দরকার'**
+  String get goals_signin_needed;
+
+  /// No description provided for @goals_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো লক্ষ্য নেই — প্রথম লক্ষ্য ঠিক করুন'**
+  String get goals_empty;
+
+  /// No description provided for @goals_open_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'খোলা লক্ষ্য'**
+  String get goals_open_label;
+
+  /// No description provided for @goal_status_proposed.
+  ///
+  /// In bn, this message translates to:
+  /// **'অপেক্ষমাণ'**
+  String get goal_status_proposed;
+
+  /// No description provided for @goal_status_approved.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমোদিত'**
+  String get goal_status_approved;
+
+  /// No description provided for @goal_status_rejected.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল'**
+  String get goal_status_rejected;
+
+  /// No description provided for @goal_status_completed.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন'**
+  String get goal_status_completed;
+
+  /// No description provided for @goal_status_withdrawn.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রত্যাহৃত'**
+  String get goal_status_withdrawn;
+
+  /// No description provided for @goals_reject_reason_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'কারণ'**
+  String get goals_reject_reason_label;
+
+  /// No description provided for @goals_queue_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য অনুমোদনের অপেক্ষায়'**
+  String get goals_queue_title;
+
+  /// No description provided for @goals_queue_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোনো অপেক্ষমাণ লক্ষ্য নেই'**
+  String get goals_queue_empty;
+
+  /// No description provided for @goals_approve.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমোদন'**
+  String get goals_approve;
+
+  /// No description provided for @goals_reject.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল'**
+  String get goals_reject;
+
+  /// No description provided for @goals_reject_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিলের কারণ লিখুন (ঐচ্ছিক)'**
+  String get goals_reject_hint;
+
+  /// No description provided for @goals_member_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'সদস্য'**
+  String get goals_member_label;
+
+  /// No description provided for @goals_remove.
+  ///
+  /// In bn, this message translates to:
+  /// **'সরান'**
+  String get goals_remove;
+
+  /// No description provided for @goals_remove_confirm.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্যটি তালিকা থেকে সরানো হবে?'**
+  String get goals_remove_confirm;
+
+  /// No description provided for @goals_proposed_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য প্রস্তাবিত — উসরা প্রধানের অনুমোদনের অপেক্ষায়'**
+  String get goals_proposed_toast;
+
+  /// No description provided for @goals_approved_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমোদিত হয়েছে'**
+  String get goals_approved_toast;
+
+  /// No description provided for @goals_rejected_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল হয়েছে'**
+  String get goals_rejected_toast;
 }
 
 class _AppLocalizationsDelegate

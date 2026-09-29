@@ -66,6 +66,11 @@ extension RoleJson on Role {
     Role.invigilator => 2,
     Role.fullAdmin => 3,
   };
+
+  /// usrah_head and above — the mentor-approval surface (goal decisions,
+  /// reviews.submit). Mirrors GuardService.isSupervisor server-side
+  /// (ROLE_RANK >= ROLE_RANK["usrah_head"]).
+  bool get isSupervisor => rank >= Role.usrahHead.rank;
 }
 
 extension LevelJson on Level {

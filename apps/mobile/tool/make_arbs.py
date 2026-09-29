@@ -495,6 +495,115 @@ NEW_KEYS = {
         "en": "Self-assessment quizzes",
         "ar": "اختبارات ذاتية",
     },
+    # ── W4c: personal-goal lifecycle ──────────────────────────────────────────
+    "goals_title": {"bn": "আমার লক্ষ্য", "en": "My Goals", "ar": "أهدافي"},
+    "goals_new": {"bn": "নতুন লক্ষ্য", "en": "New goal", "ar": "هدف جديد"},
+    "goals_amal_picker": {
+        "bn": "আমল নির্বাচন করুন",
+        "en": "Choose an amal",
+        "ar": "اختر عبادة",
+    },
+    "goals_amal_short": {"bn": "আমল", "en": "Amal", "ar": "العبادة"},
+    "goals_title_label": {
+        "bn": "লক্ষ্যের নাম",
+        "en": "Goal title",
+        "ar": "عنوان الهدف",
+    },
+    "goals_target_label": {
+        "bn": "লক্ষ্য মাত্রা (ঐচ্ছিক)",
+        "en": "Target (optional)",
+        "ar": "الهدف (اختياري)",
+    },
+    "goals_note_label": {
+        "bn": "নোট (ঐচ্ছিক)",
+        "en": "Note (optional)",
+        "ar": "ملاحظة (اختياري)",
+    },
+    "goals_submit": {"bn": "প্রস্তাব করুন", "en": "Propose", "ar": "اقترح"},
+    "goals_signin_needed": {
+        "bn": "লক্ষ্য সংরক্ষণ ও অনুমোদনের জন্য সাইন-ইন দরকার",
+        "en": "Sign in to set and track goals",
+        "ar": "سجّل الدخول لتحديد الأهداف ومتابعتها",
+    },
+    "goals_empty": {
+        "bn": "এখনো কোনো লক্ষ্য নেই — প্রথম লক্ষ্য ঠিক করুন",
+        "en": "No goals yet — set your first one",
+        "ar": "لا أهداف بعد — حدّد هدفك الأول",
+    },
+    "goals_open_label": {
+        "bn": "খোলা লক্ষ্য",
+        "en": "Open goals",
+        "ar": "أهداف مفتوحة",
+    },
+    "goal_status_proposed": {
+        "bn": "অপেক্ষমাণ",
+        "en": "Pending review",
+        "ar": "بانتظار المراجعة",
+    },
+    "goal_status_approved": {
+        "bn": "অনুমোদিত",
+        "en": "Approved",
+        "ar": "معتمد",
+    },
+    "goal_status_rejected": {
+        "bn": "বাতিল",
+        "en": "Rejected",
+        "ar": "مرفوض",
+    },
+    "goal_status_completed": {
+        "bn": "সম্পন্ন",
+        "en": "Completed",
+        "ar": "مكتمل",
+    },
+    "goal_status_withdrawn": {
+        "bn": "প্রত্যাহৃত",
+        "en": "Withdrawn",
+        "ar": "مسحوب",
+    },
+    "goals_reject_reason_label": {
+        "bn": "কারণ",
+        "en": "Reason",
+        "ar": "السبب",
+    },
+    "goals_queue_title": {
+        "bn": "লক্ষ্য অনুমোদনের অপেক্ষায়",
+        "en": "Goal approvals",
+        "ar": "طلبات اعتماد الأهداف",
+    },
+    "goals_queue_empty": {
+        "bn": "কোনো অপেক্ষমাণ লক্ষ্য নেই",
+        "en": "No pending goals",
+        "ar": "لا أهداف بانتظار الاعتماد",
+    },
+    "goals_approve": {"bn": "অনুমোদন", "en": "Approve", "ar": "اعتماد"},
+    "goals_reject": {"bn": "বাতিল", "en": "Reject", "ar": "رفض"},
+    "goals_reject_hint": {
+        "bn": "বাতিলের কারণ লিখুন (ঐচ্ছিক)",
+        "en": "Reject reason (optional)",
+        "ar": "سبب الرفض (اختياري)",
+    },
+    "goals_member_label": {"bn": "সদস্য", "en": "Member", "ar": "العضو"},
+    "goals_remove": {"bn": "সরান", "en": "Remove", "ar": "إزالة"},
+    "goals_remove_confirm": {
+        "bn": "লক্ষ্যটি তালিকা থেকে সরানো হবে?",
+        "en": "Remove this goal from your list?",
+        "ar": "إزالة هذا الهدف من القائمة؟",
+    },
+    "goals_proposed_toast": {
+        "bn": "লক্ষ্য প্রস্তাবিত — উসরা প্রধানের অনুমোদনের অপেক্ষায়",
+        "en": "Proposed — awaiting your usrah head's approval",
+        "ar": "تم الاقتراح — بانتظار اعتماد رئيس الأسر",
+    },
+    "goals_approved_toast": {
+        "bn": "অনুমোদিত হয়েছে",
+        "en": "Approved",
+        "ar": "تم الاعتماد",
+    },
+    "goals_rejected_toast": {
+        "bn": "বাতিল হয়েছে",
+        "en": "Rejected",
+        "ar": "تم الرفض",
+    },
 }
 
 
