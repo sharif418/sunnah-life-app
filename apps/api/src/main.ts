@@ -28,7 +28,9 @@ async function bootstrap(): Promise<void> {
   app.useLogger(app.get(StructuredLogger));
 
   // Product routes under /api (web + mobile contract); infra endpoints bare.
-  app.setGlobalPrefix("api", { exclude: ["health", "metrics"] });
+  // health/live + health/ready joined health here [C-W5-ops] — the liveness
+  // URL must stay stable for orchestrators; readiness is its monitor twin.
+  app.setGlobalPrefix("api", { exclude: ["health", "health/live", "health/ready", "metrics"] });
 
   // socket.io gateways (live usrah quiz) mount on the SAME HTTP server at
   // /socket.io — one backend, one auth, one deployment. The Redis adapter
