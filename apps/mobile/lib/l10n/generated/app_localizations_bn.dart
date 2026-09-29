@@ -1652,4 +1652,26 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get checklist_local_note => 'শুধু এই ডিভাইসে সংরক্ষিত';
+
+  @override
+  String get group_fard => 'ফরয নামাজ';
+
+  @override
+  String get group_salah_sunnah => 'সালাতের সুন্নত';
+
+  @override
+  String get group_nafl => 'নফল নামাজ';
+
+  @override
+  String get tilawat_begin_chip => 'শুরু';
+
+  @override
+  String get tilawat_begin_copy =>
+      'আজ ৫ মিনিট দিয়ে শুরু করুন — ধীরে ধীরে অভ্যাস হয়ে যাবে ইনশাআল্লাহ';
+
+  @override
+  String get tilawat_ramp_day => 'দিন';
+
+  @override
+  String get tilawat_begin_minutes => 'মিনিট';
 }

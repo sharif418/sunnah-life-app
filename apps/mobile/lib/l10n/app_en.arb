@@ -531,5 +531,12 @@
   "checklist_add": "Add",
   "checklist_remove": "Delete",
   "checklist_remove_confirm": "Delete this item?",
-  "checklist_local_note": "Stays on this device only"
+  "checklist_local_note": "Stays on this device only",
+  "group_fard": "Fard prayers",
+  "group_salah_sunnah": "Sunnah of salah",
+  "group_nafl": "Nafl prayers",
+  "tilawat_begin_chip": "Start",
+  "tilawat_begin_copy": "Start with 5 minutes today — it will become a habit, in shaa Allah",
+  "tilawat_ramp_day": "Day",
+  "tilawat_begin_minutes": "minutes"
 }

@@ -3291,6 +3291,48 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'শুধু এই ডিভাইসে সংরক্ষিত'**
   String get checklist_local_note;
+
+  /// No description provided for @group_fard.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফরয নামাজ'**
+  String get group_fard;
+
+  /// No description provided for @group_salah_sunnah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সালাতের সুন্নত'**
+  String get group_salah_sunnah;
+
+  /// No description provided for @group_nafl.
+  ///
+  /// In bn, this message translates to:
+  /// **'নফল নামাজ'**
+  String get group_nafl;
+
+  /// No description provided for @tilawat_begin_chip.
+  ///
+  /// In bn, this message translates to:
+  /// **'শুরু'**
+  String get tilawat_begin_chip;
+
+  /// No description provided for @tilawat_begin_copy.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ ৫ মিনিট দিয়ে শুরু করুন — ধীরে ধীরে অভ্যাস হয়ে যাবে ইনশাআল্লাহ'**
+  String get tilawat_begin_copy;
+
+  /// No description provided for @tilawat_ramp_day.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিন'**
+  String get tilawat_ramp_day;
+
+  /// No description provided for @tilawat_begin_minutes.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট'**
+  String get tilawat_begin_minutes;
 }
 
 class _AppLocalizationsDelegate

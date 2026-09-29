@@ -627,6 +627,34 @@ NEW_KEYS = {
         "en": "Stays on this device only",
         "ar": "يبقى على هذا الجهاز فقط",
     },
+    # ── W4c: tilawat beginner ramp + fard/sunnah/nafl group headers ────────────
+    "group_fard": {
+        "bn": "ফরয নামাজ",
+        "en": "Fard prayers",
+        "ar": "الفرائض",
+    },
+    "group_salah_sunnah": {
+        "bn": "সালাতের সুন্নত",
+        "en": "Sunnah of salah",
+        "ar": "سنن الصلاة",
+    },
+    "group_nafl": {
+        "bn": "নফল নামাজ",
+        "en": "Nafl prayers",
+        "ar": "النوافل",
+    },
+    "tilawat_begin_chip": {"bn": "শুরু", "en": "Start", "ar": "بداية"},
+    "tilawat_begin_copy": {
+        "bn": "আজ ৫ মিনিট দিয়ে শুরু করুন — ধীরে ধীরে অভ্যাস হয়ে যাবে ইনশাআল্লাহ",
+        "en": "Start with 5 minutes today — it will become a habit, in shaa Allah",
+        "ar": "ابدأ بخمس دقائق اليوم — ستصبح عادة بإذن الله",
+    },
+    "tilawat_ramp_day": {"bn": "দিন", "en": "Day", "ar": "يوم"},
+    "tilawat_begin_minutes": {
+        "bn": "মিনিট",
+        "en": "minutes",
+        "ar": "دقائق",
+    },
 }
 
 

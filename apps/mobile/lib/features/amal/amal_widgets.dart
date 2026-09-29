@@ -389,6 +389,151 @@ String toEnDigits(String raw) => raw.replaceAllMapped(
   (m) => '${'০১২৩৪৫৬৭৮৯'.indexOf(m.group(0)!)}',
 );
 
+/// W4c tilawat beginner card — shown for the tilawat_minutes amal while
+/// the user has <7 days of tilawat-minutes history (computed locally):
+/// a শুরু chip, the "আজ ৫ মিনিট দিয়ে শুরু করুন" ramp copy, the day-n/৭
+/// ramp chip, a +৫ মিনিট quick-log and the full QuantityInput for precise
+/// entry. After day 7 the row reverts to the normal quantity amal.
+class TilawatBeginnerCard extends StatelessWidget {
+  const TilawatBeginnerCard({
+    super.key,
+    required this.title,
+    required this.value,
+    required this.target,
+    required this.unit,
+    required this.daysDone,
+    required this.bengali,
+    required this.onChanged,
+    this.enabled = true,
+  });
+
+  /// Amal title (bn first — the diary convention).
+  final String title;
+
+  /// Today's logged minutes (0 when untouched).
+  final double value;
+
+  /// The amal target in minutes (catalog: 10).
+  final double target;
+
+  /// The amal unit label (মিনিট).
+  final String unit;
+
+  /// Completed ramp days (0–6 while the card is visible).
+  final int daysDone;
+
+  final bool bengali;
+  final ValueChanged<double> onChanged;
+  final bool enabled;
+
+  static const int rampDays = 7;
+
+  String _n(Object v) => bengali ? toBn(v) : '$v';
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final day = (daysDone + 1).clamp(1, rampDays);
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: SLColors.gold.withValues(alpha: 0.18),
+                  borderRadius: SLRadius.brPill,
+                ),
+                child: Text(
+                  context.t('tilawat_begin_chip'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: SLColors.goldDeep,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                key: const ValueKey('tilawat_ramp_chip'),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  borderRadius: SLRadius.brPill,
+                ),
+                child: Text(
+                  '${context.t('tilawat_ramp_day')} ${_n(day)}/${_n(rampDays)}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SLSpacing.s4),
+          Text(
+            context.t('tilawat_begin_copy'),
+            style: theme.textTheme.bodyMedium,
+          ),
+          const SizedBox(height: SLSpacing.s8),
+          Row(
+            children: [
+              FilledButton.icon(
+                key: const ValueKey('tilawat_begin_add5'),
+                onPressed: enabled
+                    ? () {
+                        HapticFeedback.mediumImpact();
+                        onChanged((value + 5).clamp(0, 999));
+                      }
+                    : null,
+                icon: const Icon(Icons.add, size: 18),
+                label: Text(
+                  '+${_n(5)} ${context.t('tilawat_begin_minutes')}',
+                ),
+              ),
+              const SizedBox(width: SLSpacing.s8),
+              Expanded(
+                child: Text(
+                  '${_n(value)} $unit',
+                  textAlign: TextAlign.end,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    color: value > 0
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: SLSpacing.s8),
+          SizedBox(
+            width: double.infinity,
+            child: QuantityInput(
+              value: value,
+              target: target,
+              unit: unit,
+              enabled: enabled,
+              bengali: bengali,
+              onChanged: onChanged,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+
 /// One heatmap cell in the month grid (paper-diary layout).
 class HeatmapCell extends StatelessWidget {
   const HeatmapCell({

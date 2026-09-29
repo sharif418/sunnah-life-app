@@ -593,6 +593,13 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'checklist_remove' => l.checklist_remove,
   'checklist_remove_confirm' => l.checklist_remove_confirm,
   'checklist_local_note' => l.checklist_local_note,
+  'group_fard' => l.group_fard,
+  'group_salah_sunnah' => l.group_salah_sunnah,
+  'group_nafl' => l.group_nafl,
+  'tilawat_begin_chip' => l.tilawat_begin_chip,
+  'tilawat_begin_copy' => l.tilawat_begin_copy,
+  'tilawat_ramp_day' => l.tilawat_ramp_day,
+  'tilawat_begin_minutes' => l.tilawat_begin_minutes,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

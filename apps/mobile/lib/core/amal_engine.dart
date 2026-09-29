@@ -131,6 +131,43 @@ bool isAmalDay(AmalDefinition def, String date, {int hijriAdjust = 0}) {
   }
 }
 
+// ── Presentation groups (W4c: fard / salah-sunnah / nafl / akhlaq…) ──────────
+
+/// "fard/sunnah/nafl" is not a catalog FIELD — the group derives from the
+/// amal set (the W4c catalog note): fard = the 5 tristate salahs,
+/// salah-sunnah = witr + the 12-rak'ah sunnah mu'akkadah, nafl = the
+/// remaining salahs (tahajjud, ishraq). Everything else groups by category.
+String amalGroupKey(AmalDefinition def) {
+  if (def.category != AmalCategory.salah) return def.category.labelKey;
+  if (def.inputType == AmalInputType.tristate) return 'group_fard';
+  return switch (def.key) {
+    'salat_witr' || 'sunnah_muakkadah_12' => 'group_salah_sunnah',
+    _ => 'group_nafl',
+  };
+}
+
+// ── Tilawat beginner ramp (W4c — local, no backend change) ──────────────────
+
+/// The beginner-minutes amal key (catalog: quantity, target 10 মিনিট).
+const String kTilawatMinutesKey = 'tilawat_minutes';
+
+/// Days of tilawat-minutes history the user has (distinct dates with a
+/// positive value on [kTilawatMinutesKey]) — computed LOCALLY from the
+/// diary entries; the server knows nothing about the ramp. The beginner
+/// card shows while this is < 7.
+int tilawatMinutesDaysDone(List<AmalEntry> entries) {
+  final days = <String>{};
+  for (final e in entries) {
+    if (e.amalKey != kTilawatMinutesKey) continue;
+    final n = e.value is num
+        ? (e.value as num).toDouble()
+        : double.tryParse('${e.value}');
+    if (n != null && n > 0) days.add(e.date);
+  }
+  return days.length;
+}
+
+
 // ── Locking rule ─────────────────────────────────────────────────────────────
 
 /// Deadline of amal-day `date`: Ishraq (sunrise + 20 min) of the NEXT day,

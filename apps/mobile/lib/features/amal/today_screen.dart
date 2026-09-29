@@ -104,11 +104,16 @@ class _TodayView extends ConsumerWidget {
       today,
     );
 
-    // Group by category preserving catalog order.
-    final groups = <AmalCategory, List<AmalDefinition>>{};
+    // Group for display preserving catalog order — W4c: the salah amals
+    // split into ফরয / সালাতের সুন্নত / নফল presentation groups
+    // (amalGroupKey); every other category keeps its own SectionHeader.
+    final groups = <String, List<AmalDefinition>>{};
     for (final d in todayDefs) {
-      groups.putIfAbsent(d.category, () => []).add(d);
+      groups.putIfAbsent(amalGroupKey(d), () => []).add(d);
     }
+    // W4c: the tilawat beginner ramp counts days of tilawat-minutes history
+    // LOCALLY from the diary entries — no backend involvement.
+    final tilawatDays = tilawatMinutesDaysDone(entries);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -234,11 +239,19 @@ class _TodayView extends ConsumerWidget {
         ),
         const SizedBox(height: SLSpacing.s4),
 
-        // Category sections
-        for (final cat in groups.keys) ...[
-          SectionHeader(context.t(cat.labelKey), icon: _categoryIcon(cat)),
-          for (final def in groups[cat]!)
-            _AmalRow(def: def, today: today, bn: bn),
+        // Category sections (W4c group headers: ফরয / সালাতের সুন্নত / নফল / …)
+        for (final groupKey in groups.keys) ...[
+          SectionHeader(context.t(groupKey), icon: _groupIcon(groupKey)),
+          for (final def in groups[groupKey]!)
+            def.key == kTilawatMinutesKey &&
+                    tilawatDays < TilawatBeginnerCard.rampDays
+                ? _TilawatBeginnerRow(
+                    def: def,
+                    today: today,
+                    bn: bn,
+                    daysDone: tilawatDays,
+                  )
+                : _AmalRow(def: def, today: today, bn: bn),
           const SizedBox(height: SLSpacing.s4),
         ],
 
@@ -258,16 +271,53 @@ class _TodayView extends ConsumerWidget {
     );
   }
 
-  static IconData _categoryIcon(AmalCategory cat) => switch (cat) {
-    AmalCategory.salah => Icons.mosque_outlined,
-    AmalCategory.quran => Icons.menu_book_outlined,
-    AmalCategory.dhikr => Icons.spa_outlined,
-    AmalCategory.akhlaq => Icons.volunteer_activism_outlined,
-    AmalCategory.dawat => Icons.campaign_outlined,
-    AmalCategory.lifestyle => Icons.bedtime_outlined,
-    AmalCategory.sunnah => Icons.star_outline,
-    AmalCategory.personal => Icons.flag_outlined,
+  static IconData _groupIcon(String key) => switch (key) {
+    'group_fard' => Icons.mosque_outlined,
+    'group_salah_sunnah' => Icons.stars_outlined,
+    'group_nafl' => Icons.wb_twilight_outlined,
+    'cat_quran' => Icons.menu_book_outlined,
+    'cat_dhikr' => Icons.spa_outlined,
+    'cat_akhlaq' => Icons.volunteer_activism_outlined,
+    'cat_dawat' => Icons.campaign_outlined,
+    'cat_lifestyle' => Icons.bedtime_outlined,
+    'cat_sunnah' => Icons.star_outline,
+    _ => Icons.flag_outlined,
   };
+}
+
+/// W4c: the tilawat_minutes row while the user is inside the 7-day beginner
+/// ramp — the শুরু card instead of the plain quantity row. Writes go through
+/// the same optimistic amalProvider.write path.
+class _TilawatBeginnerRow extends ConsumerWidget {
+  const _TilawatBeginnerRow({
+    required this.def,
+    required this.today,
+    required this.bn,
+    required this.daysDone,
+  });
+  final AmalDefinition def;
+  final String today;
+  final bool bn;
+  final int daysDone;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(profileProvider);
+    final value = ref.watch(amalProvider).entry(today, def.key)?.value;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+      child: TilawatBeginnerCard(
+        title: bn || def.titleBn.isNotEmpty ? def.titleBn : def.titleEn,
+        value: value is num ? value.toDouble() : 0,
+        target: def.targetFor(profile.category).toDouble(),
+        unit: def.unit ?? '',
+        daysDone: daysDone,
+        bengali: bn,
+        onChanged: (v) =>
+            ref.read(amalProvider.notifier).write(def.key, today, v, 'manual'),
+      ),
+    );
+  }
 }
 
 class _AmalRow extends ConsumerWidget {

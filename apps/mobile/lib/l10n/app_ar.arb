@@ -531,5 +531,12 @@
   "checklist_add": "إضافة",
   "checklist_remove": "حذف",
   "checklist_remove_confirm": "حذف هذا البند؟",
-  "checklist_local_note": "يبقى على هذا الجهاز فقط"
+  "checklist_local_note": "يبقى على هذا الجهاز فقط",
+  "group_fard": "الفرائض",
+  "group_salah_sunnah": "سنن الصلاة",
+  "group_nafl": "النوافل",
+  "tilawat_begin_chip": "بداية",
+  "tilawat_begin_copy": "ابدأ بخمس دقائق اليوم — ستصبح عادة بإذن الله",
+  "tilawat_ramp_day": "يوم",
+  "tilawat_begin_minutes": "دقائق"
 }

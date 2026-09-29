@@ -1648,4 +1648,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get checklist_local_note => 'Stays on this device only';
+
+  @override
+  String get group_fard => 'Fard prayers';
+
+  @override
+  String get group_salah_sunnah => 'Sunnah of salah';
+
+  @override
+  String get group_nafl => 'Nafl prayers';
+
+  @override
+  String get tilawat_begin_chip => 'Start';
+
+  @override
+  String get tilawat_begin_copy =>
+      'Start with 5 minutes today — it will become a habit, in shaa Allah';
+
+  @override
+  String get tilawat_ramp_day => 'Day';
+
+  @override
+  String get tilawat_begin_minutes => 'minutes';
 }
