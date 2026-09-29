@@ -100,8 +100,10 @@ class ReferralCard extends StatelessWidget {
                 joinLink: joinLink,
               ),
               const Spacer(),
-              // gold @ 35% — the base rule framing the card.
-              const _Hairline(color: Color(0x59C99A3B)),
+              // gold @ 35% — the base rule framing the card. W4f dark pass:
+              // token + alpha, not a raw ARGB literal (0x59 = 89 = 89/255 —
+              // byte-identical to the legacy Color(0x59C99A3B)).
+              _Hairline(color: SLColors.gold.withValues(alpha: 89 / 255)),
             ],
           ),
         ),

@@ -270,7 +270,14 @@ class _DayDot extends StatelessWidget {
             ),
             child: Center(
               child: done
-                  ? const Icon(PhosphorIconsRegular.check, size: 18, color: Colors.white)
+                  // W4f dark pass — onPrimary (cream in light, near-black in
+                  // dark), never raw Colors.white: the dark primary is a
+                  // LIGHT green and white on it fails contrast.
+                  ? Icon(
+                      PhosphorIconsRegular.check,
+                      size: 18,
+                      color: theme.colorScheme.onPrimary,
+                    )
                   : Text(
                       bengali ? toBn(dayNum) : '$dayNum',
                       style: theme.textTheme.bodySmall,
