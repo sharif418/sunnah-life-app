@@ -262,6 +262,9 @@ jobs:
   # actually landed in Postgres. This is the W2d proof: the sandbox cannot
   # run Docker, so this job is the only place the Dockerfiles, .dockerignore
   # files and compose wiring are exercised end-to-end.
+  # [C-W5-ops] The smoke curls the READINESS alias /health on purpose (it
+  # proves migrations+seed+deps from inside the container); the container
+  # healthchecks themselves moved to /health/live.
   docker:
     name: Docker — image build + compose smoke (migrate·seed·health)
     runs-on: ubuntu-latest
@@ -426,6 +429,22 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
+      # [C-W5-ops] The release app must never target the placeholder API
+      # default (https://sunnahlife.app — nothing is deployed there; sign-in
+      # failed on real phones). The base URL is a repository VARIABLE (not a
+      # secret — it is not sensitive). An unset/empty variable fails the
+      # release builds loudly instead of shipping an app that cannot sign in.
+      - name: Resolve SUNNAH_API_BASE (fail when unset)
+        id: apibase
+        env:
+          SUNNAH_API_BASE: ${{ vars.SUNNAH_API_BASE }}
+        run: |
+          if [ -z "$SUNNAH_API_BASE" ]; then
+            echo "::error::Repository variable SUNNAH_API_BASE is empty. Set it under Settings → Secrets and variables → Actions → Variables (e.g. https://api-staging.sunnahlife.ailearnersbd.com). Release builds must never target the placeholder default."
+            exit 1
+          fi
+          echo "base=$SUNNAH_API_BASE" >> "$GITHUB_OUTPUT"
+
       # Same pattern as release-bundle, except absence of the secret is a
       # NOTICE (debug-signed device-test build), not a skip: the whole point
       # of this job is that the owner can install a release build TODAY.
@@ -457,6 +476,7 @@ jobs:
         run: >
           flutter build apk --release --split-per-abi
           --target-platform android-arm,android-arm64
+          --dart-define=SUNNAH_API_BASE=${{ steps.apibase.outputs.base }}
 
       - name: Sizes → job summary + arm64 < 40 MB gate
         working-directory: apps/mobile/build/app/outputs/flutter-apk
@@ -536,6 +556,22 @@ jobs:
         working-directory: apps/mobile
         run: flutter pub get
 
+      # [C-W5-ops] The release app must never target the placeholder API
+      # default (https://sunnahlife.app — nothing is deployed there; sign-in
+      # failed on real phones). The base URL is a repository VARIABLE (not a
+      # secret — it is not sensitive). An unset/empty variable fails the
+      # release builds loudly instead of shipping an app that cannot sign in.
+      - name: Resolve SUNNAH_API_BASE (fail when unset)
+        id: apibase
+        env:
+          SUNNAH_API_BASE: ${{ vars.SUNNAH_API_BASE }}
+        run: |
+          if [ -z "$SUNNAH_API_BASE" ]; then
+            echo "::error::Repository variable SUNNAH_API_BASE is empty. Set it under Settings → Secrets and variables → Actions → Variables (e.g. https://api-staging.sunnahlife.ailearnersbd.com). Release builds must never target the placeholder default."
+            exit 1
+          fi
+          echo "base=$SUNNAH_API_BASE" >> "$GITHUB_OUTPUT"
+
       # The signing material is injected from secrets — see docs/RELEASE.md §3.
       # Without the secrets the step fails loudly with instructions.
       - name: Decode signing key (skips when secrets absent)
@@ -564,7 +600,7 @@ jobs:
       - name: Build release App Bundle
         if: steps.keystore.outputs.skip != 'true'
         working-directory: apps/mobile
-        run: flutter build appbundle --release
+        run: flutter build appbundle --release --dart-define=SUNNAH_API_BASE=${{ steps.apibase.outputs.base }}
 
       - name: Upload release bundle
         if: steps.keystore.outputs.skip != 'true'
