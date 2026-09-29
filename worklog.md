@@ -1200,3 +1200,47 @@ Stage Summary:
   2. The api container logs' MeiliIndexer lines no longer 405 on create-index, and duas/names99/articles docs sync (32/99/4 docs) — search finds duas content.
   3. Readiness for monitors: point UptimeRobot at /health/ready (or legacy /health) per DEPLOY_COOLIFY.md §9 — those return 503 when a dependency is actually down.
 - Honest remaining gaps: real-phone sign-in against a release APK built with the staging API base (owner device test, artifact internal-test-arm64-v8a from run 36519971155); the AUDIT/worklog doc pushes each trigger their own docs-only CI run (expected green, not part of the 10-job proof above).
+
+---
+Task ID: C-ENV
+Agent: C-ENV (toolchain rebuild agent)
+Task: Rebuild the Flutter 3.47.5 toolchain after the sandbox reset (no /home/z/flutter, no ~/.pub-cache, no Android SDK, no apps/mobile/.dart_tool) and re-confirm the mobile baseline gates — flutter analyze 0 issues + flutter test 236/236. No features, no commits.
+
+Work Log:
+- Read docs/ENVIRONMENT.md fully + worklog C-OPS-a/c sections first. Confirmed the reset state: /home/z/flutter, /home/z/.pub-cache, /home/z/android-sdk, apps/mobile/.dart_tool all gone; /home/z/opt survived with pg16 + redis + start-services.sh (postgres :5433 / redis :6380 verified UP via the script — not restarted, not touched). HEAD = 927e53c on main, tree clean.
+- DOC DRIFT #1: ENVIRONMENT.md points at `/home/z/opt/parallel-dl.sh URL OUT [N]` for the ranged download, but the reset wiped /home/z/opt/bin (empty) and the script with it. Recreated it at the documented path from the doc's own description (16-way default, HTTP Range chunks + per-chunk size validation + reassembly) — same interface, so the doc is now true again.
+- Downloaded `flutter_linux_3.47.5-stable.tar.xz` (1,576,266,884 bytes ≈ 1.47 GiB) from storage.googleapis.com via the 16-way ranged downloader: 10.4 s (network is faster than the original build's 58 s). Every chunk size-validated before cat-assembly; total size matched Content-Length exactly. Recorded sha256 for future verification (the doc gives no checksum): 2132e990f236f8d22e7c6314b29a191a95b10d7cbcfec9b4e2e303d996652cbb.
+- Extracted with `tar -xJf … -C /home/z` (40.9 s): exit 0, ZERO stderr warnings this time — the doc's "Directory renamed before its status could be extracted" overlayfs quirk did not reproduce. /home/z/flutter = 2.5 GB. Tarball + stderr log deleted after verification (disk back to 4.5 GB free).
+- `git config --global --add safe.directory /home/z/flutter`; PATH + PUB_CACHE=/home/z/.pub-cache per the doc's env block. `flutter --version` → Flutter 3.47.5 stable, Dart 3.13.4 (matches the pubspec pin ^3.13.4), revision 6a19cca564. `flutter config --no-analytics --no-cli-animations`.
+- DOC DRIFT #2 (deliberate deviation, per task rules): the doc's original install included the Android SDK (472 MB) + `flutter precache --android` (1 GB) — NOT reinstalled. analyze/test need none of it: the tarball already ships bin/cache/dart-sdk + linux-x64 flutter_tester + material fonts (verified present), so no precache was run at all. `flutter doctor`: ✓ Flutter, ✓ network, ✓ connected device; ✗ Android toolchain (no SDK), ✗ Chrome, ✗ Linux desktop toolchain — all ACCEPTABLE for this task (gradle/APK builds are CI's job; the 4 GB RAM / -Xmx1536m --no-daemon gradle notes exist because local APK builds are painful). Not fixed, on purpose.
+- `cd apps/mobile && flutter pub get` → "Got dependencies!" in 7.5 s (pub.dev is fast; only storage.googleapis.com needs the ranged trick). ~/.pub-cache = 411 MB, .dart_tool = 25 MB.
+- GATE 1 `flutter analyze` → PASSED: "No issues found! (ran in 17.8s)" — 0 problems.
+- GATE 2 `flutter test` → PASSED: "00:38 +236: All tests passed!" — 236/236 in 51 s wall (suite count confirmed: 22 test/*.dart files + 5 goldens in test/goldens/, matching the expected baseline exactly).
+- No product code touched, no commits/pushes, no dev-server restarts, no services started. Final git state: HEAD 927e53c, only worklog.md modified (this section). Everything lives under /home/z/flutter + /home/z/.pub-cache + apps/mobile/.dart_tool.
+
+Stage Summary:
+- Toolchain rebuilt and baseline re-confirmed GREEN:
+  - flutter analyze (apps/mobile): "No issues found! (ran in 17.8s)"
+  - flutter test (apps/mobile): "00:38 +236: All tests passed!" (236/236; 22 files + 5 goldens)
+- Flutter 3.47.5 stable / Dart 3.13.4 at /home/z/flutter; sha256 of the tarball recorded above; Android SDK intentionally absent (CI builds APKs; doctor's Android/Chrome/Linux-desktop complaints are expected and harmless here).
+- Anomalies/leftovers for the next agents: (a) /home/z/opt/parallel-dl.sh had to be recreated (reset wiped it) — it exists again at the documented path; (b) no Android SDK locally → `flutter build apk`/`run` on a device is NOT possible in-sandbox until someone reinstalls it per ENVIRONMENT.md §Android SDK (dl.google.com is fast, ~5 min); (c) the tarball-extraction warnings in ENVIRONMENT.md did not reproduce (benign either way); (d) network to storage.googleapis.com is currently much faster than documented (1.47 GiB in 10 s 16-way) — the single-stream stall may also have improved, but the ranged downloader remains the safe path.
+
+---
+Task ID: C-W4b-UI (completed by C-W4b-TAIL)
+Agent: C-W4b-UI (implementation) + C-W4b-TAIL (finish/ship)
+Task: Home per spec order — full rewiring.
+
+Work Log:
+- Three implementation commits on main (C-W4b-UI), each landing analyze-clean:
+  1. 329302c feat(W4b): countdown ring hero + in-page schedule transition — home_sections.dart (NEW): CountdownRingHero, a CustomPaint ring (_WaqtRingPainter) consuming waqtInterval(prayer.times, nowMinutes).remainingFraction (gold arc = remaining fraction of the current waqt interval, track goldSoftLight in light / dark-adjusted gold in dark, stroke 8, round caps, sweep from 12 o'clock mirrored under RTL) with the current-waqt gold pill, HH:MM:SS in display tabular digits (toBn for bn) and the next-waqt label at the center; prayer_state ticker now flows state EVERY second (ring + digits tick at second granularity) while side-effect paths (bell re-arm, home-widget platform push + snapshot disk write) stay gated on the minute/date boundary; 'সময়সূচি দেখুন' affordance scrolls IN-PAGE to the schedule section — Scrollable.ensureVisible on the schedule header's GlobalKey (SLMotion.slow/standard). Hero interpretation, stated honestly: the schedule is a section of the SAME screen, so the "flight" is an animated ensureVisible scroll, not a route Hero.
+  2. 061d701 feat(W4b): most-used amals + quick access grid — সর্বাধিক ব্যবহৃত: mostUsedAmals over the flattened LOCAL Drift 30-day window (offline-first, guests included); MostUsedCard (title, 'N দিন' chip, আজ লিখুন quick-log whenever quickLogValue yields one → amalProvider.write source 'quick:home', same kind:context family as 'auto:prayer:*'); EmptyState(most_used_empty) with no history. দ্রুত প্রবেশ: 2×2 bento grid (QuickAccessTile, 8-pt spacing, 44px+ targets) → /ilm/quran · /ilm/duas · /amal · /more/live. Catalog entries for both.
+  3. 7149c77 feat(W4b): Ilm/amal/Live previews + সব দেখুন headers — Ilm section with REAL coursePack/quizPack counts (bundled-asset fallback offline; 'N কোর্স'/'N কুইজ' in the app's N-unit convention); Today's amal preview (CompletionRing fed by todayAmalPreview over today's defs, same effectiveHijriAdjustProvider rule as today_screen — no duplicated grouping logic); Live preview = the NEXT upcoming program from liveProvider (earliest startsAt; live_next gold chip, day/time line, live_join_hint; hidden while loading/offline or nothing upcoming); every section header carries সব দেখুন → its tab route.
+- Test commit (C-W4b-TAIL): 287590b test(W4b): home section widget tests — test/w4_home_widget_test.dart (356 lines, 7 tests): ring hero renders + waqt state flows every second; most-used empty state for a fresh guest; most-used seeded card + days chip + আজ লিখুন quick-log writing source 'quick:home'; quick-access grid navigates to its destinations; amal preview ring shows today's completed/total from seed; live preview renders the NEXT upcoming program (not the past one); live preview hides when nothing is upcoming.
+- Gates, verbatim (C-W4b-TAIL re-ran both after the implementation, before committing anything):
+  - flutter analyze → "No issues found! (ran in 1.4s)"
+  - flutter test (full suite) → "00:35 +243: All tests passed!" (243/243 = 236 prior + 7 new; the new file solo: "00:03 +7: All tests passed!")
+- Tail fixed NOTHING — the first full-suite run after the W4b implementation was already green (243/243), analyze stayed 0 throughout; no existing test broke, no implementation touch needed.
+
+Stage Summary:
+- W4b complete — spec-order home: ring hero → most-used → quick-access → Ilm/amal/Live previews with সব দেখুন headers; shipped as 329302c + 061d701 + 7149c77 (implementation) + 287590b (tests) + the docs commit carrying this section and the AUDIT row (with the C-ENV toolchain section riding along).
+- Honest notes: golden-image captures for the new home sections deferred to W4f (design-polish unit) — current coverage is behavioral widget tests, not pixel goldens; CI run id was pending at this commit's push (docs-only CI proof commit follows on green — see the AUDIT W4b row); nothing needed fixing in the tail (suite green on the first run).
