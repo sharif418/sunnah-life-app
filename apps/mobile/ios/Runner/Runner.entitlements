@@ -16,5 +16,17 @@
         <array>
                 <string>Default</string>
         </array>
+        <!-- C-W3h — Universal Links: https://sunnahlife.app/join/* opens the
+             app (the apple-app-site-association file served by apps/web
+             whitelists the path — see docs/RELEASE.md §App Links for the
+             TEAMID.appID that must match). The Associated Domains capability
+             must ALSO be toggled on the App ID on the signing Mac
+             (docs/IOS_BUILD.md) so the provisioning profile carries it;
+             Xcode adds the profile side automatically when the capability
+             is enabled there once. -->
+        <key>com.apple.developer.associated-domains</key>
+        <array>
+                <string>applinks:sunnahlife.app</string>
+        </array>
 </dict>
 </plist>

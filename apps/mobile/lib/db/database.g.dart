@@ -564,6 +564,26 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _lastErrorMeta = const VerificationMeta(
+    'lastError',
+  );
+  @override
+  late final GeneratedColumn<String> lastError = GeneratedColumn<String>(
+    'last_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deadAtMeta = const VerificationMeta('deadAt');
+  @override
+  late final GeneratedColumn<DateTime> deadAt = GeneratedColumn<DateTime>(
+    'dead_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -573,6 +593,8 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
     source,
     clientUpdatedAt,
     attempts,
+    lastError,
+    deadAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -638,6 +660,18 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
         attempts.isAcceptableOrUnknown(data['attempts']!, _attemptsMeta),
       );
     }
+    if (data.containsKey('last_error')) {
+      context.handle(
+        _lastErrorMeta,
+        lastError.isAcceptableOrUnknown(data['last_error']!, _lastErrorMeta),
+      );
+    }
+    if (data.containsKey('dead_at')) {
+      context.handle(
+        _deadAtMeta,
+        deadAt.isAcceptableOrUnknown(data['dead_at']!, _deadAtMeta),
+      );
+    }
     return context;
   }
 
@@ -675,6 +709,14 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxRow> {
         DriftSqlType.int,
         data['${effectivePrefix}attempts'],
       )!,
+      lastError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_error'],
+      ),
+      deadAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}dead_at'],
+      ),
     );
   }
 
@@ -692,6 +734,13 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
   final String source;
   final DateTime clientUpdatedAt;
   final int attempts;
+
+  /// Last server rejection reason (C-W3d) — shown on the dead-rows list.
+  final String? lastError;
+
+  /// Set when the row must never re-POST again (converged via serverValue,
+  /// or attempts exhausted). Nullable — null while the row is alive.
+  final DateTime? deadAt;
   const OutboxRow({
     required this.id,
     required this.amalKey,
@@ -700,6 +749,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     required this.source,
     required this.clientUpdatedAt,
     required this.attempts,
+    this.lastError,
+    this.deadAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -711,6 +762,12 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     map['source'] = Variable<String>(source);
     map['client_updated_at'] = Variable<DateTime>(clientUpdatedAt);
     map['attempts'] = Variable<int>(attempts);
+    if (!nullToAbsent || lastError != null) {
+      map['last_error'] = Variable<String>(lastError);
+    }
+    if (!nullToAbsent || deadAt != null) {
+      map['dead_at'] = Variable<DateTime>(deadAt);
+    }
     return map;
   }
 
@@ -723,6 +780,12 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       source: Value(source),
       clientUpdatedAt: Value(clientUpdatedAt),
       attempts: Value(attempts),
+      lastError: lastError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastError),
+      deadAt: deadAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(deadAt),
     );
   }
 
@@ -739,6 +802,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       source: serializer.fromJson<String>(json['source']),
       clientUpdatedAt: serializer.fromJson<DateTime>(json['clientUpdatedAt']),
       attempts: serializer.fromJson<int>(json['attempts']),
+      lastError: serializer.fromJson<String?>(json['lastError']),
+      deadAt: serializer.fromJson<DateTime?>(json['deadAt']),
     );
   }
   @override
@@ -752,6 +817,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       'source': serializer.toJson<String>(source),
       'clientUpdatedAt': serializer.toJson<DateTime>(clientUpdatedAt),
       'attempts': serializer.toJson<int>(attempts),
+      'lastError': serializer.toJson<String?>(lastError),
+      'deadAt': serializer.toJson<DateTime?>(deadAt),
     };
   }
 
@@ -763,6 +830,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     String? source,
     DateTime? clientUpdatedAt,
     int? attempts,
+    Value<String?> lastError = const Value.absent(),
+    Value<DateTime?> deadAt = const Value.absent(),
   }) => OutboxRow(
     id: id ?? this.id,
     amalKey: amalKey ?? this.amalKey,
@@ -771,6 +840,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     source: source ?? this.source,
     clientUpdatedAt: clientUpdatedAt ?? this.clientUpdatedAt,
     attempts: attempts ?? this.attempts,
+    lastError: lastError.present ? lastError.value : this.lastError,
+    deadAt: deadAt.present ? deadAt.value : this.deadAt,
   );
   OutboxRow copyWithCompanion(OutboxCompanion data) {
     return OutboxRow(
@@ -783,6 +854,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
           ? data.clientUpdatedAt.value
           : this.clientUpdatedAt,
       attempts: data.attempts.present ? data.attempts.value : this.attempts,
+      lastError: data.lastError.present ? data.lastError.value : this.lastError,
+      deadAt: data.deadAt.present ? data.deadAt.value : this.deadAt,
     );
   }
 
@@ -795,7 +868,9 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
           ..write('valueJson: $valueJson, ')
           ..write('source: $source, ')
           ..write('clientUpdatedAt: $clientUpdatedAt, ')
-          ..write('attempts: $attempts')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('deadAt: $deadAt')
           ..write(')'))
         .toString();
   }
@@ -809,6 +884,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     source,
     clientUpdatedAt,
     attempts,
+    lastError,
+    deadAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -820,7 +897,9 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
           other.valueJson == this.valueJson &&
           other.source == this.source &&
           other.clientUpdatedAt == this.clientUpdatedAt &&
-          other.attempts == this.attempts);
+          other.attempts == this.attempts &&
+          other.lastError == this.lastError &&
+          other.deadAt == this.deadAt);
 }
 
 class OutboxCompanion extends UpdateCompanion<OutboxRow> {
@@ -831,6 +910,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
   final Value<String> source;
   final Value<DateTime> clientUpdatedAt;
   final Value<int> attempts;
+  final Value<String?> lastError;
+  final Value<DateTime?> deadAt;
   const OutboxCompanion({
     this.id = const Value.absent(),
     this.amalKey = const Value.absent(),
@@ -839,6 +920,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     this.source = const Value.absent(),
     this.clientUpdatedAt = const Value.absent(),
     this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.deadAt = const Value.absent(),
   });
   OutboxCompanion.insert({
     this.id = const Value.absent(),
@@ -848,6 +931,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     required String source,
     required DateTime clientUpdatedAt,
     this.attempts = const Value.absent(),
+    this.lastError = const Value.absent(),
+    this.deadAt = const Value.absent(),
   }) : amalKey = Value(amalKey),
        date = Value(date),
        valueJson = Value(valueJson),
@@ -861,6 +946,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     Expression<String>? source,
     Expression<DateTime>? clientUpdatedAt,
     Expression<int>? attempts,
+    Expression<String>? lastError,
+    Expression<DateTime>? deadAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -870,6 +957,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
       if (source != null) 'source': source,
       if (clientUpdatedAt != null) 'client_updated_at': clientUpdatedAt,
       if (attempts != null) 'attempts': attempts,
+      if (lastError != null) 'last_error': lastError,
+      if (deadAt != null) 'dead_at': deadAt,
     });
   }
 
@@ -881,6 +970,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     Value<String>? source,
     Value<DateTime>? clientUpdatedAt,
     Value<int>? attempts,
+    Value<String?>? lastError,
+    Value<DateTime?>? deadAt,
   }) {
     return OutboxCompanion(
       id: id ?? this.id,
@@ -890,6 +981,8 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
       source: source ?? this.source,
       clientUpdatedAt: clientUpdatedAt ?? this.clientUpdatedAt,
       attempts: attempts ?? this.attempts,
+      lastError: lastError ?? this.lastError,
+      deadAt: deadAt ?? this.deadAt,
     );
   }
 
@@ -917,6 +1010,12 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
     if (attempts.present) {
       map['attempts'] = Variable<int>(attempts.value);
     }
+    if (lastError.present) {
+      map['last_error'] = Variable<String>(lastError.value);
+    }
+    if (deadAt.present) {
+      map['dead_at'] = Variable<DateTime>(deadAt.value);
+    }
     return map;
   }
 
@@ -929,7 +1028,9 @@ class OutboxCompanion extends UpdateCompanion<OutboxRow> {
           ..write('valueJson: $valueJson, ')
           ..write('source: $source, ')
           ..write('clientUpdatedAt: $clientUpdatedAt, ')
-          ..write('attempts: $attempts')
+          ..write('attempts: $attempts, ')
+          ..write('lastError: $lastError, ')
+          ..write('deadAt: $deadAt')
           ..write(')'))
         .toString();
   }
@@ -2449,6 +2550,401 @@ class AyahBookmarksCompanion extends UpdateCompanion<AyahBookmark> {
   }
 }
 
+class $CustomChecklistItemsTable extends CustomChecklistItems
+    with TableInfo<$CustomChecklistItemsTable, CustomChecklistItem> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CustomChecklistItemsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _dateKeyMeta = const VerificationMeta(
+    'dateKey',
+  );
+  @override
+  late final GeneratedColumn<String> dateKey = GeneratedColumn<String>(
+    'date_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _doneMeta = const VerificationMeta('done');
+  @override
+  late final GeneratedColumn<bool> done = GeneratedColumn<bool>(
+    'done',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("done" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
+  @override
+  late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    dateKey,
+    title,
+    done,
+    sortOrder,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'custom_checklist_items';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CustomChecklistItem> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('date_key')) {
+      context.handle(
+        _dateKeyMeta,
+        dateKey.isAcceptableOrUnknown(data['date_key']!, _dateKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_dateKeyMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(
+        _titleMeta,
+        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('done')) {
+      context.handle(
+        _doneMeta,
+        done.isAcceptableOrUnknown(data['done']!, _doneMeta),
+      );
+    }
+    if (data.containsKey('sort_order')) {
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CustomChecklistItem map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CustomChecklistItem(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      dateKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}date_key'],
+      )!,
+      title: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}title'],
+      )!,
+      done: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}done'],
+      )!,
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CustomChecklistItemsTable createAlias(String alias) {
+    return $CustomChecklistItemsTable(attachedDatabase, alias);
+  }
+}
+
+class CustomChecklistItem extends DataClass
+    implements Insertable<CustomChecklistItem> {
+  final int id;
+  final String dateKey;
+  final String title;
+  final bool done;
+  final int sortOrder;
+  final DateTime createdAt;
+  const CustomChecklistItem({
+    required this.id,
+    required this.dateKey,
+    required this.title,
+    required this.done,
+    required this.sortOrder,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['date_key'] = Variable<String>(dateKey);
+    map['title'] = Variable<String>(title);
+    map['done'] = Variable<bool>(done);
+    map['sort_order'] = Variable<int>(sortOrder);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CustomChecklistItemsCompanion toCompanion(bool nullToAbsent) {
+    return CustomChecklistItemsCompanion(
+      id: Value(id),
+      dateKey: Value(dateKey),
+      title: Value(title),
+      done: Value(done),
+      sortOrder: Value(sortOrder),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CustomChecklistItem.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CustomChecklistItem(
+      id: serializer.fromJson<int>(json['id']),
+      dateKey: serializer.fromJson<String>(json['dateKey']),
+      title: serializer.fromJson<String>(json['title']),
+      done: serializer.fromJson<bool>(json['done']),
+      sortOrder: serializer.fromJson<int>(json['sortOrder']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'dateKey': serializer.toJson<String>(dateKey),
+      'title': serializer.toJson<String>(title),
+      'done': serializer.toJson<bool>(done),
+      'sortOrder': serializer.toJson<int>(sortOrder),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CustomChecklistItem copyWith({
+    int? id,
+    String? dateKey,
+    String? title,
+    bool? done,
+    int? sortOrder,
+    DateTime? createdAt,
+  }) => CustomChecklistItem(
+    id: id ?? this.id,
+    dateKey: dateKey ?? this.dateKey,
+    title: title ?? this.title,
+    done: done ?? this.done,
+    sortOrder: sortOrder ?? this.sortOrder,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  CustomChecklistItem copyWithCompanion(CustomChecklistItemsCompanion data) {
+    return CustomChecklistItem(
+      id: data.id.present ? data.id.value : this.id,
+      dateKey: data.dateKey.present ? data.dateKey.value : this.dateKey,
+      title: data.title.present ? data.title.value : this.title,
+      done: data.done.present ? data.done.value : this.done,
+      sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomChecklistItem(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('title: $title, ')
+          ..write('done: $done, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, dateKey, title, done, sortOrder, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CustomChecklistItem &&
+          other.id == this.id &&
+          other.dateKey == this.dateKey &&
+          other.title == this.title &&
+          other.done == this.done &&
+          other.sortOrder == this.sortOrder &&
+          other.createdAt == this.createdAt);
+}
+
+class CustomChecklistItemsCompanion
+    extends UpdateCompanion<CustomChecklistItem> {
+  final Value<int> id;
+  final Value<String> dateKey;
+  final Value<String> title;
+  final Value<bool> done;
+  final Value<int> sortOrder;
+  final Value<DateTime> createdAt;
+  const CustomChecklistItemsCompanion({
+    this.id = const Value.absent(),
+    this.dateKey = const Value.absent(),
+    this.title = const Value.absent(),
+    this.done = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  });
+  CustomChecklistItemsCompanion.insert({
+    this.id = const Value.absent(),
+    required String dateKey,
+    required String title,
+    this.done = const Value.absent(),
+    this.sortOrder = const Value.absent(),
+    this.createdAt = const Value.absent(),
+  }) : dateKey = Value(dateKey),
+       title = Value(title);
+  static Insertable<CustomChecklistItem> custom({
+    Expression<int>? id,
+    Expression<String>? dateKey,
+    Expression<String>? title,
+    Expression<bool>? done,
+    Expression<int>? sortOrder,
+    Expression<DateTime>? createdAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (dateKey != null) 'date_key': dateKey,
+      if (title != null) 'title': title,
+      if (done != null) 'done': done,
+      if (sortOrder != null) 'sort_order': sortOrder,
+      if (createdAt != null) 'created_at': createdAt,
+    });
+  }
+
+  CustomChecklistItemsCompanion copyWith({
+    Value<int>? id,
+    Value<String>? dateKey,
+    Value<String>? title,
+    Value<bool>? done,
+    Value<int>? sortOrder,
+    Value<DateTime>? createdAt,
+  }) {
+    return CustomChecklistItemsCompanion(
+      id: id ?? this.id,
+      dateKey: dateKey ?? this.dateKey,
+      title: title ?? this.title,
+      done: done ?? this.done,
+      sortOrder: sortOrder ?? this.sortOrder,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (dateKey.present) {
+      map['date_key'] = Variable<String>(dateKey.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (done.present) {
+      map['done'] = Variable<bool>(done.value);
+    }
+    if (sortOrder.present) {
+      map['sort_order'] = Variable<int>(sortOrder.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CustomChecklistItemsCompanion(')
+          ..write('id: $id, ')
+          ..write('dateKey: $dateKey, ')
+          ..write('title: $title, ')
+          ..write('done: $done, ')
+          ..write('sortOrder: $sortOrder, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2458,6 +2954,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SettingsTableTable settingsTable = $SettingsTableTable(this);
   late final $LastReadTable lastRead = $LastReadTable(this);
   late final $AyahBookmarksTable ayahBookmarks = $AyahBookmarksTable(this);
+  late final $CustomChecklistItemsTable customChecklistItems =
+      $CustomChecklistItemsTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -2469,6 +2967,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     settingsTable,
     lastRead,
     ayahBookmarks,
+    customChecklistItems,
   ];
 }
 
@@ -2725,6 +3224,8 @@ typedef $$OutboxTableCreateCompanionBuilder = OutboxCompanion Function({
   required String source,
   required DateTime clientUpdatedAt,
   Value<int> attempts,
+  Value<String?> lastError,
+  Value<DateTime?> deadAt,
 });
 typedef $$OutboxTableUpdateCompanionBuilder = OutboxCompanion Function({
   Value<int> id,
@@ -2734,6 +3235,8 @@ typedef $$OutboxTableUpdateCompanionBuilder = OutboxCompanion Function({
   Value<String> source,
   Value<DateTime> clientUpdatedAt,
   Value<int> attempts,
+  Value<String?> lastError,
+  Value<DateTime?> deadAt,
 });
 
 class $$OutboxTableFilterComposer
@@ -2777,6 +3280,16 @@ class $$OutboxTableFilterComposer
 
   ColumnFilters<int> get attempts => $composableBuilder(
     column: $table.attempts,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get deadAt => $composableBuilder(
+    column: $table.deadAt,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2824,6 +3337,16 @@ class $$OutboxTableOrderingComposer
     column: $table.attempts,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get lastError => $composableBuilder(
+    column: $table.lastError,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get deadAt => $composableBuilder(
+    column: $table.deadAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$OutboxTableAnnotationComposer
@@ -2857,6 +3380,12 @@ class $$OutboxTableAnnotationComposer
 
   GeneratedColumn<int> get attempts =>
       $composableBuilder(column: $table.attempts, builder: (column) => column);
+
+  GeneratedColumn<String> get lastError =>
+      $composableBuilder(column: $table.lastError, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get deadAt =>
+      $composableBuilder(column: $table.deadAt, builder: (column) => column);
 }
 
 class $$OutboxTableTableManager
@@ -2894,6 +3423,8 @@ class $$OutboxTableTableManager
                 Value<String> source = const Value.absent(),
                 Value<DateTime> clientUpdatedAt = const Value.absent(),
                 Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<DateTime?> deadAt = const Value.absent(),
               }) => OutboxCompanion(
                 id: id,
                 amalKey: amalKey,
@@ -2902,6 +3433,8 @@ class $$OutboxTableTableManager
                 source: source,
                 clientUpdatedAt: clientUpdatedAt,
                 attempts: attempts,
+                lastError: lastError,
+                deadAt: deadAt,
               ),
           createCompanionCallback:
               ({
@@ -2912,6 +3445,8 @@ class $$OutboxTableTableManager
                 required String source,
                 required DateTime clientUpdatedAt,
                 Value<int> attempts = const Value.absent(),
+                Value<String?> lastError = const Value.absent(),
+                Value<DateTime?> deadAt = const Value.absent(),
               }) => OutboxCompanion.insert(
                 id: id,
                 amalKey: amalKey,
@@ -2920,6 +3455,8 @@ class $$OutboxTableTableManager
                 source: source,
                 clientUpdatedAt: clientUpdatedAt,
                 attempts: attempts,
+                lastError: lastError,
+                deadAt: deadAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(
@@ -3830,6 +4367,246 @@ typedef $$AyahBookmarksTableProcessedTableManager =
       AyahBookmark,
       PrefetchHooks Function()
     >;
+typedef $$CustomChecklistItemsTableCreateCompanionBuilder =
+    CustomChecklistItemsCompanion Function({
+      Value<int> id,
+      required String dateKey,
+      required String title,
+      Value<bool> done,
+      Value<int> sortOrder,
+      Value<DateTime> createdAt,
+    });
+typedef $$CustomChecklistItemsTableUpdateCompanionBuilder =
+    CustomChecklistItemsCompanion Function({
+      Value<int> id,
+      Value<String> dateKey,
+      Value<String> title,
+      Value<bool> done,
+      Value<int> sortOrder,
+      Value<DateTime> createdAt,
+    });
+
+class $$CustomChecklistItemsTableFilterComposer
+    extends Composer<_$AppDatabase, $CustomChecklistItemsTable> {
+  $$CustomChecklistItemsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get done => $composableBuilder(
+    column: $table.done,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CustomChecklistItemsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CustomChecklistItemsTable> {
+  $$CustomChecklistItemsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get dateKey => $composableBuilder(
+    column: $table.dateKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get title => $composableBuilder(
+    column: $table.title,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get done => $composableBuilder(
+    column: $table.done,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get sortOrder => $composableBuilder(
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CustomChecklistItemsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CustomChecklistItemsTable> {
+  $$CustomChecklistItemsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get dateKey =>
+      $composableBuilder(column: $table.dateKey, builder: (column) => column);
+
+  GeneratedColumn<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<bool> get done =>
+      $composableBuilder(column: $table.done, builder: (column) => column);
+
+  GeneratedColumn<int> get sortOrder =>
+      $composableBuilder(column: $table.sortOrder, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CustomChecklistItemsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CustomChecklistItemsTable,
+          CustomChecklistItem,
+          $$CustomChecklistItemsTableFilterComposer,
+          $$CustomChecklistItemsTableOrderingComposer,
+          $$CustomChecklistItemsTableAnnotationComposer,
+          $$CustomChecklistItemsTableCreateCompanionBuilder,
+          $$CustomChecklistItemsTableUpdateCompanionBuilder,
+          (
+            CustomChecklistItem,
+            BaseReferences<
+              _$AppDatabase,
+              $CustomChecklistItemsTable,
+              CustomChecklistItem
+            >,
+          ),
+          CustomChecklistItem,
+          PrefetchHooks Function()
+        > {
+  $$CustomChecklistItemsTableTableManager(
+    _$AppDatabase db,
+    $CustomChecklistItemsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CustomChecklistItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CustomChecklistItemsTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$CustomChecklistItemsTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> dateKey = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<bool> done = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => CustomChecklistItemsCompanion(
+                id: id,
+                dateKey: dateKey,
+                title: title,
+                done: done,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String dateKey,
+                required String title,
+                Value<bool> done = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => CustomChecklistItemsCompanion.insert(
+                id: id,
+                dateKey: dateKey,
+                title: title,
+                done: done,
+                sortOrder: sortOrder,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$CustomChecklistItemsTable, CustomChecklistItem>(
+                    table,
+                  ),
+                  BaseReferences<
+                    _$AppDatabase,
+                    $CustomChecklistItemsTable,
+                    CustomChecklistItem
+                  >(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CustomChecklistItemsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CustomChecklistItemsTable,
+      CustomChecklistItem,
+      $$CustomChecklistItemsTableFilterComposer,
+      $$CustomChecklistItemsTableOrderingComposer,
+      $$CustomChecklistItemsTableAnnotationComposer,
+      $$CustomChecklistItemsTableCreateCompanionBuilder,
+      $$CustomChecklistItemsTableUpdateCompanionBuilder,
+      (
+        CustomChecklistItem,
+        BaseReferences<
+          _$AppDatabase,
+          $CustomChecklistItemsTable,
+          CustomChecklistItem
+        >,
+      ),
+      CustomChecklistItem,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3846,4 +4623,6 @@ class $AppDatabaseManager {
       $$LastReadTableTableManager(_db, _db.lastRead);
   $$AyahBookmarksTableTableManager get ayahBookmarks =>
       $$AyahBookmarksTableTableManager(_db, _db.ayahBookmarks);
+  $$CustomChecklistItemsTableTableManager get customChecklistItems =>
+      $$CustomChecklistItemsTableTableManager(_db, _db.customChecklistItems);
 }

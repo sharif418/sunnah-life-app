@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/design_tokens.dart';
+import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 
 class IlmScreen extends StatefulWidget {
@@ -103,6 +104,9 @@ class _IlmScreenState extends State<IlmScreen> {
             SLSpacing.s24,
           ),
           children: [
+            // C-W4a: the shared global header (logo, location, triple
+            // calendar, notification/reminder/profile, sync badge).
+            const GlobalHeader(),
             Text(
               context.t('tab_ilm'),
               style: theme.textTheme.headlineMedium?.copyWith(

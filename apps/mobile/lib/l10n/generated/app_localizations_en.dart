@@ -380,6 +380,28 @@ class AppLocalizationsEn extends AppLocalizations {
   String get quran_tilawat_logged => 'Tilawat added to your diary';
 
   @override
+  String get quran_goto_ayah => 'Go to ayah';
+
+  @override
+  String get quran_goto_ayah_hint => 'Enter ayah number';
+
+  @override
+  String get quran_invalid_ayah => 'That ayah number is not valid';
+
+  @override
+  String get quran_reciter => 'Choose reciter';
+
+  @override
+  String get quran_play_ayah => 'Play ayah';
+
+  @override
+  String get quran_stop_audio => 'Stop audio';
+
+  @override
+  String get quran_audio_error =>
+      'Could not play the audio — check your connection';
+
+  @override
   String get adhkar_morning => 'Morning adhkar';
 
   @override
@@ -930,7 +952,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get qibla_north => 'North';
 
   @override
-  String get qibla_dial_hint => 'Rotate the dial — keep the arrow on top';
+  String get qibla_dial_hint =>
+      'Turn the dial until N points north — the arrow then shows the qibla';
 
   @override
   String get qibla_dial => 'Dial';
@@ -1264,4 +1287,411 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dawah_req_live_action => 'Live checklist';
+
+  @override
+  String get bell_minutes_title => 'Bell timing';
+
+  @override
+  String get bell_minutes_before => 'Minutes before waqt';
+
+  @override
+  String get bell_minutes_after => 'Minutes after prayer';
+
+  @override
+  String get bell_minutes_reset => 'Reset';
+
+  @override
+  String get bell_minutes_done => 'Done';
+
+  @override
+  String get sync_sheet_title => 'Sync status';
+
+  @override
+  String get sync_now => 'Sync now';
+
+  @override
+  String get sync_last_synced => 'Last synced';
+
+  @override
+  String get sync_never => 'Never synced';
+
+  @override
+  String get sync_failed_entries => 'Failed entries';
+
+  @override
+  String get sync_failed_short => 'failed';
+
+  @override
+  String get sync_dead_discard => 'Discard';
+
+  @override
+  String get sync_error_unexpected => 'Unexpected error — try again';
+
+  @override
+  String get gps_find_city => 'Find with GPS';
+
+  @override
+  String get gps_find_city_hint => 'Detect your nearest district automatically';
+
+  @override
+  String get gps_locating => 'Getting your location…';
+
+  @override
+  String get gps_your_location => 'Your location';
+
+  @override
+  String get gps_approx => 'approximate';
+
+  @override
+  String get gps_approx_note => 'far from the nearest listed city';
+
+  @override
+  String get gps_tap_confirm => 'Tap to confirm';
+
+  @override
+  String get gps_permission_denied =>
+      'Permission not granted — pick a city from the list';
+
+  @override
+  String get gps_permission_denied_forever =>
+      'Permission is off — allow it from settings';
+
+  @override
+  String get gps_open_settings => 'Open settings';
+
+  @override
+  String get gps_service_off => 'Phone location is off';
+
+  @override
+  String get gps_open_location_settings => 'Turn on location';
+
+  @override
+  String get gps_unavailable => 'Couldn\'t get a location — try again';
+
+  @override
+  String get unit_m => 'm';
+
+  @override
+  String get qibla_compass_heading => 'Current heading';
+
+  @override
+  String get qibla_calibration_title => 'Calibrate the compass';
+
+  @override
+  String get qibla_calibration_hint =>
+      'Wave the phone in a figure-8 pattern a few times, then check again';
+
+  @override
+  String get qibla_compass_unavailable =>
+      'No compass found on this phone — use the manual dial below';
+
+  @override
+  String get mosques_near_me => 'Near me';
+
+  @override
+  String get mosques_from_city => 'From this city';
+
+  @override
+  String get mosques_from_location => 'From your location';
+
+  @override
+  String get mosques_use_city => 'Use city';
+
+  @override
+  String get mosque_direction => 'direction';
+
+  @override
+  String get more_autosilent => 'Auto-silent';
+
+  @override
+  String get autosilent_explain_title => 'Silent during jama\'at';
+
+  @override
+  String get autosilent_explain_body =>
+      'At the start of each prayer time the phone goes silent (priority-only) and returns to normal after the set minutes. Android\'s Do Not Disturb access is required for this.';
+
+  @override
+  String get autosilent_dnd_status => 'Permission status';
+
+  @override
+  String get autosilent_granted => 'Access granted';
+
+  @override
+  String get autosilent_not_granted => 'Access not granted';
+
+  @override
+  String get autosilent_grant => 'Grant access';
+
+  @override
+  String get autosilent_recheck => 'Check again';
+
+  @override
+  String get autosilent_return_hint =>
+      'Return to the app after granting — the status updates by itself';
+
+  @override
+  String get autosilent_master => 'Auto-silent on';
+
+  @override
+  String get autosilent_minutes_label => 'Silent duration';
+
+  @override
+  String get autosilent_minutes_suffix => 'min silent';
+
+  @override
+  String get autosilent_waqts_title => 'Which prayer times';
+
+  @override
+  String get autosilent_reboot_note =>
+      'After a phone restart, opening the app once re-arms the schedule.';
+
+  @override
+  String get more_donate => 'Donate';
+
+  @override
+  String get donation_open_failed => 'Could not open the link';
+
+  @override
+  String get referral_by => 'Referred by';
+
+  @override
+  String get header_notifications => 'Notifications';
+
+  @override
+  String get header_reminders => 'Reminders';
+
+  @override
+  String get notifications_guest_hint =>
+      'Sign in to see usrah announcements, weekly reviews and live reminders here.';
+
+  @override
+  String get notifications_empty => 'No announcements yet';
+
+  @override
+  String get notifications_announcements => 'Announcements';
+
+  @override
+  String get notifications_live => 'Live programs';
+
+  @override
+  String get reminders_empty => 'No reminders yet';
+
+  @override
+  String get reminder_mark_done => 'Mark done';
+
+  @override
+  String get reminder_due => 'Due';
+
+  @override
+  String get reminder_overdue => 'Overdue';
+
+  @override
+  String get reminder_upcoming => 'Upcoming';
+
+  @override
+  String get contact_title => 'Contact us';
+
+  @override
+  String get contact_call => 'Call';
+
+  @override
+  String get contact_website => 'Website';
+
+  @override
+  String get contact_call_failed => 'Could not place the call';
+
+  @override
+  String get quick_access => 'Quick access';
+
+  @override
+  String get quick_quran_desc => 'Surahs & translation';
+
+  @override
+  String get quick_duas_desc => 'Everyday duas';
+
+  @override
+  String get quick_amal_desc => 'Muhasaba diary';
+
+  @override
+  String get quick_live_desc => 'Live programs';
+
+  @override
+  String get most_used => 'Most used';
+
+  @override
+  String get most_used_empty =>
+      'Your most-logged amals of the last 30 days appear here — start from today\'s diary';
+
+  @override
+  String get most_used_log_today => 'Log today';
+
+  @override
+  String get most_used_days => 'days';
+
+  @override
+  String get countdown_to_schedule => 'View schedule';
+
+  @override
+  String get next_bell_chip => 'Next bell';
+
+  @override
+  String get live_next => 'Next live';
+
+  @override
+  String get live_join_hint => 'Tap to watch';
+
+  @override
+  String get ilm_courses_desc => 'Courses & lessons';
+
+  @override
+  String get ilm_quizzes_desc => 'Self-assessment quizzes';
+
+  @override
+  String get goals_title => 'My Goals';
+
+  @override
+  String get goals_new => 'New goal';
+
+  @override
+  String get goals_amal_picker => 'Choose an amal';
+
+  @override
+  String get goals_amal_short => 'Amal';
+
+  @override
+  String get goals_title_label => 'Goal title';
+
+  @override
+  String get goals_target_label => 'Target (optional)';
+
+  @override
+  String get goals_note_label => 'Note (optional)';
+
+  @override
+  String get goals_submit => 'Propose';
+
+  @override
+  String get goals_signin_needed => 'Sign in to set and track goals';
+
+  @override
+  String get goals_empty => 'No goals yet — set your first one';
+
+  @override
+  String get goals_open_label => 'Open goals';
+
+  @override
+  String get goal_status_proposed => 'Pending review';
+
+  @override
+  String get goal_status_approved => 'Approved';
+
+  @override
+  String get goal_status_rejected => 'Rejected';
+
+  @override
+  String get goal_status_completed => 'Completed';
+
+  @override
+  String get goal_status_withdrawn => 'Withdrawn';
+
+  @override
+  String get goals_reject_reason_label => 'Reason';
+
+  @override
+  String get goals_queue_title => 'Goal approvals';
+
+  @override
+  String get goals_queue_empty => 'No pending goals';
+
+  @override
+  String get goals_approve => 'Approve';
+
+  @override
+  String get goals_reject => 'Reject';
+
+  @override
+  String get goals_reject_hint => 'Reject reason (optional)';
+
+  @override
+  String get goals_member_label => 'Member';
+
+  @override
+  String get goals_remove => 'Remove';
+
+  @override
+  String get goals_remove_confirm => 'Remove this goal from your list?';
+
+  @override
+  String get goals_proposed_toast =>
+      'Proposed — awaiting your usrah head\'s approval';
+
+  @override
+  String get goals_approved_toast => 'Approved';
+
+  @override
+  String get goals_rejected_toast => 'Rejected';
+
+  @override
+  String get checklist_title => 'My checklist';
+
+  @override
+  String get checklist_hint => 'Add a task';
+
+  @override
+  String get checklist_add => 'Add';
+
+  @override
+  String get checklist_remove => 'Delete';
+
+  @override
+  String get checklist_remove_confirm => 'Delete this item?';
+
+  @override
+  String get checklist_local_note => 'Stays on this device only';
+
+  @override
+  String get group_fard => 'Fard prayers';
+
+  @override
+  String get group_salah_sunnah => 'Sunnah of salah';
+
+  @override
+  String get group_nafl => 'Nafl prayers';
+
+  @override
+  String get tilawat_begin_chip => 'Start';
+
+  @override
+  String get tilawat_begin_copy =>
+      'Start with 5 minutes today — it will become a habit, in shaa Allah';
+
+  @override
+  String get tilawat_ramp_day => 'Day';
+
+  @override
+  String get tilawat_begin_minutes => 'minutes';
+
+  @override
+  String get leaderboard_title => 'Leaderboard';
+
+  @override
+  String get leaderboard_points => 'points';
+
+  @override
+  String get leaderboard_window_days => 'days window';
+
+  @override
+  String get leaderboard_band_top10 => 'Top 10%';
+
+  @override
+  String get leaderboard_band_top25 => 'Top 25%';
+
+  @override
+  String get leaderboard_band_top50 => 'Top 50%';
+
+  @override
+  String get leaderboard_band_top75 => 'Top 75%';
+
+  @override
+  String get leaderboard_band_bottom => 'Bottom 25%';
 }

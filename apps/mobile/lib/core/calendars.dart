@@ -209,6 +209,15 @@ bool isAyyamBeez(DateTime d, {int adjustDays = 0}) {
   return day == 13 || day == 14 || day == 15;
 }
 
+/// Effective Hijri day-adjustment (C-W3g): the USER's local correction
+/// (−2..2, profile screen) plus the ADMIN's server-side correction
+/// (−2..2, GET /api/config `hijriAdjust`), clamped to the combined −4..4
+/// window. Both are ±day corrections from different actors, so they SUM.
+/// Pure — wired to the config + profile providers via
+/// `effectiveHijriAdjustProvider`; every `hijriDate` call site watches that
+/// provider instead of `profile.hijriAdjust` alone.
+int effectiveHijriAdjust(int user, int admin) => (user + admin).clamp(-4, 4);
+
 // ── Bengali clock ────────────────────────────────────────────────────────────
 
 String timePeriodBn(int hour) {

@@ -108,6 +108,29 @@ export function invalidateAppConfigCache(): void {
   cache.slAppConfig = undefined;
 }
 
+/**
+ * The ONE config read shared by every server-side consumer (GET /api/config,
+ * the admin CMS write-through, and feature gates like the W4c leaderboard):
+ * AppConfigRow (key "app") merged over the fallback, cached 60 s per process.
+ * Phase C/W4c: extracted from the controller so gates read the SAME source
+ * the app config endpoint serves.
+ */
+export async function readAppConfig(prisma: PrismaService): Promise<AppConfig> {
+  const hit = cache.slAppConfig;
+  if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
+  let value = FALLBACK;
+  try {
+    // AppConfigRow is RLS-exempt (public config) — direct read as the
+    // runtime role is the documented pattern for exempt tables.
+    const row = await prisma.appConfigRow.findUnique({ where: { key: "app" } });
+    if (row) value = mergeConfig(row.valueJson);
+  } catch {
+    /* DB not reachable → fallback */
+  }
+  cache.slAppConfig = { at: Date.now(), value };
+  return value;
+}
+
 @ApiTags("config")
 @Controller("config")
 export class ConfigApiController {
@@ -117,18 +140,6 @@ export class ConfigApiController {
   @Get()
   @ApiOperation({ summary: "Public app configuration (admin-editable)" })
   async getConfig(): Promise<AppConfig> {
-    const hit = cache.slAppConfig;
-    if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.value;
-    let value = FALLBACK;
-    try {
-      // AppConfigRow is RLS-exempt (public config) — direct read as the
-      // runtime role is the documented pattern for exempt tables.
-      const row = await this.prisma.appConfigRow.findUnique({ where: { key: "app" } });
-      if (row) value = mergeConfig(row.valueJson);
-    } catch {
-      /* DB not reachable → fallback */
-    }
-    cache.slAppConfig = { at: Date.now(), value };
-    return value;
+    return readAppConfig(this.prisma);
   }
 }

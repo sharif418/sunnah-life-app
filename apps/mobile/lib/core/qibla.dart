@@ -21,6 +21,23 @@ double qiblaBearing(double lat, double lng) {
   return brng;
 }
 
+/// Initial great-circle bearing (degrees from true north) from
+/// (lat1, lng1) to (lat2, lng2) — the general form of [qiblaBearing] (which
+/// fixes the target at the Kaaba). Used for per-mosque direction arrows:
+/// bearing mosque-from-user, NOT kaaba-from-user.
+double bearingDeg(double lat1, double lng1, double lat2, double lng2) {
+  final dLng = (lng2 - lng1) * _deg;
+  final p1 = lat1 * _deg;
+  final p2 = lat2 * _deg;
+  final y = math.sin(dLng) * math.cos(p2);
+  final x =
+      math.cos(p1) * math.sin(p2) -
+      math.sin(p1) * math.cos(p2) * math.cos(dLng);
+  var brng = math.atan2(y, x) / _deg;
+  brng = ((brng % 360) + 360) % 360;
+  return brng;
+}
+
 /// Great-circle distance in km.
 double distanceKm(double lat1, double lng1, double lat2, double lng2) {
   const r = 6371.0;

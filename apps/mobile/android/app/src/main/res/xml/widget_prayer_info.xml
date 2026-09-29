@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Sunnah Life home widget (C-W3f): the 30-min system updatePeriodMillis is
+     the baseline refresh; WidgetRender also re-renders from the persisted
+     snapshot every ~15 min via an inexact alarm (survives process death +
+     reboot — see PrayerWidgetProvider.kt), so this stays a cheap backstop. -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="180dp"
     android:minHeight="60dp"

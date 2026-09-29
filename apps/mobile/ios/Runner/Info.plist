@@ -45,6 +45,9 @@
         <string>$(FLUTTER_BUILD_NUMBER)</string>
         <key>LSRequiresIPhoneOS</key>
         <true/>
+        <!-- C-W3c: city picker GPS snap + mosques "near me" (while-in-use only). -->
+        <key>NSLocationWhenInUseUsageDescription</key>
+        <string>সুন্নাহ লাইফ আপনার নিকটতম জেলা ও কাছের মসজিদ বের করতে অবস্থান ব্যবহার করে।</string>
         <key>UIApplicationSceneManifest</key>
         <dict>
                 <key>UIApplicationSupportsMultipleScenes</key>

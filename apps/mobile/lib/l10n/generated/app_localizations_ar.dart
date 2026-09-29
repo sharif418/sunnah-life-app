@@ -380,6 +380,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get quran_tilawat_logged => 'أُضيف التلاوة إلى سجلك';
 
   @override
+  String get quran_goto_ayah => 'الانتقال إلى الآية';
+
+  @override
+  String get quran_goto_ayah_hint => 'أدخل رقم الآية';
+
+  @override
+  String get quran_invalid_ayah => 'رقم الآية غير صحيح';
+
+  @override
+  String get quran_reciter => 'اختر القارئ';
+
+  @override
+  String get quran_play_ayah => 'تشغيل الآية';
+
+  @override
+  String get quran_stop_audio => 'إيقاف الصوت';
+
+  @override
+  String get quran_audio_error =>
+      'تعذّر تشغيل الصوت — تحقق من اتصالك بالإنترنت';
+
+  @override
   String get adhkar_morning => 'أذكار الصباح';
 
   @override
@@ -925,7 +947,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get qibla_north => 'الشمال';
 
   @override
-  String get qibla_dial_hint => 'أدر القرص — اجعل السهم في الأعلى';
+  String get qibla_dial_hint =>
+      'أدر القرص حتى يشير N إلى الشمال — سيدل السهم حينها إلى القبلة';
 
   @override
   String get qibla_dial => 'القرص';
@@ -1257,4 +1280,409 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dawah_req_live_action => 'القائمة الحيّة';
+
+  @override
+  String get bell_minutes_title => 'توقيت الجرس';
+
+  @override
+  String get bell_minutes_before => 'دقائق قبل الوقت';
+
+  @override
+  String get bell_minutes_after => 'دقائق بعد الصلاة';
+
+  @override
+  String get bell_minutes_reset => 'إعادة تعيين';
+
+  @override
+  String get bell_minutes_done => 'حسنًا';
+
+  @override
+  String get sync_sheet_title => 'حالة المزامنة';
+
+  @override
+  String get sync_now => 'زامِن الآن';
+
+  @override
+  String get sync_last_synced => 'آخر مزامنة';
+
+  @override
+  String get sync_never => 'لم تتم المزامنة بعد';
+
+  @override
+  String get sync_failed_entries => 'إدخالات فاشلة';
+
+  @override
+  String get sync_failed_short => 'فشل';
+
+  @override
+  String get sync_dead_discard => 'تجاهل';
+
+  @override
+  String get sync_error_unexpected => 'خطأ غير متوقع — أعد المحاولة';
+
+  @override
+  String get gps_find_city => 'ابحث عبر GPS';
+
+  @override
+  String get gps_find_city_hint => 'سنكتشف أقرب منطقة لك تلقائيًا';
+
+  @override
+  String get gps_locating => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get gps_your_location => 'موقعك';
+
+  @override
+  String get gps_approx => 'تقريبي';
+
+  @override
+  String get gps_approx_note => 'بعيد عن أقرب مدينة مدرجة';
+
+  @override
+  String get gps_tap_confirm => 'اضغط للتأكيد';
+
+  @override
+  String get gps_permission_denied => 'لم يُمنح الإذن — اختر مدينة من القائمة';
+
+  @override
+  String get gps_permission_denied_forever =>
+      'الإذن معطّل — فعّله من الإعدادات';
+
+  @override
+  String get gps_open_settings => 'افتح الإعدادات';
+
+  @override
+  String get gps_service_off => 'خدمة الموقع في الهاتف معطّلة';
+
+  @override
+  String get gps_open_location_settings => 'تشغيل الموقع';
+
+  @override
+  String get gps_unavailable => 'تعذّر تحديد الموقع — أعد المحاولة';
+
+  @override
+  String get unit_m => 'م';
+
+  @override
+  String get qibla_compass_heading => 'الاتجاه الحالي';
+
+  @override
+  String get qibla_calibration_title => 'معايرة البوصلة';
+
+  @override
+  String get qibla_calibration_hint =>
+      'حرّك الهاتف في الهواء على شكل الرقم ٨ عدة مرات ثم تحقق مجددًا';
+
+  @override
+  String get qibla_compass_unavailable =>
+      'لم يتم العثور على بوصلة في هذا الهاتف — استخدم القرص اليدوي أدناه';
+
+  @override
+  String get mosques_near_me => 'قريبة منّي';
+
+  @override
+  String get mosques_from_city => 'من هذه المدينة';
+
+  @override
+  String get mosques_from_location => 'من موقعك';
+
+  @override
+  String get mosques_use_city => 'استخدم المدينة';
+
+  @override
+  String get mosque_direction => 'الاتجاه';
+
+  @override
+  String get more_autosilent => 'الصامت التلقائي';
+
+  @override
+  String get autosilent_explain_title => 'صامت أثناء الجماعة';
+
+  @override
+  String get autosilent_explain_body =>
+      'في بداية كل وقت صلاة يتحول الهاتف إلى الصامت (المهم فقط) ثم يعود إلى حالته بعد المدة المحددة. يتطلب ذلك إذن ‘عدم الإزعاج’ في أندرويد.';
+
+  @override
+  String get autosilent_dnd_status => 'حالة الإذن';
+
+  @override
+  String get autosilent_granted => 'الإذن مُنَح';
+
+  @override
+  String get autosilent_not_granted => 'الإذن غير مُنَح';
+
+  @override
+  String get autosilent_grant => 'منح الإذن';
+
+  @override
+  String get autosilent_recheck => 'تحقق مرة أخرى';
+
+  @override
+  String get autosilent_return_hint =>
+      'عُد إلى التطبيق بعد المنح — تتحدث الحالة تلقائيًا';
+
+  @override
+  String get autosilent_master => 'تشغيل الصامت التلقائي';
+
+  @override
+  String get autosilent_minutes_label => 'مدة الصمت';
+
+  @override
+  String get autosilent_minutes_suffix => 'دقيقة صامتة';
+
+  @override
+  String get autosilent_waqts_title => 'أي أوقات الصلاة';
+
+  @override
+  String get autosilent_reboot_note =>
+      'بعد إعادة تشغيل الهاتف، يُعاد تفعيل الجدولة بفتح التطبيق مرة واحدة.';
+
+  @override
+  String get more_donate => 'تبرّع';
+
+  @override
+  String get donation_open_failed => 'تعذّر فتح الرابط';
+
+  @override
+  String get referral_by => 'المُحيل';
+
+  @override
+  String get header_notifications => 'الإشعارات';
+
+  @override
+  String get header_reminders => 'تذكيرات';
+
+  @override
+  String get notifications_guest_hint =>
+      'سجّل الدخول لعرض إعلانات الأسرة والمراجعات الأسبوعية وتذكيرات البث هنا.';
+
+  @override
+  String get notifications_empty => 'لا توجد إعلانات بعد';
+
+  @override
+  String get notifications_announcements => 'إعلانات';
+
+  @override
+  String get notifications_live => 'برامج مباشرة';
+
+  @override
+  String get reminders_empty => 'لا توجد تذكيرات بعد';
+
+  @override
+  String get reminder_mark_done => 'وضع علامة تم';
+
+  @override
+  String get reminder_due => 'الآن';
+
+  @override
+  String get reminder_overdue => 'متأخر';
+
+  @override
+  String get reminder_upcoming => 'قادم';
+
+  @override
+  String get contact_title => 'تواصل معنا';
+
+  @override
+  String get contact_call => 'اتصال';
+
+  @override
+  String get contact_website => 'الموقع الإلكتروني';
+
+  @override
+  String get contact_call_failed => 'تعذّر إجراء الاتصال';
+
+  @override
+  String get quick_access => 'وصول سريع';
+
+  @override
+  String get quick_quran_desc => 'السور والترجمة';
+
+  @override
+  String get quick_duas_desc => 'أدعية يومية';
+
+  @override
+  String get quick_amal_desc => 'يومية المحاسبة';
+
+  @override
+  String get quick_live_desc => 'برامج مباشرة';
+
+  @override
+  String get most_used => 'الأكثر استخدامًا';
+
+  @override
+  String get most_used_empty =>
+      'تظهر هنا أكثر عباداتك تسجيلًا خلال آخر ٣٠ يومًا — ابدأ بيومية اليوم';
+
+  @override
+  String get most_used_log_today => 'سجّل اليوم';
+
+  @override
+  String get most_used_days => 'يوم';
+
+  @override
+  String get countdown_to_schedule => 'عرض المواقيت';
+
+  @override
+  String get next_bell_chip => 'الجرس القادم';
+
+  @override
+  String get live_next => 'البث القادم';
+
+  @override
+  String get live_join_hint => 'اضغط للمشاهدة';
+
+  @override
+  String get ilm_courses_desc => 'دروس ومقررات';
+
+  @override
+  String get ilm_quizzes_desc => 'اختبارات ذاتية';
+
+  @override
+  String get goals_title => 'أهدافي';
+
+  @override
+  String get goals_new => 'هدف جديد';
+
+  @override
+  String get goals_amal_picker => 'اختر عبادة';
+
+  @override
+  String get goals_amal_short => 'العبادة';
+
+  @override
+  String get goals_title_label => 'عنوان الهدف';
+
+  @override
+  String get goals_target_label => 'الهدف (اختياري)';
+
+  @override
+  String get goals_note_label => 'ملاحظة (اختياري)';
+
+  @override
+  String get goals_submit => 'اقترح';
+
+  @override
+  String get goals_signin_needed => 'سجّل الدخول لتحديد الأهداف ومتابعتها';
+
+  @override
+  String get goals_empty => 'لا أهداف بعد — حدّد هدفك الأول';
+
+  @override
+  String get goals_open_label => 'أهداف مفتوحة';
+
+  @override
+  String get goal_status_proposed => 'بانتظار المراجعة';
+
+  @override
+  String get goal_status_approved => 'معتمد';
+
+  @override
+  String get goal_status_rejected => 'مرفوض';
+
+  @override
+  String get goal_status_completed => 'مكتمل';
+
+  @override
+  String get goal_status_withdrawn => 'مسحوب';
+
+  @override
+  String get goals_reject_reason_label => 'السبب';
+
+  @override
+  String get goals_queue_title => 'طلبات اعتماد الأهداف';
+
+  @override
+  String get goals_queue_empty => 'لا أهداف بانتظار الاعتماد';
+
+  @override
+  String get goals_approve => 'اعتماد';
+
+  @override
+  String get goals_reject => 'رفض';
+
+  @override
+  String get goals_reject_hint => 'سبب الرفض (اختياري)';
+
+  @override
+  String get goals_member_label => 'العضو';
+
+  @override
+  String get goals_remove => 'إزالة';
+
+  @override
+  String get goals_remove_confirm => 'إزالة هذا الهدف من القائمة؟';
+
+  @override
+  String get goals_proposed_toast => 'تم الاقتراح — بانتظار اعتماد رئيس الأسر';
+
+  @override
+  String get goals_approved_toast => 'تم الاعتماد';
+
+  @override
+  String get goals_rejected_toast => 'تم الرفض';
+
+  @override
+  String get checklist_title => 'قائمتي';
+
+  @override
+  String get checklist_hint => 'أضف مهمة';
+
+  @override
+  String get checklist_add => 'إضافة';
+
+  @override
+  String get checklist_remove => 'حذف';
+
+  @override
+  String get checklist_remove_confirm => 'حذف هذا البند؟';
+
+  @override
+  String get checklist_local_note => 'يبقى على هذا الجهاز فقط';
+
+  @override
+  String get group_fard => 'الفرائض';
+
+  @override
+  String get group_salah_sunnah => 'سنن الصلاة';
+
+  @override
+  String get group_nafl => 'النوافل';
+
+  @override
+  String get tilawat_begin_chip => 'بداية';
+
+  @override
+  String get tilawat_begin_copy =>
+      'ابدأ بخمس دقائق اليوم — ستصبح عادة بإذن الله';
+
+  @override
+  String get tilawat_ramp_day => 'يوم';
+
+  @override
+  String get tilawat_begin_minutes => 'دقائق';
+
+  @override
+  String get leaderboard_title => 'لوحة الصدارة';
+
+  @override
+  String get leaderboard_points => 'نقطة';
+
+  @override
+  String get leaderboard_window_days => 'أيام الحساب';
+
+  @override
+  String get leaderboard_band_top10 => 'أعلى ١٠٪';
+
+  @override
+  String get leaderboard_band_top25 => 'أعلى ٢٥٪';
+
+  @override
+  String get leaderboard_band_top50 => 'أعلى ٥٠٪';
+
+  @override
+  String get leaderboard_band_top75 => 'أعلى ٧٥٪';
+
+  @override
+  String get leaderboard_band_bottom => 'أدنى ٢٥٪';
 }

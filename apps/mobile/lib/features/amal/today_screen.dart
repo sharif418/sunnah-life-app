@@ -13,10 +13,14 @@ import '../../core/bn_digits.dart';
 import '../../core/calendars.dart';
 import '../../core/date_keys.dart';
 import '../../design/design_tokens.dart';
+import '../../db/database.dart' show CustomChecklistItem;
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
+import '../../state/checklist_state.dart';
 import '../../state/providers.dart';
+import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
+import '../shared/global_header.dart';
 import 'amal_widgets.dart';
 
 class AmalHubScreen extends ConsumerWidget {
@@ -28,13 +32,23 @@ class AmalHubScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: defsAsync.when(
-          loading: () => const Skeleton(height: 72, count: 6),
-          error: (e, _) => ErrorState(
-            message: '$e',
-            onRetry: () => ref.invalidate(amalDefinitionsProvider),
-          ),
-          data: (defs) => _TodayView(defs: defs),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // C-W4a: the shared global header (logo, location, triple
+            // calendar, notification/reminder/profile, sync badge).
+            const GlobalHeader(),
+            Expanded(
+              child: defsAsync.when(
+                loading: () => const Skeleton(height: 72, count: 6),
+                error: (e, _) => ErrorState(
+                  message: '$e',
+                  onRetry: () => ref.invalidate(amalDefinitionsProvider),
+                ),
+                data: (defs) => _TodayView(defs: defs),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -62,7 +76,15 @@ class _TodayView extends ConsumerWidget {
     }
 
     final todayDefs = defs
-        .where((d) => isAmalDay(d, today, hijriAdjust: profile.hijriAdjust))
+        .where(
+          (d) => isAmalDay(
+            d,
+            today,
+            // C-W3g: user ±2 + admin config ±2 — ayyam-beez dates follow the
+            // same effective adjustment as the rendered Hijri date bar.
+            hijriAdjust: ref.watch(effectiveHijriAdjustProvider),
+          ),
+        )
         .toList();
     final entries = [
       for (final day in amal.entries.keys)
@@ -82,11 +104,16 @@ class _TodayView extends ConsumerWidget {
       today,
     );
 
-    // Group by category preserving catalog order.
-    final groups = <AmalCategory, List<AmalDefinition>>{};
+    // Group for display preserving catalog order — W4c: the salah amals
+    // split into ফরয / সালাতের সুন্নত / নফল presentation groups
+    // (amalGroupKey); every other category keeps its own SectionHeader.
+    final groups = <String, List<AmalDefinition>>{};
     for (final d in todayDefs) {
-      groups.putIfAbsent(d.category, () => []).add(d);
+      groups.putIfAbsent(amalGroupKey(d), () => []).add(d);
     }
+    // W4c: the tilawat beginner ramp counts days of tilawat-minutes history
+    // LOCALLY from the diary entries — no backend involvement.
+    final tilawatDays = tilawatMinutesDaysDone(entries);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
@@ -119,10 +146,12 @@ class _TodayView extends ConsumerWidget {
               ),
             ),
             StreakBadge(days: streak, bengali: bn),
-            const SizedBox(width: SLSpacing.s8),
-            SyncBadge(),
           ],
         ),
+
+        // W4c: gender-scoped percentile band — compact card under the streak
+        // header; hidden entirely while the flag is off / guest / 404.
+        const LeaderboardBandCard(),
         const SizedBox(height: SLSpacing.s8),
 
         // Quick links
@@ -147,6 +176,12 @@ class _TodayView extends ConsumerWidget {
               avatar: const Icon(Icons.quiz_outlined, size: 18),
               label: Text(context.t('amal_self_test')),
               onPressed: () => context.push('/amal/self-test'),
+            ),
+            // W4c: আমার লক্ষ্য — propose → head approval → status chips.
+            ActionChip(
+              avatar: const Icon(Icons.flag_outlined, size: 18),
+              label: Text(context.t('goals_title')),
+              onPressed: () => context.push('/amal/goals'),
             ),
           ],
         ),
@@ -208,13 +243,26 @@ class _TodayView extends ConsumerWidget {
         ),
         const SizedBox(height: SLSpacing.s4),
 
-        // Category sections
-        for (final cat in groups.keys) ...[
-          SectionHeader(context.t(cat.labelKey), icon: _categoryIcon(cat)),
-          for (final def in groups[cat]!)
-            _AmalRow(def: def, today: today, bn: bn),
+        // Category sections (W4c group headers: ফরয / সালাতের সুন্নত / নফল / …)
+        for (final groupKey in groups.keys) ...[
+          SectionHeader(context.t(groupKey), icon: _groupIcon(groupKey)),
+          for (final def in groups[groupKey]!)
+            def.key == kTilawatMinutesKey &&
+                    tilawatDays < TilawatBeginnerCard.rampDays
+                ? _TilawatBeginnerRow(
+                    def: def,
+                    today: today,
+                    bn: bn,
+                    daysDone: tilawatDays,
+                  )
+                : _AmalRow(def: def, today: today, bn: bn),
           const SizedBox(height: SLSpacing.s4),
         ],
+
+        // W4c: নিজের তালিকা — per-day custom checklist (local-only,
+        // offline-first; no API surface by design).
+        SectionHeader(context.t('checklist_title'), icon: Icons.checklist),
+        _CustomChecklistSection(today: today, bn: bn),
 
         const SizedBox(height: SLSpacing.s8),
         Text(
@@ -227,16 +275,53 @@ class _TodayView extends ConsumerWidget {
     );
   }
 
-  static IconData _categoryIcon(AmalCategory cat) => switch (cat) {
-    AmalCategory.salah => Icons.mosque_outlined,
-    AmalCategory.quran => Icons.menu_book_outlined,
-    AmalCategory.dhikr => Icons.spa_outlined,
-    AmalCategory.akhlaq => Icons.volunteer_activism_outlined,
-    AmalCategory.dawat => Icons.campaign_outlined,
-    AmalCategory.lifestyle => Icons.bedtime_outlined,
-    AmalCategory.sunnah => Icons.star_outline,
-    AmalCategory.personal => Icons.flag_outlined,
+  static IconData _groupIcon(String key) => switch (key) {
+    'group_fard' => Icons.mosque_outlined,
+    'group_salah_sunnah' => Icons.stars_outlined,
+    'group_nafl' => Icons.wb_twilight_outlined,
+    'cat_quran' => Icons.menu_book_outlined,
+    'cat_dhikr' => Icons.spa_outlined,
+    'cat_akhlaq' => Icons.volunteer_activism_outlined,
+    'cat_dawat' => Icons.campaign_outlined,
+    'cat_lifestyle' => Icons.bedtime_outlined,
+    'cat_sunnah' => Icons.star_outline,
+    _ => Icons.flag_outlined,
   };
+}
+
+/// W4c: the tilawat_minutes row while the user is inside the 7-day beginner
+/// ramp — the শুরু card instead of the plain quantity row. Writes go through
+/// the same optimistic amalProvider.write path.
+class _TilawatBeginnerRow extends ConsumerWidget {
+  const _TilawatBeginnerRow({
+    required this.def,
+    required this.today,
+    required this.bn,
+    required this.daysDone,
+  });
+  final AmalDefinition def;
+  final String today;
+  final bool bn;
+  final int daysDone;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(profileProvider);
+    final value = ref.watch(amalProvider).entry(today, def.key)?.value;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+      child: TilawatBeginnerCard(
+        title: bn || def.titleBn.isNotEmpty ? def.titleBn : def.titleEn,
+        value: value is num ? value.toDouble() : 0,
+        target: def.targetFor(profile.category).toDouble(),
+        unit: def.unit ?? '',
+        daysDone: daysDone,
+        bengali: bn,
+        onChanged: (v) =>
+            ref.read(amalProvider.notifier).write(def.key, today, v, 'manual'),
+      ),
+    );
+  }
 }
 
 class _AmalRow extends ConsumerWidget {
@@ -358,4 +443,143 @@ class _AmalRow extends ConsumerWidget {
         'monthly:ayyam_beez' => context.t('cadence_ayyam_beez'),
         _ => '',
       };
+}
+
+/// W4c: নিজের তালিকা — one day's custom checklist. Add-field + check-off
+/// rows + delete on long-press; per-day filtering by dateKey (only today's
+/// items ever render here). Rows carry the 44dp minimum tap target.
+class _CustomChecklistSection extends ConsumerStatefulWidget {
+  const _CustomChecklistSection({required this.today, required this.bn});
+  final String today;
+  final bool bn;
+
+  @override
+  ConsumerState<_CustomChecklistSection> createState() =>
+      _CustomChecklistSectionState();
+}
+
+class _CustomChecklistSectionState extends ConsumerState<_CustomChecklistSection> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _add() async {
+    final title = _controller.text.trim();
+    if (title.isEmpty) return;
+    _controller.clear();
+    await ref.read(checklistProvider.notifier).add(title);
+  }
+
+  Future<void> _confirmRemove(
+    BuildContext context,
+    CustomChecklistItem item,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        content: Text(dialogContext.t('checklist_remove_confirm')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text(dialogContext.t('cancel')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(dialogContext.t('checklist_remove')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(checklistProvider.notifier).remove(item);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final notifier = ref.read(checklistProvider.notifier);
+    final items = ref.watch(
+      checklistProvider.select((s) => s[widget.today] ?? const []),
+    );
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  key: const ValueKey('checklist_add_field'),
+                  controller: _controller,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => _add(),
+                  decoration: InputDecoration(
+                    hintText: context.t('checklist_hint'),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: SLSpacing.s8),
+              IconButton.filledTonal(
+                key: const ValueKey('checklist_add_button'),
+                tooltip: context.t('checklist_add'),
+                icon: const Icon(Icons.add),
+                onPressed: _add,
+              ),
+            ],
+          ),
+          const SizedBox(height: SLSpacing.s4),
+          for (final item in items)
+            Semantics(
+              button: true,
+              toggled: item.done,
+              label: item.title,
+              child: InkWell(
+                key: ValueKey('checklist_item_${item.id}'),
+                onTap: () => notifier.toggle(item),
+                onLongPress: () => _confirmRemove(context, item),
+                borderRadius: SLRadius.brMd,
+                child: SizedBox(
+                  height: SLSpacing.minTapTarget,
+                  child: Row(
+                    children: [
+                      Checkbox(
+                        value: item.done,
+                        onChanged: (_) => notifier.toggle(item),
+                      ),
+                      Expanded(
+                        child: Text(
+                          item.title,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: item.done
+                                ? theme.colorScheme.onSurfaceVariant
+                                : theme.colorScheme.onSurface,
+                            decoration: item.done
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: SLSpacing.s4),
+          Text(
+            context.t('checklist_local_note'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }

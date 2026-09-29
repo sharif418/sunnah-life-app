@@ -8,12 +8,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../api/api_client.dart' show ApiException;
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../services/platform_channels.dart';
+import '../../state/amal_state.dart';
+import '../../state/goals_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
+import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 
 class DawahScreen extends ConsumerWidget {
@@ -43,16 +47,18 @@ class DawahScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(context.t('dawah_gate_title')),
-        actions: [
-          Padding(
-            padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
-            child: SyncBadge(),
-          ),
-        ],
+      // C-W4a: the shared global header replaces the screen's own AppBar
+      // (logo, location, triple calendar, notification/reminder/profile,
+      // sync badge — the badge used to live in this AppBar's actions).
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const GlobalHeader(),
+            Expanded(child: body),
+          ],
+        ),
       ),
-      body: SafeArea(top: false, child: body),
     );
   }
 }
@@ -445,6 +451,7 @@ class _UsrahTab extends ConsumerWidget {
     final async = ref.watch(usrahProvider);
     final theme = Theme.of(context);
     final bn = context.isBn;
+    final user = ref.watch(authProvider).userOrNull;
 
     return async.when(
       loading: () => const Skeleton(height: 72, count: 5),
@@ -597,10 +604,241 @@ class _UsrahTab extends ConsumerWidget {
                     ),
                   ),
             ],
+            // W4c: লক্ষ্য অনুমোদন — the head's goal-approval queue
+            // (GET /api/usrah/goals; supervisors only — a da'ee sees nothing).
+            if (user?.role.isSupervisor ?? false) ...[
+              const SizedBox(height: SLSpacing.s12),
+              SectionHeader(
+                context.t('goals_queue_title'),
+                icon: Icons.fact_check_outlined,
+              ),
+              const _GoalQueueSection(),
+            ],
             const SizedBox(height: SLSpacing.s24),
           ],
         );
       },
+    );
+  }
+}
+
+// ── W4c: goal approval queue (supervisors) ──────────────────────────────────
+
+/// The queue body — watches goalQueueProvider (null hides: non-supervisor,
+/// guest, offline). Approve fires the member's reminder server-side.
+class _GoalQueueSection extends ConsumerWidget {
+  const _GoalQueueSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(goalQueueProvider);
+    return async.when(
+      loading: () => const Skeleton(height: 72, count: 2),
+      error: (e, _) => ErrorState(
+        message: '$e',
+        onRetry: () => ref.invalidate(goalQueueProvider),
+      ),
+      data: (queue) {
+        if (queue == null) return const SizedBox.shrink();
+        if (queue.isEmpty) {
+          return EmptyState(
+            message: context.t('goals_queue_empty'),
+            icon: Icons.fact_check_outlined,
+          );
+        }
+        return Column(
+          children: [for (final item in queue) _GoalQueueCard(item: item)],
+        );
+      },
+    );
+  }
+}
+
+class _GoalQueueCard extends ConsumerWidget {
+  const _GoalQueueCard({required this.item});
+  final GoalQueueItem item;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final defsAsync = ref.watch(amalDefinitionsProvider);
+    final amalTitle = defsAsync.maybeWhen(
+      data: (defs) {
+        for (final d in defs) {
+          if (d.key == item.goal.amalKey) return d.titleBn;
+        }
+        return null;
+      },
+      orElse: () => null,
+    );
+    final goal = item.goal;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+      child: AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.flag_outlined, color: theme.colorScheme.primary),
+                const SizedBox(width: SLSpacing.s8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        goal.title,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        '${context.t('goals_member_label')}: ${item.userName} · ${context.t('goals_amal_short')}: ${amalTitle ?? goal.amalKey}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (goal.note != null && goal.note!.isNotEmpty) ...[
+              const SizedBox(height: SLSpacing.s4),
+              Text(goal.note!, style: theme.textTheme.bodyMedium),
+            ],
+            const SizedBox(height: SLSpacing.s8),
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => _decide(context, ref),
+                    icon: const Icon(Icons.check, size: 18),
+                    label: Text(context.t('goals_approve')),
+                  ),
+                ),
+                const SizedBox(width: SLSpacing.s8),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _openRejectSheet(context, ref),
+                    icon: const Icon(Icons.close, size: 18),
+                    label: Text(context.t('goals_reject')),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _decide(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(apiProvider).approveGoal(item.goal.id);
+      ref.invalidate(goalQueueProvider);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(context.t('goals_approved_toast')),
+          ),
+        );
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
+  Future<void> _openRejectSheet(BuildContext context, WidgetRef ref) {
+    return showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _RejectReasonSheet(itemId: item.goal.id),
+    );
+  }
+}
+
+/// Reject with an optional reason — the reason surfaces on the member's
+/// goal card ("কারণ: …") and rides the API's GoalRejectDto.
+class _RejectReasonSheet extends ConsumerStatefulWidget {
+  const _RejectReasonSheet({required this.itemId});
+  final String itemId;
+
+  @override
+  ConsumerState<_RejectReasonSheet> createState() => _RejectReasonSheetState();
+}
+
+class _RejectReasonSheetState extends ConsumerState<_RejectReasonSheet> {
+  final _reasonController = TextEditingController();
+  bool _submitting = false;
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    setState(() => _submitting = true);
+    try {
+      await ref
+          .read(apiProvider)
+          .rejectGoal(widget.itemId, reason: _reasonController.text.trim());
+      ref.invalidate(goalQueueProvider);
+      if (mounted) {
+        Navigator.of(context).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.t('goals_rejected_toast'))),
+        );
+      }
+    } on ApiException catch (e) {
+      if (mounted) {
+        setState(() => _submitting = false);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        left: SLSpacing.s16,
+        right: SLSpacing.s16,
+        top: SLSpacing.s16,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + SLSpacing.s16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.t('goals_reject_hint')),
+          const SizedBox(height: SLSpacing.s8),
+          TextFormField(
+            controller: _reasonController,
+            maxLines: 3,
+            maxLength: 500,
+            decoration: InputDecoration(
+              labelText: context.t('goals_reject_reason_label'),
+            ),
+          ),
+          const SizedBox(height: SLSpacing.s8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submitting ? null : _submit,
+              child: Text(context.t('goals_reject')),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

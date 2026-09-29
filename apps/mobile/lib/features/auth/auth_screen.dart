@@ -21,6 +21,7 @@ import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../services/social_signin_service.dart';
 import '../../state/providers.dart';
+import '../../state/referral_state.dart';
 import '../shared/widgets.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -80,6 +81,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ? await service.googleIdToken()
           : await service.appleIdToken();
       final profile = ref.read(profileProvider);
+      // C-W3h: a pending /join referral rides along on social sign-in too.
+      final referral = ref.read(pendingReferralProvider).valueOrNull;
       await ref
           .read(authProvider.notifier)
           .signInWithSocial(
@@ -87,6 +90,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             idToken: idToken,
             name: profile.name,
             gender: profile.gender,
+            referredByCode: referral,
           );
       // The router redirect handles the gender-less account case
       // (/complete-profile); everyone else lands home.
@@ -141,6 +145,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
     try {
       final profile = ref.read(profileProvider);
+      // C-W3h: the pending /join referral (stored by the deep-link service)
+      // rides along on this OTP verify — the server creates the ReferralClosure
+      // rows. Consumed + cleared by the notifier on success only.
+      final referral = ref.read(pendingReferralProvider).valueOrNull;
       await ref
           .read(authProvider.notifier)
           .signIn(
@@ -148,6 +156,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             code: _code.text.trim(),
             name: profile.name,
             gender: profile.gender,
+            referredByCode: referral,
           );
       if (mounted) context.go('/');
     } on ApiException catch (e) {
@@ -160,6 +169,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    // C-W3h: the pending /join referral (deep-link tap before sign-up).
+    final referralCode = ref.watch(pendingReferralProvider).valueOrNull;
     return Scaffold(
       appBar: AppBar(title: Text(context.t('auth_title'))),
       body: ListView(
@@ -178,6 +189,44 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               color: theme.colorScheme.onSurfaceVariant,
             ),
           ),
+          if (referralCode != null) ...[
+            const SizedBox(height: SLSpacing.s12),
+            // Subtle chip: the inviter's code will be attached to the
+            // account on sign-in (OTP + social both).
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: SLSpacing.s12,
+                vertical: SLSpacing.s8,
+              ),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primary.withValues(alpha: 0.08),
+                borderRadius: SLRadius.brMd,
+                border: Border.all(
+                  color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.person_add_alt_1_outlined,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: SLSpacing.s8),
+                  Flexible(
+                    child: Text(
+                      '${context.t('referral_by')}: $referralCode',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: SLSpacing.s24),
           if (_socialGoogle || _socialApple) ...[
             if (_socialGoogle)

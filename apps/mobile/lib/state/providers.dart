@@ -9,6 +9,8 @@ import '../api/api_client.dart';
 import '../db/database.dart';
 import '../models/domain.dart';
 import '../core/cities.dart';
+import '../core/referral.dart';
+import 'referral_state.dart';
 
 final dbProvider = Provider<AppDatabase>((ref) {
   final db = AppDatabase();
@@ -258,6 +260,7 @@ class AuthNotifier extends Notifier<AuthState> {
       api.token = res.token;
     }
     state = AuthState(status: AuthStatus.signedIn, user: res.user);
+    await _consumePendingReferral(referredByCode);
     // Adopt the account's prayer profile locally.
     await ref
         .read(profileProvider.notifier)
@@ -305,6 +308,7 @@ class AuthNotifier extends Notifier<AuthState> {
       api.token = token;
     }
     state = AuthState(status: AuthStatus.signedIn, user: res.user);
+    await _consumePendingReferral(referredByCode);
     // Adopt the account's profile — EXCEPT gender while it is still
     // "unspecified" (the local onboarding choice stays until completion).
     await ref
@@ -325,6 +329,17 @@ class AuthNotifier extends Notifier<AuthState> {
   /// Replace the in-session user after a profile PATCH (gender completion).
   void updateUser(User user) {
     state = AuthState(status: AuthStatus.signedIn, user: user);
+  }
+
+  /// C-W3h: a successful sign-in that CARRIED a referral consumes the
+  /// pending-referral storage — a later sign-in can never re-attach the
+  /// same inviter. Called only after the session state is already signed in
+  /// (a failed verify leaves the code in place for the retry).
+  Future<void> _consumePendingReferral(String? referredByCode) async {
+    if (referredByCode == null || referredByCode.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    await PendingReferralStore(prefs).clear();
+    ref.invalidate(pendingReferralProvider);
   }
 
   /// True while the signed-in account still lacks gender — the router sends

@@ -18,6 +18,10 @@
 # Every ${VAR} below is set in the Coolify environment of this resource.
 # Build contexts are relative to the REPOSITORY ROOT: Coolify runs compose
 # with --project-directory set to the checkout root.
+#
+# [C-W5-ops] This file is mirrored on the `staging` branch — that is what
+# Coolify actually deploys. Keep the two copies in sync: the api healthcheck
+# targets /health/live here AND on staging (same change on both branches).
 # ─────────────────────────────────────────────────────────────────────────────
 
 x-logging: &default-logging
@@ -143,7 +147,7 @@ services:
     volumes:
       - apistorage:/app/storage
     healthcheck:
-      # [C-W5-ops] liveness only — Traefik drops unhealthy containers; slow deps must not flip a serving api
+      # [C-W5-ops] liveness only — readiness (/health, /health/ready) is for monitoring; slow deps must not flip the container unhealthy (Traefik drops unhealthy containers).
       test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health/live"]
       interval: 15s
       timeout: 5s

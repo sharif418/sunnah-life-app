@@ -11,8 +11,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'design/phosphor_icons.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'design/design_tokens.dart';
+import 'core/bell_schedule.dart';
+import 'core/referral.dart';
+import 'features/amal/goals_screen.dart';
 import 'features/amal/habit_screen.dart';
 import 'features/amal/month_screen.dart';
 import 'features/amal/self_test_screen.dart';
@@ -35,6 +40,7 @@ import 'features/ilm/quran_reader_screen.dart';
 import 'features/ilm/quizzes_screen.dart';
 import 'features/ilm/sunnahs_screen.dart';
 import 'features/more/about_screen.dart';
+import 'features/more/auto_silent_screen.dart';
 import 'features/more/live_screen.dart';
 import 'features/more/masala_screen.dart';
 import 'features/more/more_screen.dart';
@@ -44,13 +50,19 @@ import 'features/more/qibla_screen.dart';
 import 'features/more/zakat_screen.dart';
 import 'features/onboarding/gender_completion_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
+import 'features/shared/contact_fab.dart';
+import 'features/shared/sl_bottom_bar.dart';
 import 'features/shared/widgets.dart';
 import 'l10n/app_strings.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/domain.dart';
+import 'services/notification_service.dart';
 import 'services/push_service.dart';
+import 'services/app_link_service.dart';
 import 'state/amal_state.dart';
+import 'state/prayer_state.dart';
 import 'state/providers.dart';
+import 'state/referral_state.dart';
 
 /// Single-flight bootstrap: read the persisted guest profile before the
 /// router mounts so the onboarding redirect never races hydration.
@@ -60,6 +72,21 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   ref.read(profileProvider.notifier).hydrateFrom(row);
   // Offline-first background sync: 60s outbox flush (see SyncNotifier).
   ref.read(syncProvider.notifier).startPeriodicFlush();
+  // Post-prayer জামাতে/একা/কাযা action taps that reach the FOREGROUND
+  // callback go through the same Riverpod flow as the in-app prompt
+  // (optimistic state + shared DB connection + debounced sync flush);
+  // taps while the app is dead are handled on the plugin's background
+  // isolate by handleAmalNotificationAction.
+  NotificationService.instance.onAmalAction = (actionId, payload) async {
+    final value = kAmalActionValues[actionId];
+    if (value == null) return;
+    await ref.read(amalProvider.notifier).write(
+          payload.amalKey,
+          payload.dateKey,
+          value,
+          autoSourceFromAmalKey(payload.amalKey) ?? 'manual',
+        );
+  };
   // Push (B2): FCM handlers + deep-link navigation; registration follows the
   // auth session. Everything degrades to local-only when Firebase is
   // unavailable (placeholder options / no Play Services / widget tests).
@@ -67,6 +94,16 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     onNavigate: (route) => ref.read(routerProvider).go(route),
   );
   ref.watch(pushRegistrationProvider);
+  // C-W3h: /join deep links (cold start + warm stream) → the pending
+  // referral store; the auth screen surfaces the chip and rides the code
+  // along on sign-in. Idempotent writes; failures swallowed inside.
+  await AppLinkService.instance.ensureInitialized(
+    onReferralCode: (code) async {
+      final prefs = await SharedPreferences.getInstance();
+      await PendingReferralStore(prefs).write(code);
+      ref.invalidate(pendingReferralProvider);
+    },
+  );
 });
 
 /// Push registration lifecycle: register the FCM token when signed in,
@@ -156,6 +193,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                   GoRoute(
                     path: 'self-test',
                     builder: (c, s) => const SelfTestScreen(),
+                  ),
+                  // W4c: আমার লক্ষ্য — personal-goal lifecycle (propose →
+                  // head approval → status chips).
+                  GoRoute(
+                    path: 'goals',
+                    builder: (c, s) => const GoalsScreen(),
                   ),
                 ],
               ),
@@ -265,6 +308,10 @@ final routerProvider = Provider<GoRouter>((ref) {
                     builder: (c, s) => const QiblaScreen(),
                   ),
                   GoRoute(
+                    path: 'autosilent',
+                    builder: (c, s) => const AutoSilentScreen(),
+                  ),
+                  GoRoute(
                     path: 'mosques',
                     builder: (c, s) => const MosquesScreen(),
                   ),
@@ -291,11 +338,38 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class SunnahLifeApp extends ConsumerWidget {
+class SunnahLifeApp extends ConsumerStatefulWidget {
   const SunnahLifeApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SunnahLifeApp> createState() => _SunnahLifeAppState();
+}
+
+class _SunnahLifeAppState extends ConsumerState<SunnahLifeApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Back from the background (possibly after days): the rolling bell
+    // window may have gone stale — re-arm it (idempotent per day).
+    if (state == AppLifecycleState.resumed) {
+      ref.read(prayerProvider.notifier).refreshBells();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final profile = ref.watch(profileProvider);
     final lang = LangX.fromCode(profile.language);
     final themeMode = switch (profile.themeMode) {
@@ -389,10 +463,15 @@ class _SplashLogo extends StatelessWidget {
 
 /// Bottom-nav shell: 5 destinations for daee+ (হোম / আমল / দাওয়াত / ইলম /
 /// আরও), 4 for everyone else (the Da'wah branch is hidden, not merely
-/// gated). Always-visible labels, 44dp targets.
+/// gated). Token-built SLBottomBar (C-W4a) + the floating contact button on
+/// the five root tab paths only.
 class AppShellScaffold extends ConsumerWidget {
   const AppShellScaffold({super.key, required this.navigationShell});
   final StatefulNavigationShell navigationShell;
+
+  /// The five root tab paths — where the floating contact button (C-W4a)
+  /// may appear. Sub-screens keep their own chrome, no overlapping FAB.
+  static const _rootTabPaths = {'/', '/amal', '/dawah', '/ilm', '/more'};
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -405,6 +484,7 @@ class AppShellScaffold extends ConsumerWidget {
     // the role doesn't qualify).
     final current = navigationShell.currentIndex;
     final selectedTab = !canSeeDawah && current > 2 ? current - 1 : current;
+    final onRootTab = _rootTabPaths.contains(GoRouterState.of(context).uri.path);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
@@ -415,8 +495,21 @@ class AppShellScaffold extends ConsumerWidget {
             : Brightness.dark,
       ),
       child: Scaffold(
-        body: navigationShell,
-        bottomNavigationBar: NavigationBar(
+        body: Stack(
+          children: [
+            navigationShell,
+            // C-W4a: floating contact (five institutions) — bottom-END above
+            // the nav bar, never over the SyncBadge (header trailing) or a
+            // CTA. Hidden when the config carries no contacts.
+            if (onRootTab)
+              PositionedDirectional(
+                bottom: SLSpacing.s16,
+                end: SLSpacing.s16,
+                child: const ContactFab(),
+              ),
+          ],
+        ),
+        bottomNavigationBar: SLBottomBar(
           selectedIndex: selectedTab,
           onDestinationSelected: (tab) {
             final branch = !canSeeDawah && tab >= 2 ? tab + 1 : tab;
@@ -426,30 +519,30 @@ class AppShellScaffold extends ConsumerWidget {
             );
           },
           destinations: [
-            NavigationDestination(
-              icon: const Icon(Icons.mosque_outlined),
-              selectedIcon: const Icon(Icons.mosque),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.starAndCrescent,
+              selectedIcon: PhosphorIconsFill.starAndCrescent,
               label: S.tr(lang, 'tab_home'),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.menu_book_outlined),
-              selectedIcon: const Icon(Icons.menu_book),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.bookOpen,
+              selectedIcon: PhosphorIconsFill.bookOpen,
               label: S.tr(lang, 'tab_amal'),
             ),
             if (canSeeDawah)
-              NavigationDestination(
-                icon: const Icon(Icons.campaign_outlined),
-                selectedIcon: const Icon(Icons.campaign),
+              SLBottomBarItem(
+                icon: PhosphorIconsRegular.megaphone,
+                selectedIcon: PhosphorIconsFill.megaphone,
                 label: S.tr(lang, 'tab_dawah'),
               ),
-            NavigationDestination(
-              icon: const Icon(Icons.auto_stories_outlined),
-              selectedIcon: const Icon(Icons.auto_stories),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.graduationCap,
+              selectedIcon: PhosphorIconsFill.graduationCap,
               label: S.tr(lang, 'tab_ilm'),
             ),
-            NavigationDestination(
-              icon: const Icon(Icons.grid_view_rounded),
-              selectedIcon: const Icon(Icons.grid_view),
+            SLBottomBarItem(
+              icon: PhosphorIconsRegular.squaresFour,
+              selectedIcon: PhosphorIconsFill.squaresFour,
               label: S.tr(lang, 'tab_more'),
             ),
           ],

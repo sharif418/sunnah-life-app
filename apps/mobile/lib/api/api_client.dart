@@ -368,6 +368,84 @@ class ApiClient {
     },
   );
 
+  // ── Personal goals (W4c) ─────────────────────────────────────────────────────
+
+  /// GET /api/goals — own goals, every lifecycle status (newest first).
+  Future<List<PersonalGoal>> fetchGoals() async {
+    final j = await _req('GET', '/api/goals');
+    return ((j['goals'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => PersonalGoal.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/goals — propose a goal for mentor approval (max 14 open).
+  /// The server sets status "proposed"; startDate is YYYY-MM-DD.
+  Future<PersonalGoal> proposeGoal({
+    required String amalKey,
+    required String title,
+    required String startDate,
+    String? note,
+    String? target,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/goals',
+      body: {
+        'amalKey': amalKey,
+        'title': title,
+        'startDate': startDate,
+        if (note != null && note.isNotEmpty) 'note': note,
+        if (target != null && target.isNotEmpty) 'target': target,
+      },
+    );
+    return PersonalGoal.fromJson(
+      (j['goal'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// DELETE /api/goals?id= — remove one of my open (non-terminal) goals.
+  /// Terminal rows are history on the server and are refused with 400.
+  Future<void> deleteGoal(String id) =>
+      _req('DELETE', '/api/goals', query: {'id': id});
+
+  /// GET /api/usrah/goals — the approval queue (usrah_head+; RLS scopes
+  /// the rows to the caller's own members).
+  Future<List<GoalQueueItem>> usrahGoals() async {
+    final j = await _req('GET', '/api/usrah/goals');
+    return ((j['queue'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => GoalQueueItem.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/goals/:id/approve — usrah_head+ (fires the member reminder).
+  Future<PersonalGoal> approveGoal(String id) async {
+    final j = await _req('POST', '/api/goals/$id/approve');
+    return PersonalGoal.fromJson(
+      (j['goal'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// POST /api/goals/:id/reject — usrah_head+ (optional reason).
+  Future<PersonalGoal> rejectGoal(String id, {String? reason}) async {
+    final j = await _req(
+      'POST',
+      '/api/goals/$id/reject',
+      body: {
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      },
+    );
+    return PersonalGoal.fromJson(
+      (j['goal'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// GET /api/leaderboard/me — own gender-scoped percentile band
+  /// (config-gated; 404 while the flag is off server-side).
+  Future<LeaderboardMe> leaderboardMe() async =>
+      LeaderboardMe.fromJson(await _req('GET', '/api/leaderboard/me'));
+
   // ── Dawah engine ────────────────────────────────────────────────────────────
 
   Future<DawahOverview> dawahOverview() async =>

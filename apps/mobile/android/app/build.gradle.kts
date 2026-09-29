@@ -22,8 +22,9 @@ android {
     compileSdk = flutter.compileSdkVersion
     // Pinned to Flutter's blessed NDK: AGP 9.1 demands an NDK at configure
     // time (its default IS this version) for the jniLibs strip machinery —
-    // auto-installed on CI runners. Debug builds skip actual stripping via the
-    // keepDebugSymbols block below.
+    // auto-installed on CI runners. Debug and release both strip normally
+    // (the old debug-only keepDebugSymbols escape hatch was removed in W3i —
+    // CI runners have the NDK, and the sandbox never runs gradle).
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -38,12 +39,13 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        // Single-ABI debug builds (low-disk CI/sandbox): the debug engine
-        // ships ~150 MB per ABI unstripped. The release pipeline builds all
-        // ABIs via `flutter build apk --split-per-abi`.
-        ndk {
-            abiFilters += listOf("arm64-v8a")
-        }
+        // ABI selection is owned by the Flutter tool, not by abiFilters: debug
+        // APKs ship every engine ABI regardless of any filter here (proven on
+        // run #25's 3-ABI debug artifact), and the release split is driven by
+        // `flutter build apk --release --split-per-abi
+        // --target-platform android-arm,android-arm64` (the release-apk CI
+        // job). A defaultConfig abiFilters line was a misleading no-op —
+        // removed in W3i.
     }
 
     // Strip via the NDK's llvm-strip (in constrained environments the NDK
@@ -81,15 +83,13 @@ android {
     }
 }
 
-// Debug APKs keep native symbols by design — the strip task's llvm-strip would
-// drag in a 2+ GB NDK download for zero debugging value. Scoped to the debug
-// variant only: release keeps the default stripping (CI runners provide the
-// NDK there).
-androidComponents {
-    onVariants(selector().withBuildType("debug")) { variant ->
-        variant.packaging.jniLibs.keepDebugSymbols.add("**/*.so")
-    }
-}
+// (W3i) the debug-only keepDebugSymbols block is GONE: CI runners provide
+// the NDK for normal stripping on both variants, and the debug APK artifact
+// shrinks accordingly. R8/minify is deliberately NOT enabled yet — the
+// split alone meets the < 40 MB arm64 target, and shrinking/obfuscation
+// needs a device smoke before it can be trusted with plugin reflection
+// (workmanager, notification receivers). Revisit after the owner's device
+// round.
 
 kotlin {
     compilerOptions {

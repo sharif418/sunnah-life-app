@@ -6,7 +6,7 @@
 
 import type { Prisma } from "../common/prisma-client";
 import { addDays, dateKey, parseKey } from "./calendars";
-import { amalPoints, loadDailyDefinitions } from "./amal";
+import { amalPoints, loadActiveDefinitions, loadDailyDefinitions, mapDefinition } from "./amal";
 import { todayInTz, weekStartInTz } from "./tz";
 import type { WeeklyReview } from "./domain";
 
@@ -29,6 +29,10 @@ export interface WeekSummary {
   streak: number;
   missedDays: number;
   counts: Record<string, number>;
+  /** Phase C/W4c: the member's APPROVED goals ride along so the reviewing
+   * head sees target progress next to the week's amal rollup (amalPoints
+   * summed over the week's entries for each goal's amalKey). */
+  goals: { amalKey: string; title: string; weekPoints: number; weekDays: number }[];
 }
 
 /**
@@ -105,7 +109,43 @@ export async function computeWeekSummary(
 
   const missedDays = elapsed.filter((d) => (dayPoints.get(d) ?? 0) <= 0).length;
 
-  return { overallPct, byCategory, streak, missedDays, counts };
+  // Phase C/W4c — approved goals with their week progress (amalPoints over
+  // the week's entries for each goal's amalKey; the daily-defs entries looped
+  // above do not cover non-daily amal keys, so goal entries are read here).
+  const goalRows = (await tx.personalGoal.findMany({
+    where: { userId, status: "approved", active: true },
+    orderBy: { createdAt: "asc" },
+  })) as unknown as { amalKey: string; title: string }[];
+  const goals: WeekSummary["goals"] = [];
+  if (goalRows.length) {
+    const allDefMap = new Map(
+      (await loadActiveDefinitions(tx)).map((d) => [d.key, mapDefinition(d)])
+    );
+    const goalEntries = (await tx.amalEntry.findMany({
+      where: {
+        userId,
+        date: { gte: days[0], lte: days[days.length - 1] },
+        amalKey: { in: [...new Set(goalRows.map((g) => g.amalKey))] },
+      },
+    })) as unknown as { amalKey: string; date: string; valueJson: unknown }[];
+    const pts = new Map<string, number>();
+    for (const e of goalEntries) {
+      if (!elapsed.includes(e.date)) continue;
+      const gdef = allDefMap.get(e.amalKey);
+      if (!gdef) continue;
+      pts.set(e.amalKey, (pts.get(e.amalKey) ?? 0) + amalPoints(e.valueJson, gdef, category));
+    }
+    for (const g of goalRows) {
+      goals.push({
+        amalKey: g.amalKey,
+        title: g.title,
+        weekPoints: Math.round((pts.get(g.amalKey) ?? 0) * 10) / 10,
+        weekDays: elapsed.length,
+      });
+    }
+  }
+
+  return { overallPct, byCategory, streak, missedDays, counts, goals };
 }
 
 export interface ReviewRow {

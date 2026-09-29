@@ -131,6 +131,19 @@
       "autoSource": "auto:quran:tilawat"
     },
     {
+      "key": "tilawat_minutes",
+      "titleBn": "তিলাওয়াত (মিনিট)",
+      "titleEn": "Qur'an Recitation (minutes)",
+      "category": "quran",
+      "inputType": "quantity",
+      "cadence": "daily",
+      "targetJson": "{\"general\":10,\"hafez\":10,\"alim\":10}",
+      "unit": "মিনিট — শুরুর পর্যায়ে যারা এখনো পৃষ্ঠা হিসাবে পড়তে পারেন না",
+      "minLevel": "none",
+      "sortOrder": 105,
+      "autoSource": null
+    },
+    {
       "key": "quran_reading",
       "titleBn": "কুরআনের অনুবাদ / ইসলামিক গ্রন্থ পাঠ",
       "titleEn": "Qur'an Translation / Islamic Reading",
@@ -300,6 +313,19 @@
       "autoSource": null
     },
     {
+      "key": "exercise_minutes",
+      "titleBn": "শরীরচর্চা / হাঁটা (মিনিট)",
+      "titleEn": "Exercise / Walking (minutes)",
+      "category": "lifestyle",
+      "inputType": "quantity",
+      "cadence": "daily",
+      "targetJson": "{\"general\":20,\"hafez\":20,\"alim\":20}",
+      "unit": "মিনিট",
+      "minLevel": "none",
+      "sortOrder": 235,
+      "autoSource": null
+    },
+    {
       "key": "avoided_entertainment",
       "titleBn": "হারাম বিনোদন (নাটক/সিনেমা/গান/রিলস) থেকে বেঁচে থাকা",
       "titleEn": "Avoiding Haram Entertainment (Dramas/Movies/Songs/Reels)",
@@ -401,6 +427,32 @@
       "unit": null,
       "minLevel": "none",
       "sortOrder": 310,
+      "autoSource": null
+    },
+    {
+      "key": "akhlaq_truthful",
+      "titleBn": "সর্বদা সত্য কথা বলা",
+      "titleEn": "Always Speaking the Truth",
+      "category": "akhlaq",
+      "inputType": "boolean",
+      "cadence": "daily",
+      "targetJson": null,
+      "unit": null,
+      "minLevel": "none",
+      "sortOrder": 320,
+      "autoSource": null
+    },
+    {
+      "key": "akhlaq_anger_control",
+      "titleBn": "রাগ নিয়ন্ত্রণ করা",
+      "titleEn": "Controlling Anger",
+      "category": "akhlaq",
+      "inputType": "boolean",
+      "cadence": "daily",
+      "targetJson": null,
+      "unit": null,
+      "minLevel": "none",
+      "sortOrder": 330,
       "autoSource": null
     }
   ]

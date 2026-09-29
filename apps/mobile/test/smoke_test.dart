@@ -2,15 +2,20 @@
 // profile hydration + go_router shell) and the bottom nav renders the
 // 5 tabs for a daee (Da'wah branch visible) and 4 tabs for a guest
 // (Da'wah hidden for role < daee).
+//
+// C-W4a: the stock Material NavigationBar was replaced by the token-built
+// SLBottomBar — the assertions were updated from NavigationBar/
+// NavigationDestination to SLBottomBar/SLBottomBarItem (same localized
+// label expectations, unchanged).
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunnah_life/app.dart';
 import 'package:sunnah_life/db/database.dart';
+import 'package:sunnah_life/features/shared/sl_bottom_bar.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/providers.dart';
 
@@ -79,8 +84,8 @@ void main() {
       extra: [authProvider.overrideWith(_DaeeAuthNotifier.new)],
     );
 
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(NavigationDestination), findsNWidgets(5));
+    expect(find.byType(SLBottomBar), findsOneWidget);
+    expect(find.byType(SLBottomDestination), findsNWidgets(5));
     expect(find.text('হোম'), findsOneWidget);
     expect(find.text('আমল'), findsOneWidget);
     expect(find.text('দাওয়াত'), findsOneWidget);
@@ -96,8 +101,8 @@ void main() {
 
     final container = await _boot(tester, db);
 
-    expect(find.byType(NavigationBar), findsOneWidget);
-    expect(find.byType(NavigationDestination), findsNWidgets(4));
+    expect(find.byType(SLBottomBar), findsOneWidget);
+    expect(find.byType(SLBottomDestination), findsNWidgets(4));
     expect(find.text('দাওয়াত'), findsNothing);
     expect(find.text('আরও'), findsOneWidget);
 

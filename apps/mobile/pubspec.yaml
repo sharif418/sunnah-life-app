@@ -49,6 +49,24 @@ dependencies:
   firebase_messaging: ^16.7.0
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^8.2.0
+  flutter_timezone: ^5.1.0
+  workmanager: ^0.10.10
+  # Qur'an per-ayah recitation with on-disk caching (LockCachingAudioSource).
+  just_audio: ^0.10.4
+  geolocator: ^14.0.2
+  flutter_compass: ^0.8.1
+  # Donation link in the in-app browser (Chrome Custom Tabs on Android /
+  # SFSafariViewController on iOS — LaunchMode.inAppBrowserView, C-W3g).
+  url_launcher: ^6.3.2
+  # https://sunnahlife.app/join/* + sunnahlife://join/* referral deep links
+  # (cold start + warm stream, C-W3h).
+  app_links: ^7.2.1
+  # NOT phosphor_flutter: pub 2.1.0 (latest, incl. git HEAD) does not
+  # compile under this Flutter pin — IconData became a final class and the
+  # package subclasses it (flutter test hard-fails). The Phosphor fonts are
+  # vendored in assets/fonts + a hand-written glyph table for the icons the
+  # C-W4a/W4b chrome uses: lib/design/phosphor_icons.dart (MIT, license
+  # committed beside the fonts).
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +74,9 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.24.0
   build_runner: ^2.4.14
+  # v1→v2 outbox migration test needs a raw v1 sqlite file (drift itself
+  # always generates the LATEST schema). Same package drift/native uses.
+  sqlite3: ^3.5.2
 
 flutter:
   uses-material-design: true
@@ -64,3 +85,15 @@ flutter:
   assets:
     - assets/content/
     - assets/google_fonts/
+  # Vendored Phosphor icon fonts (see lib/design/phosphor_icons.dart for
+  # the why — the pub package doesn't compile on this Flutter pin).
+  fonts:
+    - family: PhosphorRegular
+      fonts:
+        - asset: assets/fonts/phosphor-regular.ttf
+    - family: PhosphorFill
+      fonts:
+        - asset: assets/fonts/phosphor-fill.ttf
+    - family: PhosphorBold
+      fonts:
+        - asset: assets/fonts/phosphor-bold.ttf

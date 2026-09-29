@@ -8,9 +8,18 @@
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
     <!-- Posting notifications on Android 13+. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Re-arm the scheduled waqt bells + post-prayer prompts after a reboot
+         (flutter_local_notifications' ScheduledNotificationBootReceiver). -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- FCM background delivery (notification messages while the app is
          not in the foreground). -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- GPS location (C-W3c): city picker snap-to-nearest-district + mosques
+         "near me". Coarse covers Android 12+ "approximate" grants; fine is
+         requested for the near-me mosque distances. geolocator maps these to
+         the balanced-power priority at runtime. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:label="সুন্নাহ লাইফ"
@@ -46,6 +55,22 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="sunnahlife" android:host="*"/>
             </intent-filter>
+            <!-- C-W3h · App Links: https://sunnahlife.app/join/* opens the app
+                 directly (no disambiguation sheet) once Android verifies the
+                 statement at https://sunnahlife.app/.well-known/assetlinks.json
+                 (served by apps/web — the sha256 fingerprint step for the owner
+                 is documented in docs/RELEASE.md §App Links). autoVerify +
+                 pathPrefix keeps every other path on the website; the
+                 sunnahlife:// filter above keeps working for QR/share links. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data
+                    android:scheme="https"
+                    android:host="sunnahlife.app"
+                    android:pathPrefix="/join"/>
+            </intent-filter>
         </activity>
 
         <!-- FCM (Task B2): system-tray notifications on background/terminated
@@ -63,6 +88,41 @@
             android:name=".PrayerAlarmReceiver"
             android:exported="false" />
 
+        <!-- C-W3e · auto-silent ringer flips at jama'at window edges — armed
+             by the Dart PrayerBellScheduler through MainActivity's
+             "sunnahlife/prayer" channel (AlarmManager → this receiver →
+             NotificationManager.setInterruptionFilter). No boot receiver by
+             design: Android clears alarms on reboot and the Dart refresh
+             (app open / resume / day rollover / daily WorkManager task)
+             re-arms them — documented honest edge. -->
+        <receiver
+            android:name=".AutoSilentReceiver"
+            android:exported="false" />
+
+        <!-- flutter_local_notifications receiver surface (C-W3b): the plugin's
+             own manifest declares only VIBRATE + POST_NOTIFICATIONS — without
+             these explicit declarations in the app manifest, every
+             zonedSchedule() silently never fires on a real device. The boot
+             receiver re-arms pending zoned schedules after reboot / package
+             replace; ActionBroadcastReceiver delivers notification ACTION
+             button taps (the post-prayer জামাতে/একা/কাযা diary buttons). -->
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:exported="false"
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver" />
+
         <!-- Home-screen widget: next prayer + countdown. -->
         <receiver
             android:name=".PrayerWidgetProvider"
@@ -70,10 +130,24 @@
             android:label="পরবর্তী ওয়াক্ত">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="bd.asunnah.sunnah_life.WIDGET_RENDER" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_prayer_info" />
+        </receiver>
+
+        <!-- C-W3f · widget boot restore: after BOOT_COMPLETED / package
+             replace, re-render from the persisted snapshot (written by the
+             Flutter side after every prayer tick) + re-arm the periodic
+             re-render alarm so the widget never resets to its placeholder. -->
+        <receiver
+            android:name=".WidgetBootReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
         </receiver>
 
         <!-- Don't delete the meta-data below.

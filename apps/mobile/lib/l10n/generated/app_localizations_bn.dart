@@ -382,6 +382,28 @@ class AppLocalizationsBn extends AppLocalizations {
   String get quran_tilawat_logged => 'তিলাওয়াত আমলনামায় যোগ হয়েছে';
 
   @override
+  String get quran_goto_ayah => 'আয়াতে যান';
+
+  @override
+  String get quran_goto_ayah_hint => 'আয়াত নম্বর লিখুন';
+
+  @override
+  String get quran_invalid_ayah => 'আয়াত নম্বরটি সঠিক নয়';
+
+  @override
+  String get quran_reciter => 'বাদক নির্বাচন করুন';
+
+  @override
+  String get quran_play_ayah => 'আয়াত শুনুন';
+
+  @override
+  String get quran_stop_audio => 'অডিও বন্ধ করুন';
+
+  @override
+  String get quran_audio_error =>
+      'অডিও চালানো যায়নি — ইন্টারনেট সংযোগ দেখে নিন';
+
+  @override
   String get adhkar_morning => 'সকালের আযকার';
 
   @override
@@ -931,7 +953,8 @@ class AppLocalizationsBn extends AppLocalizations {
   String get qibla_north => 'উত্তর';
 
   @override
-  String get qibla_dial_hint => 'ডায়াল ঘোরান — তীরটি যেন উপরে থাকে';
+  String get qibla_dial_hint =>
+      'ডায়াল ঘুরিয়ে উ (N) চিহ্নটি উত্তর দিকে আনুন — তীর তখন কিবলার দিক দেখাবে';
 
   @override
   String get qibla_dial => 'ডায়াল';
@@ -1266,4 +1289,413 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get dawah_req_live_action => 'লাইভ চেকলিস্ট';
+
+  @override
+  String get bell_minutes_title => 'ঘণ্টির সময় নির্ধারণ';
+
+  @override
+  String get bell_minutes_before => 'ওয়াক্তের আগে (মিনিট)';
+
+  @override
+  String get bell_minutes_after => 'নামাজের পরে (মিনিট)';
+
+  @override
+  String get bell_minutes_reset => 'রিসেট';
+
+  @override
+  String get bell_minutes_done => 'ঠিক আছে';
+
+  @override
+  String get sync_sheet_title => 'সিঙ্ক অবস্থা';
+
+  @override
+  String get sync_now => 'এখনই সিঙ্ক করুন';
+
+  @override
+  String get sync_last_synced => 'সর্বশেষ সিঙ্ক';
+
+  @override
+  String get sync_never => 'এখনো সিঙ্ক হয়নি';
+
+  @override
+  String get sync_failed_entries => 'সমস্যায় পড়া এন্ট্রি';
+
+  @override
+  String get sync_failed_short => 'সমস্যা';
+
+  @override
+  String get sync_dead_discard => 'বাদ দিন';
+
+  @override
+  String get sync_error_unexpected => 'অপ্রত্যাশিত সমস্যা — আবার চেষ্টা করুন';
+
+  @override
+  String get gps_find_city => 'GPS দিয়ে খুঁজুন';
+
+  @override
+  String get gps_find_city_hint =>
+      'আপনার নিকটতম জেলা স্বয়ংক্রিয়ভাবে খুঁজে নেওয়া হবে';
+
+  @override
+  String get gps_locating => 'অবস্থান নেওয়া হচ্ছে…';
+
+  @override
+  String get gps_your_location => 'আপনার অবস্থান';
+
+  @override
+  String get gps_approx => 'অনুমান';
+
+  @override
+  String get gps_approx_note => 'নিকটতম তালিকাভুক্ত শহর থেকে অনেক দূরে';
+
+  @override
+  String get gps_tap_confirm => 'ট্যাপ করে নিশ্চিত করুন';
+
+  @override
+  String get gps_permission_denied =>
+      'অনুমতি দেওয়া হয়নি — তালিকা থেকে শহর বেছে নিন';
+
+  @override
+  String get gps_permission_denied_forever =>
+      'অনুমতি বন্ধ আছে — সেটিংস থেকে অনুমতি দিন';
+
+  @override
+  String get gps_open_settings => 'সেটিংস খুলুন';
+
+  @override
+  String get gps_service_off => 'ফোনের লোকেশন বন্ধ আছে';
+
+  @override
+  String get gps_open_location_settings => 'লোকেশন চালু করুন';
+
+  @override
+  String get gps_unavailable => 'অবস্থান পাওয়া যায়নি — আবার চেষ্টা করুন';
+
+  @override
+  String get unit_m => 'মি';
+
+  @override
+  String get qibla_compass_heading => 'বর্তমান দিক';
+
+  @override
+  String get qibla_calibration_title => 'কম্পাস ক্যালিব্রেট করুন';
+
+  @override
+  String get qibla_calibration_hint =>
+      'ফোনটি বাতাসে ৮ আকৃতিতে কয়েকবার ঘোরান, তারপর আবার দেখুন';
+
+  @override
+  String get qibla_compass_unavailable =>
+      'এই ফোনে কম্পাস পাওয়া যায়নি — নিচের ম্যানুয়াল ডায়াল ব্যবহার করুন';
+
+  @override
+  String get mosques_near_me => 'আমার কাছাকাছি';
+
+  @override
+  String get mosques_from_city => 'এই শহর থেকে';
+
+  @override
+  String get mosques_from_location => 'আপনার অবস্থান থেকে';
+
+  @override
+  String get mosques_use_city => 'শহর থেকে দেখুন';
+
+  @override
+  String get mosque_direction => 'দিক';
+
+  @override
+  String get more_autosilent => 'অটো-সাইলেন্ট';
+
+  @override
+  String get autosilent_explain_title => 'জামাতের সময় ফোন নিঃশব্দ';
+
+  @override
+  String get autosilent_explain_body =>
+      'প্রতি ওয়াক্তের শুরুতে ফোন সাইলেন্ট (শুধু জরুরি) হয়ে যায় এবং নির্দিষ্ট সময় পর আগের অবস্থায় ফিরে আসে। এর জন্য অ্যান্ড্রয়েডের ‘বিরক্ত না করুন’ (Do Not Disturb) অনুমতি দরকার।';
+
+  @override
+  String get autosilent_dnd_status => 'অনুমতির অবস্থা';
+
+  @override
+  String get autosilent_granted => 'অনুমতি দেওয়া আছে';
+
+  @override
+  String get autosilent_not_granted => 'অনুমতি নেই';
+
+  @override
+  String get autosilent_grant => 'অনুমতি দিন';
+
+  @override
+  String get autosilent_recheck => 'আবার চেক করুন';
+
+  @override
+  String get autosilent_return_hint =>
+      'অনুমতি দিয়ে অ্যাপে ফিরে এলে অবস্থা নিজেই হালনাগাদ হবে';
+
+  @override
+  String get autosilent_master => 'অটো-সাইলেন্ট চালু';
+
+  @override
+  String get autosilent_minutes_label => 'সাইলেন্ট থাকার সময়';
+
+  @override
+  String get autosilent_minutes_suffix => 'মিনিট সাইলেন্ট';
+
+  @override
+  String get autosilent_waqts_title => 'কোন কোন ওয়াক্তে চালু হবে';
+
+  @override
+  String get autosilent_reboot_note =>
+      'ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।';
+
+  @override
+  String get more_donate => 'দান করুন';
+
+  @override
+  String get donation_open_failed => 'লিংক খোলা যায়নি';
+
+  @override
+  String get referral_by => 'রেফার করেছেন';
+
+  @override
+  String get header_notifications => 'নোটিফিকেশন';
+
+  @override
+  String get header_reminders => 'রিমাইন্ডার';
+
+  @override
+  String get notifications_guest_hint =>
+      'সাইন ইন করলে উসরা ঘোষণা, সাপ্তাহিক রিভিউ ও লাইভ রিমাইন্ডার এখানে দেখা যাবে।';
+
+  @override
+  String get notifications_empty => 'এখনো কোনো ঘোষণা নেই';
+
+  @override
+  String get notifications_announcements => 'ঘোষণা';
+
+  @override
+  String get notifications_live => 'লাইভ অনুষ্ঠান';
+
+  @override
+  String get reminders_empty => 'এখনো কোনো রিমাইন্ডার নেই';
+
+  @override
+  String get reminder_mark_done => 'সম্পন্ন করুন';
+
+  @override
+  String get reminder_due => 'এখন';
+
+  @override
+  String get reminder_overdue => 'মেয়াদ পেরিয়েছে';
+
+  @override
+  String get reminder_upcoming => 'আসছে';
+
+  @override
+  String get contact_title => 'যোগাযোগ';
+
+  @override
+  String get contact_call => 'কল করুন';
+
+  @override
+  String get contact_website => 'ওয়েবসাইট';
+
+  @override
+  String get contact_call_failed => 'কল করা যায়নি';
+
+  @override
+  String get quick_access => 'দ্রুত প্রবেশ';
+
+  @override
+  String get quick_quran_desc => 'সূরা ও অনুবাদ';
+
+  @override
+  String get quick_duas_desc => 'দৈনন্দিন দোয়া';
+
+  @override
+  String get quick_amal_desc => 'মুহাসাবা ডায়েরি';
+
+  @override
+  String get quick_live_desc => 'সরাসরি অনুষ্ঠান';
+
+  @override
+  String get most_used => 'সর্বাধিক ব্যবহৃত';
+
+  @override
+  String get most_used_empty =>
+      'গত ৩০ দিনে সবচেয়ে বেশি লেখা আমলগুলো এখানে দেখা যাবে — আজকের ডায়েরি থেকে শুরু করুন';
+
+  @override
+  String get most_used_log_today => 'আজ লিখুন';
+
+  @override
+  String get most_used_days => 'দিন';
+
+  @override
+  String get countdown_to_schedule => 'সময়সূচি দেখুন';
+
+  @override
+  String get next_bell_chip => 'পরবর্তী বেল';
+
+  @override
+  String get live_next => 'পরবর্তী লাইভ';
+
+  @override
+  String get live_join_hint => 'দেখতে ট্যাপ করুন';
+
+  @override
+  String get ilm_courses_desc => 'শেখার কোর্স ও লেসন';
+
+  @override
+  String get ilm_quizzes_desc => 'আত্মমূল্যায়ন কুইজ';
+
+  @override
+  String get goals_title => 'আমার লক্ষ্য';
+
+  @override
+  String get goals_new => 'নতুন লক্ষ্য';
+
+  @override
+  String get goals_amal_picker => 'আমল নির্বাচন করুন';
+
+  @override
+  String get goals_amal_short => 'আমল';
+
+  @override
+  String get goals_title_label => 'লক্ষ্যের নাম';
+
+  @override
+  String get goals_target_label => 'লক্ষ্য মাত্রা (ঐচ্ছিক)';
+
+  @override
+  String get goals_note_label => 'নোট (ঐচ্ছিক)';
+
+  @override
+  String get goals_submit => 'প্রস্তাব করুন';
+
+  @override
+  String get goals_signin_needed =>
+      'লক্ষ্য সংরক্ষণ ও অনুমোদনের জন্য সাইন-ইন দরকার';
+
+  @override
+  String get goals_empty => 'এখনো কোনো লক্ষ্য নেই — প্রথম লক্ষ্য ঠিক করুন';
+
+  @override
+  String get goals_open_label => 'খোলা লক্ষ্য';
+
+  @override
+  String get goal_status_proposed => 'অপেক্ষমাণ';
+
+  @override
+  String get goal_status_approved => 'অনুমোদিত';
+
+  @override
+  String get goal_status_rejected => 'বাতিল';
+
+  @override
+  String get goal_status_completed => 'সম্পন্ন';
+
+  @override
+  String get goal_status_withdrawn => 'প্রত্যাহৃত';
+
+  @override
+  String get goals_reject_reason_label => 'কারণ';
+
+  @override
+  String get goals_queue_title => 'লক্ষ্য অনুমোদনের অপেক্ষায়';
+
+  @override
+  String get goals_queue_empty => 'কোনো অপেক্ষমাণ লক্ষ্য নেই';
+
+  @override
+  String get goals_approve => 'অনুমোদন';
+
+  @override
+  String get goals_reject => 'বাতিল';
+
+  @override
+  String get goals_reject_hint => 'বাতিলের কারণ লিখুন (ঐচ্ছিক)';
+
+  @override
+  String get goals_member_label => 'সদস্য';
+
+  @override
+  String get goals_remove => 'সরান';
+
+  @override
+  String get goals_remove_confirm => 'লক্ষ্যটি তালিকা থেকে সরানো হবে?';
+
+  @override
+  String get goals_proposed_toast =>
+      'লক্ষ্য প্রস্তাবিত — উসরা প্রধানের অনুমোদনের অপেক্ষায়';
+
+  @override
+  String get goals_approved_toast => 'অনুমোদিত হয়েছে';
+
+  @override
+  String get goals_rejected_toast => 'বাতিল হয়েছে';
+
+  @override
+  String get checklist_title => 'নিজের তালিকা';
+
+  @override
+  String get checklist_hint => 'নতুন কাজ লিখুন';
+
+  @override
+  String get checklist_add => 'যোগ করুন';
+
+  @override
+  String get checklist_remove => 'মুছুন';
+
+  @override
+  String get checklist_remove_confirm => 'কাজটি মুছে ফেলা হবে?';
+
+  @override
+  String get checklist_local_note => 'শুধু এই ডিভাইসে সংরক্ষিত';
+
+  @override
+  String get group_fard => 'ফরয নামাজ';
+
+  @override
+  String get group_salah_sunnah => 'সালাতের সুন্নত';
+
+  @override
+  String get group_nafl => 'নফল নামাজ';
+
+  @override
+  String get tilawat_begin_chip => 'শুরু';
+
+  @override
+  String get tilawat_begin_copy =>
+      'আজ ৫ মিনিট দিয়ে শুরু করুন — ধীরে ধীরে অভ্যাস হয়ে যাবে ইনশাআল্লাহ';
+
+  @override
+  String get tilawat_ramp_day => 'দিন';
+
+  @override
+  String get tilawat_begin_minutes => 'মিনিট';
+
+  @override
+  String get leaderboard_title => 'লিডারবোর্ড';
+
+  @override
+  String get leaderboard_points => 'পয়েন্ট';
+
+  @override
+  String get leaderboard_window_days => 'দিনের হিসাব';
+
+  @override
+  String get leaderboard_band_top10 => 'শীর্ষ ১০%';
+
+  @override
+  String get leaderboard_band_top25 => 'শীর্ষ ২৫%';
+
+  @override
+  String get leaderboard_band_top50 => 'শীর্ষ ৫০%';
+
+  @override
+  String get leaderboard_band_top75 => 'শীর্ষ ৭৫%';
+
+  @override
+  String get leaderboard_band_bottom => 'নিচের ২৫%';
 }

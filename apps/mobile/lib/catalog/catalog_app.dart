@@ -14,10 +14,17 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/bn_digits.dart';
+import '../core/date_keys.dart';
+import '../core/most_used.dart';
+import '../core/prayer_engine.dart';
 import '../design/design_tokens.dart';
+import '../design/phosphor_icons.dart';
 import '../features/amal/amal_widgets.dart';
+import '../features/home/home_sections.dart';
 import '../features/shared/widgets.dart';
 import '../l10n/app_strings.dart';
+import '../models/domain.dart';
+import '../state/prayer_state.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -211,6 +218,18 @@ class _CatalogStateState extends State<_CatalogState> {
                   SizedBox(height: SLSpacing.s8),
                   SyncBadge(),
                 ],
+              ),
+              _CatalogSection(
+                title: 'CountdownRingHero (C-W4b — ওয়াক্ত রিং)',
+                children: [_RingHeroDemo()],
+              ),
+              _CatalogSection(
+                title: 'MostUsedCard (C-W4b — সর্বাধিক ব্যবহৃত)',
+                children: [_MostUsedDemo()],
+              ),
+              _CatalogSection(
+                title: 'QuickAccessTile (C-W4b — দ্রুত প্রবেশ)',
+                children: [_QuickAccessDemo()],
               ),
               _CatalogSection(
                 title: 'Bengali numerals (toBn)',
@@ -417,6 +436,124 @@ class _HeatmapDemo extends StatelessWidget {
         HeatmapCell(points: 1),
         HeatmapCell(points: 0, isToday: true),
         HeatmapCell(points: 1, locked: true),
+      ],
+    );
+  }
+}
+
+/// C-W4b ring hero with a REAL Dhaka prayer bundle computed at build time —
+/// the arc + HH:MM:SS snapshot of "now" (the live screen ticks them via
+/// prayerProvider's per-second state).
+class _RingHeroDemo extends StatelessWidget {
+  const _RingHeroDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final times = PrayerEngine.compute(
+      dateKey(now),
+      lat: 23.8103,
+      lng: 90.4125,
+      tz: 6.0,
+      method: CalcMethod.karachi,
+      madhhab: Madhhab.hanafi,
+    );
+    final nowMinutes = now.hour * 60.0 + now.minute + now.second / 60.0;
+    final (nextKey, minsToNext) = PrayerEngine.nextPrayer(times, nowMinutes);
+    return CountdownRingHero(
+      prayer: PrayerNow(
+        dateKey: dateKey(now),
+        times: times,
+        nowMinutes: nowMinutes,
+        currentWaqt: PrayerEngine.currentWaqt(times, nowMinutes),
+        nextKey: nextKey,
+        minutesToNext: minsToNext,
+        forbiddenLabel: null,
+        postPrayerKey: null,
+      ),
+      lang: Lang.bn,
+      bn: true,
+      onShowSchedule: () {},
+    );
+  }
+}
+
+/// Two most-used cards — a tristate (no current value → আজ লিখুন logs
+/// জামাতে) and a count (current 3 → logs 4).
+class _MostUsedDemo extends StatelessWidget {
+  const _MostUsedDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 176,
+      child: Row(
+        children: [
+          MostUsedCard(
+            item: MostUsedAmal(
+              def: AmalDefinition(
+                key: 'salat_fajr',
+                titleBn: 'ফজর নামাজ',
+                titleEn: 'Fajr',
+                category: AmalCategory.salah,
+                inputType: AmalInputType.tristate,
+                cadence: 'daily',
+              ),
+              daysUsed: 12,
+            ),
+            currentValue: null,
+            lang: Lang.bn,
+            onQuickLog: (_) {},
+          ),
+          const SizedBox(width: SLSpacing.s8),
+          MostUsedCard(
+            item: MostUsedAmal(
+              def: AmalDefinition(
+                key: 'tilawat',
+                titleBn: 'কুরআন তিলাওয়াত',
+                titleEn: 'Quran reading',
+                category: AmalCategory.quran,
+                inputType: AmalInputType.count,
+                cadence: 'daily',
+              ),
+              daysUsed: 7,
+            ),
+            currentValue: 3,
+            lang: Lang.bn,
+            onQuickLog: (_) {},
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The 2×2 দ্রুত প্রবেশ bento pair — icon in a tinted circle + title +
+/// subtitle (the home grid mounts all four tiles).
+class _QuickAccessDemo extends StatelessWidget {
+  const _QuickAccessDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: QuickAccessTile(
+            icon: PhosphorIconsFill.bookOpenText,
+            title: S.tr(Lang.bn, 'ilm_quran'),
+            subtitle: S.tr(Lang.bn, 'quick_quran_desc'),
+            onTap: () {},
+          ),
+        ),
+        const SizedBox(width: SLSpacing.s8),
+        Expanded(
+          child: QuickAccessTile(
+            icon: PhosphorIconsFill.handHeart,
+            title: S.tr(Lang.bn, 'ilm_duas'),
+            subtitle: S.tr(Lang.bn, 'quick_duas_desc'),
+            onTap: () {},
+          ),
+        ),
       ],
     );
   }

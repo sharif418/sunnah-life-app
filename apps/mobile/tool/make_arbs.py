@@ -375,6 +375,327 @@ NEW_KEYS = {
         "en": "programs",
         "ar": "برنامجًا",
     },
+    # ── C-W4a: global chrome (header panels, contact, bottom bar) ──────────
+    "header_notifications": {
+        "bn": "নোটিফিকেশন",
+        "en": "Notifications",
+        "ar": "الإشعارات",
+    },
+    "header_reminders": {"bn": "রিমাইন্ডার", "en": "Reminders", "ar": "تذكيرات"},
+    "notifications_guest_hint": {
+        "bn": "সাইন ইন করলে উসরা ঘোষণা, সাপ্তাহিক রিভিউ ও লাইভ রিমাইন্ডার এখানে দেখা যাবে।",
+        "en": "Sign in to see usrah announcements, weekly reviews and live reminders here.",
+        "ar": "سجّل الدخول لعرض إعلانات الأسرة والمراجعات الأسبوعية وتذكيرات البث هنا.",
+    },
+    "notifications_empty": {
+        "bn": "এখনো কোনো ঘোষণা নেই",
+        "en": "No announcements yet",
+        "ar": "لا توجد إعلانات بعد",
+    },
+    "notifications_announcements": {
+        "bn": "ঘোষণা",
+        "en": "Announcements",
+        "ar": "إعلانات",
+    },
+    "notifications_live": {
+        "bn": "লাইভ অনুষ্ঠান",
+        "en": "Live programs",
+        "ar": "برامج مباشرة",
+    },
+    "reminders_empty": {
+        "bn": "এখনো কোনো রিমাইন্ডার নেই",
+        "en": "No reminders yet",
+        "ar": "لا توجد تذكيرات بعد",
+    },
+    "reminder_mark_done": {
+        "bn": "সম্পন্ন করুন",
+        "en": "Mark done",
+        "ar": "وضع علامة تم",
+    },
+    "reminder_due": {"bn": "এখন", "en": "Due", "ar": "الآن"},
+    "reminder_overdue": {
+        "bn": "মেয়াদ পেরিয়েছে",
+        "en": "Overdue",
+        "ar": "متأخر",
+    },
+    "reminder_upcoming": {"bn": "আসছে", "en": "Upcoming", "ar": "قادم"},
+    "contact_title": {"bn": "যোগাযোগ", "en": "Contact us", "ar": "تواصل معنا"},
+    "contact_call": {"bn": "কল করুন", "en": "Call", "ar": "اتصال"},
+    "contact_website": {
+        "bn": "ওয়েবসাইট",
+        "en": "Website",
+        "ar": "الموقع الإلكتروني",
+    },
+    "contact_call_failed": {
+        "bn": "কল করা যায়নি",
+        "en": "Could not place the call",
+        "ar": "تعذّر إجراء الاتصال",
+    },
+    # ── C-W4b: home sections per spec order ─────────────────────────────────
+    "quick_access": {"bn": "দ্রুত প্রবেশ", "en": "Quick access", "ar": "وصول سريع"},
+    "quick_quran_desc": {
+        "bn": "সূরা ও অনুবাদ",
+        "en": "Surahs & translation",
+        "ar": "السور والترجمة",
+    },
+    "quick_duas_desc": {
+        "bn": "দৈনন্দিন দোয়া",
+        "en": "Everyday duas",
+        "ar": "أدعية يومية",
+    },
+    "quick_amal_desc": {
+        "bn": "মুহাসাবা ডায়েরি",
+        "en": "Muhasaba diary",
+        "ar": "يومية المحاسبة",
+    },
+    "quick_live_desc": {
+        "bn": "সরাসরি অনুষ্ঠান",
+        "en": "Live programs",
+        "ar": "برامج مباشرة",
+    },
+    "most_used": {
+        "bn": "সর্বাধিক ব্যবহৃত",
+        "en": "Most used",
+        "ar": "الأكثر استخدامًا",
+    },
+    "most_used_empty": {
+        "bn": "গত ৩০ দিনে সবচেয়ে বেশি লেখা আমলগুলো এখানে দেখা যাবে — আজকের ডায়েরি থেকে শুরু করুন",
+        "en": "Your most-logged amals of the last 30 days appear here — start from today's diary",
+        "ar": "تظهر هنا أكثر عباداتك تسجيلًا خلال آخر ٣٠ يومًا — ابدأ بيومية اليوم",
+    },
+    "most_used_log_today": {
+        "bn": "আজ লিখুন",
+        "en": "Log today",
+        "ar": "سجّل اليوم",
+    },
+    "most_used_days": {"bn": "দিন", "en": "days", "ar": "يوم"},
+    "countdown_to_schedule": {
+        "bn": "সময়সূচি দেখুন",
+        "en": "View schedule",
+        "ar": "عرض المواقيت",
+    },
+    "next_bell_chip": {
+        "bn": "পরবর্তী বেল",
+        "en": "Next bell",
+        "ar": "الجرس القادم",
+    },
+    "live_next": {"bn": "পরবর্তী লাইভ", "en": "Next live", "ar": "البث القادم"},
+    "live_join_hint": {
+        "bn": "দেখতে ট্যাপ করুন",
+        "en": "Tap to watch",
+        "ar": "اضغط للمشاهدة",
+    },
+    "ilm_courses_desc": {
+        "bn": "শেখার কোর্স ও লেসন",
+        "en": "Courses & lessons",
+        "ar": "دروس ومقررات",
+    },
+    "ilm_quizzes_desc": {
+        "bn": "আত্মমূল্যায়ন কুইজ",
+        "en": "Self-assessment quizzes",
+        "ar": "اختبارات ذاتية",
+    },
+    # ── W4c: personal-goal lifecycle ──────────────────────────────────────────
+    "goals_title": {"bn": "আমার লক্ষ্য", "en": "My Goals", "ar": "أهدافي"},
+    "goals_new": {"bn": "নতুন লক্ষ্য", "en": "New goal", "ar": "هدف جديد"},
+    "goals_amal_picker": {
+        "bn": "আমল নির্বাচন করুন",
+        "en": "Choose an amal",
+        "ar": "اختر عبادة",
+    },
+    "goals_amal_short": {"bn": "আমল", "en": "Amal", "ar": "العبادة"},
+    "goals_title_label": {
+        "bn": "লক্ষ্যের নাম",
+        "en": "Goal title",
+        "ar": "عنوان الهدف",
+    },
+    "goals_target_label": {
+        "bn": "লক্ষ্য মাত্রা (ঐচ্ছিক)",
+        "en": "Target (optional)",
+        "ar": "الهدف (اختياري)",
+    },
+    "goals_note_label": {
+        "bn": "নোট (ঐচ্ছিক)",
+        "en": "Note (optional)",
+        "ar": "ملاحظة (اختياري)",
+    },
+    "goals_submit": {"bn": "প্রস্তাব করুন", "en": "Propose", "ar": "اقترح"},
+    "goals_signin_needed": {
+        "bn": "লক্ষ্য সংরক্ষণ ও অনুমোদনের জন্য সাইন-ইন দরকার",
+        "en": "Sign in to set and track goals",
+        "ar": "سجّل الدخول لتحديد الأهداف ومتابعتها",
+    },
+    "goals_empty": {
+        "bn": "এখনো কোনো লক্ষ্য নেই — প্রথম লক্ষ্য ঠিক করুন",
+        "en": "No goals yet — set your first one",
+        "ar": "لا أهداف بعد — حدّد هدفك الأول",
+    },
+    "goals_open_label": {
+        "bn": "খোলা লক্ষ্য",
+        "en": "Open goals",
+        "ar": "أهداف مفتوحة",
+    },
+    "goal_status_proposed": {
+        "bn": "অপেক্ষমাণ",
+        "en": "Pending review",
+        "ar": "بانتظار المراجعة",
+    },
+    "goal_status_approved": {
+        "bn": "অনুমোদিত",
+        "en": "Approved",
+        "ar": "معتمد",
+    },
+    "goal_status_rejected": {
+        "bn": "বাতিল",
+        "en": "Rejected",
+        "ar": "مرفوض",
+    },
+    "goal_status_completed": {
+        "bn": "সম্পন্ন",
+        "en": "Completed",
+        "ar": "مكتمل",
+    },
+    "goal_status_withdrawn": {
+        "bn": "প্রত্যাহৃত",
+        "en": "Withdrawn",
+        "ar": "مسحوب",
+    },
+    "goals_reject_reason_label": {
+        "bn": "কারণ",
+        "en": "Reason",
+        "ar": "السبب",
+    },
+    "goals_queue_title": {
+        "bn": "লক্ষ্য অনুমোদনের অপেক্ষায়",
+        "en": "Goal approvals",
+        "ar": "طلبات اعتماد الأهداف",
+    },
+    "goals_queue_empty": {
+        "bn": "কোনো অপেক্ষমাণ লক্ষ্য নেই",
+        "en": "No pending goals",
+        "ar": "لا أهداف بانتظار الاعتماد",
+    },
+    "goals_approve": {"bn": "অনুমোদন", "en": "Approve", "ar": "اعتماد"},
+    "goals_reject": {"bn": "বাতিল", "en": "Reject", "ar": "رفض"},
+    "goals_reject_hint": {
+        "bn": "বাতিলের কারণ লিখুন (ঐচ্ছিক)",
+        "en": "Reject reason (optional)",
+        "ar": "سبب الرفض (اختياري)",
+    },
+    "goals_member_label": {"bn": "সদস্য", "en": "Member", "ar": "العضو"},
+    "goals_remove": {"bn": "সরান", "en": "Remove", "ar": "إزالة"},
+    "goals_remove_confirm": {
+        "bn": "লক্ষ্যটি তালিকা থেকে সরানো হবে?",
+        "en": "Remove this goal from your list?",
+        "ar": "إزالة هذا الهدف من القائمة؟",
+    },
+    "goals_proposed_toast": {
+        "bn": "লক্ষ্য প্রস্তাবিত — উসরা প্রধানের অনুমোদনের অপেক্ষায়",
+        "en": "Proposed — awaiting your usrah head's approval",
+        "ar": "تم الاقتراح — بانتظار اعتماد رئيس الأسر",
+    },
+    "goals_approved_toast": {
+        "bn": "অনুমোদিত হয়েছে",
+        "en": "Approved",
+        "ar": "تم الاعتماد",
+    },
+    "goals_rejected_toast": {
+        "bn": "বাতিল হয়েছে",
+        "en": "Rejected",
+        "ar": "تم الرفض",
+    },
+    # ── W4c: custom checklist (local, per-day) ─────────────────────────────────
+    "checklist_title": {
+        "bn": "নিজের তালিকা",
+        "en": "My checklist",
+        "ar": "قائمتي",
+    },
+    "checklist_hint": {
+        "bn": "নতুন কাজ লিখুন",
+        "en": "Add a task",
+        "ar": "أضف مهمة",
+    },
+    "checklist_add": {"bn": "যোগ করুন", "en": "Add", "ar": "إضافة"},
+    "checklist_remove": {"bn": "মুছুন", "en": "Delete", "ar": "حذف"},
+    "checklist_remove_confirm": {
+        "bn": "কাজটি মুছে ফেলা হবে?",
+        "en": "Delete this item?",
+        "ar": "حذف هذا البند؟",
+    },
+    "checklist_local_note": {
+        "bn": "শুধু এই ডিভাইসে সংরক্ষিত",
+        "en": "Stays on this device only",
+        "ar": "يبقى على هذا الجهاز فقط",
+    },
+    # ── W4c: tilawat beginner ramp + fard/sunnah/nafl group headers ────────────
+    "group_fard": {
+        "bn": "ফরয নামাজ",
+        "en": "Fard prayers",
+        "ar": "الفرائض",
+    },
+    "group_salah_sunnah": {
+        "bn": "সালাতের সুন্নত",
+        "en": "Sunnah of salah",
+        "ar": "سنن الصلاة",
+    },
+    "group_nafl": {
+        "bn": "নফল নামাজ",
+        "en": "Nafl prayers",
+        "ar": "النوافل",
+    },
+    "tilawat_begin_chip": {"bn": "শুরু", "en": "Start", "ar": "بداية"},
+    "tilawat_begin_copy": {
+        "bn": "আজ ৫ মিনিট দিয়ে শুরু করুন — ধীরে ধীরে অভ্যাস হয়ে যাবে ইনশাআল্লাহ",
+        "en": "Start with 5 minutes today — it will become a habit, in shaa Allah",
+        "ar": "ابدأ بخمس دقائق اليوم — ستصبح عادة بإذن الله",
+    },
+    "tilawat_ramp_day": {"bn": "দিন", "en": "Day", "ar": "يوم"},
+    "tilawat_begin_minutes": {
+        "bn": "মিনিট",
+        "en": "minutes",
+        "ar": "دقائق",
+    },
+    # ── W4c: leaderboard percentile bands (config-gated) ───────────────────────
+    "leaderboard_title": {
+        "bn": "লিডারবোর্ড",
+        "en": "Leaderboard",
+        "ar": "لوحة الصدارة",
+    },
+    "leaderboard_points": {
+        "bn": "পয়েন্ট",
+        "en": "points",
+        "ar": "نقطة",
+    },
+    "leaderboard_window_days": {
+        "bn": "দিনের হিসাব",
+        "en": "days window",
+        "ar": "أيام الحساب",
+    },
+    "leaderboard_band_top10": {
+        "bn": "শীর্ষ ১০%",
+        "en": "Top 10%",
+        "ar": "أعلى ١٠٪",
+    },
+    "leaderboard_band_top25": {
+        "bn": "শীর্ষ ২৫%",
+        "en": "Top 25%",
+        "ar": "أعلى ٢٥٪",
+    },
+    "leaderboard_band_top50": {
+        "bn": "শীর্ষ ৫০%",
+        "en": "Top 50%",
+        "ar": "أعلى ٥٠٪",
+    },
+    "leaderboard_band_top75": {
+        "bn": "শীর্ষ ৭৫%",
+        "en": "Top 75%",
+        "ar": "أعلى ٧٥٪",
+    },
+    "leaderboard_band_bottom": {
+        "bn": "নিচের ২৫%",
+        "en": "Bottom 25%",
+        "ar": "أدنى ٢٥٪",
+    },
 }
 
 

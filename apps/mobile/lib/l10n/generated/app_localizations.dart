@@ -826,6 +826,48 @@ abstract class AppLocalizations {
   /// **'তিলাওয়াত আমলনামায় যোগ হয়েছে'**
   String get quran_tilawat_logged;
 
+  /// No description provided for @quran_goto_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াতে যান'**
+  String get quran_goto_ayah;
+
+  /// No description provided for @quran_goto_ayah_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াত নম্বর লিখুন'**
+  String get quran_goto_ayah_hint;
+
+  /// No description provided for @quran_invalid_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াত নম্বরটি সঠিক নয়'**
+  String get quran_invalid_ayah;
+
+  /// No description provided for @quran_reciter.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাদক নির্বাচন করুন'**
+  String get quran_reciter;
+
+  /// No description provided for @quran_play_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াত শুনুন'**
+  String get quran_play_ayah;
+
+  /// No description provided for @quran_stop_audio.
+  ///
+  /// In bn, this message translates to:
+  /// **'অডিও বন্ধ করুন'**
+  String get quran_stop_audio;
+
+  /// No description provided for @quran_audio_error.
+  ///
+  /// In bn, this message translates to:
+  /// **'অডিও চালানো যায়নি — ইন্টারনেট সংযোগ দেখে নিন'**
+  String get quran_audio_error;
+
   /// No description provided for @adhkar_morning.
   ///
   /// In bn, this message translates to:
@@ -1903,7 +1945,7 @@ abstract class AppLocalizations {
   /// No description provided for @qibla_dial_hint.
   ///
   /// In bn, this message translates to:
-  /// **'ডায়াল ঘোরান — তীরটি যেন উপরে থাকে'**
+  /// **'ডায়াল ঘুরিয়ে উ (N) চিহ্নটি উত্তর দিকে আনুন — তীর তখন কিবলার দিক দেখাবে'**
   String get qibla_dial_hint;
 
   /// No description provided for @qibla_dial.
@@ -2547,6 +2589,798 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'লাইভ চেকলিস্ট'**
   String get dawah_req_live_action;
+
+  /// No description provided for @bell_minutes_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঘণ্টির সময় নির্ধারণ'**
+  String get bell_minutes_title;
+
+  /// No description provided for @bell_minutes_before.
+  ///
+  /// In bn, this message translates to:
+  /// **'ওয়াক্তের আগে (মিনিট)'**
+  String get bell_minutes_before;
+
+  /// No description provided for @bell_minutes_after.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজের পরে (মিনিট)'**
+  String get bell_minutes_after;
+
+  /// No description provided for @bell_minutes_reset.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিসেট'**
+  String get bell_minutes_reset;
+
+  /// No description provided for @bell_minutes_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঠিক আছে'**
+  String get bell_minutes_done;
+
+  /// No description provided for @sync_sheet_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'সিঙ্ক অবস্থা'**
+  String get sync_sheet_title;
+
+  /// No description provided for @sync_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনই সিঙ্ক করুন'**
+  String get sync_now;
+
+  /// No description provided for @sync_last_synced.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ সিঙ্ক'**
+  String get sync_last_synced;
+
+  /// No description provided for @sync_never.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো সিঙ্ক হয়নি'**
+  String get sync_never;
+
+  /// No description provided for @sync_failed_entries.
+  ///
+  /// In bn, this message translates to:
+  /// **'সমস্যায় পড়া এন্ট্রি'**
+  String get sync_failed_entries;
+
+  /// No description provided for @sync_failed_short.
+  ///
+  /// In bn, this message translates to:
+  /// **'সমস্যা'**
+  String get sync_failed_short;
+
+  /// No description provided for @sync_dead_discard.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাদ দিন'**
+  String get sync_dead_discard;
+
+  /// No description provided for @sync_error_unexpected.
+  ///
+  /// In bn, this message translates to:
+  /// **'অপ্রত্যাশিত সমস্যা — আবার চেষ্টা করুন'**
+  String get sync_error_unexpected;
+
+  /// No description provided for @gps_find_city.
+  ///
+  /// In bn, this message translates to:
+  /// **'GPS দিয়ে খুঁজুন'**
+  String get gps_find_city;
+
+  /// No description provided for @gps_find_city_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার নিকটতম জেলা স্বয়ংক্রিয়ভাবে খুঁজে নেওয়া হবে'**
+  String get gps_find_city_hint;
+
+  /// No description provided for @gps_locating.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থান নেওয়া হচ্ছে…'**
+  String get gps_locating;
+
+  /// No description provided for @gps_your_location.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান'**
+  String get gps_your_location;
+
+  /// No description provided for @gps_approx.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমান'**
+  String get gps_approx;
+
+  /// No description provided for @gps_approx_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিকটতম তালিকাভুক্ত শহর থেকে অনেক দূরে'**
+  String get gps_approx_note;
+
+  /// No description provided for @gps_tap_confirm.
+  ///
+  /// In bn, this message translates to:
+  /// **'ট্যাপ করে নিশ্চিত করুন'**
+  String get gps_tap_confirm;
+
+  /// No description provided for @gps_permission_denied.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দেওয়া হয়নি — তালিকা থেকে শহর বেছে নিন'**
+  String get gps_permission_denied;
+
+  /// No description provided for @gps_permission_denied_forever.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি বন্ধ আছে — সেটিংস থেকে অনুমতি দিন'**
+  String get gps_permission_denied_forever;
+
+  /// No description provided for @gps_open_settings.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেটিংস খুলুন'**
+  String get gps_open_settings;
+
+  /// No description provided for @gps_service_off.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনের লোকেশন বন্ধ আছে'**
+  String get gps_service_off;
+
+  /// No description provided for @gps_open_location_settings.
+  ///
+  /// In bn, this message translates to:
+  /// **'লোকেশন চালু করুন'**
+  String get gps_open_location_settings;
+
+  /// No description provided for @gps_unavailable.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থান পাওয়া যায়নি — আবার চেষ্টা করুন'**
+  String get gps_unavailable;
+
+  /// No description provided for @unit_m.
+  ///
+  /// In bn, this message translates to:
+  /// **'মি'**
+  String get unit_m;
+
+  /// No description provided for @qibla_compass_heading.
+  ///
+  /// In bn, this message translates to:
+  /// **'বর্তমান দিক'**
+  String get qibla_compass_heading;
+
+  /// No description provided for @qibla_calibration_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কম্পাস ক্যালিব্রেট করুন'**
+  String get qibla_calibration_title;
+
+  /// No description provided for @qibla_calibration_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনটি বাতাসে ৮ আকৃতিতে কয়েকবার ঘোরান, তারপর আবার দেখুন'**
+  String get qibla_calibration_hint;
+
+  /// No description provided for @qibla_compass_unavailable.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই ফোনে কম্পাস পাওয়া যায়নি — নিচের ম্যানুয়াল ডায়াল ব্যবহার করুন'**
+  String get qibla_compass_unavailable;
+
+  /// No description provided for @mosques_near_me.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার কাছাকাছি'**
+  String get mosques_near_me;
+
+  /// No description provided for @mosques_from_city.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই শহর থেকে'**
+  String get mosques_from_city;
+
+  /// No description provided for @mosques_from_location.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান থেকে'**
+  String get mosques_from_location;
+
+  /// No description provided for @mosques_use_city.
+  ///
+  /// In bn, this message translates to:
+  /// **'শহর থেকে দেখুন'**
+  String get mosques_use_city;
+
+  /// No description provided for @mosque_direction.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিক'**
+  String get mosque_direction;
+
+  /// No description provided for @more_autosilent.
+  ///
+  /// In bn, this message translates to:
+  /// **'অটো-সাইলেন্ট'**
+  String get more_autosilent;
+
+  /// No description provided for @autosilent_explain_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'জামাতের সময় ফোন নিঃশব্দ'**
+  String get autosilent_explain_title;
+
+  /// No description provided for @autosilent_explain_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতি ওয়াক্তের শুরুতে ফোন সাইলেন্ট (শুধু জরুরি) হয়ে যায় এবং নির্দিষ্ট সময় পর আগের অবস্থায় ফিরে আসে। এর জন্য অ্যান্ড্রয়েডের ‘বিরক্ত না করুন’ (Do Not Disturb) অনুমতি দরকার।'**
+  String get autosilent_explain_body;
+
+  /// No description provided for @autosilent_dnd_status.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতির অবস্থা'**
+  String get autosilent_dnd_status;
+
+  /// No description provided for @autosilent_granted.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দেওয়া আছে'**
+  String get autosilent_granted;
+
+  /// No description provided for @autosilent_not_granted.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি নেই'**
+  String get autosilent_not_granted;
+
+  /// No description provided for @autosilent_grant.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দিন'**
+  String get autosilent_grant;
+
+  /// No description provided for @autosilent_recheck.
+  ///
+  /// In bn, this message translates to:
+  /// **'আবার চেক করুন'**
+  String get autosilent_recheck;
+
+  /// No description provided for @autosilent_return_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দিয়ে অ্যাপে ফিরে এলে অবস্থা নিজেই হালনাগাদ হবে'**
+  String get autosilent_return_hint;
+
+  /// No description provided for @autosilent_master.
+  ///
+  /// In bn, this message translates to:
+  /// **'অটো-সাইলেন্ট চালু'**
+  String get autosilent_master;
+
+  /// No description provided for @autosilent_minutes_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাইলেন্ট থাকার সময়'**
+  String get autosilent_minutes_label;
+
+  /// No description provided for @autosilent_minutes_suffix.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট সাইলেন্ট'**
+  String get autosilent_minutes_suffix;
+
+  /// No description provided for @autosilent_waqts_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোন কোন ওয়াক্তে চালু হবে'**
+  String get autosilent_waqts_title;
+
+  /// No description provided for @autosilent_reboot_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোন রিস্টার্টের পর অ্যাপ একবার খুললে সময়সূচি আবার চালু হয়ে যায়।'**
+  String get autosilent_reboot_note;
+
+  /// No description provided for @more_donate.
+  ///
+  /// In bn, this message translates to:
+  /// **'দান করুন'**
+  String get more_donate;
+
+  /// No description provided for @donation_open_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'লিংক খোলা যায়নি'**
+  String get donation_open_failed;
+
+  /// No description provided for @referral_by.
+  ///
+  /// In bn, this message translates to:
+  /// **'রেফার করেছেন'**
+  String get referral_by;
+
+  /// No description provided for @header_notifications.
+  ///
+  /// In bn, this message translates to:
+  /// **'নোটিফিকেশন'**
+  String get header_notifications;
+
+  /// No description provided for @header_reminders.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিমাইন্ডার'**
+  String get header_reminders;
+
+  /// No description provided for @notifications_guest_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাইন ইন করলে উসরা ঘোষণা, সাপ্তাহিক রিভিউ ও লাইভ রিমাইন্ডার এখানে দেখা যাবে।'**
+  String get notifications_guest_hint;
+
+  /// No description provided for @notifications_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো ঘোষণা নেই'**
+  String get notifications_empty;
+
+  /// No description provided for @notifications_announcements.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঘোষণা'**
+  String get notifications_announcements;
+
+  /// No description provided for @notifications_live.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ অনুষ্ঠান'**
+  String get notifications_live;
+
+  /// No description provided for @reminders_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো রিমাইন্ডার নেই'**
+  String get reminders_empty;
+
+  /// No description provided for @reminder_mark_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন করুন'**
+  String get reminder_mark_done;
+
+  /// No description provided for @reminder_due.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন'**
+  String get reminder_due;
+
+  /// No description provided for @reminder_overdue.
+  ///
+  /// In bn, this message translates to:
+  /// **'মেয়াদ পেরিয়েছে'**
+  String get reminder_overdue;
+
+  /// No description provided for @reminder_upcoming.
+  ///
+  /// In bn, this message translates to:
+  /// **'আসছে'**
+  String get reminder_upcoming;
+
+  /// No description provided for @contact_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোগাযোগ'**
+  String get contact_title;
+
+  /// No description provided for @contact_call.
+  ///
+  /// In bn, this message translates to:
+  /// **'কল করুন'**
+  String get contact_call;
+
+  /// No description provided for @contact_website.
+  ///
+  /// In bn, this message translates to:
+  /// **'ওয়েবসাইট'**
+  String get contact_website;
+
+  /// No description provided for @contact_call_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'কল করা যায়নি'**
+  String get contact_call_failed;
+
+  /// No description provided for @quick_access.
+  ///
+  /// In bn, this message translates to:
+  /// **'দ্রুত প্রবেশ'**
+  String get quick_access;
+
+  /// No description provided for @quick_quran_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূরা ও অনুবাদ'**
+  String get quick_quran_desc;
+
+  /// No description provided for @quick_duas_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'দৈনন্দিন দোয়া'**
+  String get quick_duas_desc;
+
+  /// No description provided for @quick_amal_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুহাসাবা ডায়েরি'**
+  String get quick_amal_desc;
+
+  /// No description provided for @quick_live_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'সরাসরি অনুষ্ঠান'**
+  String get quick_live_desc;
+
+  /// No description provided for @most_used.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বাধিক ব্যবহৃত'**
+  String get most_used;
+
+  /// No description provided for @most_used_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'গত ৩০ দিনে সবচেয়ে বেশি লেখা আমলগুলো এখানে দেখা যাবে — আজকের ডায়েরি থেকে শুরু করুন'**
+  String get most_used_empty;
+
+  /// No description provided for @most_used_log_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ লিখুন'**
+  String get most_used_log_today;
+
+  /// No description provided for @most_used_days.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিন'**
+  String get most_used_days;
+
+  /// No description provided for @countdown_to_schedule.
+  ///
+  /// In bn, this message translates to:
+  /// **'সময়সূচি দেখুন'**
+  String get countdown_to_schedule;
+
+  /// No description provided for @next_bell_chip.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরবর্তী বেল'**
+  String get next_bell_chip;
+
+  /// No description provided for @live_next.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরবর্তী লাইভ'**
+  String get live_next;
+
+  /// No description provided for @live_join_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'দেখতে ট্যাপ করুন'**
+  String get live_join_hint;
+
+  /// No description provided for @ilm_courses_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'শেখার কোর্স ও লেসন'**
+  String get ilm_courses_desc;
+
+  /// No description provided for @ilm_quizzes_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'আত্মমূল্যায়ন কুইজ'**
+  String get ilm_quizzes_desc;
+
+  /// No description provided for @goals_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার লক্ষ্য'**
+  String get goals_title;
+
+  /// No description provided for @goals_new.
+  ///
+  /// In bn, this message translates to:
+  /// **'নতুন লক্ষ্য'**
+  String get goals_new;
+
+  /// No description provided for @goals_amal_picker.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল নির্বাচন করুন'**
+  String get goals_amal_picker;
+
+  /// No description provided for @goals_amal_short.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল'**
+  String get goals_amal_short;
+
+  /// No description provided for @goals_title_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্যের নাম'**
+  String get goals_title_label;
+
+  /// No description provided for @goals_target_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য মাত্রা (ঐচ্ছিক)'**
+  String get goals_target_label;
+
+  /// No description provided for @goals_note_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'নোট (ঐচ্ছিক)'**
+  String get goals_note_label;
+
+  /// No description provided for @goals_submit.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রস্তাব করুন'**
+  String get goals_submit;
+
+  /// No description provided for @goals_signin_needed.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য সংরক্ষণ ও অনুমোদনের জন্য সাইন-ইন দরকার'**
+  String get goals_signin_needed;
+
+  /// No description provided for @goals_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো লক্ষ্য নেই — প্রথম লক্ষ্য ঠিক করুন'**
+  String get goals_empty;
+
+  /// No description provided for @goals_open_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'খোলা লক্ষ্য'**
+  String get goals_open_label;
+
+  /// No description provided for @goal_status_proposed.
+  ///
+  /// In bn, this message translates to:
+  /// **'অপেক্ষমাণ'**
+  String get goal_status_proposed;
+
+  /// No description provided for @goal_status_approved.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমোদিত'**
+  String get goal_status_approved;
+
+  /// No description provided for @goal_status_rejected.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল'**
+  String get goal_status_rejected;
+
+  /// No description provided for @goal_status_completed.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন'**
+  String get goal_status_completed;
+
+  /// No description provided for @goal_status_withdrawn.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রত্যাহৃত'**
+  String get goal_status_withdrawn;
+
+  /// No description provided for @goals_reject_reason_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'কারণ'**
+  String get goals_reject_reason_label;
+
+  /// No description provided for @goals_queue_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য অনুমোদনের অপেক্ষায়'**
+  String get goals_queue_title;
+
+  /// No description provided for @goals_queue_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোনো অপেক্ষমাণ লক্ষ্য নেই'**
+  String get goals_queue_empty;
+
+  /// No description provided for @goals_approve.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমোদন'**
+  String get goals_approve;
+
+  /// No description provided for @goals_reject.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল'**
+  String get goals_reject;
+
+  /// No description provided for @goals_reject_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিলের কারণ লিখুন (ঐচ্ছিক)'**
+  String get goals_reject_hint;
+
+  /// No description provided for @goals_member_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'সদস্য'**
+  String get goals_member_label;
+
+  /// No description provided for @goals_remove.
+  ///
+  /// In bn, this message translates to:
+  /// **'সরান'**
+  String get goals_remove;
+
+  /// No description provided for @goals_remove_confirm.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্যটি তালিকা থেকে সরানো হবে?'**
+  String get goals_remove_confirm;
+
+  /// No description provided for @goals_proposed_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য প্রস্তাবিত — উসরা প্রধানের অনুমোদনের অপেক্ষায়'**
+  String get goals_proposed_toast;
+
+  /// No description provided for @goals_approved_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমোদিত হয়েছে'**
+  String get goals_approved_toast;
+
+  /// No description provided for @goals_rejected_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল হয়েছে'**
+  String get goals_rejected_toast;
+
+  /// No description provided for @checklist_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজের তালিকা'**
+  String get checklist_title;
+
+  /// No description provided for @checklist_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'নতুন কাজ লিখুন'**
+  String get checklist_hint;
+
+  /// No description provided for @checklist_add.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোগ করুন'**
+  String get checklist_add;
+
+  /// No description provided for @checklist_remove.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুছুন'**
+  String get checklist_remove;
+
+  /// No description provided for @checklist_remove_confirm.
+  ///
+  /// In bn, this message translates to:
+  /// **'কাজটি মুছে ফেলা হবে?'**
+  String get checklist_remove_confirm;
+
+  /// No description provided for @checklist_local_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'শুধু এই ডিভাইসে সংরক্ষিত'**
+  String get checklist_local_note;
+
+  /// No description provided for @group_fard.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফরয নামাজ'**
+  String get group_fard;
+
+  /// No description provided for @group_salah_sunnah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সালাতের সুন্নত'**
+  String get group_salah_sunnah;
+
+  /// No description provided for @group_nafl.
+  ///
+  /// In bn, this message translates to:
+  /// **'নফল নামাজ'**
+  String get group_nafl;
+
+  /// No description provided for @tilawat_begin_chip.
+  ///
+  /// In bn, this message translates to:
+  /// **'শুরু'**
+  String get tilawat_begin_chip;
+
+  /// No description provided for @tilawat_begin_copy.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ ৫ মিনিট দিয়ে শুরু করুন — ধীরে ধীরে অভ্যাস হয়ে যাবে ইনশাআল্লাহ'**
+  String get tilawat_begin_copy;
+
+  /// No description provided for @tilawat_ramp_day.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিন'**
+  String get tilawat_ramp_day;
+
+  /// No description provided for @tilawat_begin_minutes.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট'**
+  String get tilawat_begin_minutes;
+
+  /// No description provided for @leaderboard_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'লিডারবোর্ড'**
+  String get leaderboard_title;
+
+  /// No description provided for @leaderboard_points.
+  ///
+  /// In bn, this message translates to:
+  /// **'পয়েন্ট'**
+  String get leaderboard_points;
+
+  /// No description provided for @leaderboard_window_days.
+  ///
+  /// In bn, this message translates to:
+  /// **'দিনের হিসাব'**
+  String get leaderboard_window_days;
+
+  /// No description provided for @leaderboard_band_top10.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ১০%'**
+  String get leaderboard_band_top10;
+
+  /// No description provided for @leaderboard_band_top25.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ২৫%'**
+  String get leaderboard_band_top25;
+
+  /// No description provided for @leaderboard_band_top50.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ৫০%'**
+  String get leaderboard_band_top50;
+
+  /// No description provided for @leaderboard_band_top75.
+  ///
+  /// In bn, this message translates to:
+  /// **'শীর্ষ ৭৫%'**
+  String get leaderboard_band_top75;
+
+  /// No description provided for @leaderboard_band_bottom.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিচের ২৫%'**
+  String get leaderboard_band_bottom;
 }
 
 class _AppLocalizationsDelegate
