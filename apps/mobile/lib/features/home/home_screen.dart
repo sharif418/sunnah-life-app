@@ -14,6 +14,7 @@ import '../../core/bn_digits.dart';
 import '../../core/bell_schedule.dart';
 import '../../core/calendars.dart' show formatTimeBn;
 import '../../core/cities.dart';
+import '../../core/amal_engine.dart' show isAmalDay;
 import '../../core/date_keys.dart';
 import '../../core/most_used.dart';
 import '../../core/prayer_engine.dart';
@@ -23,8 +24,11 @@ import '../../models/domain.dart';
 import '../../state/amal_state.dart';
 import '../../state/prayer_state.dart';
 import '../../state/providers.dart';
+import '../../state/remote_state.dart'
+    show effectiveHijriAdjustProvider, coursePackProvider, quizPackProvider, liveProvider;
 import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
+import '../amal/amal_widgets.dart' show CompletionRing;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
 import 'home_sections.dart';
@@ -298,6 +302,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // ── দ্রুত প্রবেশ (C-W4b) ──
             const _QuickAccessGrid(),
 
+            // ── Ilm (C-W4b) ──
+            const _IlmSection(),
+
+            // ── Today's amal preview (C-W4b) ──
+            const _AmalPreviewSection(),
+
+            // ── Live preview (C-W4b) — public data; hidden when nothing
+            // upcoming or while it loads/offline-fails.
+            const _LivePreviewSection(),
+
             const SizedBox(height: SLSpacing.s24),
             Center(
               child: Text(
@@ -438,6 +452,356 @@ class _QuickAccessGrid extends StatelessWidget {
       ],
     );
   }
+}
+
+// ── সব দেখুন action (see_all) ─────────────────────────────────────────────
+
+/// The SectionHeader action for sections that have a destination —
+/// 'সব দেখুন →' (44px target, direction-aware caret).
+class _SeeAllButton extends StatelessWidget {
+  const _SeeAllButton(this.route);
+
+  final String route;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        minimumSize: const Size(44, SLSpacing.minTapTarget),
+        padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s8),
+      ),
+      onPressed: () => context.push(route),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            context.t('see_all'),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 2),
+          DirectionalIcon(
+            PhosphorIconsBold.caretRight,
+            size: 14,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Ilm (courses + quizzes) ────────────────────────────────────────────────
+
+class _IlmSection extends ConsumerWidget {
+  const _IlmSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final bn = context.isBn;
+    // The existing lightweight packs (bundled-asset fallback when offline)
+    // — counts only; no new API surface.
+    final courseCount = ref
+        .watch(coursePackProvider)
+        .maybeWhen(data: (c) => c.length, orElse: () => null);
+    final quizCount = ref
+        .watch(quizPackProvider)
+        .maybeWhen(data: (q) => q.length, orElse: () => null);
+
+    Widget card({
+      required IconData icon,
+      required String title,
+      required String desc,
+      required int? count,
+      required String countUnit,
+      required String route,
+    }) {
+      return AppCard(
+        onTap: () => context.push(route),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: theme.colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 22, color: theme.colorScheme.primary),
+            ),
+            const SizedBox(height: SLSpacing.s8),
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: SLSpacing.s4),
+            Text(
+              desc,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (count != null && count > 0) ...[
+              const SizedBox(height: SLSpacing.s4),
+              Text(
+                '${bn ? toBn(count) : '$count'} $countUnit',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          context.t('tab_ilm'),
+          icon: PhosphorIconsRegular.graduationCap,
+          action: _SeeAllButton('/ilm'),
+        ),
+        Row(
+          children: [
+            Expanded(
+              child: card(
+                icon: PhosphorIconsFill.graduationCap,
+                title: context.t('ilm_courses'),
+                desc: context.t('ilm_courses_desc'),
+                count: courseCount,
+                countUnit: context.t('ilm_courses'),
+                route: '/ilm/courses',
+              ),
+            ),
+            const SizedBox(width: SLSpacing.s8),
+            Expanded(
+              child: card(
+                icon: PhosphorIconsFill.chartPieSlice,
+                title: context.t('ilm_quizzes'),
+                desc: context.t('ilm_quizzes_desc'),
+                count: quizCount,
+                countUnit: context.t('ilm_quizzes'),
+                route: '/ilm/quizzes',
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+// ── Today's amal preview ────────────────────────────────────────────────────
+
+class _AmalPreviewSection extends ConsumerWidget {
+  const _AmalPreviewSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final bn = context.isBn;
+    final profile = ref.watch(profileProvider);
+    final defs =
+        ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
+    final amal = ref.watch(amalProvider);
+    final today = dateKey(DateTime.now());
+    // Same grouping rule as today_screen: effective hijri adjust (user ±2 +
+    // admin ±2) decides ayyam-beez cadence membership.
+    final todayDefs = defs
+        .where(
+          (d) => isAmalDay(
+            d,
+            today,
+            hijriAdjust: ref.watch(effectiveHijriAdjustProvider),
+          ),
+        )
+        .toList();
+    final entries = [
+      for (final day in amal.entries.keys)
+        for (final e in (amal.entries[day] ?? const {}).values) e,
+    ];
+    final preview = todayAmalPreview(
+      entries,
+      todayDefs,
+      profile.category,
+      today,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          context.t('tab_amal'),
+          icon: PhosphorIconsRegular.listChecks,
+          action: _SeeAllButton('/amal'),
+        ),
+        AppCard(
+          key: const ValueKey('home_amal_preview'),
+          onTap: () => context.push('/amal'),
+          child: Row(
+            children: [
+              CompletionRing(
+                pct: preview.pct,
+                label: context.t('amal_today'),
+                size: 64,
+                bengali: bn,
+              ),
+              const SizedBox(width: SLSpacing.s16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${bn ? toBn(preview.completed) : preview.completed}/'
+                      '${bn ? toBn(preview.total) : preview.total} '
+                      '${context.t('done')}',
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: SLSpacing.s4),
+                    Text(
+                      context.t('today_progress'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const DirectionalIcon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ── Live preview ────────────────────────────────────────────────────────────
+
+class _LivePreviewSection extends ConsumerWidget {
+  const _LivePreviewSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    // Live is PUBLIC data; the section stays hidden while loading/offline
+    // and when nothing is upcoming (home degrades like the other sections
+    // do for guests — the full list lives at /more/live).
+    final upcoming = ref.watch(liveProvider).maybeWhen(
+          data: (programs) =>
+              (programs.where((p) => p.status == 'upcoming').toList()
+                    ..sort((a, b) => a.startsAt.compareTo(b.startsAt)))
+                  .firstOrNull,
+          orElse: () => null,
+        );
+    if (upcoming == null) return const SizedBox.shrink();
+    final p = upcoming;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(
+          context.t('more_live'),
+          icon: PhosphorIconsRegular.broadcast,
+          action: _SeeAllButton('/more/live'),
+        ),
+        AppCard(
+          key: const ValueKey('home_live_preview'),
+          onTap: () => context.push('/more/live'),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  PhosphorIconsRegular.broadcast,
+                  size: 22,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: SLSpacing.s12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          key: const ValueKey('home_live_chip'),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: SLSpacing.s8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: SLColors.gold.withValues(alpha: 0.18),
+                            borderRadius: SLRadius.brPill,
+                          ),
+                          child: Text(
+                            context.t('live_next'),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: SLColors.goldDeep,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: SLSpacing.s4),
+                    Text(
+                      p.titleBn,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: SLSpacing.s4),
+                    Text(
+                      _liveWhen(p.startsAt),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      context.t('live_join_hint'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Day/time line in the Live screen's convention (ISO → 'YYYY-MM-DD HH:MM'),
+  /// length-guarded so a short/odd server string never crashes home.
+  static String _liveWhen(String startsAt) => startsAt.length >= 16
+      ? startsAt.substring(0, 16).replaceAll('T', ' ')
+      : startsAt;
 }
 
 // ── Post-prayer prompt (20 min after the waqt begins) ───────────────────────
