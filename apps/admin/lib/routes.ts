@@ -14,7 +14,15 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Route prefixes whose whole API surface is full_admin-only. */
-const FULL_ADMIN_PREFIXES = ["/users", "/support", "/catalog", "/audit", "/content", "/settings"];
+const FULL_ADMIN_PREFIXES = [
+  "/users",
+  "/support",
+  "/catalog",
+  "/audit",
+  "/content",
+  "/settings",
+  "/level-rules", // W4h editor — GET/PUT/DELETE /api/admin/level-rules is full_admin-only
+];
 
 /** Is this pathname accessible for the role? (Assumes an authenticated
  * supervisor — the session layer refuses everyone below.) */
