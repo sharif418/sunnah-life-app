@@ -1297,3 +1297,6 @@ Stage Summary:
 - W4c-UI complete — five deliverables shipped: (1) goals lifecycle UI (propose sheet → status chips incl. rejected reason + toasts), (2) the usrah-head approval queue in the dawah tabs (approve/reject + reason sheet; daee boundary), (3) the local per-day custom checklist, (4) the tilawat beginner ramp card + exercise amal + fard/salah-sunnah/nafl group headers, (5) the config-gated leaderboard percentile band card. Overflow fix included. CI proof appended to docs/AUDIT.md.
 - Follow-ups for the next session: web dawah-view queue integration (the queue is mobile-first; the web dawah view doesn't surface it); the checklist is local-only BY DESIGN (offline-first, no API surface — a sync surface would be a new mission decision); W4d–W4j NOT started.
 
+Addendum:
+- [C-W4c-CI-FIX] AUDIT citation corrected — the UI chain is proven by run 36539079890 (https://github.com/sharif418/sunnah-life-app/actions/runs/36539079890, head 137ab45, all 10 jobs green incl. Flutter — analyze · test · debug APK); 36529174552 covers only the backend (its head c80d5af predates the six UI commits).
+
