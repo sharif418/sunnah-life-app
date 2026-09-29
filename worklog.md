@@ -1417,3 +1417,18 @@ Work Log:
 
 Stage Summary:
 - W4e COMPLETE: branded 1080×1350 referral PNG with preview sheet + native image share (Android) + text fallback, and the real madu tree — both over the offline cache. Head: the test commit after c11f0e7-series (see git log).
+
+---
+Task ID: W4f-a (agent landed the Phosphor migration + golden warm-up; the lead shipped the transitions + texture + verification)
+Agent: W4f-a + lead
+Task: Design-system craft core — Phosphor migration, shared page transitions, hero geometric texture, motion/haptics/line-height verification.
+
+Work Log:
+- Agent (ca91715): the FULL Material→Phosphor icon migration across the feature screens (glyph table additions in design/phosphor_icons.dart where needed) + test/golden_fonts.dart — the FontLoader prewarm so goldens render the REAL Phosphor glyph shapes (extends the suite's pixel truth to icons; all 12 goldens regenerated, 303/303 verified by the lead).
+- Lead (a6cb320): slFadePage — ONE shared fade-through for all 32 pushed sub-routes (SLMotion.base in / fast out, decelerate/accelerate, 0.98→1.0 scale); the five tab roots stay instant by design; entry flows keep plain builders. Navigation/smoke/rtl/deep-link tests green.
+- Lead (775927d-ish texture commit): SLGeometricTexture (design/texture.dart) — eight-point-star khatam lattice, plain line geometry, no assets/packages, const painter; 5% foreground over the home ring hero, corner-clipped. Ring test finder updated (painter-driven CustomPaint only). Home golden regenerated; other four byte-identical.
+- Verified already-done: appBarTheme token-built (elevation 0, surface colors, family via textTheme — the 30 pushed AppBars inherit it); SLMotion tokens exist and are now ACTUALLY used by the transition; body/bodyLarge carry height 1.6 (the ≥1.6 Bengali rule); haptics on TriStateChips/AmalToggle/CountStepper/tilawat ramp + the bottom bar.
+- Gates (verbatim, apps/mobile): flutter analyze → "No issues found! (ran in 1.7s)"; flutter test → "00:52 +303: All tests passed!".
+
+Stage Summary:
+- W4f CORE complete: one icon set everywhere (goldens prove the glyphs), one transition everywhere pushed, the hero texture, motion tokens in real use. Remaining for W4f-b (next): illustrated empty/error/offline states, dark-mode tuning pass, explicit 360×640 + 1.3× overflow sweep, Widgetbook entries.
