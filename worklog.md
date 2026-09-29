@@ -1394,3 +1394,26 @@ Work Log:
 
 Stage Summary:
 - W4d COMPLETE across both halves: backend (W4d-API: support threads + usrah join requests + admin inbox/queue, 314 jest) + mobile UI (this section: sectioned §4.3 More + 6 new screens/flows + detox channel, 293 flutter tests). Every §4.3 item has a home: Donate+Foundation (contacts) top → worship tools (zakat/qibla/mosque/masala/live/autosilent/detox) → knowledge (99 names/Islamic names/70 branches) → support (support threads/usrah join/feedback/FAQ) → app (about/share/groups). Head for the wave: 3afd454.
+
+---
+Task ID: W4e (agent landed 2 commits + the feature files; the lead repaired the test harness approach + a real sheet-layout defect and shipped the tail)
+Agent: W4e + lead
+Task: Dawah craft — the referral share card as a branded PNG + the real madu tree view.
+
+Work Log:
+- Agent commits: b1c4b81 (6 l10n keys ×3: card title/note/tagline/toast/share-now + more), 6e5bd71 (shareFile channel: ACTION_SEND image/* + EXTRA_STREAM + FileProvider exposing ONLY <cache>/share — Kotlin + manifest + res/xml/file_paths).
+- Feature files landed by the agent, finished + fixed by the lead:
+  - referral_card.dart — the 1080×1350 fixed design surface, token branding, no-text-scaling; stage/capture split for testability.
+  - referral_share_sheet.dart — live preview + শেয়ার করুন; REAL DEFECT the tests caught: the preview Column overflowed 359px (no height budget) — fixed with a bounded 85%-height modal + Expanded preview before anything was committed.
+  - madu_tree.dart — indented tree with CustomPainter connector rails, gender-tinted avatars, level chips, relative last-active; dawah_screen.dart wired (both share entry points + the tree replaces the flat list).
+- Lead's test-harness work (the agent's draft tests hung; root causes all found + fixed):
+  1. Directory.createTemp (async IO) at test start starves under fake-async → createTempSync everywhere.
+  2. toImage/toByteData/decodeImageFromList are REAL-async: restructured to the golden-matcher discipline (toImage called in the fake zone, awaited + PNG-encoded + decoded INSIDE tester.runAsync — mirrors flutter_test's own _matchers_io); added the @visibleForTesting referralCardCapture seam so sheet-UX tests stay hermetic while the real capture has its own dedicated runAsync test.
+  3. Sync PNG write in production (a real-async write also starves test beds).
+  4. Scrollable.first on the dawah screen is the TabBarView's horizontal PageView — the tree/empty tests now scope to the vertical ListView.
+  5. Rails finder looks through the Positioned.fill wrappers.
+- Gates (verbatim, apps/mobile): flutter analyze → "No issues found! (ran in 2.0s)"; flutter test → "00:51 +303: All tests passed!" (303 = 293 + 10 new; card golden NEW + dawah golden regenerated 38227 → 46834 bytes over the tree layout; other four tab goldens byte-identical).
+- Honest notes: iOS keeps the text-share fallback (no shareFile handler — noted in-code); the tree is read-only (API depth without parentage — noted in madu_tree.dart); FileProvider exposes only the share subdirectory.
+
+Stage Summary:
+- W4e COMPLETE: branded 1080×1350 referral PNG with preview sheet + native image share (Android) + text fallback, and the real madu tree — both over the offline cache. Head: the test commit after c11f0e7-series (see git log).
