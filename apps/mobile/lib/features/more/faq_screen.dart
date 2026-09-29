@@ -23,15 +23,21 @@ class FaqEntry {
 /// Asset loader — `rootBundle` in the app; tests inject `dart:io` reads
 /// (the QuranRepository seam: rootBundle platform-channel responses cannot
 /// complete inside a widget test's fake-async zone, so tests pre-warm the
-/// single-flight future under `tester.runAsync`).
+/// pack under `tester.runAsync`). NOTE the cache design: the memo is the
+/// decoded DATA, not the future — a future completed inside runAsync's
+/// real-async zone never resolves fake-zone listeners (the quran repository
+/// memoizes data for exactly this reason).
 class FaqRepository {
   FaqRepository._();
 
   static Future<String> Function(String path) _loadAsset =
       rootBundle.loadString;
 
-  /// Single-flight: once loaded (or failed), every open of the screen
-  /// shares the same future.
+  /// Completed cache — plain data, zone-free. Reopening the screen after a
+  /// load resolves on the next microtask in whatever zone asks.
+  static List<FaqEntry>? _cache;
+
+  /// Single-flight for concurrent same-zone opens.
   static Future<List<FaqEntry>>? _loading;
 
   @visibleForTesting
@@ -39,35 +45,39 @@ class FaqRepository {
     Future<String> Function(String path) loader,
   ) {
     _loadAsset = loader;
+    _cache = null;
     _loading = null;
   }
 
   @visibleForTesting
   static void resetForTesting() {
     _loadAsset = rootBundle.loadString;
+    _cache = null;
     _loading = null;
   }
 
   static Future<List<FaqEntry>> entries() {
+    final cached = _cache;
+    if (cached != null) return Future.value(cached);
     return _loading ??= () async {
       try {
         final raw = await _loadAsset('assets/content/faq.json');
         final decoded = jsonDecode(raw);
-        if (decoded is Map<String, dynamic>) {
-          return ((decoded['items'] as List?) ?? const [])
-              .whereType<Map>()
-              .map((e) => FaqEntry.fromJson(e.cast<String, dynamic>()))
-              .toList();
-        }
+        final list = decoded is Map<String, dynamic>
+            ? ((decoded['items'] as List?) ?? const [])
+                  .whereType<Map>()
+                  .map((e) => FaqEntry.fromJson(e.cast<String, dynamic>()))
+                  .toList()
+            : const <FaqEntry>[];
+        _cache = list;
+        _loading = null;
+        return list;
       } catch (e) {
         debugPrint('faq.json load failed: $e');
-        if (_loading != null) {
-          // A failed load must not poison future opens — drop the memo.
-          _loading = null;
-        }
+        // A failed load must not poison future opens — drop the memo.
+        _loading = null;
         rethrow;
       }
-      return const <FaqEntry>[];
     }();
   }
 }

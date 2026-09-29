@@ -286,8 +286,15 @@ class MoreScreen extends ConsumerWidget {
 /// NO share_plus dependency — a spec deviation documented in the worklog).
 Future<void> _shareApp(BuildContext context) async {
   final text = context.t('more_share_text');
-  await Clipboard.setData(ClipboardData(text: text));
+  // The native share sheet is the primary action — fire it FIRST, and keep
+  // the clipboard copy best-effort: a platform without a clipboard service
+  // (or a test bed without a handler) must never break the share itself.
   await SystemChannel.shareText(text);
+  try {
+    await Clipboard.setData(ClipboardData(text: text));
+  } catch (_) {
+    // Clipboard is a convenience, not a requirement.
+  }
   if (context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
