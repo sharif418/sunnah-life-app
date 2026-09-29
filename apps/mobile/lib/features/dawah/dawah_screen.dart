@@ -12,13 +12,14 @@ import '../../api/api_client.dart' show ApiException;
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
-import '../../services/platform_channels.dart';
 import '../../state/amal_state.dart';
 import '../../state/goals_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
+import 'madu_tree.dart';
+import 'referral_share_sheet.dart';
 
 class DawahScreen extends ConsumerWidget {
   const DawahScreen({super.key});
@@ -164,8 +165,19 @@ class _DawahOverviewTab extends ConsumerWidget {
           );
         }
         final overview = remote.data;
+        final memberName =
+            ref.watch(authProvider).userOrNull?.name ?? '';
 
         String joinLink(String code) => 'https://sunnahlife.app/join/$code';
+
+        // W4e — the branded referral card preview (renders the PNG on
+        // share). The sheet resolves all its strings from the locale.
+        void openCardSheet() => showReferralCardSheet(
+              context,
+              memberName: memberName,
+              memberCode: overview.memberCode,
+              joinLink: joinLink(overview.memberCode),
+            );
 
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
@@ -231,24 +243,22 @@ class _DawahOverviewTab extends ConsumerWidget {
                       IconButton(
                         tooltip: context.t('share'),
                         icon: const Icon(Icons.share),
-                        onPressed: () async {
-                          final text =
-                              '${context.t('dawah_share_message')} ${joinLink(overview.memberCode)}';
-                          await Clipboard.setData(ClipboardData(text: text));
-                          await SystemChannel.shareText(text);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  '${context.t('copied')} — ${context.t('share')}',
-                                ),
-                              ),
-                            );
-                          }
-                        },
+                        onPressed: openCardSheet,
                       ),
                     ],
                   ),
+                  // W4e — the overview's primary share action: the branded
+                  // card preview (hidden when there is no code to invite
+                  // with — the empty-code edge stays honest).
+                  if (overview.memberCode.isNotEmpty) ...[
+                    const SizedBox(height: SLSpacing.s12),
+                    FilledButton.icon(
+                      key: const Key('dawahShareCardButton'),
+                      onPressed: openCardSheet,
+                      icon: const Icon(Icons.share),
+                      label: Text(context.t('dawah_share_card')),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -315,7 +325,9 @@ class _DawahOverviewTab extends ConsumerWidget {
               ),
             ),
 
-            // Madu tree
+            // Madu tree — W4e: the flat depth-sorted downline rendered as
+            // an indented tree with connector rails (read-only — the API
+            // carries depth but no parentage; madu_tree.dart notes why).
             SectionHeader(context.t('dawah_madu'), icon: Icons.account_tree),
             if (overview.downline.isEmpty)
               EmptyState(
@@ -325,34 +337,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                 icon: Icons.park_outlined,
               )
             else
-              AppCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    for (final node in overview.downline)
-                      ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsetsDirectional.only(
-                          start: SLSpacing.s12 + (node.depth - 1) * 24,
-                          end: SLSpacing.s12,
-                        ),
-                        leading: node.depth == 1
-                            ? const Icon(Icons.person_outline)
-                            // Mirrors under RTL so the tree keeps branching
-                            // inward from the leading edge.
-                            : const DirectionalIcon(
-                                Icons.subdirectory_arrow_right,
-                                size: 18,
-                              ),
-                        title: Text(node.name),
-                        subtitle: Text(
-                          '${node.memberCode ?? ''} · ${context.t(node.level.labelKey)}',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              MaduTree(nodes: overview.downline),
 
             // Assessments
             SectionHeader(

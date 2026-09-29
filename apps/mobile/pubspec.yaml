@@ -77,6 +77,9 @@ dev_dependencies:
   # v1→v2 outbox migration test needs a raw v1 sqlite file (drift itself
   # always generates the LATEST schema). Same package drift/native uses.
   sqlite3: ^3.5.2
+  # The referral-card test fakes the path_provider platform interface (the
+  # temp dir the rendered PNG lands in) — declared so the import is honest.
+  path_provider_platform_interface: ^2.1.2
 
 flutter:
   uses-material-design: true
