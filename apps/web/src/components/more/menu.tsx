@@ -35,7 +35,7 @@ const ITEMS: { view: string; icon: LucideIcon; titleKey: string; descKey: string
 export function MoreMenu() {
   const { user, profile, nav } = useApp();
   const t = (k: string) => translate(profile.language, k);
-  const name = user?.name || profile.name || "অতিথি";
+  const name = user?.name || profile.name || t("auth.guest");
   const initials = name.trim().slice(0, 2);
 
   return (
@@ -55,7 +55,7 @@ export function MoreMenu() {
         onKeyDown={(e: React.KeyboardEvent) => {
           if (e.key === "Enter" || e.key === " ") nav("more", "profile");
         }}
-        aria-label="প্রোফাইল খুলুন"
+        aria-label={`${t("more.profile")} — ${t("app.name")}`}
       >
         <CardContent className="p-4 flex items-center gap-3.5">
           <span className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary text-lg font-bold">
