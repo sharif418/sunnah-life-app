@@ -302,8 +302,17 @@ model Assessment {
   scoresJson          Json // {"criterionKey": {score: 0|1|2, comment?}}
   overallComment      String?
   assessorSignedAt    DateTime?
-  assesseeSignedAt    DateTime? // OTP-confirmed signature
+  assesseeSignedAt    DateTime? // set by the OTP-confirmed acknowledgment (W4i)
   result              String    @default("not_yet") // passed | not_yet
+  // W4i — the farze-ain result only becomes FINAL (effective) after the
+  // ASSESSEE's own OTP-confirmed acknowledgment: submitted scores start
+  // pending_confirmation; confirm sets status confirmed + assesseeSignedAt,
+  // decline sets declined (+ decisionNote). Only confirmed assessments
+  // satisfy the level-transition "assessment_passed" rule.
+  status              String    @default("pending_confirmation") // pending_confirmation | confirmed | declined
+  confirmedAt         DateTime?
+  declinedAt          DateTime?
+  decisionNote        String? // the assessee's decline reason
   createdAt           DateTime  @default(now())
 }
 
