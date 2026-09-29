@@ -1,6 +1,6 @@
 /* সুন্নাহ লাইফ — web service worker (W4g).
  *
- * Strategy (per docs/PLAN.md C-W4g):
+ * Strategy (per docs/PLAN.md C-W4g + the W4j search close-out):
  *  - PRECACHE the app shell ("/" HTML, offline fallback, manifest, icons).
  *    Prayer times are computed CLIENT-SIDE (src/lib/prayer-times.ts) and
  *    cities are bundled into the JS chunks — the shell is all the offline
@@ -10,12 +10,17 @@
  *  - STALE-WHILE-REVALIDATE for GET /api/config (donation URL, hijri
  *    adjust, nisab, contacts) — any origin, so the cross-origin API base
  *    used in production is covered too.
+ *  - STALE-WHILE-REVALIDATE for GET /api/content/:pack (duas, adhkar,
+ *    names99, articles, …) — versioned content; W4j: the offline search
+ *    fallback (and the offline ilm tabs) read these through getPack(), so
+ *    after the first visit the packs survive a network loss. Any origin
+ *    (same cross-origin-API reason as /api/config).
  *  - NAVIGATIONS: network-first with the cached shell as fallback, then
  *    /offline.html as the last resort.
  *
  * Bump VERSION to invalidate every cache on deploy.
  */
-const VERSION = "w4g-1";
+const VERSION = "w4j-1";
 const SHELL_CACHE = `sl-shell-${VERSION}`;
 const STATIC_CACHE = `sl-static-${VERSION}`;
 const RUNTIME_CACHE = `sl-runtime-${VERSION}`;
@@ -58,6 +63,15 @@ self.addEventListener("fetch", (event) => {
   // GET /api/config — stale-while-revalidate, any origin (the API base is
   // cross-origin in production; those requests still pass through this SW).
   if (url.pathname === "/api/config" || url.pathname.endsWith("/api/config")) {
+    event.respondWith(staleWhileRevalidate(req, CONFIG_CACHE));
+    return;
+  }
+
+  // GET /api/content/:pack — stale-while-revalidate, any origin. W4j: the
+  // offline search fallback reads these packs through getPack(); serving
+  // them from the cache (and refreshing in the background) makes the ilm
+  // content + the search fallback work offline after the first visit.
+  if (url.pathname.startsWith("/api/content/")) {
     event.respondWith(staleWhileRevalidate(req, CONFIG_CACHE));
     return;
   }
