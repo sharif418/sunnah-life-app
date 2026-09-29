@@ -41,6 +41,8 @@ import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/providers.dart';
 import 'package:sunnah_life/design/phosphor_icons.dart';
 
+import 'golden_fonts.dart';
+
 /// Pinned app clock — the tree's relative last-active labels and the
 /// offline banner stamps never drift.
 final DateTime _kNow = DateTime(2026, 9, 29, 12, 0);
@@ -225,6 +227,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    await warmPhosphorFonts(tester);
 
     await tester.pumpWidget(
       MaterialApp(
@@ -259,6 +262,7 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
+    await warmPhosphorFonts(tester);
 
     await tester.pumpWidget(
       MaterialApp(

@@ -40,6 +40,8 @@ import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
 import 'package:sunnah_life/state/remote_state.dart' show configProvider;
 
+import 'golden_fonts.dart';
+
 /// The pinned instant (a Sunday — mon/thu fast + kahf stay hidden).
 final DateTime _kNow = DateTime(2025, 6, 15, 14, 30);
 final String _kToday = dateKey(_kNow);
@@ -329,6 +331,10 @@ void main() {
     // body (smoke_test pattern) so the 60s sync-flush periodic timer is
     // cancelled before the binding checks for pending timers.
     addTearDown(db.close);
+
+    // Icons render with the real Phosphor glyphs (not tofu boxes) — the
+    // whole point of this suite's pixel truth extends to icon shapes.
+    await warmPhosphorFonts(tester);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(
