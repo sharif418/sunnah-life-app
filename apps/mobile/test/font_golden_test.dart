@@ -38,6 +38,7 @@ import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
+import 'package:sunnah_life/state/remote_state.dart' show configProvider;
 
 /// The pinned instant (a Sunday — mon/thu fast + kahf stay hidden).
 final DateTime _kNow = DateTime(2025, 6, 15, 14, 30);
@@ -102,6 +103,35 @@ class _SignedInDaee extends AuthNotifier {
 /// Deterministic remote payloads — no network, Bengali-rich on purpose
 /// (the tofu guard only means anything when Bengali actually renders).
 class _GoldenApi extends ApiClient {
+  /// The More §4.3 golden's fixed remote surface: ONE contact + ONE group +
+  /// detox on — fed via a configProvider override ONLY for the /more
+  /// iteration, so the other four tab goldens stay byte-identical (a
+  /// non-empty contacts list would mount the floating ContactFab on every
+  /// root tab, changing those pixels too).
+  static const AppConfig moreEnrichedConfig = AppConfig(
+    donationUrl: 'https://as-sunnah.org/donation',
+    domain: 'sunnahlife.app',
+    hijriAdjust: 0,
+    goldPerGramBdt: 16500,
+    silverPerGramBdt: 220,
+    contacts: [
+      ConfigContact(
+        org: 'আস-সুন্নাহ ফাউন্ডেশন',
+        descBn: 'মূল সংস্থা — দাওয়াত, শিক্ষা ও সমাজকল্যাণমূলক কার্যক্রম।',
+        website: 'https://as-sunnah.org',
+        email: 'info@as-sunnah.org',
+      ),
+    ],
+    groups: [
+      ConfigGroup(
+        titleBn: 'সুন্নাহ লাইফ অ্যাপ গ্রুপ (টেলিগ্রাম)',
+        url: 'https://t.me/sunnahlife',
+        descBn: 'নিয়মিত আপডেট ও ঘোষণা',
+      ),
+    ],
+    detoxEnabled: true,
+  );
+
   @override
   Future<AppConfig> config() async => const AppConfig(
     donationUrl: 'https://as-sunnah.org/donation',
@@ -112,58 +142,57 @@ class _GoldenApi extends ApiClient {
   );
 
   @override
-  Future<List<AmalDefinition>> amalDefinitions() async =>
-      fallbackDefinitions();
+  Future<List<AmalDefinition>> amalDefinitions() async => fallbackDefinitions();
 
   @override
   Future<ApiCached<DawahOverview>> dawahOverview({String? scope}) async =>
       ApiCached(
         DawahOverview(
-    memberCode: 'DS-000004',
-    referralLink: 'https://sunnahlife.app/join/DS-000004',
-    invitedCount: 3,
-    downline: [
-      DownlineNode(
-        id: 'm1',
-        name: 'আব্দুল্লাহ আল মামুন',
-        gender: Gender.m,
-        level: Level.none,
-        depth: 1,
-        lastActiveAt: '2025-06-10',
-      ),
-      DownlineNode(
-        id: 'm2',
-        name: 'মোঃ সাইফুল ইসলাম',
-        gender: Gender.m,
-        level: Level.none,
-        depth: 1,
-        lastActiveAt: '2025-06-12',
-      ),
-    ],
-    level: Level.muhibbusSunnah,
-    monthsInLevel: 2,
-    requirements: [
-      const LevelRequirement(
-        key: 'r1',
-        label: 'সাপ্তাহিক রিভিউ অংশগ্রহণ',
-        done: true,
-        detail: 'টানা ৪ সপ্তাহ',
-      ),
-      const LevelRequirement(
-        key: 'r2',
-        label: 'প্রতিদিন ১ পৃষ্ঠা কুরআন তিলাওয়াত',
-        done: true,
-        detail: '৩০ দিনের মধ্যে ২৫ দিন',
-      ),
-      const LevelRequirement(
-        key: 'r3',
-        label: '২ জনকে দাওয়াত',
-        done: false,
-        detail: '১/২ সম্পন্ন',
-      ),
-    ],
-    nextLevel: Level.farzeAin1,
-    assessments: const [],
+          memberCode: 'DS-000004',
+          referralLink: 'https://sunnahlife.app/join/DS-000004',
+          invitedCount: 3,
+          downline: [
+            DownlineNode(
+              id: 'm1',
+              name: 'আব্দুল্লাহ আল মামুন',
+              gender: Gender.m,
+              level: Level.none,
+              depth: 1,
+              lastActiveAt: '2025-06-10',
+            ),
+            DownlineNode(
+              id: 'm2',
+              name: 'মোঃ সাইফুল ইসলাম',
+              gender: Gender.m,
+              level: Level.none,
+              depth: 1,
+              lastActiveAt: '2025-06-12',
+            ),
+          ],
+          level: Level.muhibbusSunnah,
+          monthsInLevel: 2,
+          requirements: [
+            const LevelRequirement(
+              key: 'r1',
+              label: 'সাপ্তাহিক রিভিউ অংশগ্রহণ',
+              done: true,
+              detail: 'টানা ৪ সপ্তাহ',
+            ),
+            const LevelRequirement(
+              key: 'r2',
+              label: 'প্রতিদিন ১ পৃষ্ঠা কুরআন তিলাওয়াত',
+              done: true,
+              detail: '৩০ দিনের মধ্যে ২৫ দিন',
+            ),
+            const LevelRequirement(
+              key: 'r3',
+              label: '২ জনকে দাওয়াত',
+              done: false,
+              detail: '১/২ সম্পন্ন',
+            ),
+          ],
+          nextLevel: Level.farzeAin1,
+          assessments: const [],
         ),
         fetchedAt: _kNow,
       );
@@ -171,8 +200,7 @@ class _GoldenApi extends ApiClient {
   @override
   Future<ApiCached<(Usrah?, List<Announcement>)>> usrah({
     String? scope,
-  }) async => ApiCached(
-    (
+  }) async => ApiCached((
     Usrah(
       id: 'u1',
       name: 'আল-হুদা উসরা',
@@ -197,27 +225,25 @@ class _GoldenApi extends ApiClient {
         authorName: 'উসরা প্রধান',
       ),
     ],
-    ),
-    fetchedAt: _kNow,
-  );
+  ), fetchedAt: _kNow);
 
   @override
   Future<ApiCached<List<WeeklyReview>>> reviews({String? scope}) async =>
       ApiCached([
-    WeeklyReview(
-      id: 'r1',
-      userId: 'u-font-daee',
-      reviewerId: 'h1',
-      weekStart: '2025-06-09',
-      comment: 'আলহামদুলিল্লাহ, এই সপ্তাহে নিয়মিত আমল হয়েছে।',
-      rating: 4,
-      status: 'done',
-      createdAt: '2025-06-13',
-      completedAt: '2025-06-13',
-      userName: 'রাফিউল ইসলাম',
-      reviewerName: 'উসরা প্রধান',
-    ),
-  ], fetchedAt: _kNow);
+        WeeklyReview(
+          id: 'r1',
+          userId: 'u-font-daee',
+          reviewerId: 'h1',
+          weekStart: '2025-06-09',
+          comment: 'আলহামদুলিল্লাহ, এই সপ্তাহে নিয়মিত আমল হয়েছে।',
+          rating: 4,
+          status: 'done',
+          createdAt: '2025-06-13',
+          completedAt: '2025-06-13',
+          userName: 'রাফিউল ইসলাম',
+          reviewerName: 'উসরা প্রধান',
+        ),
+      ], fetchedAt: _kNow);
 
   @override
   Future<List<LiveProgramItem>> live() async => const [];
@@ -331,7 +357,19 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      final container = await bootAt(tester, path);
+      // The More golden renders the §4.3 sections over a fixed contact +
+      // group row (see _GoldenApi.moreEnrichedConfig).
+      final container = await bootAt(
+        tester,
+        path,
+        extra: path == '/more'
+            ? [
+                configProvider.overrideWith(
+                  (ref) async => _GoldenApi.moreEnrichedConfig,
+                ),
+              ]
+            : const <Override>[],
+      );
 
       expectNoPlatformFont(tester, screen);
 
