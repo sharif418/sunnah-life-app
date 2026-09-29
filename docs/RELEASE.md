@@ -149,6 +149,17 @@ flutter build apk --release --split-per-abi      # or appbundle for Play
 On the signing Mac — see `docs/IOS_BUILD.md` (APNs key, capabilities,
 `flutter build ipa`).
 
+### API base — SUNNAH_API_BASE
+
+Release APK/AAB builds (both `.github/workflows/ci.yml` release jobs) pass
+`--dart-define=SUNNAH_API_BASE` taken from the **repository variable** of the
+same name (Settings → Secrets and variables → Actions → Variables; current
+value `https://api-staging.sunnahlife.ailearnersbd.com`). Both release jobs
+**fail closed** when it is unset — a build silently targeting the placeholder
+default `https://sunnahlife.app` cannot sign in (nothing is deployed there;
+found on a real phone). Debug/CI builds keep the local default. To change the
+target: update the variable — no code change.
+
 ---
 
 ## 4. Backend release

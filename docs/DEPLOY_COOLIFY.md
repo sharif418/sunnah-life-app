@@ -75,7 +75,7 @@ Verify:
 
 ```bash
 docker compose --env-file .env -f infra/docker-compose.yml ps
-curl -s http://localhost:4000/health   # api
+curl -s http://localhost:4000/health   # api — readiness (postgres·redis·meili·storage)
 curl -s http://localhost:3000/api/config | head -c 200   # web
 ```
 
@@ -396,8 +396,16 @@ Coolify Path B/C: the same flow is "pull latest → redeploy" per resource.
 
 ## 9. Observability
 
-- **`GET /health`** on the api (port 4000) — liveness for compose/Coolify/
-  Cloudflare health checks (also used by the Dockerfile HEALTHCHECK).
+- **`GET /health/live`** on the api (port 4000) — **liveness**: the process is
+  up and can serve HTTP, zero dependency calls. This is what the Dockerfile
+  HEALTHCHECK, the compose healthchecks and Coolify's Traefik gate on
+  [C/W5-ops].
+- **`GET /health/ready`** (and the legacy alias **`GET /health`**) on the api
+  — **readiness**: probes postgres · redis · meili · storage, returns 503 when
+  degraded, per-check 1.5 s budget, one shared Redis client. Point uptime
+  monitors (UptimeRobot etc.) HERE. Why the split: a slow dependency used to
+  flip the serving container unhealthy and Traefik dropped it ("no available
+  server" on the live staging deployment) [C/W5-ops].
 - **`GET /metrics`** on the api — Prometheus text format (prom-client):
   request latency histograms, error rates, queue depths. Scrape example:
   `curl -s http://localhost:4000/metrics | head`. Point a Prometheus/Grafana
@@ -430,7 +438,7 @@ Database rollbacks are **forward-only** by policy: if a migration must be
 reverted, write a new compensating migration. If data was lost, restore from
 pgBackRest (§6.1 restore drill) into a fresh volume and restart the stack.
 
-Verify after any rollback: `/health` green, `docker compose ps` all healthy,
+Verify after any rollback: `/health/ready` green, `docker compose ps` all healthy,
 demo login works (docs/DEMO_ACCOUNTS.md §5).
 
 ---

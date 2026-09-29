@@ -149,3 +149,13 @@ Full narrative in `worklog.md` (entries C-W3a..C-W3i-CI). Evidence: local analyz
 | Token-built bottom bar + Phosphor set (W4a/W4f subset) | Done | SLBottomBar replaces stock NavigationBar (localized labels kept, tests green); fonts vendored (pub package didn't compile in the build env — commit d4e3a7f); icon migration is incremental by design |
 | Home per spec — countdown ring, সর্বাধিক ব্যবহৃত, দ্রুত প্রবেশ, Ilm/amal/Live sections, সব দেখুন headers (W4b) | **Partial — logic + 10 tests only** | most_used.dart + waqt_progress.dart pinned by test/w4_home_logic_test.dart (236/236); the home_screen rewiring is NOT done — next unit, honestly stated |
 | W4c..W4j | Not started this session | — |
+
+## Wave 4 — operations fixes (C-OPS)
+
+Found on the LIVE staging deployment (Coolify) + real phones: a slow dependency flipped the serving api container unhealthy and Traefik dropped it ("no available server"); release APKs targeted the placeholder API default so sign-in failed on real phones; Meilisearch boot indexing 405'd on v1.x and the duas pack was never indexed. Narrative in `worklog.md` (entries C-OPS-a..c).
+
+| Item | Status | Implementing files | Proven by |
+|---|---|---|---|
+| Release builds target the real API | Done (code) | `.github/workflows/ci.yml` (both release jobs), `docs/RELEASE.md` | CI run pending (filled by C-OPS-c); guard fails closed when the variable is empty |
+| Liveness/readiness split (`/health/live` vs `/health/ready`+alias, shared Redis client, 1.5 s per-check budgets) | Done (code) | `apps/api/src/health/health.controller.ts`, `apps/api/src/main.ts`, `test/health-ops.spec.ts`, `infra/api.Dockerfile`, `infra/docker-compose.yml`, `infra/coolify.compose.yml` | jest 13/13 local (health-ops) + full 259/259; live effect on the Coolify staging stack PENDING the owner's redeploy of the staging branch (honest: not yet deployed) |
+| Meilisearch create-index 405 on boot (v1.x route) + duas pack never indexed (packDocuments first-array bug) | Done (code) | `apps/api/src/content/content.controller.ts`, `apps/api/src/shared/quran.ts`, `test/meili-indexer.spec.ts` | jest 6/6 unit (route shape pinned against v1.54); real meili re-indexing happens on the owner's redeploy |

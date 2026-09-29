@@ -1088,3 +1088,67 @@ Work Log:
 
 Stage Summary:
 - Run 36490403860 (975ed3c): ALL JOBS SUCCESS — the Wave-4-first-units state is CI-proven (mobile incl. debug APK, release-apk split-per-ABI gate, docker compose smoke, web incl. /join routes, api 248-suite, admin, tokens, report).
+
+---
+Task ID: C-OPS-a
+Agent: C-OPS-a (verification agent)
+Task: Verify the liveness/readiness health-probe split + Meilisearch v1.x fix on disk, then run the API lint + test suites and report verbatim.
+
+Work Log:
+- Read worklog.md (all 1090 lines to date) + the six files + CI api job + infra conventions before touching anything.
+- THE SANDBOX WAS RESET since the lead's session: root node_modules EMPTY, apps/api/.env gone, /home/z/opt (PG16/Redis/Meili + start-services.sh) wiped — nothing runnable. Restored the documented dev environment first (all outside the repo except .env):
+  - `bun install --frozen-lockfile` at repo root (2787 packages, 8.8 s, bun 1.3.14).
+  - PostgreSQL 16.10 portable binaries re-downloaded from theseus-rs/postgresql-binaries (same source as docs/ENVIRONMENT.md), initdb at /home/z/opt/pgdata (trust auth, 127.0.0.1 only), started on :5433; created DB sunnahlife + role sunnah_app (NOBYPASSRLS, password sunnah_app_dev) exactly per the CI bootstrap/infra/postgres/init-rls.sql.
+  - Redis 7.0.15 re-extracted from bookworm-security debs (redis-server + redis-tools + liblzf1, dpkg-deb -x), started daemonized on :6380 — PONG verified.
+  - Meilisearch NOT reinstalled: no suite needs it (the CI api job deliberately leaves MEILI_HOST unset so the probe reports "absent"); noted in the recreated .env.
+  - apps/api/.env recreated from .env.example + the CI api job env (gitignored file; MEILI_HOST left unset, THROTTLE_OTP_PER_10MIN=200 / THROTTLE_IP_PER_MIN=5000, SEED_DEMO=true, JWT/SMS mock dev values).
+  - `bun run prisma:generate` → `bun run migrate:deploy` (13 migrations applied) → `SEED_DEMO=true bun run seed` (15 users, 2 usrahs, 6780 amal entries, 31 definitions — CI-parity demo dataset).
+  - /home/z/opt/start-services.sh recreated (idempotent restart path referenced by docs/ENVIRONMENT.md); verified: "postgres :5433 already up / redis :6380 already up".
+- VERIFIED THE SIX FILES against every marker — 4 of 6 matched exactly (health.controller.ts: CHECK_TIMEOUT_MS=1500, OnModuleDestroy + shared static Redis client with lazyConnect/maxRetriesPerRequest:1/commandTimeout, budgeted() race helper, live()/readiness()/503 routes, token-gated /metrics; main.ts exclude ["health","health/live","health/ready","metrics"]; content.controller.ts POST {HOST}/indexes with {uid,primaryKey:"id"} + 400-index_already_exists-only fallthrough; quran.ts idBearing walks ALL array props with `if (docs.length) return docs;`; duas.json confirmed categories(8,no-id)→items(32,id), names99 99 id docs, articles 4 id docs).
+- FIXED 2 drifts, both surgical, both in the new test files:
+  1. test/health-ops.spec.ts beforeAll excluded only ["health","metrics"] — NestJS 11 excludes are EXACT pathToRegexp matches (verified in @nestjs/core router/utils/exclude-route.util.js), so /health/live + /health/ready got the /api prefix → 404. Changed to ["health","health/live","health/ready","metrics"] (mirror of main.ts).
+  2. test/meili-indexer.spec.ts carried an unused eslint-disable directive on the syncAll helper (`as any`) — replaced with a typed `as unknown as { syncAll: … }` cast, directive removed.
+- RAN THE SUITES from apps/api (postgres :5433 + redis :6380 up, meili unset):
+  - `bun run lint` → 0 errors, 5 warnings — ALL five in files OUTSIDE this work and untouched by it (prisma/seed-demo.ts hijriArithmetic, src/shared/reviews.ts dateKey, test/amal.spec.ts bdNowShifted, test/token-security.spec.ts prisma+rls ×2), i.e. pre-existing at HEAD; the new/edited files lint clean.
+  - `bunx jest test/meili-indexer.spec.ts` → PASS, 6/6 (no services needed).
+  - `bunx jest test/health-ops.spec.ts` → PASS, 13/13 (1 live + 4 ready + 2 legacy alias + 6 metrics).
+  - `bun run test` (full suite, default parallel) → 18 suites / 259 tests, ALL PASSED, 9.6 s; re-ran CI-mode `bun run test -- --runInBand` → 18/259 again, 9.0 s.
+  - `bunx tsc --noEmit` (and -p tsconfig.build.json) → exit 0, ZERO errors project-wide. The "~18 known pre-existing errors in src/reports/report-renderer.ts + test/monthly-report.spec.ts" did NOT reproduce with the lockfile-pinned toolchain (typescript 5.9.3, fontkit 2.0.4/@types/fontkit present after the fresh install).
+- No commits/pushes; git working tree = exactly the six files (5 M + 1 ??).
+
+Stage Summary:
+- VERIFIED RAW (last lines, verbatim):
+  - bun run lint: "✖ 5 problems (0 errors, 5 warnings)" — all in pre-existing untouched files; 0 problems from the six files.
+  - meili-indexer.spec.ts: "Tests: 6 passed, 6 total".
+  - health-ops.spec.ts: "Tests: 13 passed, 13 total".
+  - full suite: "Test Suites: 18 passed, 18 total / Tests: 259 passed, 259 total / Snapshots: 0 total" (both parallel and --runInBand).
+  - tsc: no output, exit 0 (both tsconfig.json and tsconfig.build.json).
+- Suite-count note: the task predicted ~261 tests / 11 suites; the real numbers are 259 / 18. Arithmetic: previous 248 INCLUDED health-ops' old 8 tests → 248 − 8 + 13 + 6 = 259; there are 18 spec files, not 11. All green either way.
+- Services status: postgres 16.10 :5433 UP (recreated), redis 7.0.15 :6380 UP (recreated), meili NOT running by design (CI-parity env leaves MEILI_HOST unset; no suite needs it; /home/z/opt/start-services.sh documents how to reinstall if search dev resumes).
+- Anomalies: (a) full sandbox reset before this task — node_modules, apps/api/.env and the entire /home/z/opt toolchain had to be rebuilt from the documented sources before anything could run; (b) /home/z/my-project/dev.log and .zscripts referenced by the task do not exist; (c) the ~18 "known" tsc errors did not reproduce (clean) — either fixed upstream since or environment-dependent; (d) plain parallel `bun run test` passed despite CI's documented OTP-race note (serial mode also verified green).
+
+---
+Task ID: C-OPS-b
+Agent: C-OPS-b (infra/CI/docs agent)
+Task: Infra + CI + docs edits for the Wave-5 ops fixes — healthcheck → /health/live everywhere containers are gated, SUNNAH_API_BASE fail-closed release builds, coolify.compose.yml on main, doc/audit updates.
+
+Work Log:
+- Read worklog.md fully (last sections C-W4a-CI + C-OPS-a) before touching anything; verified HEAD = 5b6beca on main and the working tree carried exactly C-OPS-a's six uncommitted api files (untouched by me — no apps/api edits made).
+- infra/api.Dockerfile (HEALTHCHECK, now lines 133–138): all three fallback URLs /health → /health/live + the [C-W5-ops] liveness-only comment block above it (a slow Postgres/Redis/Meili must never flip the container unhealthy — that made Coolify's Traefik drop the serving api on live staging).
+- infra/docker-compose.yml (api healthcheck, now lines 269–279): curl target → http://localhost:4000/health/live + extended liveness-only comment; interval 15s / timeout 5s / retries 5 / start_period 90s UNCHANGED (worker's depends_on: service_healthy semantics unchanged — it gates on liveness now, which is what it always meant).
+- infra/coolify.compose.yml — NEW on main, content = origin/staging's file with exactly two deltas: (1) header note that this file is mirrored on the staging branch (what Coolify deploys) and the same healthcheck change exists there; (2) api healthcheck /health → /health/live + one [C-W5-ops] comment line. Verified vs staging via git diff --no-index: only those two hunks.
+- infra/postgres/Dockerfile — NEW on main, byte-identical to origin/staging (coolify.compose.yml builds postgres from ./infra/postgres/Dockerfile; init-rls.sql + init-walarchive.sh + pgbackrest.conf already existed on main with identical blobs).
+- admin.Dockerfile decision: git diff origin/staging origin/main showed staging carries an extra `ARG NEXT_PUBLIC_DEMO` (demo quick-login grid, ENV passthrough + comment) that main lacks — and coolify.compose.yml DOES pass `NEXT_PUBLIC_DEMO: ${NEXT_PUBLIC_DEMO:-}` as a build arg to the admin build. Per task rule, brought staging's version to main verbatim (without the ARG the build-arg would be silently dropped and the staging demo login grid would never render). Main's copy had no other differences. Diff vs staging now empty.
+- .github/workflows/ci.yml: (a) release-apk — inserted "Resolve SUNNAH_API_BASE (fail when unset)" (id: apibase, reads vars.SUNNAH_API_BASE, ::error:: + exit 1 when empty, outputs base) between Pub get and Decode signing key; build step now ends with `--dart-define=SUNNAH_API_BASE=${{ steps.apibase.outputs.base }}` (continues the existing folded `run: >` scalar). (b) release-bundle — same step inserted between its Pub get and Decode signing key; `run: flutter build appbundle --release` → `... --dart-define=SUNNAH_API_BASE=${{ steps.apibase.outputs.base }}`. (c) docker job comment block — appended the [C-W5-ops] note that the smoke curls the READINESS alias /health on purpose; smoke curl target UNCHANGED.
+- docs/DEPLOY_COOLIFY.md: §Path-A verify curl comment → "# api — readiness (postgres·redis·meili·storage)"; §9 Observability — the old single "GET /health = liveness" bullet rewritten into the liveness (/health/live, zero dependency calls, what Docker HEALTHCHECK + compose + Coolify Traefik gate on) vs readiness (/health/ready + legacy /health alias, 503 when degraded, 1.5 s per-check budget, shared Redis client, point UptimeRobot HERE) pair with the WHY (slow dep flipped the serving container unhealthy → Traefik "no available server"); §10 rollback-verify line → /health/ready.
+- docs/RELEASE.md: new "### API base — SUNNAH_API_BASE" subsection in §3 — repository VARIABLE (Settings → Secrets and variables → Actions → Variables; current value https://api-staging.sunnahlife.ailearnersbd.com), both release jobs fail closed, placeholder-default history (real-phone sign-in failure), debug/CI builds keep the local default, change target = update the variable only.
+- docs/AUDIT.md: appended "## Wave 4 — operations fixes (C-OPS)" at the END — three honest rows (release-build API target: Done (code), CI run pending → C-OPS-c; liveness/readiness split: Done (code), 259/259 local, live staging effect PENDING the owner's redeploy; Meili 405 + duas indexing: Done (code), jest 6/6 pinned against v1.54). Old rows untouched.
+- YAML sanity: `python3 -c "import yaml,sys; [yaml.safe_load(open(f)) for f in ['.github/workflows/ci.yml','infra/docker-compose.yml','infra/coolify.compose.yml']]"` → YAML-OK (pyyaml present). No services started, no dev server run.
+- git diff --stat final: only the intended files (my seven + the pre-existing C-OPS-a six + worklog.md); nothing staged, nothing committed, nothing pushed — the next agent owns that.
+
+Stage Summary:
+- All seven deliverable edits landed: api.Dockerfile + docker-compose.yml + coolify.compose.yml healthchecks now gate on /health/live (liveness) with the Traefik-outage rationale in comments at each spot; infra/coolify.compose.yml + infra/postgres/Dockerfile now exist on main (staging parity, healthcheck delta applied); admin.Dockerfile brought to staging's NEXT_PUBLIC_DEMO-carrying version (compose passes that build arg).
+- CI release builds now FAIL CLOSED on an unset/empty SUNNAH_API_BASE repository variable and pass --dart-define to both the APK and AAB builds — the placeholder-default (https://sunnahlife.app) sign-in failure on real phones can no longer ship silently. The docker smoke keeps curling /health (readiness alias) deliberately, now explained in the job's comment block.
+- Docs: DEPLOY_COOLIFY.md documents the live/ready split + where uptime monitors point; RELEASE.md documents the variable; AUDIT.md carries the honest C-OPS rows (CI proof pending C-OPS-c, staging redeploy pending the owner).
+- YAML-OK on all three touched YAML files; diff verified minimal; no commits/pushes; apps/api untouched by me (its six files remain exactly as C-OPS-a left them, verified 259/259 green before I started).
+- Next actions (not mine): C-OPS-c commits + pushes + sets the SUNNAH_API_BASE variable + fills the CI-run evidence; the owner redeploys the staging branch in Coolify for the live /health/live effect + the meili re-index.
