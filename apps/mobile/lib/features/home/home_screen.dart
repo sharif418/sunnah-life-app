@@ -925,6 +925,12 @@ class _ForbiddenTimes extends StatelessWidget {
       (context.t('prayer_forbidden_sunset'), t.sunset - 15, t.sunset + 5),
     ];
     final theme = Theme.of(context);
+    // Spec §2.1 — a calm caution, not an alarm: light alert-tinted surface
+    // (#FCE4E4) with #C0392B text/icons and only a hairline border in the
+    // same hue. Never a saturated red fill.
+    final dark = theme.brightness == Brightness.dark;
+    final alertBg = dark ? SLColors.darkAlertSoft : SLColors.alertSoftLight;
+    final alertFg = dark ? SLColors.darkAlert : SLColors.lightDestructive;
     return Column(
       children: [
         for (final (label, from, to) in windows)
@@ -935,18 +941,29 @@ class _ForbiddenTimes extends StatelessWidget {
               vertical: SLSpacing.s8,
             ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+              color: alertBg,
               borderRadius: SLRadius.brMd,
-              border: Border.all(color: theme.colorScheme.error, width: 1),
+              border: Border.all(
+                color: alertFg.withValues(alpha: 0.25),
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.block, color: theme.colorScheme.error, size: 18),
+                Icon(Icons.block, color: alertFg, size: 18),
                 const SizedBox(width: SLSpacing.s8),
-                Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: alertFg,
+                    ),
+                  ),
+                ),
                 Text(
                   '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
                   style: theme.textTheme.bodySmall?.copyWith(
+                    color: alertFg,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
