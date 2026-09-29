@@ -1300,3 +1300,53 @@ Stage Summary:
 Addendum:
 - [C-W4c-CI-FIX] AUDIT citation corrected — the UI chain is proven by run 36539079890 (https://github.com/sharif418/sunnah-life-app/actions/runs/36539079890, head 137ab45, all 10 jobs green incl. Flutter — analyze · test · debug APK); 36529174552 covers only the backend (its head c80d5af predates the six UI commits).
 
+
+---
+Task ID: W4-FIX-1 (backfill — the previous session completed this work but ran out of context before logging it)
+Agent: lead (continued session)
+Task: Owner's visual review finding #1 — font consistency: some components fell back to platform fonts (tofu □□□ with only bundled fonts): Dawah TabBar labels, Amal Today's four top chips, the Dawah retry button. Set Hind Siliguri on EVERY component theme in the token-built ThemeData + a tofu-guard golden test.
+
+Work Log:
+- Commit 84d01f1 (verified this session: in main, tests green):
+  - pubspec.yaml declares HindSiliguri/Amiri/AmiriQuran as engine font families (the same bundled TTFs) so they resolve BEFORE the first frame — no google_fonts runtime loading, no platform fallback.
+  - design_tokens.dart regenerated via the updated build.mjs template: all 15 textTheme roles + primaryTextTheme carry the family; explicit family styles on tabBar/chip/button/segmented/snackbar/dialog/listTile/popup/dropdown/tooltip/fab/input/navigationBar themes.
+  - Riding along: alert #C0392B → #B93527 in tokens.json/generated file sync (B6+B7 WCAG pass had changed tokens.json but the Dart file was never regenerated) + goldText tokens finally reach Flutter.
+  - headerNowProvider made injectable (global header date bar + diary keys — goldens never flake across days); Ilm grid aspect 1.3 + icon 28 fits real Bengali metrics.
+  - NEW test/font_golden_test.dart: Home/Amal Today/Dawah/Ilm/More in bn light with ONLY bundled fonts — pixel goldens + a RenderParagraph family walk failing with the exact widget name on any fallback; quran/sync goldens regenerated (real glyphs).
+
+Stage Summary:
+- Finding #1 fixed at 84d01f1: analyze 0 + 266/266; tofu guard is now a standing CI gate on the five tab goldens.
+
+---
+Task ID: W4-FIX-2 (backfill — same previous session; the commit landed with an accidental UUID message, reworded this session)
+Agent: lead (continued session)
+Task: Owner's finding #2 — Amal Today density: every boolean amal was a tall card with a centered small switch; the diary scrolled for screens; the tilawat quantity input rendered abnormally tall/empty. Compact grouped rows + input repair.
+
+Work Log:
+- Commit 9f39734 (was e22d77d with a UUID message — AMENDED locally before push, message only, no content change; the UUID was an accident of the session dying mid-commit):
+  - _AmalGroupCard: ONE card per category; boolean amals compact single rows (minHeight 60) — title + one-line hint leading, switch trailing, hairline dividers between rows, the WHOLE row toggles on tap.
+  - Salat tristate rows unchanged. Custom checklist compacted to the same rhythm.
+  - Tilawat quantity input rebuilt: normal-height field, current value with unit inline (পৃষ্ঠা/পারা/মিনিট), beginner unit switch kept.
+  - Golden fonts_amal_today_bn_light.png regenerated; w4c widget tests re-fitted to the new row finders.
+
+Stage Summary:
+- Finding #2 fixed at 9f39734: analyze 0 + 266/266 verified this session before any new work.
+
+---
+Task ID: W4-FIX-3+4
+Agent: lead (this session)
+Task: Owner's findings #3 + #4 — forbidden-times card per spec §2.1 (#FCE4E4 + #C0392B) and the Dawah tab offline cache (Drift last-good cache + "সর্বশেষ হালনাগাদ" stamp + subtle banner; error state only when never cached).
+
+Work Log:
+- Finding #3 (commit f7675d7): _ForbiddenTimes in home_screen.dart — alertSoftLight (#FCE4E4) surface + lightDestructive (#C0392B) icon/label/time + hairline border @ 25% alpha; dark pairs darkAlertSoft #3A211D + darkAlert #E06A5A. Calm caution, never a saturated fill.
+- Finding #4 (commit 4dca89f-chain):
+  - Drift schema v3 → v4: RemoteCacheTable (key/payload/fetchedAt), pure CREATE TABLE migration; DAO remoteCache/saveRemoteCache.
+  - ApiClient: ApiCached<T> envelope + injectable ApiCacheStore + _cachedGet — fresh GET overwrites the row; NETWORK failure (status 0) serves the cached envelope stale:true (rethrow on miss); server 4xx/5xx ALWAYS rethrows (stale data never masks a live refusal); keys user-scoped endpoint:userId. Raw envelopes + existing fromJson = no toJson on any model. DriftApiCacheStore adapter in lib/db/api_cache.dart (dart:convert both ways).
+  - dawahOverview/usrah/reviews/dawahRequirements wrapped; providers expose the envelope (UsrahBundle carries fetchedAt/stale); three tabs + requirements screen + reviews empty-state render the new shared OfflineBanner (gold-on-cream wifi_off strip, injectable clock, bn/en/ar strings, _translate map cases added).
+  - Fakes updated: font_golden_test._GoldenApi + w4c FakeGoalsApi to ApiCached signatures (stale:false — goldens byte-identical, verified passing).
+  - NEW test/dawah_cache_test.dart — 14 tests incl. the full-tab integration: signed-in da'ee + dead network + pre-warmed cache → DawahScreen renders the overview + OfflineBanner with NO error wall.
+- Gates (verbatim, apps/mobile): flutter analyze → "No issues found! (ran in 1.8s)"; flutter test → "00:48 +280: All tests passed!" (280/280 = 266 prior + 14 new; home golden unaffected — its viewport sits above the forbidden strip).
+- Fix 5 (More tab §4.3) deliberately NOT done here — it is W4d itself, launched next.
+
+Stage Summary:
+- Findings #3 + #4 fixed: f7675d7 (forbidden card) + the offline-cache commit; AUDIT rows appended (W4-FIX section) with honest statuses. All five owner findings now: 1 ✓ 2 ✓ 3 ✓ 4 ✓ 5 → W4d (next).
