@@ -143,7 +143,8 @@ services:
     volumes:
       - apistorage:/app/storage
     healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health"]
+      # [C-W5-ops] liveness only — Traefik drops unhealthy containers; slow deps must not flip a serving api
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health/live"]
       interval: 15s
       timeout: 5s
       retries: 5

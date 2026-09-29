@@ -130,8 +130,12 @@ RUN chmod +x /usr/local/bin/api-entrypoint.sh \
 USER bun
 EXPOSE 4000
 
+# [C-W5-ops] Liveness ONLY — the process can serve HTTP; no dependency calls.
+# The readiness checks (/health, /health/ready) are for monitoring: a slow
+# Postgres/Redis/Meili must NEVER flip the container unhealthy (that made
+# Coolify's Traefik drop the serving api on the live staging deployment).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD curl -fsS "http://localhost:${PORT:-4000}/health" || curl -fsS "http://localhost:3001/health" || curl -fsS "http://localhost:3000/health" || exit 1
+  CMD curl -fsS "http://localhost:${PORT:-4000}/health/live" || curl -fsS "http://localhost:3001/health/live" || curl -fsS "http://localhost:3000/health/live" || exit 1
 
 ENTRYPOINT ["dumb-init", "--"]
 CMD ["/usr/local/bin/api-entrypoint.sh"]
