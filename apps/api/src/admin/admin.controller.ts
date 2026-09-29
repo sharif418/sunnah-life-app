@@ -1808,6 +1808,91 @@ export class AdminService {
     });
   }
 
+  // ── W4h: referral tree, server-side cursor-paginated ─────────────────────
+
+  /**
+   * GET /api/admin/referral-tree?userId=&cursor=&limit= — full_admin.
+   *
+   * One PAGE of one parent's children (or of the roots when userId is
+   * omitted), keyset-paginated by id (orderBy id asc, cursor = the last
+   * node's id), so a 1000-node usrah never has to arrive in one response.
+   * Every node carries childCount — the expander badge — from ONE groupBy
+   * over the page's ids. Supervisors keep their depth-bounded own-downline
+   * view (GET /api/dawah); the whole-forest browser is a full_admin tool.
+   */
+  async referralTree(
+    viewer: User | null,
+    opts: { userId?: string; cursor?: string; limit?: string }
+  ) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    const limitRaw = parseInt(opts.limit ?? "50", 10);
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 100) {
+      throw new ApiError(400, "প্রতি পাতায় ১ থেকে ১০০টি নোড দেখা যাবে");
+    }
+
+    // existence pre-read in the system context → honest 404 (assertCanAccess
+    // pattern); RLS is bypassed for full_admin anyway.
+    let parentId: string | null = null;
+    if (opts.userId) {
+      const parent = await this.rls.system((tx) =>
+        tx.user.findUnique({ where: { id: opts.userId }, select: { id: true } })
+      );
+      if (!parent) throw new ApiError(404, "ব্যবহারকারী পাওয়া যায়নি");
+      parentId = opts.userId;
+    }
+
+    return this.rls.run(user, async (tx) => {
+      const where: Record<string, unknown> = {
+        ...(parentId ? { referredById: parentId } : { referredById: null }),
+        ...(opts.cursor ? { id: { gt: opts.cursor } } : {}),
+      };
+      // the count uses the SAME where (cursor applied) so "remaining" is
+      // exact — an exact-fit last page yields nextCursor null
+      const [rows, remaining] = await Promise.all([
+        tx.user.findMany({
+          where: where as never,
+          orderBy: { id: "asc" },
+          take: limitRaw,
+        }),
+        tx.user.count({ where: where as never }),
+      ]);
+
+      const ids = rows.map((r) => r.id);
+      const childCounts = new Map<string, number>();
+      if (ids.length) {
+        const grouped = await tx.user.groupBy({
+          by: ["referredById"],
+          where: { referredById: { in: ids } },
+          _count: { _all: true },
+        });
+        for (const g of grouped) {
+          if (g.referredById) childCounts.set(g.referredById, g._count._all);
+        }
+      }
+
+      const nodes = rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        gender: r.gender as Gender,
+        level: r.level as Level,
+        memberCode: r.memberCode,
+        role: r.role as Role,
+        lastActiveAt: r.lastActiveAt.toISOString(),
+        joinedAt: r.createdAt.toISOString(),
+        childCount: childCounts.get(r.id) ?? 0,
+      }));
+      const nextCursor =
+        rows.length === limitRaw && remaining > limitRaw && rows.length > 0
+          ? rows[rows.length - 1].id
+          : null;
+      // remaining = rows still to fetch AFTER this page (the count query has
+      // the cursor applied, minus what this page just returned)
+      return { nodes, nextCursor, remaining: Math.max(0, remaining - rows.length) };
+    });
+  }
+
   /** GET /api/admin/audit — full_admin: last 100 audit entries with actor names. */
   async audit(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -2314,6 +2399,20 @@ export class AdminController {
   @Roles("invigilator") // floor: invigilator, usrah_head, full_admin (service splits)
   invigilatorHealth(@Req() req: AuthedRequest) {
     return this.service.invigilatorHealth(currentUser(req));
+  }
+
+  // ── W4h: referral tree, server-side cursor-paginated ─────────────────────
+
+  @Get("referral-tree")
+  @ApiOperation({ summary: "full_admin: one cursor-paged level of the referral forest (roots or one parent's children)" })
+  @Roles("full_admin")
+  referralTree(
+    @Query("userId") userId: string | undefined,
+    @Query("cursor") cursor: string | undefined,
+    @Query("limit") limit: string | undefined,
+    @Req() req: AuthedRequest
+  ) {
+    return this.service.referralTree(currentUser(req), { userId, cursor, limit });
   }
 
   @Get("support")
