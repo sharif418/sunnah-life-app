@@ -11,6 +11,7 @@ import '../../core/location_service.dart';
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import 'widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Opens the city picker and returns the chosen [CityEntry], or null.
 Future<CityEntry?> showCityPicker(BuildContext context) {
@@ -64,7 +65,7 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
     switch (_gps) {
       case _GpsPhase.idle:
         return _GpsCard(
-          icon: Icons.my_location,
+          icon: PhosphorIconsRegular.crosshair,
           title: context.t('gps_find_city'),
           subtitle: context.t('gps_find_city_hint'),
           onTap: _locate,
@@ -79,7 +80,7 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
       case _GpsPhase.confirm:
         final s = _snap!;
         return _GpsCard(
-          icon: Icons.location_on,
+          icon: PhosphorIconsFill.mapPin,
           title:
               '${context.t('gps_your_location')}: ${s.city.nameBn}'
               '${s.approximate ? ' (${context.t('gps_approx')})' : ''}',
@@ -101,6 +102,8 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
           LocationFailure.unavailable => context.t('gps_unavailable'),
         };
         return _GpsCard(
+          // No Phosphor 2.1 equivalent (slashed location pin) — the one
+          // Material glyph left in the city picker.
           icon: Icons.location_off_outlined,
           title: message,
           subtitle: null,
@@ -171,7 +174,7 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
               onChanged: (v) => setState(() => _query = v),
               decoration: InputDecoration(
                 hintText: context.t('onb_city_search'),
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                 isDense: true,
               ),
             ),
@@ -311,7 +314,7 @@ class _GpsCard extends StatelessWidget {
                 action!,
               ] else if (onTap != null)
                 Icon(
-                  Icons.chevron_right,
+                  PhosphorIconsRegular.caretRight,
                   size: 20,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),

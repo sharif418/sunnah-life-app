@@ -7,6 +7,7 @@ import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class IslamicNamesScreen extends StatefulWidget {
   const IslamicNamesScreen({super.key});
@@ -38,7 +39,7 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
           if (names.isEmpty) {
             return EmptyState(
                 message: context.t('empty_generic'),
-                icon: Icons.child_care_outlined);
+                icon: PhosphorIconsRegular.baby);
           }
           var visible = names
               .where((n) => n.gender == (_girls ? 'girl' : 'boy'))
@@ -62,7 +63,7 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                         onChanged: (v) => setState(() => _query = v),
                         decoration: InputDecoration(
                           hintText: context.t('search'),
-                          prefixIcon: const Icon(Icons.search),
+                          prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                           isDense: true,
                         ),
                       ),
@@ -72,12 +73,12 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                       segments: [
                         ButtonSegment(
                           value: false,
-                          icon: const Icon(Icons.boy_outlined, size: 18),
+                          icon: const Icon(PhosphorIconsRegular.genderMale, size: 18),
                           label: Text(context.t('names_boy')),
                         ),
                         ButtonSegment(
                           value: true,
-                          icon: const Icon(Icons.girl_outlined, size: 18),
+                          icon: const Icon(PhosphorIconsRegular.genderFemale, size: 18),
                           label: Text(context.t('names_girl')),
                         ),
                       ],
@@ -92,7 +93,7 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                 child: visible.isEmpty
                     ? EmptyState(
                         message: context.t('empty_generic'),
-                        icon: Icons.search)
+                        icon: PhosphorIconsRegular.magnifyingGlass)
                     : ListView.separated(
                         padding: const EdgeInsets.all(SLSpacing.s16),
                         itemCount: visible.length,

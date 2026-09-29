@@ -7,6 +7,7 @@ import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class Names99Screen extends StatefulWidget {
   const Names99Screen({super.key});
@@ -37,7 +38,7 @@ class _Names99ScreenState extends State<Names99Screen> {
           if (names.isEmpty) {
             return EmptyState(
               message: context.t('empty_generic'),
-              icon: Icons.brightness_7_outlined,
+              icon: PhosphorIconsRegular.sun,
             );
           }
           final q = _query.trim();
@@ -62,7 +63,7 @@ class _Names99ScreenState extends State<Names99Screen> {
                   onChanged: (v) => setState(() => _query = v),
                   decoration: InputDecoration(
                     hintText: context.t('search'),
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                     isDense: true,
                   ),
                 ),
@@ -71,7 +72,7 @@ class _Names99ScreenState extends State<Names99Screen> {
                 child: names.isEmpty
                     ? EmptyState(
                         message: context.t('empty_generic'),
-                        icon: Icons.search,
+                        icon: PhosphorIconsRegular.magnifyingGlass,
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(SLSpacing.s16),

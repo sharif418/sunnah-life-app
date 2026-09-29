@@ -23,6 +23,7 @@ import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
 import 'amal_widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class AmalHubScreen extends ConsumerWidget {
   const AmalHubScreen({super.key});
@@ -71,7 +72,7 @@ class _TodayView extends ConsumerWidget {
       return ListView(
         children: [
           const SizedBox(height: SLSpacing.s32),
-          EmptyState(message: context.t('amal_no_defs'), icon: Icons.menu_book),
+          EmptyState(message: context.t('amal_no_defs'), icon: PhosphorIconsRegular.bookOpen),
         ],
       );
     }
@@ -161,26 +162,26 @@ class _TodayView extends ConsumerWidget {
           runSpacing: SLSpacing.s8,
           children: [
             ActionChip(
-              avatar: const Icon(Icons.grid_view_outlined, size: 18),
+              avatar: const Icon(PhosphorIconsRegular.squaresFour, size: 18),
               label: Text(context.t('amal_month')),
               onPressed: () => context.push('/amal/month'),
             ),
             ActionChip(
               avatar: const Icon(
-                Icons.local_fire_department_outlined,
+                PhosphorIconsFill.fire,
                 size: 18,
               ),
               label: Text(context.t('amal_habit_builder')),
               onPressed: () => context.push('/amal/habit'),
             ),
             ActionChip(
-              avatar: const Icon(Icons.quiz_outlined, size: 18),
+              avatar: const Icon(PhosphorIconsRegular.question, size: 18),
               label: Text(context.t('amal_self_test')),
               onPressed: () => context.push('/amal/self-test'),
             ),
             // W4c: আমার লক্ষ্য — propose → head approval → status chips.
             ActionChip(
-              avatar: const Icon(Icons.flag_outlined, size: 18),
+              avatar: const Icon(PhosphorIconsRegular.flagBanner, size: 18),
               label: Text(context.t('goals_title')),
               onPressed: () => context.push('/amal/goals'),
             ),
@@ -293,7 +294,7 @@ class _TodayView extends ConsumerWidget {
 
         // W4c: নিজের তালিকা — per-day custom checklist (local-only,
         // offline-first; no API surface by design).
-        SectionHeader(context.t('checklist_title'), icon: Icons.checklist),
+        SectionHeader(context.t('checklist_title'), icon: PhosphorIconsRegular.listChecks),
         _CustomChecklistSection(today: today, bn: bn),
 
         const SizedBox(height: SLSpacing.s8),
@@ -308,16 +309,16 @@ class _TodayView extends ConsumerWidget {
   }
 
   static IconData _groupIcon(String key) => switch (key) {
-    'group_fard' => Icons.mosque_outlined,
-    'group_salah_sunnah' => Icons.stars_outlined,
-    'group_nafl' => Icons.wb_twilight_outlined,
-    'cat_quran' => Icons.menu_book_outlined,
-    'cat_dhikr' => Icons.spa_outlined,
-    'cat_akhlaq' => Icons.volunteer_activism_outlined,
-    'cat_dawat' => Icons.campaign_outlined,
-    'cat_lifestyle' => Icons.bedtime_outlined,
-    'cat_sunnah' => Icons.star_outline,
-    _ => Icons.flag_outlined,
+    'group_fard' => PhosphorIconsRegular.mosque,
+    'group_salah_sunnah' => PhosphorIconsRegular.star,
+    'group_nafl' => PhosphorIconsRegular.sunHorizon,
+    'cat_quran' => PhosphorIconsRegular.bookOpen,
+    'cat_dhikr' => PhosphorIconsRegular.plant,
+    'cat_akhlaq' => PhosphorIconsRegular.handHeart,
+    'cat_dawat' => PhosphorIconsRegular.megaphone,
+    'cat_lifestyle' => PhosphorIconsRegular.moon,
+    'cat_sunnah' => PhosphorIconsRegular.star,
+    _ => PhosphorIconsRegular.flagBanner,
   };
 }
 
@@ -460,7 +461,7 @@ class _AmalGroupRow extends ConsumerWidget {
                       message:
                           '${context.t('amal_auto_logged')} (${entry!.source})',
                       child: Icon(
-                        Icons.auto_awesome,
+                        PhosphorIconsRegular.sparkle,
                         size: 16,
                         color: theme.colorScheme.tertiary,
                       ),
@@ -615,7 +616,7 @@ class _AmalGroupRow extends ConsumerWidget {
                 message:
                     '${context.t('amal_auto_logged')} (${autoSource ?? ''})',
                 child: Icon(
-                  Icons.auto_awesome,
+                  PhosphorIconsRegular.sparkle,
                   size: 16,
                   color: theme.colorScheme.tertiary,
                 ),
@@ -789,7 +790,7 @@ class _CustomChecklistSectionState extends ConsumerState<_CustomChecklistSection
               IconButton.filledTonal(
                 key: const ValueKey('checklist_add_button'),
                 tooltip: context.t('checklist_add'),
-                icon: const Icon(Icons.add),
+                icon: const Icon(PhosphorIconsRegular.plus),
                 onPressed: _add,
               ),
             ],

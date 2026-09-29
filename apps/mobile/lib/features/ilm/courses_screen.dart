@@ -12,6 +12,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Digit formatter following the app language (bn → Bengali numerals).
 String _n(BuildContext context, Object value) =>
@@ -67,7 +68,7 @@ class CoursesScreen extends ConsumerWidget {
                   message:
                       '${context.t('courses_empty_title')}\n'
                       '${context.t('courses_empty_hint')}',
-                  icon: Icons.school_outlined,
+                  icon: PhosphorIconsRegular.graduationCap,
                 ),
               ],
             );
@@ -273,7 +274,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          icon: const Icon(Icons.login_outlined, size: 18),
+                          icon: const Icon(PhosphorIconsRegular.signIn, size: 18),
                           label: Text(context.t('course_signin_to_enroll')),
                           onPressed: () => context.push('/auth'),
                         ),
@@ -295,7 +296,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                         width: double.infinity,
                         child: FilledButton.tonalIcon(
                           icon: const Icon(
-                            Icons.check_circle_outline,
+                            PhosphorIconsRegular.checkCircle,
                             size: 18,
                           ),
                           label: Text(context.t('course_enrolled')),
@@ -416,7 +417,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
             child: Center(
               child: isDone
                   ? Icon(
-                      Icons.check,
+                      PhosphorIconsRegular.check,
                       size: 20,
                       color: theme.colorScheme.onPrimary,
                     )
@@ -450,7 +451,7 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
               ],
             ),
           ),
-          const DirectionalIcon(Icons.chevron_right, size: 24),
+          const DirectionalIcon(PhosphorIconsRegular.caretRight, size: 24),
         ],
       ),
     );
@@ -563,14 +564,14 @@ class _LessonSheetState extends State<_LessonSheet> {
                   else
                     FilledButton.icon(
                       onPressed: _handleToggle,
-                      icon: const Icon(Icons.check),
+                      icon: const Icon(PhosphorIconsRegular.check),
                       label: Text(context.t('lesson_complete')),
                     ),
                   if (_done && widget.next != null) ...[
                     const SizedBox(height: SLSpacing.s8),
                     FilledButton.icon(
                       onPressed: widget.onAdvance,
-                      icon: const DirectionalIcon(Icons.arrow_forward),
+                      icon: const DirectionalIcon(PhosphorIconsRegular.arrowRight),
                       label: Text(context.t('lesson_next')),
                     ),
                   ],

@@ -16,6 +16,7 @@ import '../../design/design_tokens.dart';
 import '../../services/platform_channels.dart';
 import '../shared/widgets.dart';
 import 'referral_card.dart';
+import '../../design/phosphor_icons.dart';
 
 /// The capture behind the শেয়ার করুন button — injectable for tests: the
 /// engine's toImage/toByteData pipeline is real-async, which the fake-async
@@ -185,7 +186,7 @@ class _ReferralShareSheetState extends State<_ReferralShareSheet> {
                         height: 16,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.share),
+                    : const Icon(PhosphorIconsRegular.shareNetwork),
                 label: Text(context.t('dawah_share_now')),
               ),
             ],

@@ -17,6 +17,7 @@ import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class GenderCompletionScreen extends ConsumerStatefulWidget {
   const GenderCompletionScreen({super.key});
@@ -85,7 +86,7 @@ class _GenderCompletionScreenState
         padding: const EdgeInsets.all(SLSpacing.s20),
         children: [
           Icon(
-            Icons.badge_outlined,
+            PhosphorIconsRegular.identificationBadge,
             size: 56,
             color: theme.colorScheme.primary,
           ),
@@ -114,7 +115,7 @@ class _GenderCompletionScreenState
               Expanded(
                 child: _ChoiceTile(
                   selected: _gender == Gender.m,
-                  icon: Icons.man_outlined,
+                  icon: PhosphorIconsRegular.genderMale,
                   title: context.t('onb_male'),
                   onTap: () => setState(() => _gender = Gender.m),
                 ),
@@ -123,7 +124,7 @@ class _GenderCompletionScreenState
               Expanded(
                 child: _ChoiceTile(
                   selected: _gender == Gender.f,
-                  icon: Icons.woman_outlined,
+                  icon: PhosphorIconsRegular.genderFemale,
                   title: context.t('onb_female'),
                   onTap: () => setState(() => _gender = Gender.f),
                 ),
@@ -235,7 +236,7 @@ class _ChoiceTile extends StatelessWidget {
               ),
               if (selected)
                 Icon(
-                  Icons.check_circle,
+                  PhosphorIconsFill.checkCircle,
                   color: theme.colorScheme.primary,
                   size: 20,
                 ),

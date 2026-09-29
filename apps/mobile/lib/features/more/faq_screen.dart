@@ -10,6 +10,7 @@ import 'package:flutter/services.dart' show rootBundle;
 
 import '../../design/design_tokens.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class FaqEntry {
   const FaqEntry({required this.q, required this.a});
@@ -126,7 +127,7 @@ class _FaqScreenState extends State<FaqScreen> {
           if (items.isEmpty) {
             return EmptyState(
               message: context.t('empty_generic'),
-              icon: Icons.help_outline,
+              icon: PhosphorIconsRegular.question,
             );
           }
           return ListView(

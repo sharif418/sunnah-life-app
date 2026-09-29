@@ -20,6 +20,7 @@ import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 
 import '../../design/design_tokens.dart';
+import '../../design/phosphor_icons.dart';
 
 /// The shared referral card. Fixed design surface — NOT reflowed for any
 /// screen; the preview scales it with FittedBox, the PNG renders it
@@ -124,7 +125,7 @@ class _LogoMark extends StatelessWidget {
         color: SLColors.gold,
         shape: BoxShape.circle,
       ),
-      child: Icon(Icons.star, color: SLColors.primaryDeep, size: starSize),
+      child: Icon(PhosphorIconsFill.star, color: SLColors.primaryDeep, size: starSize),
     );
   }
 }

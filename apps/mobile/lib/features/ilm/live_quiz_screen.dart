@@ -25,6 +25,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 // ── wire types (JSON payloads from quiz.gateway.ts) ─────────────────────────
 
@@ -394,7 +395,7 @@ class _LiveQuizScreenState extends ConsumerState<LiveQuizScreen> {
       body = const Skeleton(height: 96, count: 3);
     } else if (!auth.signedIn) {
       body = _Gate(
-        icon: Icons.groups_outlined,
+        icon: PhosphorIconsRegular.usersThree,
         title: context.t('live_quiz_for_usrah'),
         hint: context.t('live_quiz_signin_hint'),
         actionLabel: context.t('onb_signin'),
@@ -449,7 +450,7 @@ class _LiveQuizScreenState extends ConsumerState<LiveQuizScreen> {
         if (_phase != 'ended' && _scoreboard.isNotEmpty) ...[
           SectionHeader(
             context.t('live_quiz_leaderboard'),
-            icon: Icons.workspace_premium,
+            icon: PhosphorIconsRegular.medal,
           ),
           for (var i = 0; i < _scoreboard.length; i++)
             _LeaderRow(rank: i + 1, row: _scoreboard[i]),
@@ -520,7 +521,7 @@ class _Gate extends StatelessWidget {
             const SizedBox(height: SLSpacing.s16),
             FilledButton.icon(
               onPressed: onAction,
-              icon: const Icon(Icons.login, size: 18),
+              icon: const Icon(PhosphorIconsRegular.signIn, size: 18),
               label: Text(actionLabel),
             ),
           ],
@@ -553,7 +554,7 @@ class _StatusPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(connected ? Icons.wifi : Icons.wifi_off, size: 14, color: color),
+          Icon(connected ? PhosphorIconsRegular.wifiHigh : PhosphorIconsRegular.wifiSlash, size: 14, color: color),
           const SizedBox(width: 6),
           Text(
             label,
@@ -594,7 +595,7 @@ class _IntroCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.wifi_tethering,
+                  PhosphorIconsRegular.broadcast,
                   color: theme.colorScheme.primary,
                 ),
               ),
@@ -619,7 +620,7 @@ class _IntroCard extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.wifi_tethering, size: 18),
+                : const Icon(PhosphorIconsRegular.broadcast, size: 18),
             label: Text(
               context.t(joining ? 'live_quiz_joining' : 'live_quiz_enter'),
             ),
@@ -660,7 +661,7 @@ class _HostCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.workspace_premium, size: 18, color: gold),
+                Icon(PhosphorIconsRegular.medal, size: 18, color: gold),
                 const SizedBox(width: SLSpacing.s8),
                 Expanded(
                   child: Text(
@@ -691,7 +692,7 @@ class _HostCard extends StatelessWidget {
                   onPressed: selected.isEmpty
                       ? null
                       : () => state._hostStart(selected),
-                  icon: const Icon(Icons.play_arrow, size: 18),
+                  icon: const Icon(PhosphorIconsRegular.play, size: 18),
                   label: Text(context.t('live_quiz_start')),
                 ),
               ),
@@ -720,13 +721,13 @@ class _HostCard extends StatelessWidget {
                       child: state._phase == 'question'
                           ? FilledButton.icon(
                               onPressed: state._hostNext,
-                              icon: const Icon(Icons.bolt, size: 18),
+                              icon: const Icon(PhosphorIconsRegular.lightning, size: 18),
                               label: Text(context.t('live_quiz_reveal_now')),
                             )
                           : FilledButton.icon(
                               onPressed: state._hostNext,
                               icon: const DirectionalIcon(
-                                Icons.skip_next,
+                                PhosphorIconsRegular.skipForward,
                                 size: 18,
                               ),
                               label: Text(context.t('live_quiz_next')),
@@ -736,7 +737,7 @@ class _HostCard extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: state._hostEnd,
-                        icon: const Icon(Icons.stop_circle_outlined, size: 18),
+                        icon: const Icon(PhosphorIconsRegular.stopCircle, size: 18),
                         label: Text(context.t('live_quiz_end')),
                       ),
                     ),
@@ -790,7 +791,7 @@ class _QuizPickRow extends StatelessWidget {
           child: Row(
             children: [
               Icon(
-                Icons.quiz_outlined,
+                PhosphorIconsRegular.question,
                 size: 18,
                 color: theme.colorScheme.primary,
               ),
@@ -819,7 +820,7 @@ class _QuizPickRow extends StatelessWidget {
                 ),
               ),
               if (selected)
-                Icon(Icons.check_circle, color: theme.colorScheme.primary),
+                Icon(PhosphorIconsFill.checkCircle, color: theme.colorScheme.primary),
             ],
           ),
         ),
@@ -842,7 +843,7 @@ class _LobbyCard extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            Icons.groups_outlined,
+            PhosphorIconsRegular.usersThree,
             size: 36,
             color: theme.colorScheme.primary.withValues(alpha: 0.6),
           ),
@@ -1062,7 +1063,7 @@ class _OptionTile extends StatelessWidget {
                   ),
                   child: picked
                       ? Icon(
-                          Icons.check,
+                          PhosphorIconsRegular.check,
                           size: 16,
                           color: theme.colorScheme.onPrimary,
                         )
@@ -1215,7 +1216,7 @@ class _EndedCard extends StatelessWidget {
       child: Column(
         children: [
           Icon(
-            Icons.workspace_premium,
+            PhosphorIconsRegular.medal,
             size: 40,
             color: theme.colorScheme.tertiary,
           ),
@@ -1234,7 +1235,7 @@ class _EndedCard extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton.icon(
               onPressed: state._leave,
-              icon: const Icon(Icons.logout, size: 18),
+              icon: const Icon(PhosphorIconsRegular.signOut, size: 18),
               label: Text(context.t('live_quiz_leave')),
             ),
           ),

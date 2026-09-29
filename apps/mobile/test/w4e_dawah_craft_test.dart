@@ -39,6 +39,7 @@ import 'package:sunnah_life/features/shared/widgets.dart';
 import 'package:sunnah_life/l10n/app_strings.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/providers.dart';
+import 'package:sunnah_life/design/phosphor_icons.dart';
 
 /// Pinned app clock — the tree's relative last-active labels and the
 /// offline banner stamps never drift.
@@ -616,11 +617,11 @@ final Finder overviewScroll = find
     await bootDawah(tester, api: _TreeApi(downline: const []));
 
     await tester.scrollUntilVisible(
-      find.byIcon(Icons.park_outlined),
+      find.byIcon(PhosphorIconsRegular.tree),
       300,
       scrollable: overviewScroll,
     );
-    expect(find.byIcon(Icons.park_outlined), findsOneWidget);
+    expect(find.byIcon(PhosphorIconsRegular.tree), findsOneWidget);
     expect(
       find.byKey(const ValueKey('maduRow_m1')),
       findsNothing,

@@ -174,7 +174,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         post = kDefaultPostPrayerMinutes;
                         dirty = true;
                       }),
-                      icon: const Icon(Icons.restart_alt),
+                      icon: const Icon(PhosphorIconsRegular.arrowClockwise),
                       label: Text(sheetContext.t('bell_minutes_reset')),
                     ),
                     FilledButton(
@@ -267,7 +267,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SectionHeader(
               key: _scheduleKey,
               context.t('prayer_schedule'),
-              icon: Icons.schedule_outlined,
+              icon: PhosphorIconsRegular.clock,
             ),
             _Schedule(
               prayer: prayer,
@@ -280,7 +280,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // ── Forbidden times ──
             SectionHeader(
               context.t('prayer_forbidden_times'),
-              icon: Icons.block_outlined,
+              icon: PhosphorIconsRegular.prohibit,
             ),
             _ForbiddenTimes(prayer: prayer, bn: bn),
 
@@ -681,7 +681,7 @@ class _AmalPreviewSection extends ConsumerWidget {
                   ],
                 ),
               ),
-              const DirectionalIcon(Icons.chevron_right),
+              const DirectionalIcon(PhosphorIconsRegular.caretRight),
             ],
           ),
         ),
@@ -865,7 +865,7 @@ class _PostPrayerPrompt extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.task_alt, color: theme.colorScheme.tertiary, size: 20),
+              Icon(PhosphorIconsRegular.checkCircle, color: theme.colorScheme.tertiary, size: 20),
               const SizedBox(width: SLSpacing.s8),
               Expanded(
                 child: Text(
@@ -886,19 +886,19 @@ class _PostPrayerPrompt extends ConsumerWidget {
               option(
                 'jamaat',
                 context.t('amal_jamaat'),
-                Icons.groups_outlined,
+                PhosphorIconsRegular.usersThree,
                 theme.colorScheme.primary,
               ),
               option(
                 'alone',
                 context.t('amal_alone'),
-                Icons.person_outline,
+                PhosphorIconsRegular.user,
                 theme.colorScheme.secondary,
               ),
               option(
                 'qaza',
                 context.t('amal_qaza'),
-                Icons.schedule,
+                PhosphorIconsRegular.clock,
                 theme.colorScheme.error,
               ),
             ],
@@ -950,7 +950,7 @@ class _ForbiddenTimes extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.block, color: alertFg, size: 18),
+                Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
                 const SizedBox(width: SLSpacing.s8),
                 Expanded(
                   child: Text(
@@ -1039,12 +1039,12 @@ class _Schedule extends StatelessWidget {
           minVerticalPadding: 6,
           leading: isCurrent
               ? Icon(
-                  Icons.radio_button_checked,
+                  PhosphorIconsRegular.record,
                   color: theme.colorScheme.primary,
                   size: 20,
                 )
               : Icon(
-                  Icons.circle_outlined,
+                  PhosphorIconsRegular.circle,
                   color: theme.colorScheme.outline,
                   size: 12,
                 ),
@@ -1115,7 +1115,7 @@ class _BellButton extends StatelessWidget {
           width: SLSpacing.minTapTarget,
           height: SLSpacing.minTapTarget,
           child: Icon(
-            on ? Icons.notifications_active : Icons.notifications_none,
+            on ? PhosphorIconsRegular.bellRinging : PhosphorIconsRegular.bell,
             size: 20,
             color: on ? theme.colorScheme.tertiary : theme.colorScheme.outline,
           ),
@@ -1137,7 +1137,7 @@ class _ExactAlarmCard extends StatelessWidget {
     return AppCard(
       child: Row(
         children: [
-          Icon(Icons.alarm, color: theme.colorScheme.primary),
+          Icon(PhosphorIconsRegular.alarm, color: theme.colorScheme.primary),
           const SizedBox(width: SLSpacing.s12),
           Expanded(
             child: Column(

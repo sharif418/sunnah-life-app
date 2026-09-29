@@ -17,6 +17,7 @@ import '../../design/design_tokens.dart';
 import '../../services/notification_service.dart';
 import '../../services/platform_channels.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 const String _kPrefReminderOn = 'detox_reminder_on';
 const String _kPrefReminderHour = 'detox_reminder_h';
@@ -164,7 +165,7 @@ class _DetoxScreenState extends State<DetoxScreen> with WidgetsBindingObserver {
           IconButton(
             tooltip: context.t('detox_recheck'),
             onPressed: _recheck,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(PhosphorIconsRegular.arrowClockwise),
           ),
         ],
       ),
@@ -179,7 +180,7 @@ class _DetoxScreenState extends State<DetoxScreen> with WidgetsBindingObserver {
                 Row(
                   children: [
                     Icon(
-                      Icons.shield_outlined,
+                      PhosphorIconsRegular.shield,
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: SLSpacing.s12),
@@ -209,7 +210,7 @@ class _DetoxScreenState extends State<DetoxScreen> with WidgetsBindingObserver {
               child: Row(
                 children: [
                   Icon(
-                    Icons.smartphone_outlined,
+                    PhosphorIconsRegular.deviceMobile,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: SLSpacing.s12),
@@ -233,7 +234,7 @@ class _DetoxScreenState extends State<DetoxScreen> with WidgetsBindingObserver {
                   Row(
                     children: [
                       Icon(
-                        granted ? Icons.check_circle : Icons.error_outline,
+                        granted ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.warningCircle,
                         size: 18,
                         color: granted
                             ? theme.colorScheme.tertiary
@@ -253,7 +254,7 @@ class _DetoxScreenState extends State<DetoxScreen> with WidgetsBindingObserver {
                   ),
                   const SizedBox(height: SLSpacing.s12),
                   FilledButton.icon(
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                    icon: const Icon(PhosphorIconsRegular.shieldCheck),
                     label: Text(context.t('detox_grant')),
                     onPressed: _requestAccess,
                   ),

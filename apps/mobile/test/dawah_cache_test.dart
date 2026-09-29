@@ -28,6 +28,7 @@ import 'package:sunnah_life/features/dawah/dawah_screen.dart';
 import 'package:sunnah_life/features/shared/widgets.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/providers.dart';
+import 'package:sunnah_life/design/phosphor_icons.dart';
 
 http.Response _jsonResponse(Object body, [int status = 200]) => http.Response(
   jsonEncode(body),
@@ -367,7 +368,7 @@ void main() {
       );
 
       expect(find.byType(OfflineBanner), findsOneWidget);
-      expect(find.byIcon(Icons.wifi_off), findsOneWidget);
+      expect(find.byIcon(PhosphorIconsRegular.wifiSlash), findsOneWidget);
       expect(
         find.textContaining('সর্বশেষ হালনাগাদ'),
         findsOneWidget,

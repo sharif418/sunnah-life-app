@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class SunnahsScreen extends StatefulWidget {
   const SunnahsScreen({super.key});
@@ -18,10 +19,10 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
   String _category = 'all';
 
   static const _cats = <String, (String, IconData)>{
-    'all': ('sunnah_cat_all', Icons.all_inclusive_outlined),
-    'daily': ('sunnah_cat_daily', Icons.wb_sunny_outlined),
-    'forgotten': ('sunnah_cat_forgotten', Icons.wb_twilight_outlined),
-    'salah': ('sunnah_cat_salah', Icons.mosque_outlined),
+    'all': ('sunnah_cat_all', PhosphorIconsRegular.infinity),
+    'daily': ('sunnah_cat_daily', PhosphorIconsRegular.sun),
+    'forgotten': ('sunnah_cat_forgotten', PhosphorIconsRegular.sunHorizon),
+    'salah': ('sunnah_cat_salah', PhosphorIconsRegular.mosque),
   };
 
   @override
@@ -42,7 +43,7 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
           if (items.isEmpty) {
             return EmptyState(
               message: context.t('empty_generic'),
-              icon: Icons.wb_twilight_outlined,
+              icon: PhosphorIconsRegular.sunHorizon,
             );
           }
           final visible = _category == 'all'
@@ -79,7 +80,7 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                 child: visible.isEmpty
                     ? EmptyState(
                         message: context.t('empty_generic'),
-                        icon: Icons.search,
+                        icon: PhosphorIconsRegular.magnifyingGlass,
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(SLSpacing.s16),
@@ -103,7 +104,7 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                                     ),
                                     Icon(
                                       _cats[s.category]?.$2 ??
-                                          Icons.star_outline,
+                                          PhosphorIconsRegular.star,
                                       size: 18,
                                       color: theme.colorScheme.primary,
                                     ),

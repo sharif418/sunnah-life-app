@@ -469,7 +469,7 @@ class _SplashLogo extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: const Center(
-            child: Icon(Icons.star, color: SLColors.primaryDeep, size: 40),
+            child: Icon(PhosphorIconsFill.star, color: SLColors.primaryDeep, size: 40),
           ),
         ),
         const SizedBox(height: SLSpacing.s16),

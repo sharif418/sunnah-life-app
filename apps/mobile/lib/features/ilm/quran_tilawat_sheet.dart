@@ -11,6 +11,7 @@ import '../../design/design_tokens.dart';
 import '../../state/amal_state.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Shows the recitation-session sheet. Returns true when the user logged
 /// pages (or dismissed after logging).
@@ -67,7 +68,7 @@ Future<bool> showTilawatSheet(
                   onPressed: () => setState(
                     () => pages = (pages - 0.5).clamp(0, 999).toDouble(),
                   ),
-                  icon: const Icon(Icons.remove),
+                  icon: const Icon(PhosphorIconsRegular.minus),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
@@ -83,7 +84,7 @@ Future<bool> showTilawatSheet(
                   onPressed: () => setState(
                     () => pages = (pages + 0.5).clamp(0, 999).toDouble(),
                   ),
-                  icon: const Icon(Icons.add),
+                  icon: const Icon(PhosphorIconsRegular.plus),
                 ),
               ],
             ),
@@ -94,7 +95,7 @@ Future<bool> showTilawatSheet(
             ),
             const SizedBox(height: SLSpacing.s12),
             FilledButton.icon(
-              icon: const Icon(Icons.menu_book_outlined),
+              icon: const Icon(PhosphorIconsRegular.bookOpen),
               label: Text(context.t('save')),
               onPressed: () async {
                 if (pages > 0) {

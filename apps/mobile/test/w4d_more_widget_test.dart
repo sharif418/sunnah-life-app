@@ -41,6 +41,7 @@ import 'package:sunnah_life/services/platform_channels.dart';
 import 'package:sunnah_life/state/providers.dart';
 import 'package:sunnah_life/state/remote_state.dart'
     show UsrahBundle, configProvider, usrahProvider;
+import 'package:sunnah_life/design/phosphor_icons.dart';
 
 // ── Top-level fixtures ──────────────────────────────────────────────────────
 
@@ -568,7 +569,7 @@ void main() {
       find.byType(TextField),
       'ফজরের বেলা বাজছে না কীভাবে ঠিক করব?',
     );
-    await tester.tap(find.byIcon(Icons.send_outlined));
+    await tester.tap(find.byIcon(PhosphorIconsRegular.paperPlaneTilt));
     await tester.pumpAndSettle();
     expect(openApi.appendCalls, 1);
     expect(openApi.lastAppendBody, 'ফজরের বেলা বাজছে না কীভাবে ঠিক করব?');

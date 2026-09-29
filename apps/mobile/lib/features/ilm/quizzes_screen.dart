@@ -12,6 +12,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Digit formatter following the app language (bn → Bengali numerals).
 String _n(BuildContext context, Object value) =>
@@ -54,7 +55,7 @@ class QuizzesScreen extends ConsumerWidget {
                   message:
                       '${context.t('quizzes_empty_title')}\n'
                       '${context.t('quizzes_empty_hint')}',
-                  icon: Icons.quiz_outlined,
+                  icon: PhosphorIconsRegular.question,
                 ),
               ],
             );
@@ -310,7 +311,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                 const SizedBox(height: SLSpacing.s24),
                 EmptyState(
                   message: context.t('quizzes_empty_title'),
-                  icon: Icons.quiz_outlined,
+                  icon: PhosphorIconsRegular.question,
                 ),
               ],
             );
@@ -470,7 +471,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
       circleBg = theme.colorScheme.primary;
       circleFg = theme.colorScheme.onPrimary;
       trailing = Icon(
-        Icons.check_circle,
+        PhosphorIconsFill.checkCircle,
         size: 22,
         color: theme.colorScheme.primary,
       );
@@ -480,7 +481,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
       rowFg = theme.colorScheme.error;
       circleBg = theme.colorScheme.error;
       circleFg = theme.colorScheme.onError;
-      trailing = Icon(Icons.cancel, size: 22, color: theme.colorScheme.error);
+      trailing = Icon(PhosphorIconsRegular.xCircle, size: 22, color: theme.colorScheme.error);
     } else {
       rowBg = theme.colorScheme.surfaceContainerLow;
       rowBorder = theme.colorScheme.outline;
@@ -612,8 +613,8 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                   children: [
                     Icon(
                       _savedToServer
-                          ? Icons.cloud_done_outlined
-                          : Icons.cloud_off_outlined,
+                          ? PhosphorIconsRegular.cloudCheck
+                          : PhosphorIconsRegular.cloudSlash,
                       size: 16,
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -635,7 +636,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
               SizedBox(
                 width: double.infinity,
                 child: FilledButton.icon(
-                  icon: const Icon(Icons.replay),
+                  icon: const Icon(PhosphorIconsRegular.arrowCounterClockwise),
                   onPressed: _reset,
                   label: Text(context.t('quiz_play_again')),
                 ),

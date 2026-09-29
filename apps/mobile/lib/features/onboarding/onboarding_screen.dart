@@ -14,6 +14,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../shared/city_picker.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -88,7 +89,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.star,
+                        PhosphorIconsFill.star,
                         color: SLColors.primaryDeep,
                         size: 30,
                       ),
@@ -246,7 +247,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Expanded(
             child: _OptionTile(
               selected: _gender == Gender.m,
-              icon: Icons.man_outlined,
+              icon: PhosphorIconsRegular.genderMale,
               title: context.t('onb_male'),
               onTap: () => setState(() => _gender = Gender.m),
             ),
@@ -255,7 +256,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           Expanded(
             child: _OptionTile(
               selected: _gender == Gender.f,
-              icon: Icons.woman_outlined,
+              icon: PhosphorIconsRegular.genderFemale,
               title: context.t('onb_female'),
               onTap: () => setState(() => _gender = Gender.f),
             ),
@@ -295,7 +296,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       Text(context.t('onb_step3_title'), style: theme.textTheme.titleMedium),
       const SizedBox(height: SLSpacing.s16),
       _OptionTile(
-        icon: Icons.location_on_outlined,
+        icon: PhosphorIconsRegular.mapPin,
         title: city?.nameBn ?? profile.city,
         subtitle: city == null || !city.isBd
             ? context.t('country_abroad')
@@ -373,7 +374,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       ),
       const SizedBox(height: SLSpacing.s16),
       OutlinedButton.icon(
-        icon: const Icon(Icons.login),
+        icon: const Icon(PhosphorIconsRegular.signIn),
         label: Text(context.t('onb_signin')),
         onPressed: () => context.push('/auth'),
       ),
@@ -456,7 +457,7 @@ class _OptionTile extends StatelessWidget {
               ),
               if (selected)
                 Icon(
-                  Icons.check_circle,
+                  PhosphorIconsFill.checkCircle,
                   color: theme.colorScheme.primary,
                   size: 20,
                 ),

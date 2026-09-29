@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class DuasScreen extends StatefulWidget {
   const DuasScreen({super.key});
@@ -60,7 +61,7 @@ class _DuasScreenState extends State<DuasScreen> {
                   onChanged: (v) => setState(() => _query = v),
                   decoration: InputDecoration(
                     hintText: context.t('search'),
-                    prefixIcon: const Icon(Icons.search),
+                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                     isDense: true,
                   ),
                 ),
@@ -97,7 +98,7 @@ class _DuasScreenState extends State<DuasScreen> {
                 child: visible.isEmpty
                     ? EmptyState(
                         message: context.t('empty_generic'),
-                        icon: Icons.front_hand_outlined,
+                        icon: PhosphorIconsRegular.hand,
                       )
                     : ListView.builder(
                         padding: const EdgeInsets.all(SLSpacing.s16),

@@ -16,6 +16,7 @@ import '../../services/platform_channels.dart';
 import '../../state/providers.dart';
 import '../shared/city_picker.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -86,14 +87,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 if (user == null) ...[
                   const SizedBox(height: SLSpacing.s12),
                   FilledButton.icon(
-                    icon: const Icon(Icons.login),
+                    icon: const Icon(PhosphorIconsRegular.signIn),
                     label: Text(context.t('onb_signin')),
                     onPressed: () => context.push('/auth'),
                   ),
                 ] else ...[
                   const SizedBox(height: SLSpacing.s12),
                   OutlinedButton.icon(
-                    icon: const Icon(Icons.logout),
+                    icon: const Icon(PhosphorIconsRegular.signOut),
                     label: Text(context.t('auth_signout')),
                     onPressed: () => ref.read(authProvider.notifier).signOut(),
                   ),
@@ -104,23 +105,23 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           const SizedBox(height: SLSpacing.s16),
 
           // Identity (read-only gender)
-          SectionHeader(context.t('onb_step2_title'), icon: Icons.badge_outlined),
+          SectionHeader(context.t('onb_step2_title'), icon: PhosphorIconsRegular.identificationBadge),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.person_outline),
+                  leading: const Icon(PhosphorIconsRegular.user),
                   title: Text(context.t('onb_name')),
                   subtitle: Text(user?.name ?? profile.name),
                   trailing: user == null
-                      ? const Icon(Icons.edit_outlined, size: 18)
+                      ? const Icon(PhosphorIconsRegular.pencilSimple, size: 18)
                       : null,
                   onTap: user == null ? () => _editName(context) : null,
                 ),
                 ListTile(
                   leading: const Icon(
-                    Icons.lock_outline,
+                    PhosphorIconsRegular.lockSimple,
                     size: 20,
                   ),
                   title: Text(context.t('onb_gender')),
@@ -129,14 +130,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.school_outlined),
+                  leading: const Icon(PhosphorIconsRegular.graduationCap),
                   title: Text(context.t('profile_category')),
                   subtitle: Text(switch (profile.category) {
                     UserCategory.general => context.t('profile_category_general'),
                     UserCategory.hafez => context.t('profile_category_hafez'),
                     UserCategory.alim => context.t('profile_category_alim'),
                   }),
-                  trailing: const Icon(Icons.edit_outlined, size: 18),
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   onTap: () => _pickCategory(context),
                 ),
               ],
@@ -146,16 +147,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           // Prayer settings
           SectionHeader(context.t('onb_step3_title'),
-              icon: Icons.location_on_outlined),
+              icon: PhosphorIconsRegular.mapPin),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.location_city_outlined),
+                  leading: const Icon(PhosphorIconsRegular.buildings),
                   title: Text(context.t('onb_city')),
                   subtitle: Text(profile.city),
-                  trailing: const Icon(Icons.edit_outlined, size: 18),
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   onTap: () async {
                     final picked = await showCityPicker(context);
                     if (picked != null) {
@@ -169,21 +170,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   },
                 ),
                 ListTile(
-                  leading: const Icon(Icons.balance_outlined),
+                  leading: const Icon(PhosphorIconsRegular.scales),
                   title: Text(context.t('onb_madhhab')),
                   subtitle: Text(context.t(profile.madhhab.labelKey)),
-                  trailing: const Icon(Icons.edit_outlined, size: 18),
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   onTap: () => _pickMadhhab(context),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.calculate_outlined),
+                  leading: const Icon(PhosphorIconsRegular.calculator),
                   title: Text(context.t('onb_method')),
                   subtitle: Text(context.t(profile.method.labelKey)),
-                  trailing: const Icon(Icons.edit_outlined, size: 18),
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   onTap: () => _pickMethod(context),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.calendar_month_outlined),
+                  leading: const Icon(PhosphorIconsRegular.calendarBlank),
                   title: Text(context.t('hijri_adjust')),
                   subtitle: Text(
                       '${profile.hijriAdjust >= 0 ? '+' : ''}${profile.hijriAdjust}'),
@@ -192,14 +193,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       IconButton(
                         tooltip: context.t('hijri_decrease'),
-                        icon: const Icon(Icons.remove_circle_outline),
+                        icon: const Icon(PhosphorIconsRegular.minusCircle),
                         onPressed: () => notifier.update(
                             hijriAdjust:
                                 (profile.hijriAdjust - 1).clamp(-2, 2)),
                       ),
                       IconButton(
                         tooltip: context.t('hijri_increase'),
-                        icon: const Icon(Icons.add_circle_outline),
+                        icon: const Icon(PhosphorIconsRegular.plusCircle),
                         onPressed: () => notifier.update(
                             hijriAdjust:
                                 (profile.hijriAdjust + 1).clamp(-2, 2)),
@@ -214,34 +215,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
           // App settings
           SectionHeader(context.t('profile_app_section'),
-              icon: Icons.settings_outlined),
+              icon: PhosphorIconsRegular.gear),
           AppCard(
             padding: EdgeInsets.zero,
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.language),
+                  leading: const Icon(PhosphorIconsRegular.translate),
                   title: Text(context.t('profile_language')),
                   subtitle: Text(
                       LangX.fromCode(profile.language).labelNative),
-                  trailing: const Icon(Icons.edit_outlined, size: 18),
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   onTap: () => _pickLanguage(context),
                 ),
                 ListTile(
                   leading: Icon(theme.brightness == Brightness.dark
-                      ? Icons.dark_mode_outlined
-                      : Icons.light_mode_outlined),
+                      ? PhosphorIconsRegular.moonStars
+                      : PhosphorIconsRegular.sun),
                   title: Text(context.t('profile_theme')),
                   subtitle: Text(switch (profile.themeMode) {
                     'light' => context.t('profile_theme_light'),
                     'dark' => context.t('profile_theme_dark'),
                     _ => context.t('profile_theme_system'),
                   }),
-                  trailing: const Icon(Icons.edit_outlined, size: 18),
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   onTap: () => _pickTheme(context),
                 ),
                 ListTile(
-                  leading: const Icon(Icons.share_outlined),
+                  leading: const Icon(PhosphorIconsRegular.shareNetwork),
                   title: Text(context.t('more_share_app')),
                   onTap: () async {
                     final text = context.t('more_share_text');

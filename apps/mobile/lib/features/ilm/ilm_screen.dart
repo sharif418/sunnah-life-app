@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../design/design_tokens.dart';
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class IlmScreen extends StatefulWidget {
   const IlmScreen({super.key});
@@ -36,58 +37,58 @@ class _IlmScreenState extends State<IlmScreen> {
     final theme = Theme.of(context);
     final entries = <_IlmEntry>[
       _IlmEntry(
-        icon: Icons.school_outlined,
+        icon: PhosphorIconsRegular.graduationCap,
         title: context.t('ilm_courses'),
         route: '/ilm/courses',
       ),
       _IlmEntry(
-        icon: Icons.quiz_outlined,
+        icon: PhosphorIconsRegular.question,
         title: context.t('ilm_quizzes'),
         route: '/ilm/quizzes',
       ),
       _IlmEntry(
-        icon: Icons.wifi_tethering_outlined,
+        icon: PhosphorIconsRegular.broadcast,
         title: context.t('ilm_live_quiz'),
         route: '/ilm/live-quiz',
       ),
       _IlmEntry(
-        icon: Icons.menu_book_outlined,
+        icon: PhosphorIconsRegular.bookOpen,
         title: context.t('ilm_quran'),
         route: '/ilm/quran',
       ),
       _IlmEntry(
-        icon: Icons.spa_outlined,
+        icon: PhosphorIconsRegular.plant,
         title: context.t('ilm_adhkar'),
         route: '/ilm/adhkar',
       ),
       _IlmEntry(
-        icon: Icons.front_hand_outlined,
+        icon: PhosphorIconsRegular.hand,
         title: context.t('ilm_duas'),
         route: '/ilm/duas',
       ),
       _IlmEntry(
-        icon: Icons.brightness_7_outlined,
+        icon: PhosphorIconsRegular.sun,
         title: context.t('ilm_names99'),
         route: '/ilm/names99',
       ),
       _IlmEntry(
-        icon: Icons.child_care_outlined,
+        icon: PhosphorIconsRegular.baby,
         title: context.t('ilm_baby_names'),
         route: '/ilm/islamic-names',
       ),
       _IlmEntry(
-        icon: Icons.favorite_outline,
+        icon: PhosphorIconsRegular.heart,
         title: context.t('ilm_iman_branches'),
         route: '/ilm/iman-branches',
       ),
       _IlmEntry(
-        icon: Icons.wb_twilight_outlined,
+        icon: PhosphorIconsRegular.sunHorizon,
         title: context.t('ilm_sunnahs'),
         route: '/ilm/sunnahs',
         badge: _sunnahsNew,
       ),
       _IlmEntry(
-        icon: Icons.article_outlined,
+        icon: PhosphorIconsRegular.article,
         title: context.t('ilm_articles'),
         route: '/ilm/articles',
       ),

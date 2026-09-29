@@ -15,6 +15,7 @@ import '../../state/providers.dart';
 import '../../state/remote_state.dart' show usrahProvider;
 import '../../state/support_state.dart' show joinRequestProvider;
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 Future<void> showUsrahJoinSheet(BuildContext context) {
   return showModalBottomSheet<void>(
@@ -161,7 +162,7 @@ class _InUsrahCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.groups_outlined, color: theme.colorScheme.primary),
+              Icon(PhosphorIconsRegular.usersThree, color: theme.colorScheme.primary),
               const SizedBox(width: SLSpacing.s12),
               Expanded(
                 child: Text(
@@ -178,7 +179,7 @@ class _InUsrahCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.person_outline,
+                  PhosphorIconsRegular.user,
                   size: 16,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -193,7 +194,7 @@ class _InUsrahCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  Icons.group_outlined,
+                  PhosphorIconsRegular.users,
                   size: 16,
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -233,7 +234,7 @@ class _PendingCard extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.hourglass_top_outlined,
+                PhosphorIconsRegular.hourglass,
                 size: 20,
                 color: theme.colorScheme.primary,
               ),
@@ -287,7 +288,7 @@ class _RequestForm extends StatelessWidget {
           Row(
             children: [
               Icon(
-                Icons.info_outline,
+                PhosphorIconsRegular.info,
                 size: 18,
                 color: theme.colorScheme.error,
               ),
@@ -336,7 +337,7 @@ class _RequestForm extends StatelessWidget {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Icon(Icons.send_outlined),
+                : const Icon(PhosphorIconsRegular.paperPlaneTilt),
             label: Text(context.t('usrah_join_send')),
           ),
         ),
@@ -354,7 +355,7 @@ class _GatePane extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(SLSpacing.s24),
-      child: EmptyState(message: message, icon: Icons.login),
+      child: EmptyState(message: message, icon: PhosphorIconsRegular.signIn),
     );
   }
 }

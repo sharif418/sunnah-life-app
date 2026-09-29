@@ -14,6 +14,7 @@ import 'package:sunnah_life/features/amal/amal_widgets.dart';
 import 'package:sunnah_life/features/amal/month_screen.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/providers.dart';
+import 'package:sunnah_life/design/phosphor_icons.dart';
 
 ProfileState _profile() => const ProfileState(
       name: 'tester',
@@ -100,7 +101,7 @@ void main() {
     await _pumpHeatmap(tester, db: db, today: '2025-03-05');
 
     // 30 locked columns × 15 rows, the today column has none.
-    expect(find.byIcon(Icons.lock), findsNWidgets(30 * 15));
+    expect(find.byIcon(PhosphorIconsRegular.lockSimple), findsNWidgets(30 * 15));
 
     // The today column is highlighted (border), still tappable.
     final todayHeader = find.text(toBn(5));
@@ -129,7 +130,7 @@ void main() {
     expect(find.text('ইশা নামাজ'), findsNWidgets(2));
 
     // The today column is not locked → no unlock request button.
-    expect(find.byIcon(Icons.lock_open), findsNothing);
+    expect(find.byIcon(PhosphorIconsRegular.lockSimpleOpen), findsNothing);
   });
 
   testWidgets('locked day-detail offers the unlock request', (tester) async {
@@ -148,20 +149,20 @@ void main() {
 
     // Locked chip is present (the grid behind also carries lock icons).
     expect(find.text(toBn('2025-03-01')), findsOneWidget);
-    expect(find.byIcon(Icons.lock), findsWidgets);
+    expect(find.byIcon(PhosphorIconsRegular.lockSimple), findsWidgets);
 
     // The "আনলক চাই" action sits below the 12 amal rows — scroll the sheet
     // down to reveal it, then press it (guest session → sign-in snackbar).
     await tester.scrollUntilVisible(
-      find.byIcon(Icons.lock_open),
+      find.byIcon(PhosphorIconsRegular.lockSimpleOpen),
       240,
       scrollable: find.descendant(
         of: find.byType(DraggableScrollableSheet),
         matching: find.byType(Scrollable),
       ),
     );
-    expect(find.byIcon(Icons.lock_open), findsOneWidget);
-    await tester.tap(find.byIcon(Icons.lock_open));
+    expect(find.byIcon(PhosphorIconsRegular.lockSimpleOpen), findsOneWidget);
+    await tester.tap(find.byIcon(PhosphorIconsRegular.lockSimpleOpen));
     await tester.pump();
     await tester.pumpAndSettle();
   });

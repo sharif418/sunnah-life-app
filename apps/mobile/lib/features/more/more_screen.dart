@@ -20,6 +20,7 @@ import '../../state/remote_state.dart' show configProvider;
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 import 'usrah_join_sheet.dart';
+import '../../design/phosphor_icons.dart';
 
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
@@ -103,7 +104,7 @@ class MoreScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const DirectionalIcon(Icons.chevron_right),
+                  const DirectionalIcon(PhosphorIconsRegular.caretRight),
                 ],
               ),
             ),
@@ -112,7 +113,7 @@ class MoreScreen extends ConsumerWidget {
             // ── ফাউন্ডেশন — donate + the five services ──
             SectionHeader(
               context.t('more_section_foundation'),
-              icon: Icons.volunteer_activism_outlined,
+              icon: PhosphorIconsRegular.handHeart,
             ),
             if (canDonate) _DonateCard(url: donationUrl),
             if (contacts.isNotEmpty)
@@ -121,44 +122,44 @@ class MoreScreen extends ConsumerWidget {
             // ── ইবাদত ও টুলস ──
             SectionHeader(
               context.t('more_section_worship'),
-              icon: Icons.mosque_outlined,
+              icon: PhosphorIconsRegular.mosque,
             ),
             _MoreGroupCard(
               rows: [
                 _MoreRow(
-                  icon: Icons.calculate_outlined,
+                  icon: PhosphorIconsRegular.calculator,
                   title: context.t('more_zakat'),
                   onTap: () => context.push('/more/zakat'),
                 ),
                 _MoreRow(
-                  icon: Icons.explore_outlined,
+                  icon: PhosphorIconsRegular.compass,
                   title: context.t('more_qibla'),
                   onTap: () => context.push('/more/qibla'),
                 ),
                 _MoreRow(
-                  icon: Icons.mosque_outlined,
+                  icon: PhosphorIconsRegular.mosque,
                   title: context.t('more_mosque'),
                   onTap: () => context.push('/more/mosques'),
                 ),
                 _MoreRow(
-                  icon: Icons.help_outline,
+                  icon: PhosphorIconsRegular.question,
                   title: context.t('more_masala'),
                   onTap: () => context.push('/more/masala'),
                 ),
                 _MoreRow(
-                  icon: Icons.podcasts_outlined,
+                  icon: PhosphorIconsRegular.broadcast,
                   title: context.t('more_live'),
                   onTap: () => context.push('/more/live'),
                 ),
                 _MoreRow(
-                  icon: Icons.do_not_disturb_on_outlined,
+                  icon: PhosphorIconsRegular.minusCircle,
                   title: context.t('more_autosilent'),
                   onTap: () => context.push('/more/autosilent'),
                 ),
                 // Guard-module seed (W4d) — hidden while the admin flag is off.
                 if (detoxEnabled)
                   _MoreRow(
-                    icon: Icons.shield_outlined,
+                    icon: PhosphorIconsRegular.shield,
                     title: context.t('more_detox'),
                     onTap: () => context.push('/more/detox'),
                   ),
@@ -168,22 +169,22 @@ class MoreScreen extends ConsumerWidget {
             // ── জ্ঞান ── (same routes as the Ilm tab — no duplicates)
             SectionHeader(
               context.t('more_section_knowledge'),
-              icon: Icons.school_outlined,
+              icon: PhosphorIconsRegular.graduationCap,
             ),
             _MoreGroupCard(
               rows: [
                 _MoreRow(
-                  icon: Icons.brightness_7_outlined,
+                  icon: PhosphorIconsRegular.sun,
                   title: context.t('ilm_names99'),
                   onTap: () => context.push('/ilm/names99'),
                 ),
                 _MoreRow(
-                  icon: Icons.child_care_outlined,
+                  icon: PhosphorIconsRegular.baby,
                   title: context.t('ilm_baby_names'),
                   onTap: () => context.push('/ilm/islamic-names'),
                 ),
                 _MoreRow(
-                  icon: Icons.favorite_outline,
+                  icon: PhosphorIconsRegular.heart,
                   title: context.t('ilm_iman_branches'),
                   onTap: () => context.push('/ilm/iman-branches'),
                 ),
@@ -193,27 +194,27 @@ class MoreScreen extends ConsumerWidget {
             // ── সহায়তা ──
             SectionHeader(
               context.t('more_section_support'),
-              icon: Icons.support_agent_outlined,
+              icon: PhosphorIconsRegular.headset,
             ),
             _MoreGroupCard(
               rows: [
                 _MoreRow(
-                  icon: Icons.support_agent_outlined,
+                  icon: PhosphorIconsRegular.headset,
                   title: context.t('more_support'),
                   onTap: () => context.push('/more/support'),
                 ),
                 _MoreRow(
-                  icon: Icons.group_add_outlined,
+                  icon: PhosphorIconsRegular.userPlus,
                   title: context.t('more_usrah_join'),
                   onTap: () => showUsrahJoinSheet(context),
                 ),
                 _MoreRow(
-                  icon: Icons.rate_review_outlined,
+                  icon: PhosphorIconsRegular.star,
                   title: context.t('more_feedback'),
                   onTap: () => showFeedbackSheet(context),
                 ),
                 _MoreRow(
-                  icon: Icons.help_center_outlined,
+                  icon: PhosphorIconsRegular.question,
                   title: context.t('more_faq'),
                   onTap: () => context.push('/more/faq'),
                 ),
@@ -221,16 +222,16 @@ class MoreScreen extends ConsumerWidget {
             ),
 
             // ── অ্যাপ ──
-            SectionHeader(context.t('more_section_app'), icon: Icons.apps),
+            SectionHeader(context.t('more_section_app'), icon: PhosphorIconsRegular.dotsNine),
             _MoreGroupCard(
               rows: [
                 _MoreRow(
-                  icon: Icons.info_outline,
+                  icon: PhosphorIconsRegular.info,
                   title: context.t('more_about'),
                   onTap: () => context.push('/more/about'),
                 ),
                 _MoreRow(
-                  icon: Icons.share_outlined,
+                  icon: PhosphorIconsRegular.shareNetwork,
                   title: context.t('more_share_app'),
                   onTap: () => _shareApp(context),
                 ),
@@ -247,7 +248,7 @@ class MoreScreen extends ConsumerWidget {
                 rows: [
                   for (final g in groups)
                     _MoreRow(
-                      icon: Icons.public_outlined,
+                      icon: PhosphorIconsRegular.globe,
                       title: g.titleBn,
                       subtitle: g.descBn,
                       onTap: () async {
@@ -340,7 +341,7 @@ class _DonateCard extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(Icons.volunteer_activism_outlined, color: fg),
+                Icon(PhosphorIconsRegular.handHeart, color: fg),
                 const SizedBox(width: SLSpacing.s12),
                 Expanded(
                   child: Text(
@@ -351,7 +352,7 @@ class _DonateCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Icon(Icons.open_in_new, size: 18, color: fg),
+                Icon(PhosphorIconsRegular.arrowSquareOut, size: 18, color: fg),
               ],
             ),
           ),
@@ -480,7 +481,7 @@ class _ServiceRow extends StatelessWidget {
               if (hasPhone)
                 IconButton(
                   tooltip: context.t('contact_call'),
-                  icon: const Icon(Icons.call_outlined),
+                  icon: const Icon(PhosphorIconsRegular.phone),
                   iconSize: 20,
                   color: theme.colorScheme.primary,
                   onPressed: () async {
@@ -493,7 +494,7 @@ class _ServiceRow extends StatelessWidget {
               if (hasEmail)
                 IconButton(
                   tooltip: context.t('contact_email'),
-                  icon: const Icon(Icons.email_outlined),
+                  icon: const Icon(PhosphorIconsRegular.envelopeSimple),
                   iconSize: 20,
                   color: theme.colorScheme.primary,
                   onPressed: () async {
@@ -506,7 +507,7 @@ class _ServiceRow extends StatelessWidget {
               if (hasSite)
                 IconButton(
                   tooltip: context.t('contact_website'),
-                  icon: const Icon(Icons.open_in_new),
+                  icon: const Icon(PhosphorIconsRegular.arrowSquareOut),
                   iconSize: 20,
                   color: theme.colorScheme.primary,
                   onPressed: () async {
@@ -607,7 +608,7 @@ class _MoreRow extends StatelessWidget {
                   ],
                 ),
               ),
-              const DirectionalIcon(Icons.chevron_right),
+              const DirectionalIcon(PhosphorIconsRegular.caretRight),
             ],
           ),
         ),
@@ -704,7 +705,7 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.send_outlined),
+                  : const Icon(PhosphorIconsRegular.paperPlaneTilt),
               label: Text(context.t('send')),
             ),
           ),

@@ -17,6 +17,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/support_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Thread list.
 class SupportScreen extends ConsumerWidget {
@@ -49,7 +50,7 @@ class SupportScreen extends ConsumerWidget {
       floatingActionButton: auth.signedIn
           ? FloatingActionButton.extended(
               onPressed: () => _showCreateSheet(context, ref),
-              icon: const Icon(Icons.chat_outlined),
+              icon: const Icon(PhosphorIconsRegular.chatCircle),
               label: Text(context.t('support_new_thread')),
             )
           : null,
@@ -174,7 +175,7 @@ class _CreateThreadSheetState extends ConsumerState<_CreateThreadSheet> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(Icons.send_outlined),
+                    : const Icon(PhosphorIconsRegular.paperPlaneTilt),
                 label: Text(context.t('send')),
               ),
             ),
@@ -214,7 +215,7 @@ class _ThreadList extends ConsumerWidget {
                 const SizedBox(height: SLSpacing.s32),
                 EmptyState(
                   message: context.t('support_empty'),
-                  icon: Icons.support_agent_outlined,
+                  icon: PhosphorIconsRegular.headset,
                 ),
               ],
             );
@@ -329,7 +330,7 @@ class _ThreadRow extends StatelessWidget {
               const SizedBox(width: SLSpacing.s8),
               SupportStatusChip(status: thread.status),
               const SizedBox(width: SLSpacing.s4),
-              const DirectionalIcon(Icons.chevron_right),
+              const DirectionalIcon(PhosphorIconsRegular.caretRight),
             ],
           ),
         ),
@@ -468,7 +469,7 @@ class _SupportThreadScreenState extends ConsumerState<SupportThreadScreen> {
                 child: messages.isEmpty
                     ? EmptyState(
                         message: context.t('support_empty'),
-                        icon: Icons.forum_outlined,
+                        icon: PhosphorIconsRegular.chats,
                       )
                     : ListView.builder(
                         reverse: false,
@@ -521,7 +522,7 @@ class _SupportThreadScreenState extends ConsumerState<SupportThreadScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const DirectionalIcon(Icons.send_outlined),
+                              : const DirectionalIcon(PhosphorIconsRegular.paperPlaneTilt),
                         ),
                       ],
                     ),
@@ -614,7 +615,7 @@ class _Gate extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.support_agent_outlined,
+              PhosphorIconsRegular.headset,
               size: 56,
               color: theme.colorScheme.primary,
             ),

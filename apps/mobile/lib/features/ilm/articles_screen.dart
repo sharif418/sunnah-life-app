@@ -7,6 +7,7 @@ import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class ArticlesScreen extends StatefulWidget {
   const ArticlesScreen({super.key});
@@ -37,7 +38,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
           if (items.isEmpty) {
             return EmptyState(
               message: context.t('empty_generic'),
-              icon: Icons.article_outlined,
+              icon: PhosphorIconsRegular.article,
             );
           }
           final open = _openId == null
@@ -49,7 +50,7 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
               children: [
                 TextButton.icon(
                   // Mirrors automatically under RTL (back = forward arrow).
-                  icon: const DirectionalIcon(Icons.arrow_back),
+                  icon: const DirectionalIcon(PhosphorIconsRegular.arrowLeft),
                   label: Text(context.t('back')),
                   onPressed: () => setState(() => _openId = null),
                 ),

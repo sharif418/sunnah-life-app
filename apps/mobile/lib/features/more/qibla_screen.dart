@@ -18,6 +18,7 @@ import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Whether flutter_compass's heading is TRUE north on this platform.
 ///
@@ -183,7 +184,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.explore_outlined,
+                PhosphorIconsRegular.compass,
                 size: 18,
                 color: theme.colorScheme.primary,
               ),

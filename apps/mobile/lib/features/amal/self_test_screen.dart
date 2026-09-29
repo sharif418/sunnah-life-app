@@ -9,6 +9,7 @@ import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class SelfTestScreen extends ConsumerStatefulWidget {
   const SelfTestScreen({super.key});
@@ -40,7 +41,7 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
           if (quizzes.isEmpty) {
             return EmptyState(
               message: context.t('empty_generic'),
-              icon: Icons.quiz_outlined,
+              icon: PhosphorIconsRegular.question,
             );
           }
           return ListView(
@@ -134,7 +135,7 @@ class _QuizRunnerState extends State<_QuizRunner> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  pct >= 70 ? Icons.emoji_events : Icons.school_outlined,
+                  pct >= 70 ? PhosphorIconsFill.trophy : PhosphorIconsRegular.graduationCap,
                   size: 64,
                   color: pct >= 70
                       ? theme.colorScheme.tertiary
@@ -273,9 +274,9 @@ class _OptionTile extends StatelessWidget {
             children: [
               Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
               if (state == _OptionState.correct)
-                Icon(Icons.check_circle, color: theme.colorScheme.onPrimary)
+                Icon(PhosphorIconsFill.checkCircle, color: theme.colorScheme.onPrimary)
               else if (state == _OptionState.wrong)
-                Icon(Icons.cancel, color: theme.colorScheme.onError),
+                Icon(PhosphorIconsRegular.xCircle, color: theme.colorScheme.onError),
             ],
           ),
         ),

@@ -20,6 +20,7 @@ import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 import 'madu_tree.dart';
 import 'referral_share_sheet.dart';
+import '../../design/phosphor_icons.dart';
 
 class DawahScreen extends ConsumerWidget {
   const DawahScreen({super.key});
@@ -33,14 +34,14 @@ class DawahScreen extends ConsumerWidget {
       body = const Skeleton(height: 72, count: 5);
     } else if (!auth.signedIn) {
       body = _Gate(
-        icon: Icons.login,
+        icon: PhosphorIconsRegular.signIn,
         message: context.t('dawah_signin_needed'),
         actionLabel: context.t('onb_signin'),
         onAction: () => context.push('/auth'),
       );
     } else if (!(auth.user?.canSeeDawah ?? false)) {
       body = _Gate(
-        icon: Icons.campaign_outlined,
+        icon: PhosphorIconsRegular.megaphone,
         message: context.t('dawah_role_needed'),
       );
     } else {
@@ -209,7 +210,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                       ),
                       IconButton(
                         tooltip: context.t('copy'),
-                        icon: const Icon(Icons.copy),
+                        icon: const Icon(PhosphorIconsRegular.copy),
                         onPressed: () async {
                           await Clipboard.setData(
                             ClipboardData(text: overview.memberCode),
@@ -242,7 +243,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                       ),
                       IconButton(
                         tooltip: context.t('share'),
-                        icon: const Icon(Icons.share),
+                        icon: const Icon(PhosphorIconsRegular.shareNetwork),
                         onPressed: openCardSheet,
                       ),
                     ],
@@ -255,7 +256,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                     FilledButton.icon(
                       key: const Key('dawahShareCardButton'),
                       onPressed: openCardSheet,
-                      icon: const Icon(Icons.share),
+                      icon: const Icon(PhosphorIconsRegular.shareNetwork),
                       label: Text(context.t('dawah_share_card')),
                     ),
                   ],
@@ -289,10 +290,10 @@ class _DawahOverviewTab extends ConsumerWidget {
             // (GET /api/dawah/requirements, B9 mobile parity with the web).
             SectionHeader(
               context.t('dawah_requirements'),
-              icon: Icons.checklist,
+              icon: PhosphorIconsRegular.listChecks,
               action: TextButton.icon(
                 onPressed: () => context.push('/dawah/requirements'),
-                icon: const Icon(Icons.bolt, size: 16),
+                icon: const Icon(PhosphorIconsRegular.lightning, size: 16),
                 label: Text(context.t('dawah_req_live_action')),
               ),
             ),
@@ -305,8 +306,8 @@ class _DawahOverviewTab extends ConsumerWidget {
                       dense: true,
                       leading: Icon(
                         overview.requirements[i].done
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
+                            ? PhosphorIconsFill.checkCircle
+                            : PhosphorIconsRegular.circle,
                         color: overview.requirements[i].done
                             ? theme.colorScheme.primary
                             : theme.colorScheme.outline,
@@ -328,13 +329,13 @@ class _DawahOverviewTab extends ConsumerWidget {
             // Madu tree — W4e: the flat depth-sorted downline rendered as
             // an indented tree with connector rails (read-only — the API
             // carries depth but no parentage; madu_tree.dart notes why).
-            SectionHeader(context.t('dawah_madu'), icon: Icons.account_tree),
+            SectionHeader(context.t('dawah_madu'), icon: PhosphorIconsRegular.gitFork),
             if (overview.downline.isEmpty)
               EmptyState(
                 message: overview.level == Level.none
                     ? context.t('dawah_level_none_next')
                     : context.t('empty_generic'),
-                icon: Icons.park_outlined,
+                icon: PhosphorIconsRegular.tree,
               )
             else
               MaduTree(nodes: overview.downline),
@@ -342,7 +343,7 @@ class _DawahOverviewTab extends ConsumerWidget {
             // Assessments
             SectionHeader(
               context.t('dawah_assessments'),
-              icon: Icons.fact_check_outlined,
+              icon: PhosphorIconsRegular.clipboardText,
             ),
             if (overview.assessments.isEmpty)
               EmptyState(message: context.t('empty_generic'))
@@ -356,8 +357,8 @@ class _DawahOverviewTab extends ConsumerWidget {
                         dense: true,
                         leading: Icon(
                           a.result == 'passed'
-                              ? Icons.verified
-                              : Icons.timelapse,
+                              ? PhosphorIconsRegular.sealCheck
+                              : PhosphorIconsRegular.hourglass,
                           color: a.result == 'passed'
                               ? theme.colorScheme.primary
                               : theme.colorScheme.tertiary,
@@ -471,7 +472,7 @@ class _UsrahTab extends ConsumerWidget {
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
                 message: context.t('dawah_no_usrah'),
-                icon: Icons.groups_outlined,
+                icon: PhosphorIconsRegular.usersThree,
               ),
             ] else ...[
               AppCard(
@@ -480,7 +481,7 @@ class _UsrahTab extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.groups, color: theme.colorScheme.primary),
+                        Icon(PhosphorIconsRegular.usersThree, color: theme.colorScheme.primary),
                         const SizedBox(width: SLSpacing.s8),
                         Expanded(
                           child: Text(
@@ -539,7 +540,7 @@ class _UsrahTab extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.forum_outlined,
+                      PhosphorIconsRegular.chats,
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: SLSpacing.s12),
@@ -551,14 +552,14 @@ class _UsrahTab extends ConsumerWidget {
                       ),
                       ),
                     ),
-                    const DirectionalIcon(Icons.chevron_right),
+                    const DirectionalIcon(PhosphorIconsRegular.caretRight),
                   ],
                 ),
               ),
               const SizedBox(height: SLSpacing.s4),
               SectionHeader(
                 context.t('dawah_announcements'),
-                icon: Icons.campaign_outlined,
+                icon: PhosphorIconsRegular.megaphone,
               ),
               if (bundle.announcements.isEmpty)
                 EmptyState(message: context.t('empty_generic'))
@@ -572,7 +573,7 @@ class _UsrahTab extends ConsumerWidget {
                           children: [
                             if (a.pinned)
                               Icon(
-                                Icons.push_pin,
+                                PhosphorIconsRegular.pushPin,
                                 size: 14,
                                 color: theme.colorScheme.tertiary,
                               ),
@@ -602,7 +603,7 @@ class _UsrahTab extends ConsumerWidget {
               const SizedBox(height: SLSpacing.s12),
               SectionHeader(
                 context.t('goals_queue_title'),
-                icon: Icons.fact_check_outlined,
+                icon: PhosphorIconsRegular.clipboardText,
               ),
               const _GoalQueueSection(),
             ],
@@ -635,7 +636,7 @@ class _GoalQueueSection extends ConsumerWidget {
         if (queue.isEmpty) {
           return EmptyState(
             message: context.t('goals_queue_empty'),
-            icon: Icons.fact_check_outlined,
+            icon: PhosphorIconsRegular.clipboardText,
           );
         }
         return Column(
@@ -673,7 +674,7 @@ class _GoalQueueCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.flag_outlined, color: theme.colorScheme.primary),
+                Icon(PhosphorIconsRegular.flagBanner, color: theme.colorScheme.primary),
                 const SizedBox(width: SLSpacing.s8),
                 Expanded(
                   child: Column(
@@ -706,7 +707,7 @@ class _GoalQueueCard extends ConsumerWidget {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => _decide(context, ref),
-                    icon: const Icon(Icons.check, size: 18),
+                    icon: const Icon(PhosphorIconsRegular.check, size: 18),
                     label: Text(context.t('goals_approve')),
                   ),
                 ),
@@ -714,7 +715,7 @@ class _GoalQueueCard extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _openRejectSheet(context, ref),
-                    icon: const Icon(Icons.close, size: 18),
+                    icon: const Icon(PhosphorIconsRegular.x, size: 18),
                     label: Text(context.t('goals_reject')),
                   ),
                 ),
@@ -895,7 +896,7 @@ class _ReviewsTab extends ConsumerWidget {
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
                 message: context.t('dawah_no_reviews'),
-                icon: Icons.rate_review_outlined,
+                icon: PhosphorIconsRegular.star,
               ),
             ],
           );
@@ -976,8 +977,8 @@ class _ReviewsTab extends ConsumerWidget {
                         for (var s = 1; s <= 5; s++)
                           Icon(
                             s <= (r.rating ?? 0)
-                                ? Icons.star
-                                : Icons.star_border,
+                                ? PhosphorIconsFill.star
+                                : PhosphorIconsRegular.star,
                             size: 16,
                             color: theme.colorScheme.tertiary,
                           ),

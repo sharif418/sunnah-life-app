@@ -12,6 +12,7 @@ import '../../l10n/app_strings.dart';
 import '../../state/amal_state.dart';
 import '../../state/providers.dart';
 import 'sync_sheet.dart';
+import '../../design/phosphor_icons.dart';
 
 extension L10nX on BuildContext {
   Lang get lang => LangX.fromCode(
@@ -122,7 +123,7 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              icon ?? Icons.inbox_outlined,
+              icon ?? PhosphorIconsRegular.tray,
               size: 48,
               color: theme.colorScheme.outline,
             ),
@@ -155,7 +156,7 @@ class ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+            Icon(PhosphorIconsRegular.warningCircle, size: 48, color: theme.colorScheme.error),
             const SizedBox(height: SLSpacing.s12),
             Text(
               message,
@@ -166,7 +167,7 @@ class ErrorState extends StatelessWidget {
               const SizedBox(height: SLSpacing.s12),
               OutlinedButton.icon(
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh),
+                icon: const Icon(PhosphorIconsRegular.arrowClockwise),
                 label: Text(context.t('retry')),
               ),
             ],
@@ -209,7 +210,7 @@ class OfflineBanner extends StatelessWidget {
       decoration: BoxDecoration(color: bg, borderRadius: SLRadius.brMd),
       child: Row(
         children: [
-          Icon(Icons.wifi_off, size: 16, color: fg),
+          Icon(PhosphorIconsRegular.wifiSlash, size: 16, color: fg),
           const SizedBox(width: SLSpacing.s8),
           Expanded(
             child: Text(
@@ -306,19 +307,19 @@ class SyncBadge extends ConsumerWidget {
       );
     } else if (hasDead) {
       indicator = Icon(
-        Icons.cloud_off_outlined,
+        PhosphorIconsRegular.cloudSlash,
         size: 18,
         color: theme.colorScheme.error,
       );
     } else if (hasPending) {
       indicator = Icon(
-        Icons.cloud_upload_outlined,
+        PhosphorIconsRegular.cloudArrowUp,
         size: 18,
         color: theme.colorScheme.tertiary,
       );
     } else {
       indicator = Icon(
-        Icons.check_circle_outline,
+        PhosphorIconsRegular.checkCircle,
         size: 18,
         color: theme.colorScheme.outline,
       );

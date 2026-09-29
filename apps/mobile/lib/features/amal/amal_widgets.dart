@@ -15,6 +15,7 @@ import '../../core/amal_engine.dart';
 import '../../models/domain.dart';
 import '../../state/remote_state.dart' show leaderboardMeProvider;
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// জামাতে / একা / কাযা — the salat tristate chip row (44dp targets).
 class TriStateChips extends StatelessWidget {
@@ -100,16 +101,16 @@ class TriStateChips extends StatelessWidget {
         chip(
           'jamaat',
           labels.jamaat,
-          Icons.groups_outlined,
+          PhosphorIconsRegular.usersThree,
           theme.colorScheme.primary,
         ),
         chip(
           'alone',
           labels.alone,
-          Icons.person_outline,
+          PhosphorIconsRegular.user,
           theme.colorScheme.secondary,
         ),
-        chip('qaza', labels.qaza, Icons.schedule, theme.colorScheme.error),
+        chip('qaza', labels.qaza, PhosphorIconsRegular.clock, theme.colorScheme.error),
       ],
     );
   }
@@ -197,7 +198,7 @@ class CountStepper extends StatelessWidget {
       children: [
         _step(
           context,
-          Icons.remove,
+          PhosphorIconsRegular.minus,
           () => onChanged((value - 1).clamp(0, 1 << 30)),
         ),
         Padding(
@@ -221,7 +222,7 @@ class CountStepper extends StatelessWidget {
                   if (reached) ...[
                     const SizedBox(width: 2),
                     Icon(
-                      Icons.check_circle,
+                      PhosphorIconsFill.checkCircle,
                       size: 16,
                       color: theme.colorScheme.primary,
                     ),
@@ -239,7 +240,7 @@ class CountStepper extends StatelessWidget {
         ),
         _step(
           context,
-          Icons.add,
+          PhosphorIconsRegular.plus,
           () => onChanged((value + 1).clamp(0, 1 << 30)),
         ),
         if (quickCount > 0) ...[
@@ -260,7 +261,7 @@ class CountStepper extends StatelessWidget {
 
   Widget _step(BuildContext context, IconData icon, VoidCallback onTap) {
     final theme = Theme.of(context);
-    final increase = icon == Icons.add;
+    final increase = icon == PhosphorIconsRegular.plus;
     return Semantics(
       button: true,
       label: increase
@@ -363,7 +364,7 @@ class _QuantityInputState extends State<QuantityInput> {
       children: [
         _btn(
           context,
-          Icons.remove,
+          PhosphorIconsRegular.minus,
           () => widget.onChanged(math.max(0, widget.value - 0.5)),
         ),
         const SizedBox(width: SLSpacing.s8),
@@ -417,7 +418,7 @@ class _QuantityInputState extends State<QuantityInput> {
                 if (reached) ...[
                   const SizedBox(width: 4),
                   Icon(
-                    Icons.check_circle,
+                    PhosphorIconsFill.checkCircle,
                     color: theme.colorScheme.primary,
                     size: 16,
                   ),
@@ -427,14 +428,14 @@ class _QuantityInputState extends State<QuantityInput> {
           ),
         ),
         const SizedBox(width: SLSpacing.s8),
-        _btn(context, Icons.add, () => widget.onChanged(widget.value + 0.5)),
+        _btn(context, PhosphorIconsRegular.plus, () => widget.onChanged(widget.value + 0.5)),
       ],
     );
   }
 
   Widget _btn(BuildContext context, IconData icon, VoidCallback onTap) {
     final theme = Theme.of(context);
-    final increase = icon == Icons.add;
+    final increase = icon == PhosphorIconsRegular.plus;
     return Semantics(
       button: true,
       label: increase
@@ -583,7 +584,7 @@ class TilawatBeginnerCard extends StatelessWidget {
                         onChanged((value + 5).clamp(0, 999));
                       }
                     : null,
-                icon: const Icon(Icons.add, size: 18),
+                icon: const Icon(PhosphorIconsRegular.plus, size: 18),
                 label: Text(
                   '+${_n(5)} ${context.t('tilawat_begin_minutes')}',
                 ),
@@ -672,7 +673,7 @@ class HeatmapCell extends StatelessWidget {
           ),
           child: locked
               ? Icon(
-                  Icons.lock,
+                  PhosphorIconsRegular.lockSimple,
                   size: 12,
                   color: theme.colorScheme.onSurfaceVariant,
                 )
@@ -706,7 +707,7 @@ class StreakBadge extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(
-            Icons.local_fire_department_outlined,
+            PhosphorIconsFill.fire,
             size: 16,
             color: SLColors.goldDeep,
           ),
@@ -845,7 +846,7 @@ class LeaderboardBandCard extends ConsumerWidget {
             child: Row(
               children: [
                 Icon(
-                  Icons.leaderboard_outlined,
+                  PhosphorIconsRegular.chartBar,
                   color: theme.colorScheme.primary,
                 ),
                 const SizedBox(width: SLSpacing.s12),

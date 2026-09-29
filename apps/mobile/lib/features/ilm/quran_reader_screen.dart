@@ -20,6 +20,7 @@ import '../../state/remote_state.dart' show configProvider;
 import '../shared/widgets.dart';
 import 'quran_audio.dart';
 import 'quran_tilawat_sheet.dart';
+import '../../design/phosphor_icons.dart';
 
 class QuranReaderScreen extends ConsumerStatefulWidget {
   const QuranReaderScreen({super.key});
@@ -73,7 +74,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
               decoration: InputDecoration(
                 hintText:
                     '${context.t('search')} — ${context.t('quran_surahs')}',
-                prefixIcon: const Icon(Icons.search),
+                prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
                 isDense: true,
               ),
             ),
@@ -88,7 +89,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                 children: [
                   Expanded(
                     child: ActionChip(
-                      avatar: const Icon(Icons.bookmark, size: 18),
+                      avatar: const Icon(PhosphorIconsFill.bookmark, size: 18),
                       label: Text(context.t('quran_resume')),
                       onPressed: () => _openSurah(_lastRead!.$1),
                     ),
@@ -107,7 +108,7 @@ class _QuranReaderScreenState extends ConsumerState<QuranReaderScreen> {
                 if (surahs.isEmpty) {
                   return EmptyState(
                     message: context.t('empty_generic'),
-                    icon: Icons.menu_book_outlined,
+                    icon: PhosphorIconsRegular.bookOpen,
                   );
                 }
                 final filtered = QuranRepository.filterSurahs(surahs, _query);
@@ -476,7 +477,7 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                 title: Text(r.nameFor(lang)),
                 trailing: r.id == _reciter.id
                     ? Icon(
-                        Icons.check_circle,
+                        PhosphorIconsFill.checkCircle,
                         color: Theme.of(sheetContext).colorScheme.primary,
                       )
                     : null,
@@ -529,25 +530,25 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                 isSelected: _showTranslation,
                 onPressed: () =>
                     setState(() => _showTranslation = !_showTranslation),
-                icon: const Icon(Icons.translate),
+                icon: const Icon(PhosphorIconsRegular.translate),
               ),
             ),
             IconButton(
               tooltip: context.t('quran_goto_ayah'),
-              icon: const Icon(Icons.gps_fixed),
+              icon: const Icon(PhosphorIconsRegular.crosshair),
               onPressed: _showGoToAyah,
             ),
             if (audio) ...[
               IconButton(
                 tooltip: context.t('quran_reciter'),
-                icon: const Icon(Icons.record_voice_over_outlined),
+                icon: const Icon(PhosphorIconsRegular.userSound),
                 onPressed: _pickReciter,
               ),
               if (_playingAyah != null)
                 IconButton(
                   tooltip: context.t('quran_stop_audio'),
                   icon: Icon(
-                    Icons.stop_circle,
+                    PhosphorIconsRegular.stopCircle,
                     color: theme.colorScheme.tertiary,
                   ),
                   onPressed: _stopAudio,
@@ -638,8 +639,8 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                                     _toggleAudio(ayah.numberInSurah),
                                 icon: Icon(
                                   playing
-                                      ? Icons.pause_circle
-                                      : Icons.play_circle,
+                                      ? PhosphorIconsRegular.pauseCircle
+                                      : PhosphorIconsRegular.playCircle,
                                   color: playing
                                       ? theme.colorScheme.tertiary
                                       : null,
@@ -663,7 +664,7 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                                     );
                               },
                               icon: Icon(
-                                marked ? Icons.bookmark : Icons.bookmark_border,
+                                marked ? PhosphorIconsFill.bookmark : PhosphorIconsRegular.bookmark,
                               ),
                             ),
                           ),

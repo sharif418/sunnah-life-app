@@ -13,6 +13,7 @@ import '../../models/domain.dart';
 import '../../api/api_client.dart' show ApiCached;
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class DawahRequirementsScreen extends ConsumerWidget {
   const DawahRequirementsScreen({super.key});
@@ -161,8 +162,8 @@ class _FallbackBody extends ConsumerWidget {
                       dense: true,
                       leading: Icon(
                         r.done
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
+                            ? PhosphorIconsFill.checkCircle
+                            : PhosphorIconsRegular.circle,
                         color: r.done
                             ? theme.colorScheme.primary
                             : theme.colorScheme.outline,
@@ -333,7 +334,7 @@ class _CheckRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsetsDirectional.only(top: 2),
             child: Icon(
-              row.met ? Icons.check_circle : Icons.radio_button_unchecked,
+              row.met ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.circle,
               size: 20,
               color: row.met
                   ? theme.colorScheme.primary
@@ -438,7 +439,7 @@ class _OutcomeCard extends StatelessWidget {
     return _OutcomeCard._(
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.primaryContainer,
-      icon: Icons.emoji_events,
+      icon: PhosphorIconsFill.trophy,
       message: message,
     );
   }
@@ -448,7 +449,7 @@ class _OutcomeCard extends StatelessWidget {
     return _OutcomeCard._(
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.06),
-      icon: Icons.auto_awesome,
+      icon: PhosphorIconsRegular.sparkle,
       message: message,
     );
   }

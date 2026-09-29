@@ -83,7 +83,7 @@ class GlobalHeader extends ConsumerWidget {
                 ),
                 child: const Center(
                   child: Icon(
-                    Icons.star,
+                    PhosphorIconsFill.star,
                     color: SLColors.primaryDeep,
                     size: 18,
                   ),
