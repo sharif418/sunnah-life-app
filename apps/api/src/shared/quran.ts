@@ -101,14 +101,21 @@ export async function loadPack(key: string): Promise<unknown | null> {
   }
 }
 
-/** Documents of a pack for Meilisearch indexing (id field required). */
+/** Documents of a pack for Meilisearch indexing (id field required).
+ *  [C/W5-ops] Packs are objects with SEVERAL array properties (duas.json has
+ *  `categories` AND `items`) — the old code returned the FIRST array it met,
+ *  which for duas was `categories` (no id field ⇒ zero documents ⇒ the duas
+ *  index silently never got populated). Walk every array property and use
+ *  the first one that actually yields id-bearing documents. */
 export function packDocuments(data: unknown): Record<string, unknown>[] {
-  if (Array.isArray(data)) return data.filter((x) => x && typeof x === "object" && "id" in (x as object));
+  const idBearing = (arr: unknown[]): Record<string, unknown>[] =>
+    arr.filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && "id" in (x as object));
+  if (Array.isArray(data)) return idBearing(data);
   if (data && typeof data === "object") {
-    const obj = data as Record<string, unknown>;
-    for (const v of Object.values(obj)) {
+    for (const v of Object.values(data)) {
       if (Array.isArray(v)) {
-        return v.filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && "id" in (x as object));
+        const docs = idBearing(v);
+        if (docs.length) return docs;
       }
     }
   }
