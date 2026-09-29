@@ -53,6 +53,7 @@ import type {
   AssessmentSection,
   AuditEntry,
   Gender,
+  InvigilatorHealthItem,
   Level,
   MonthGrid,
   MonthGridCell,
@@ -1667,6 +1668,146 @@ export class AdminService {
     return level as LevelKey;
   }
 
+  // ── W4h: invigilator health score ───────────────────────────────────────
+
+  /**
+   * GET /api/admin/invigilator-health — one invigilator, or all of them.
+   *
+   * SCOPE: full_admin sees every invigilator; an invigilator sees ONLY their
+   * own score (self view); usrah_head gets 403. Every invigilator's members =
+   * the members of all usrahs of the invigilator's gender (the supervision
+   * scope the overview + reviews queue already use for the role).
+   *
+   * FORMULA (all components 0..100, bounded windows — nothing unbounded):
+   *   score = round(0.35·reviewPct + 0.35·amalPct + 0.20·activePct + 0.10·onTimePct)
+   *     reviewPct — done weekly reviews ÷ expected (members × 4 weeks) over
+   *                 the last 27 days (the 4 Saturday-started weeks the
+   *                 overview already uses)
+   *     amalPct   — mean of the members' 7-day amal completion (the shared
+   *                 completion7dForUsers rule over active daily definitions)
+   *     activePct — members active in the last 3 days ÷ members (the
+   *                 overview's INACTIVE_DAYS definition of inactive)
+   *     onTimePct — 100·(1 − overdue reviews ÷ members) — each overdue
+   *                 (stale pending) review drags the red-flag component
+   *                 proportionally, floored at 0
+   * Reviews and amal completion are the core supervision work (0.35 each);
+   * inactive members a moderate signal (0.20); overdue flags a red-flag
+   * signal (0.10). An empty scope (no usrahs of that gender) scores null.
+   */
+  async invigilatorHealth(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    if (user.role === "usrah_head") {
+      throw new ApiError(403, "এই রিপোর্ট শুধুমাত্র পরিদর্শক ও প্রধান অ্যাডমিনের জন্য");
+    }
+    if (user.role !== "full_admin" && user.role !== "invigilator") {
+      throw new ApiError(403, "এই রিপোর্ট শুধুমাত্র পরিদর্শক ও প্রধান অ্যাডমিনের জন্য");
+    }
+
+    return this.rls.run(user, async (tx) => {
+      const invigilators =
+        user.role === "full_admin"
+          ? await tx.user.findMany({
+              where: { role: "invigilator" },
+              orderBy: { name: "asc" },
+            })
+          : [await tx.user.findUnique({ where: { id: user.id } })].filter(
+              (x): x is NonNullable<typeof x> => !!x
+            );
+      if (!invigilators.length) return { invigilators: [] };
+
+      const now = Date.now();
+      const reviewCutoff = addDays(bdToday(), -REVIEW_WINDOW_DAYS);
+      const assessmentCutoff = new Date(now - 30 * 86_400_000);
+      const inactiveBefore = new Date(now - INACTIVE_DAYS * 86_400_000);
+
+      const items: InvigilatorHealthItem[] = [];
+      for (const inv of invigilators) {
+        const usrahRows = await tx.usrah.findMany({
+          where: { gender: inv.gender },
+          select: { id: true, name: true, members: { select: { id: true, category: true, lastActiveAt: true } } },
+        });
+        const memberIds = usrahRows.flatMap((u) => u.members.map((m) => m.id));
+        const memberCount = memberIds.length;
+
+        if (!memberCount) {
+          items.push({
+            id: inv.id,
+            name: inv.name,
+            memberCode: inv.memberCode,
+            gender: inv.gender as Gender,
+            usrahNames: usrahRows.map((u) => u.name),
+            memberCount: 0,
+            reviewPct: null,
+            amalPct: null,
+            activePct: null,
+            overdueCount: 0,
+            assessments30d: 0,
+            unsignedAssessments: 0,
+            score: null,
+          });
+          continue;
+        }
+
+        const [doneReviews, overdue, assessments30d] = await Promise.all([
+          tx.weeklyReview.count({
+            where: { userId: { in: memberIds }, status: "done", weekStart: { gte: reviewCutoff } },
+          }),
+          tx.weeklyReview.count({
+            where: { userId: { in: memberIds }, status: "overdue" },
+          }),
+          tx.assessment.count({
+            where: { assesseeId: { in: memberIds }, createdAt: { gte: assessmentCutoff } },
+          }),
+        ]);
+        const unsignedAssessments = await tx.assessment.count({
+          where: {
+            assesseeId: { in: memberIds },
+            createdAt: { gte: assessmentCutoff },
+            OR: [{ assessorSignedAt: null }, { assesseeSignedAt: null }],
+          },
+        });
+
+        const completions = await completion7dForUsers(
+          tx,
+          usrahRows.flatMap((u) => u.members)
+        );
+        const amalPct = Math.round(
+          memberIds.reduce((s, id) => s + (completions.get(id) ?? 0), 0) / memberCount
+        );
+
+        const expected = memberCount * 4;
+        const reviewPct = Math.min(100, Math.round((100 * doneReviews) / expected));
+        const activePct = Math.round(
+          (100 *
+            usrahRows
+              .flatMap((u) => u.members)
+              .filter((m) => m.lastActiveAt >= inactiveBefore).length) /
+            memberCount
+        );
+        const onTimePct = Math.max(0, Math.round(100 * (1 - overdue / memberCount)));
+
+        const score = Math.round(0.35 * reviewPct + 0.35 * amalPct + 0.2 * activePct + 0.1 * onTimePct);
+
+        items.push({
+          id: inv.id,
+          name: inv.name,
+          memberCode: inv.memberCode,
+          gender: inv.gender as Gender,
+          usrahNames: usrahRows.map((u) => u.name),
+          memberCount,
+          reviewPct,
+          amalPct,
+          activePct,
+          overdueCount: overdue,
+          assessments30d,
+          unsignedAssessments,
+          score,
+        });
+      }
+      return { invigilators: items };
+    });
+  }
+
   /** GET /api/admin/audit — full_admin: last 100 audit entries with actor names. */
   async audit(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -2164,6 +2305,15 @@ export class AdminController {
   @Roles("full_admin")
   resetLevelRules(@Param("level") level: string, @Req() req: AuthedRequest) {
     return this.service.resetLevelRules(currentUser(req), level);
+  }
+
+  // ── W4h: invigilator health score ────────────────────────────────────────
+
+  @Get("invigilator-health")
+  @ApiOperation({ summary: "full_admin: all invigilators; invigilator: own score" })
+  @Roles("invigilator") // floor: invigilator, usrah_head, full_admin (service splits)
+  invigilatorHealth(@Req() req: AuthedRequest) {
+    return this.service.invigilatorHealth(currentUser(req));
   }
 
   @Get("support")

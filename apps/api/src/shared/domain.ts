@@ -346,6 +346,32 @@ export interface UsrahHealth {
   inactiveCount: number;
 }
 
+/** W4h — GET /api/admin/invigilator-health row (full_admin: every invigilator;
+ * invigilator: only self). Null components/score = empty scope (no usrahs of
+ * that gender). */
+export interface InvigilatorHealthItem {
+  id: string;
+  name: string;
+  memberCode: string | null;
+  gender: Gender;
+  usrahNames: string[];
+  memberCount: number;
+  /** done reviews ÷ (members × 4 weeks), last 27 days. */
+  reviewPct: number | null;
+  /** mean 7-day amal completion of the members. */
+  amalPct: number | null;
+  /** members active in the last 3 days ÷ members. */
+  activePct: number | null;
+  /** reviews of the members currently flagged overdue. */
+  overdueCount: number;
+  /** assessments of the members created in the last 30 days. */
+  assessments30d: number;
+  /** of those — still missing an assessor or assessee signature. */
+  unsignedAssessments: number;
+  /** 0.35·reviewPct + 0.35·amalPct + 0.20·activePct + 0.10·onTimePct. */
+  score: number | null;
+}
+
 export interface AdminOverview {
   role: Role;
   totals: { users: number; daees: number; usrahs: number; pendingReviews: number };
