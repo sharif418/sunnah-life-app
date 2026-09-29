@@ -560,6 +560,7 @@
   "support_new_thread": "নতুন আলাপ শুরু করুন",
   "support_subject": "বিষয়",
   "support_subject_hint": "সংক্ষেপে বিষয়টি লিখুন",
+  "support_message": "বার্তা",
   "support_message_hint": "আপনার কথা লিখুন…",
   "support_empty": "কোনো আলাপ নেই — প্রয়োজনে নতুন একটি শুরু করুন",
   "support_status_open": "খোলা",

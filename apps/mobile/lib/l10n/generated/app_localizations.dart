@@ -3460,6 +3460,12 @@ abstract class AppLocalizations {
   /// **'সংক্ষেপে বিষয়টি লিখুন'**
   String get support_subject_hint;
 
+  /// No description provided for @support_message.
+  ///
+  /// In bn, this message translates to:
+  /// **'বার্তা'**
+  String get support_message;
+
   /// No description provided for @support_message_hint.
   ///
   /// In bn, this message translates to:

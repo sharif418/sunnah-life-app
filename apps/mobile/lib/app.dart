@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
 import 'design/phosphor_icons.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'design/design_tokens.dart';
@@ -46,6 +48,7 @@ import 'features/more/more_screen.dart';
 import 'features/more/mosques_screen.dart';
 import 'features/more/profile_screen.dart';
 import 'features/more/qibla_screen.dart';
+import 'features/more/support_screen.dart';
 import 'features/more/zakat_screen.dart';
 import 'features/onboarding/gender_completion_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
@@ -79,7 +82,9 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   NotificationService.instance.onAmalAction = (actionId, payload) async {
     final value = kAmalActionValues[actionId];
     if (value == null) return;
-    await ref.read(amalProvider.notifier).write(
+    await ref
+        .read(amalProvider.notifier)
+        .write(
           payload.amalKey,
           payload.dateKey,
           value,
@@ -146,8 +151,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // the one-time gender+name step before anything else. The refresh
       // listener re-fires on the auth change, so finishing it lands on '/'.
       final auth = ref.read(authProvider);
-      if (auth.userOrNull != null &&
-          auth.userOrNull!.gender.needsCompletion) {
+      if (auth.userOrNull != null && auth.userOrNull!.gender.needsCompletion) {
         return loc == '/complete-profile' ? null : '/complete-profile';
       }
       // Da'wah engine is daee+ territory — hide the branch for everyone
@@ -319,6 +323,20 @@ final routerProvider = Provider<GoRouter>((ref) {
                     builder: (c, s) => const MasalaScreen(),
                   ),
                   GoRoute(path: 'live', builder: (c, s) => const LiveScreen()),
+                  // W4d: লাইভ সাপোর্ট — own threads + the conversation view
+                  // (guest → sign-in gate inside the screen).
+                  GoRoute(
+                    path: 'support',
+                    builder: (c, s) => const SupportScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':threadId',
+                        builder: (c, s) => SupportThreadScreen(
+                          id: s.pathParameters['threadId'] ?? '',
+                        ),
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'about',
                     builder: (c, s) => const AboutScreen(),
@@ -416,9 +434,7 @@ class BootstrapGate extends ConsumerWidget {
         textDirection: TextDirection.ltr,
         child: MaterialApp(
           home: Scaffold(
-            body: Center(
-              child: Text('${S.tr(Lang.bn, 'boot_failed')}: $e'),
-            ),
+            body: Center(child: Text('${S.tr(Lang.bn, 'boot_failed')}: $e')),
           ),
         ),
       ),
@@ -484,13 +500,14 @@ class AppShellScaffold extends ConsumerWidget {
     // the role doesn't qualify).
     final current = navigationShell.currentIndex;
     final selectedTab = !canSeeDawah && current > 2 ? current - 1 : current;
-    final onRootTab = _rootTabPaths.contains(GoRouterState.of(context).uri.path);
+    final onRootTab = _rootTabPaths.contains(
+      GoRouterState.of(context).uri.path,
+    );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            Theme.of(context).brightness == Brightness.dark
+        statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
             ? Brightness.light
             : Brightness.dark,
       ),

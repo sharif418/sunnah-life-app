@@ -560,6 +560,7 @@
   "support_new_thread": "ابدأ محادثة",
   "support_subject": "الموضوع",
   "support_subject_hint": "اكتب الموضوع بإيجاز",
+  "support_message": "الرسالة",
   "support_message_hint": "اكتب رسالتك…",
   "support_empty": "لا محادثات بعد — ابدأ واحدة عند الحاجة",
   "support_status_open": "مفتوحة",

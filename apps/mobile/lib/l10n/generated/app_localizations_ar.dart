@@ -1726,6 +1726,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get support_subject_hint => 'اكتب الموضوع بإيجاز';
 
   @override
+  String get support_message => 'الرسالة';
+
+  @override
   String get support_message_hint => 'اكتب رسالتك…';
 
   @override

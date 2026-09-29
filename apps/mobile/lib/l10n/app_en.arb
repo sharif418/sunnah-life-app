@@ -560,6 +560,7 @@
   "support_new_thread": "Start a conversation",
   "support_subject": "Subject",
   "support_subject_hint": "Briefly state the subject",
+  "support_message": "Message",
   "support_message_hint": "Write your message…",
   "support_empty": "No conversations yet — start one if you need help",
   "support_status_open": "Open",

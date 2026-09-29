@@ -1735,6 +1735,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get support_subject_hint => 'Briefly state the subject';
 
   @override
+  String get support_message => 'Message';
+
+  @override
   String get support_message_hint => 'Write your message…';
 
   @override

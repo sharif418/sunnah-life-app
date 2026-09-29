@@ -621,6 +621,7 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'support_new_thread' => l.support_new_thread,
   'support_subject' => l.support_subject,
   'support_subject_hint' => l.support_subject_hint,
+  'support_message' => l.support_message,
   'support_message_hint' => l.support_message_hint,
   'support_empty' => l.support_empty,
   'support_status_open' => l.support_status_open,

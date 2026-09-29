@@ -1739,6 +1739,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get support_subject_hint => 'সংক্ষেপে বিষয়টি লিখুন';
 
   @override
+  String get support_message => 'বার্তা';
+
+  @override
   String get support_message_hint => 'আপনার কথা লিখুন…';
 
   @override
