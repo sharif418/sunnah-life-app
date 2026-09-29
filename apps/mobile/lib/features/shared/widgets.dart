@@ -13,6 +13,7 @@ import '../../state/amal_state.dart';
 import '../../state/providers.dart';
 import 'sync_sheet.dart';
 import '../../design/phosphor_icons.dart';
+import 'state_illustrations.dart';
 
 extension L10nX on BuildContext {
   Lang get lang => LangX.fromCode(
@@ -108,9 +109,70 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
+/// Illustrated empty state (W4f): a soft rounded vignette — an open-book
+/// cradle under gold khatam sparks, the texture.dart lattice language —
+/// with the caller's glyph in a calm chip, message below, optional CTA.
 class EmptyState extends StatelessWidget {
-  const EmptyState({super.key, required this.message, this.icon});
+  const EmptyState({
+    super.key,
+    required this.message,
+    this.icon,
+    this.actionLabel,
+    this.onAction,
+  });
   final String message;
+  final IconData? icon;
+
+  /// Optional CTA (e.g. "নতুন জিজ্ঞাসা করুন") — rendered as a tonal button
+  /// below the message only when BOTH label and callback are present.
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(SLSpacing.s32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            EmptyIllustration(icon: icon),
+            const SizedBox(height: SLSpacing.s12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: SLSpacing.s12),
+              FilledButton.tonal(
+                onPressed: onAction,
+                child: Text(actionLabel!),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Illustrated error state (W4f): the CALM variant of the alert idiom — an
+/// alert-soft vignette (#FCE4E4 light / darkAlertSoft dark) with an
+/// open-ring motif and an alert-tinted icon chip (#C0392B / darkAlert),
+/// never a saturated red flood. Message + retry below.
+class ErrorState extends StatelessWidget {
+  const ErrorState({
+    super.key,
+    required this.message,
+    this.onRetry,
+    this.icon,
+  });
+  final String message;
+  final VoidCallback? onRetry;
   final IconData? icon;
 
   @override
@@ -122,41 +184,7 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon ?? PhosphorIconsRegular.tray,
-              size: 48,
-              color: theme.colorScheme.outline,
-            ),
-            const SizedBox(height: SLSpacing.s12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class ErrorState extends StatelessWidget {
-  const ErrorState({super.key, required this.message, this.onRetry});
-  final String message;
-  final VoidCallback? onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(SLSpacing.s32),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(PhosphorIconsRegular.warningCircle, size: 48, color: theme.colorScheme.error),
+            ErrorIllustration(icon: icon),
             const SizedBox(height: SLSpacing.s12),
             Text(
               message,
