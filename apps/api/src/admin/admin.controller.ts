@@ -1,4 +1,4 @@
-import { Req, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Req, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import {
@@ -28,6 +28,7 @@ import { ApiError } from "../common/api-error";
 import { Roles } from "../common/roles.decorator";
 import { RolesGuard } from "../common/roles.guard";
 import { LevelsService, requireBengaliReason } from "../levels/levels.service";
+import { SupportReplyDto } from "../support/support.controller";
 import {
   bdToday,
   completion7dForUsers,
@@ -1580,6 +1581,145 @@ export class AdminService {
       return { entries };
     });
   }
+
+  // ── Live support threads (W4d) — full_admin support inbox ──────────────
+
+  /**
+   * GET /api/admin/support — full_admin: every support thread (optionally
+   * ?status=open|answered|closed), OPEN ones first, then answered, then
+   * closed; within a group by last activity (updatedAt) desc.
+   */
+  async supportThreads(viewer: User | null, status: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const filter = status && ["open", "answered", "closed"].includes(status) ? status : undefined;
+
+    return this.rls.run(user, async (tx) => {
+      const rows = (await tx.supportThread.findMany({
+        ...(filter ? { where: { status: filter } } : {}),
+        orderBy: { updatedAt: "desc" },
+        take: 200,
+      })) as unknown as (import("../support/support.controller").SupportThreadItem & {
+        createdAt: Date;
+        updatedAt: Date;
+        closedAt: Date | null;
+      })[];
+      if (!rows.length) return { threads: [] };
+
+      const userIds = [...new Set(rows.map((r) => r.userId))];
+      const users = await tx.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, memberCode: true, gender: true },
+      });
+      const names = new Map(users.map((u) => [u.id, u]));
+
+      const messages = (await tx.supportMessage.findMany({
+        where: { threadId: { in: rows.map((r) => r.id) } },
+        orderBy: { createdAt: "asc" },
+      })) as unknown as (import("../support/support.controller").SupportMessageItem & {
+        createdAt: Date;
+      })[];
+      const byThread = new Map<string, typeof messages>();
+      for (const m of messages) {
+        const list = byThread.get(m.threadId) ?? [];
+        list.push(m);
+        byThread.set(m.threadId, list);
+      }
+
+      const RANK: Record<string, number> = { open: 0, answered: 1, closed: 2 };
+      const threads = rows
+        .map((r) => {
+          const msgs = byThread.get(r.id) ?? [];
+          const last = msgs.length ? msgs[msgs.length - 1] : null;
+          const member = names.get(r.userId);
+          return {
+            id: r.id,
+            userId: r.userId,
+            userName: member?.name ?? "সদস্য",
+            userMemberCode: member?.memberCode ?? null,
+            userGender: (member?.gender ?? "M") as Gender,
+            subject: r.subject,
+            status: r.status,
+            messageCount: msgs.length,
+            lastMessageAt: last ? last.createdAt.toISOString() : r.createdAt.toISOString(),
+            lastPreview: last ? last.body.slice(0, 120) : null,
+            lastFromAdmin: !!last?.isAdmin,
+            createdAt: r.createdAt.toISOString(),
+            closedAt: r.closedAt ? r.closedAt.toISOString() : null,
+          };
+        })
+        .sort((a, b) =>
+          filter
+            ? 0 // already single-status; keep the updatedAt desc order
+            : (RANK[a.status] ?? 3) - (RANK[b.status] ?? 3) ||
+              new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+        );
+      return { threads };
+    });
+  }
+
+  /**
+   * POST /api/admin/support/:id/messages — full_admin: reply (isAdmin=true,
+   * status → answered, audited as support_reply). Replying to a CLOSED thread
+   * is refused — reopen deliberately (a new thread) instead.
+   */
+  async supportReply(viewer: User | null, id: string, dto: SupportReplyDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const body = (dto.message ?? "").trim();
+    if (body.length < 3) throw new ApiError(400, "বার্তা কমপক্ষে ৩ অক্ষরের হতে হবে");
+
+    return this.rls.run(user, async (tx) => {
+      const thread = await tx.supportThread.findUnique({ where: { id } });
+      if (!thread) throw new ApiError(404, "আলাপনাটি পাওয়া যায়নি");
+      if (thread.status === "closed") throw new ApiError(400, "এই আলাপনা বন্ধ করা হয়েছে");
+
+      const message = await tx.supportMessage.create({
+        data: { threadId: id, authorId: user.id, body, isAdmin: true },
+      });
+      await tx.supportThread.update({ where: { id }, data: { status: "answered" } });
+      await this.guard.audit(user.id, "support_reply", "support_thread", id, { userId: thread.userId });
+      return {
+        message: {
+          id: message.id,
+          threadId: message.threadId,
+          authorId: message.authorId,
+          isAdmin: message.isAdmin,
+          body: message.body,
+          createdAt: message.createdAt.toISOString(),
+        },
+      };
+    });
+  }
+
+  /** POST /api/admin/support/:id/close — full_admin (idempotent, audited). */
+  async supportClose(viewer: User | null, id: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const thread = await tx.supportThread.findUnique({ where: { id } });
+      if (!thread) throw new ApiError(404, "আলাপনাটি পাওয়া যায়নি");
+      if (thread.status === "closed") return { thread }; // idempotent re-close
+
+      const updated = await tx.supportThread.update({
+        where: { id },
+        data: { status: "closed", closedAt: new Date(), closedById: user.id },
+      });
+      await this.guard.audit(user.id, "support_close", "support_thread", id, { userId: thread.userId });
+      return {
+        thread: {
+          id: updated.id,
+          userId: updated.userId,
+          subject: updated.subject,
+          status: updated.status,
+          createdAt: updated.createdAt.toISOString(),
+          updatedAt: updated.updatedAt.toISOString(),
+          closedAt: updated.closedAt ? updated.closedAt.toISOString() : null,
+        },
+      };
+    });
+  }
 }
 
 function searchFilter(q: string) {
@@ -1844,5 +1984,27 @@ export class AdminController {
   @Roles("full_admin")
   audit(@Req() req: AuthedRequest) {
     return this.service.audit(currentUser(req));
+  }
+
+  @Get("support")
+  @ApiOperation({ summary: "full_admin: support inbox — open threads first (filter ?status=)" })
+  @Roles("full_admin")
+  supportThreads(@Query("status") status: string | undefined, @Req() req: AuthedRequest) {
+    return this.service.supportThreads(currentUser(req), status);
+  }
+
+  @Post("support/:id/messages")
+  @ApiOperation({ summary: "full_admin: reply to a support thread (status → answered, audited)" })
+  @Roles("full_admin")
+  supportReply(@Param("id") id: string, @Body() dto: SupportReplyDto, @Req() req: AuthedRequest) {
+    return this.service.supportReply(currentUser(req), id, dto);
+  }
+
+  @Post("support/:id/close")
+  @HttpCode(HttpStatus.OK) // decision action, not a resource creation
+  @ApiOperation({ summary: "full_admin: close a support thread (idempotent, audited)" })
+  @Roles("full_admin")
+  supportClose(@Param("id") id: string, @Req() req: AuthedRequest) {
+    return this.service.supportClose(currentUser(req), id);
   }
 }
