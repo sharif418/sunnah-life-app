@@ -1559,3 +1559,16 @@ Work Log:
 
 Stage Summary:
 - The W4d/W4e Kotlin debt is fully paid: 3 fix commits (11ff487, ee0a84f, 65658fc) → main green end to end at 65658fc.
+
+---
+Task ID: W4j-CI-FIX (part 3 — a flake on the final docs push)
+Agent: lead
+Task: Run 36617854673 (docs-only edc17a9) failed the API job on token-security.spec.ts "two RACING refreshes with the same token → exactly one wins" — the final assertion (the winner's new token must be dead after the loser's reuse detection) resolved instead of rejecting.
+
+Work Log:
+- The commits between the all-green 36616631396 (65658fc) and this run are docs-only (worklog.md, docs/AUDIT.md) — the API code is byte-identical. The same test passed in every other run today (36614184485, 36615386357, 36616631396 — the API job was green even while the APK jobs were red).
+- Job re-run (the GitHub re-run API, id 109575782306): 36617854673 → completed success, all jobs green. Verdict: a TIMING FLAKE in the race test, not a regression.
+- FLAGGED for a follow-up wave (not W4j): the test's invariant is real (family revocation on racing reuse) but its outcome depends on the loser's failure MODE being reuse-detection; a different interleaving (e.g. a serialization loser that doesn't run the reuse path) lets the winner's token live. Worth a deterministic probe or a retry-stable assertion — the current test conflates "exactly one wins" with "the family is revoked".
+
+Stage Summary:
+- W4j + the W4d/W4e Kotlin debt are DONE: main green end to end (36616631396 on 65658fc; 36617854673 on edc17a9 after the flake re-run).
