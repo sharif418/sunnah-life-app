@@ -1545,3 +1545,17 @@ Work Log:
 
 Stage Summary:
 - 11ff487 fixes the only W4e..W4i CI regression; the APK jobs should go green on the run it triggers. The audit trail above is the honest correction of the W4e..W4i CI claims.
+
+---
+Task ID: W4j-CI-FIX (part 2 — the errors the un-swallowed file surfaced)
+Agent: lead
+Task: 11ff487 un-swallowed MainActivity.kt → the compiler saw the W4d usage channel for the FIRST time → the APK jobs failed on two hallucinated Android APIs (runs 36614184485, 36615386357).
+
+Work Log:
+- ee0a84f: AppOpsManager.OPSTR_USAGE_ACCESS does not exist — the public app-op behind the Settings "usage access" toggle is OPSTR_GET_USAGE_STATS ("android:get_usage_stats"); the pre-Q branch's String-op checkOpNoThrow is not public either — pre-Q now probes via the events query itself (an ungranted queryEvents answers an empty stream; the only false negative is the first minutes after a boot — the settings CTA stays correct meanwhile). UsageEvents.nextEvent() has no zero-arg returning variant — the walk reuses one mutable Event out-param.
+- 65658fc: the out-param method's real name is getNextEvent(Event) — guessed 'nextEvent' first (one more red APK cycle), then verified EVERY API the channel touches against the AOSP framework source itself (fetched UsageEvents.java + AppOpsManager.java from the aosp-mirror on GitHub): hasNextEvent/getNextEvent/Event()/getEventType/getTimeStamp/getPackageName/MOVE_TO_*/ACTIVITY_* public ✓, OPSTR_GET_USAGE_STATS public ✓, unsafeCheckOpNoThrow(String,int,String) public (deprecated — warning only) ✓, MODE_ALLOWED ✓. Settings.ACTION_USAGE_ACCESS_SETTINGS + UsageStatsManager.queryEvents were already compiler-proven by the earlier runs' error lists.
+- LESSON (the process fix): Kotlin written in a sandbox without the Android SDK is UNVERIFIED until an APK job compiles it — and a green local gate run says nothing about it. The W4e comment bug then MASKED the W4d bugs by swallowing the whole file, so two waves shipped broken Kotlin into main. The close-out now treats "read the actual CI jobs, both APK ones, per push" as mandatory, and AOSP source verification as the way to fix without Android-SDK roulette (each APK cycle costs ~15 min).
+- Final proof: run 36616631396 on 65658fc — ALL 10 JOBS GREEN including BOTH APK builds (the first fully-green run since 36558890112 on dcab440).
+
+Stage Summary:
+- The W4d/W4e Kotlin debt is fully paid: 3 fix commits (11ff487, ee0a84f, 65658fc) → main green end to end at 65658fc.
