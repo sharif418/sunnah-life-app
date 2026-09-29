@@ -360,10 +360,11 @@ class MainActivity : FlutterActivity() {
         var currentPkg: String? = null
         var currentStart = 0L
         val events = usm.queryEvents(start, end)
-        // UsageEvents fills a MUTABLE out-event per step — nextEvent(event)
-        // returns Boolean; there is no zero-arg variant returning an event.
+        // UsageEvents fills a MUTABLE out-event per step — getNextEvent(event)
+        // returns Boolean (verified against the AOSP source; there is no
+        // zero-arg variant returning an event).
         val event = UsageEvents.Event()
-        while (events.hasNextEvent() && events.nextEvent(event)) {
+        while (events.hasNextEvent() && events.getNextEvent(event)) {
             val type = event.eventType
             val resumed = type == UsageEvents.Event.MOVE_TO_FOREGROUND ||
                 type == UsageEvents.Event.ACTIVITY_RESUMED
