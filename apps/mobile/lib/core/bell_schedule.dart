@@ -29,6 +29,7 @@ const int kRollingWindowDays = 3;
 //   exact alarm =  900 + PrayerKey.index (Kotlin AlarmManager path, unchanged)
 //   silent on   = 4000 + dayOffset * 16 + PrayerKey.index   (Kotlin ringer)
 //   silent off  = 5000 + dayOffset * 16 + PrayerKey.index   (Kotlin ringer)
+//   detox       = 6000 (W4d — the single daily screen-time reminder)
 //
 // The day stride is 16 because max PrayerKey.index is tahajjud = 9 < 16:
 // the five farz slots of one day can never bleed into the next day's
@@ -44,9 +45,15 @@ abstract final class Nid {
   static const int waqtBellBase = 1000; // + dayOffset*16 + PrayerKey.index
   static const int postPrayerBase = 2000; // + dayOffset*16 + PrayerKey.index
   static const int exactAlarmBase = 900; // + PrayerKey.index (Kotlin path)
-  static const int amalConfirmBase = 3000; // + PrayerKey.index (diary-write ack)
+  static const int amalConfirmBase =
+      3000; // + PrayerKey.index (diary-write ack)
   static const int autoSilentOnBase = 4000; // + dayOffset*16 + PrayerKey.index
   static const int autoSilentOffBase = 5000; // + dayOffset*16 + PrayerKey.index
+
+  /// The single daily screen-time reminder (W4d Guard-module seed) —
+  /// zonedSchedule with DateTimeComponents.time, replaced in place on
+  /// every toggle/time change.
+  static const int detoxReminder = 6000;
 
   static const int _dayStride = 16;
 
@@ -76,11 +83,11 @@ abstract final class Nid {
   /// slot of the stride, not just the farz indices, so the cancel stays
   /// correct even if the waqt set ever widens.
   static List<int> autoSilentAllIds() => [
-        for (final base in [autoSilentOnBase, autoSilentOffBase])
-          for (var offset = 0; offset < kRollingWindowDays; offset++)
-            for (var slot = 0; slot < _dayStride; slot++)
-              base + offset * _dayStride + slot,
-      ];
+    for (final base in [autoSilentOnBase, autoSilentOffBase])
+      for (var offset = 0; offset < kRollingWindowDays; offset++)
+        for (var slot = 0; slot < _dayStride; slot++)
+          base + offset * _dayStride + slot,
+  ];
 
   /// Confirmation id for a diary write triggered by the [key] prompt.
   static int amalConfirm(PrayerKey key) => amalConfirmBase + key.index;
@@ -107,8 +114,7 @@ class PrayerBellConfig {
 
   /// Reschedule trigger: two configs describe the same schedule iff their
   /// keys are equal (double + enum fields stringify losslessly here).
-  String get scheduleKey =>
-      '$lat|$lng|$tz|${method.json}|${madhhab.json}';
+  String get scheduleKey => '$lat|$lng|$tz|${method.json}|${madhhab.json}';
 }
 
 /// DateKeys of the rolling window ([today], [today]+1, [today]+2).
@@ -151,10 +157,7 @@ int _clampPref(int? stored, int min, int max, int fallback) {
 /// write the diary from a headless background isolate (no Riverpod there):
 /// `{"dateKey":"2026-02-08","amalKey":"salat_fajr"}`.
 class PostPrayerActionPayload {
-  const PostPrayerActionPayload({
-    required this.dateKey,
-    required this.amalKey,
-  });
+  const PostPrayerActionPayload({required this.dateKey, required this.amalKey});
 
   final String dateKey;
   final String amalKey;
@@ -213,9 +216,7 @@ String salatAutoSource(PrayerKey key) => 'auto:prayer:${key.name}';
 /// [salatAutoSource] from a diary amalKey ('salat_fajr' →
 /// 'auto:prayer:fajr'); null for non-salat keys (never written by bells).
 String? autoSourceFromAmalKey(String amalKey) =>
-    amalKey.startsWith('salat_')
-        ? 'auto:prayer:${amalKey.substring(6)}'
-        : null;
+    amalKey.startsWith('salat_') ? 'auto:prayer:${amalKey.substring(6)}' : null;
 
 /// Bengali labels of the tristate values for the headless confirmation
 /// notification (the notification layer is Bengali-first like every other
