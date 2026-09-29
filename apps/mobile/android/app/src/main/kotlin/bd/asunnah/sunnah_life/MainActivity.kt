@@ -29,8 +29,8 @@ import java.util.Calendar
  *    window alarms (AutoSilentReceiver).
  *  · "sunnahlife/widget" — home-widget text updates (RemoteViews).
  *  · "sunnahlife/system" — native share sheet (ACTION_SEND), zero plugins:
- *    plain text, or the rendered referral-card PNG (W4e) as image/* +
- *    EXTRA_STREAM through the app's FileProvider (authority
+ *    plain text, or the rendered referral-card PNG (W4e) with an any-image
+ *    MIME type + EXTRA_STREAM through the app's FileProvider (authority
  *    "${applicationId}.fileprovider", paths declared in res/xml/file_paths).
  *  · "sunnahlife/usage" — UsageStatsManager screen-time for the detox
  *    screen (W4d Guard-module seed).
