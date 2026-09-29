@@ -14,10 +14,15 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/bn_digits.dart';
+import '../core/date_keys.dart';
+import '../core/prayer_engine.dart';
 import '../design/design_tokens.dart';
 import '../features/amal/amal_widgets.dart';
+import '../features/home/home_sections.dart';
 import '../features/shared/widgets.dart';
 import '../l10n/app_strings.dart';
+import '../models/domain.dart';
+import '../state/prayer_state.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -211,6 +216,10 @@ class _CatalogStateState extends State<_CatalogState> {
                   SizedBox(height: SLSpacing.s8),
                   SyncBadge(),
                 ],
+              ),
+              _CatalogSection(
+                title: 'CountdownRingHero (C-W4b — ওয়াক্ত রিং)',
+                children: [_RingHeroDemo()],
               ),
               _CatalogSection(
                 title: 'Bengali numerals (toBn)',
@@ -418,6 +427,43 @@ class _HeatmapDemo extends StatelessWidget {
         HeatmapCell(points: 0, isToday: true),
         HeatmapCell(points: 1, locked: true),
       ],
+    );
+  }
+}
+
+/// C-W4b ring hero with a REAL Dhaka prayer bundle computed at build time —
+/// the arc + HH:MM:SS snapshot of "now" (the live screen ticks them via
+/// prayerProvider's per-second state).
+class _RingHeroDemo extends StatelessWidget {
+  const _RingHeroDemo();
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final times = PrayerEngine.compute(
+      dateKey(now),
+      lat: 23.8103,
+      lng: 90.4125,
+      tz: 6.0,
+      method: CalcMethod.karachi,
+      madhhab: Madhhab.hanafi,
+    );
+    final nowMinutes = now.hour * 60.0 + now.minute + now.second / 60.0;
+    final (nextKey, minsToNext) = PrayerEngine.nextPrayer(times, nowMinutes);
+    return CountdownRingHero(
+      prayer: PrayerNow(
+        dateKey: dateKey(now),
+        times: times,
+        nowMinutes: nowMinutes,
+        currentWaqt: PrayerEngine.currentWaqt(times, nowMinutes),
+        nextKey: nextKey,
+        minutesToNext: minsToNext,
+        forbiddenLabel: null,
+        postPrayerKey: null,
+      ),
+      lang: Lang.bn,
+      bn: true,
+      onShowSchedule: () {},
     );
   }
 }

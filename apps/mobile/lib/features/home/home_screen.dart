@@ -23,6 +23,7 @@ import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
+import 'home_sections.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -34,6 +35,12 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   Set<String> _bells = <String>{};
   bool? _exactAlarmsGranted;
+
+  /// The schedule section header's key — the countdown ring hero's
+  /// "সময়সূচি দেখুন" affordance scrolls it into view (the in-page hero
+  /// transition; the schedule is a section of THIS screen, so no route
+  /// Hero tag is involved).
+  final GlobalKey _scheduleKey = GlobalKey();
 
   @override
   void initState() {
@@ -181,6 +188,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
   }
 
+  /// Smooth in-page scroll from the ring hero to the schedule section
+  /// (C-W4b hero interpretation: the schedule lives on the same screen, so
+  /// the "flight" is an animated ensureVisible, not a route Hero).
+  void _showSchedule() {
+    final ctx = _scheduleKey.currentContext;
+    if (ctx == null) return;
+    Scrollable.ensureVisible(
+      ctx,
+      duration: SLMotion.slow,
+      curve: SLMotion.standard,
+      alignment: 0.1,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final prayer = ref.watch(prayerProvider);
@@ -221,29 +242,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // logic that used to live here moved into it — no duplication.
             const GlobalHeader(),
 
-            // ── Countdown card ──
-            _CountdownCard(prayer: prayer, lang: lang, bn: bn),
+            // ── Countdown ring hero (C-W4b) ──
+            // Same gradient family as the old countdown card, now a RING:
+            // the gold arc = REMAINING of the current waqt interval, the
+            // HH:MM:SS + arc tick every second (prayerProvider's per-second
+            // state), and the affordance row flies to the schedule below.
+            CountdownRingHero(
+              prayer: prayer,
+              lang: lang,
+              bn: bn,
+              onShowSchedule: _showSchedule,
+            ),
             const SizedBox(height: SLSpacing.s16),
 
-            // ── Post-prayer prompt ──
-            if (prayer.postPrayerKey != null)
-              _PostPrayerPrompt(prayer: prayer, bn: bn),
-
-            // ── Exact alarm permission ──
-            if (_exactAlarmsGranted == false) ...[
-              const SizedBox(height: SLSpacing.s12),
-              _ExactAlarmCard(onGrant: _checkExactAlarms),
-            ],
-
-            // ── Forbidden times ──
+            // ── Schedule (the hero's in-page destination) ──
             SectionHeader(
-              context.t('prayer_forbidden_times'),
-              icon: Icons.block_outlined,
-            ),
-            _ForbiddenTimes(prayer: prayer, bn: bn),
-
-            // ── Schedule ──
-            SectionHeader(
+              key: _scheduleKey,
               context.t('prayer_schedule'),
               icon: Icons.schedule_outlined,
             ),
@@ -254,6 +268,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onBell: _toggleBell,
               onBellLongPress: _openBellTiming,
             ),
+
+            // ── Forbidden times ──
+            SectionHeader(
+              context.t('prayer_forbidden_times'),
+              icon: Icons.block_outlined,
+            ),
+            _ForbiddenTimes(prayer: prayer, bn: bn),
+
+            // ── Post-prayer prompt ──
+            if (prayer.postPrayerKey != null)
+              _PostPrayerPrompt(prayer: prayer, bn: bn),
+
+            // ── Exact alarm permission ──
+            if (_exactAlarmsGranted == false) ...[
+              const SizedBox(height: SLSpacing.s12),
+              _ExactAlarmCard(onGrant: _checkExactAlarms),
+            ],
             const SizedBox(height: SLSpacing.s24),
             Center(
               child: Text(
@@ -266,96 +297,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-// ── Countdown card ───────────────────────────────────────────────────────────
-
-class _CountdownCard extends StatelessWidget {
-  const _CountdownCard({
-    required this.prayer,
-    required this.lang,
-    required this.bn,
-  });
-  final PrayerNow prayer;
-  final Lang lang;
-  final bool bn;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final t = prayer.times;
-    final currentLabel = _prayerLabel(prayer.currentWaqt, lang);
-    final nextLabel = _prayerLabel(prayer.nextKey, lang);
-    final nextAt = formatTimeBn(t.byKey(prayer.nextKey), bengali: bn);
-    return Container(
-      padding: const EdgeInsets.all(SLSpacing.s24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [SLColors.primary, SLColors.primaryDeep],
-        ),
-        borderRadius: SLRadius.brXl,
-        boxShadow: SLElevation.lifted(theme.brightness == Brightness.dark),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: SLColors.gold,
-                  borderRadius: SLRadius.brPill,
-                ),
-                child: Text(
-                  '${context.t('prayer_current')}: $currentLabel',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: SLColors.primaryDeep,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.nightlight_outlined,
-                size: 18,
-                color: SLColors.lightPrimaryForeground.withValues(alpha: 0.8),
-              ),
-            ],
-          ),
-          const SizedBox(height: SLSpacing.s12),
-          Text(
-            '${context.t('prayer_next')} — $nextLabel',
-            style: theme.textTheme.bodyLarge?.copyWith(
-              color: SLColors.lightPrimaryForeground,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: SLSpacing.s4),
-          Text(
-            prayer.countdownText(bengali: bn),
-            style: theme.textTheme.displaySmall?.copyWith(
-              color: SLColors.gold,
-              fontWeight: FontWeight.w700,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(height: SLSpacing.s4),
-          Text(
-            '$nextLabel ${bn ? '' : 'at '}$nextAt',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: SLColors.lightPrimaryForeground.withValues(alpha: 0.85),
-            ),
-          ),
-        ],
       ),
     );
   }

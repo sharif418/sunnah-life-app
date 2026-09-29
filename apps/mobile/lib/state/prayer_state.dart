@@ -85,14 +85,22 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
       final next = computeNow();
-      if (next != null) {
-        if (state == null ||
-            next.dateKey != state!.dateKey ||
-            next.nowMinutes.floor() != state!.nowMinutes.floor()) {
-          state = next;
-          _onStateChanged();
-        }
+      if (next == null) return;
+      // C-W4b: state flows EVERY second — the home countdown ring + HH:MM:SS
+      // tick at second granularity (nowMinutes carries the seconds fraction).
+      // The side-effect paths (bell re-arm, home-widget platform push +
+      // snapshot disk write) stay gated on the minute/date boundary below,
+      // so nothing writes to disk or crosses the channel 60× more often
+      // than before.
+      if (state == null) {
+        state = next;
+        _onStateChanged();
+        return;
       }
+      final boundary = next.dateKey != state!.dateKey ||
+          next.nowMinutes.floor() != state!.nowMinutes.floor();
+      state = next;
+      if (boundary) _onStateChanged();
     });
   }
 
