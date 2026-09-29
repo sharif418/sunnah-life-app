@@ -546,5 +546,7 @@
   "leaderboard_band_top25": "أعلى ٢٥٪",
   "leaderboard_band_top50": "أعلى ٥٠٪",
   "leaderboard_band_top75": "أعلى ٧٥٪",
-  "leaderboard_band_bottom": "أدنى ٢٥٪"
+  "leaderboard_band_bottom": "أدنى ٢٥٪",
+  "offline_banner": "بدون اتصال — يتم عرض البيانات المحفوظة",
+  "last_updated": "آخر تحديث"
 }

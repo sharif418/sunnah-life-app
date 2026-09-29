@@ -114,6 +114,20 @@ class CustomChecklistItems extends Table {
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 }
 
+/// W4-fix4: last-good JSON envelope of a remote GET read (the Da'wah tab's
+/// offline cache). `key` is endpoint + user scope so no row can ever cross
+/// a user boundary; `payload` is the decoded response body; `fetchedAt`
+/// drives the "সর্বশেষ হালনাগাদ" stamp.
+@DataClassName('RemoteCacheRow')
+class RemoteCacheTable extends Table {
+  TextColumn get key => text()();
+  TextColumn get payload => text()();
+  DateTimeColumn get fetchedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {key};
+}
+
 @DriftDatabase(
   tables: [
     AmalEntries,
@@ -123,6 +137,7 @@ class CustomChecklistItems extends Table {
     LastRead,
     AyahBookmarks,
     CustomChecklistItems,
+    RemoteCacheTable,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -131,12 +146,13 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   /// v1 → v2 (C-W3d): outbox gained `last_error` + `dead_at`. Existing user
   /// data survives — additive ALTER TABLEs only (drift's addColumn).
   /// v2 → v3 (C-W4c): the local custom-checklist table — pure CREATE TABLE,
   /// no existing column touched.
+  /// v3 → v4 (W4-fix4): the remote-read cache table — pure CREATE TABLE.
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -147,6 +163,9 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.createTable(customChecklistItems);
+      }
+      if (from < 4) {
+        await m.createTable(remoteCacheTable);
       }
     },
   );
@@ -503,6 +522,26 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> deleteChecklistItem(int id) =>
       (delete(customChecklistItems)..where((t) => t.id.equals(id))).go();
+
+  // ── Remote-read cache (W4-fix4) ─────────────────────────────────────────────
+
+  /// The last-good envelope for [key], or null when this endpoint has
+  /// never succeeded for this scope (the UI keeps its error state then).
+  Future<RemoteCacheRow?> remoteCache(String key) =>
+      (select(remoteCacheTable)..where((t) => t.key.equals(key)))
+          .getSingleOrNull();
+
+  Future<void> saveRemoteCache({
+    required String key,
+    required String payload,
+    required DateTime fetchedAt,
+  }) => into(remoteCacheTable).insertOnConflictUpdate(
+        RemoteCacheTableCompanion.insert(
+          key: key,
+          payload: payload,
+          fetchedAt: fetchedAt,
+        ),
+      );
 }
 
 LazyDatabase _openConnection() {

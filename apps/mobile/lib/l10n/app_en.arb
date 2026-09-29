@@ -546,5 +546,7 @@
   "leaderboard_band_top25": "Top 25%",
   "leaderboard_band_top50": "Top 50%",
   "leaderboard_band_top75": "Top 75%",
-  "leaderboard_band_bottom": "Bottom 25%"
+  "leaderboard_band_bottom": "Bottom 25%",
+  "offline_banner": "Offline — showing saved data",
+  "last_updated": "Last updated"
 }

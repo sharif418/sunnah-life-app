@@ -116,7 +116,9 @@ class _GoldenApi extends ApiClient {
       fallbackDefinitions();
 
   @override
-  Future<DawahOverview> dawahOverview() async => DawahOverview(
+  Future<ApiCached<DawahOverview>> dawahOverview({String? scope}) async =>
+      ApiCached(
+        DawahOverview(
     memberCode: 'DS-000004',
     referralLink: 'https://sunnahlife.app/join/DS-000004',
     invitedCount: 3,
@@ -162,10 +164,15 @@ class _GoldenApi extends ApiClient {
     ],
     nextLevel: Level.farzeAin1,
     assessments: const [],
-  );
+        ),
+        fetchedAt: _kNow,
+      );
 
   @override
-  Future<(Usrah?, List<Announcement>)> usrah() async => (
+  Future<ApiCached<(Usrah?, List<Announcement>)>> usrah({
+    String? scope,
+  }) async => ApiCached(
+    (
     Usrah(
       id: 'u1',
       name: 'আল-হুদা উসরা',
@@ -190,10 +197,13 @@ class _GoldenApi extends ApiClient {
         authorName: 'উসরা প্রধান',
       ),
     ],
+    ),
+    fetchedAt: _kNow,
   );
 
   @override
-  Future<List<WeeklyReview>> reviews() async => [
+  Future<ApiCached<List<WeeklyReview>>> reviews({String? scope}) async =>
+      ApiCached([
     WeeklyReview(
       id: 'r1',
       userId: 'u-font-daee',
@@ -207,7 +217,7 @@ class _GoldenApi extends ApiClient {
       userName: 'রাফিউল ইসলাম',
       reviewerName: 'উসরা প্রধান',
     ),
-  ];
+  ], fetchedAt: _kNow);
 
   @override
   Future<List<LiveProgramItem>> live() async => const [];

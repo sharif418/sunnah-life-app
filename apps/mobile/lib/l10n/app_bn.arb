@@ -546,5 +546,7 @@
   "leaderboard_band_top25": "শীর্ষ ২৫%",
   "leaderboard_band_top50": "শীর্ষ ৫০%",
   "leaderboard_band_top75": "শীর্ষ ৭৫%",
-  "leaderboard_band_bottom": "নিচের ২৫%"
+  "leaderboard_band_bottom": "নিচের ২৫%",
+  "offline_banner": "অফলাইন — দেখানো হচ্ছে সংরক্ষিত তথ্য",
+  "last_updated": "সর্বশেষ হালনাগাদ"
 }

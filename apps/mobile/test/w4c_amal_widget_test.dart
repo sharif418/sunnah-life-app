@@ -163,8 +163,8 @@ class FakeGoalsApi extends ApiClient {
   }
 
   @override
-  Future<(Usrah?, List<Announcement>)> usrah() async =>
-      (null, const <Announcement>[]);
+  Future<ApiCached<(Usrah?, List<Announcement>)>> usrah({String? scope}) async =>
+      ApiCached((null, const <Announcement>[]), fetchedAt: DateTime(2026));
 }
 
 /// Flag-on config (the leaderboard gating tests build their own variants).

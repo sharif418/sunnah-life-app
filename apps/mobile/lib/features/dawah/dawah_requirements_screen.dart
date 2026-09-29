@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
+import '../../api/api_client.dart' show ApiCached;
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
 
@@ -29,9 +30,15 @@ class DawahRequirementsScreen extends ConsumerWidget {
       body: liveAsync.when(
         loading: () => const Skeleton(height: 72, count: 5),
         error: (_, _) => _FallbackBody(overviewAsync: overviewAsync),
+        // W4-fix4: a cache-served snapshot still renders the live body,
+        // banner on top.
         data: (live) => live == null
             ? _FallbackBody(overviewAsync: overviewAsync)
-            : _LiveBody(requirements: live),
+            : _LiveBody(
+                requirements: live.data,
+                stale: live.stale,
+                fetchedAt: live.fetchedAt,
+              ),
       ),
     );
   }
@@ -40,8 +47,16 @@ class DawahRequirementsScreen extends ConsumerWidget {
 // ── live checklist ────────────────────────────────────────────────────────────
 
 class _LiveBody extends StatelessWidget {
-  const _LiveBody({required this.requirements});
+  const _LiveBody({
+    required this.requirements,
+    this.stale = false,
+    this.fetchedAt,
+  });
   final DawahRequirements requirements;
+
+  /// W4-fix4: cache-served snapshot (offline banner + stamp).
+  final bool stale;
+  final DateTime? fetchedAt;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +65,8 @@ class _LiveBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(SLSpacing.s16),
       children: [
+        if (stale && fetchedAt != null)
+          OfflineBanner(fetchedAt: fetchedAt!),
         _LevelRow(level: live.level, nextLevel: live.nextLevel),
         const SizedBox(height: SLSpacing.s12),
         AppCard(
@@ -88,7 +105,7 @@ class _LiveBody extends StatelessWidget {
 
 class _FallbackBody extends ConsumerWidget {
   const _FallbackBody({required this.overviewAsync});
-  final AsyncValue<DawahOverview?> overviewAsync;
+  final AsyncValue<ApiCached<DawahOverview>?> overviewAsync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,8 +123,8 @@ class _FallbackBody extends ConsumerWidget {
           ),
         ],
       ),
-      data: (overview) {
-        if (overview == null) {
+      data: (remote) {
+        if (remote == null) {
           return ListView(
             children: [
               const SizedBox(height: SLSpacing.s24),
@@ -121,6 +138,7 @@ class _FallbackBody extends ConsumerWidget {
             ],
           );
         }
+        final overview = remote.data;
         final theme = Theme.of(context);
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),

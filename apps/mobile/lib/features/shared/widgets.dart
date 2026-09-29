@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/bn_digits.dart';
+import '../../core/sync_policy.dart' show formatAgoBn;
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../state/amal_state.dart';
@@ -171,6 +172,58 @@ class ErrorState extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Subtle offline strip (W4-fix4) shown above cache-served content:
+/// "অফলাইন · সর্বশেষ হালনাগাদ: ৫ মিনিট আগে". Calm gold-on-cream — the
+/// information is "this is a snapshot", never a red alarm.
+class OfflineBanner extends StatelessWidget {
+  const OfflineBanner({super.key, required this.fetchedAt, this.now});
+
+  /// When the shown snapshot last came over the network.
+  final DateTime fetchedAt;
+
+  /// Injectable clock — goldens pin it so the ago-label never drifts.
+  final DateTime? now;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bn = context.isBn;
+    final dark = theme.brightness == Brightness.dark;
+    final bg = dark ? SLColors.darkGoldSoft : SLColors.goldSoftLight;
+    final fg = dark ? SLColors.darkGoldText : SLColors.goldDeep;
+    final ago = formatAgoBn(
+      (now ?? DateTime.now()).difference(fetchedAt),
+      bengali: bn,
+    );
+    return Container(
+      margin: const EdgeInsets.only(bottom: SLSpacing.s12),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SLSpacing.s12,
+        vertical: SLSpacing.s8,
+      ),
+      decoration: BoxDecoration(color: bg, borderRadius: SLRadius.brMd),
+      child: Row(
+        children: [
+          Icon(Icons.wifi_off, size: 16, color: fg),
+          const SizedBox(width: SLSpacing.s8),
+          Expanded(
+            child: Text(
+              '${context.t('offline_banner')} · '
+              '${context.t('last_updated')}: $ago',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: fg,
+                fontWeight: FontWeight.w600,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

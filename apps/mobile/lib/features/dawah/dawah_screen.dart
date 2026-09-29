@@ -151,8 +151,8 @@ class _DawahOverviewTab extends ConsumerWidget {
           ),
         ],
       ),
-      data: (overview) {
-        if (overview == null) {
+      data: (remote) {
+        if (remote == null) {
           return ListView(
             children: [
               const SizedBox(height: SLSpacing.s24),
@@ -163,12 +163,16 @@ class _DawahOverviewTab extends ConsumerWidget {
             ],
           );
         }
+        final overview = remote.data;
 
         String joinLink(String code) => 'https://sunnahlife.app/join/$code';
 
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
           children: [
+            // W4-fix4: cache-served snapshot — subtle banner + the stamp.
+            if (remote.stale)
+              OfflineBanner(fetchedAt: remote.fetchedAt),
             // Member code + referral
             AppCard(
               child: Column(
@@ -475,6 +479,9 @@ class _UsrahTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
           children: [
+            // W4-fix4: cache-served snapshot — subtle banner + the stamp.
+            if (bundle.stale && bundle.fetchedAt != null)
+              OfflineBanner(fetchedAt: bundle.fetchedAt!),
             if (usrah == null) ...[
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
@@ -882,8 +889,8 @@ class _ReviewsTab extends ConsumerWidget {
         message: '$e',
         onRetry: () => ref.invalidate(reviewsProvider),
       ),
-      data: (reviews) {
-        if (reviews == null) {
+      data: (remote) {
+        if (remote == null) {
           return ListView(
             children: [
               const SizedBox(height: SLSpacing.s24),
@@ -894,9 +901,12 @@ class _ReviewsTab extends ConsumerWidget {
             ],
           );
         }
+        final reviews = remote.data;
         if (reviews.isEmpty) {
           return ListView(
             children: [
+              // W4-fix4: even the empty state deserves the staleness stamp.
+              if (remote.stale) OfflineBanner(fetchedAt: remote.fetchedAt),
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
                 message: context.t('dawah_no_reviews'),
@@ -907,9 +917,12 @@ class _ReviewsTab extends ConsumerWidget {
         }
         return ListView.builder(
           padding: const EdgeInsets.all(SLSpacing.s16),
-          itemCount: reviews.length,
+          itemCount: reviews.length + (remote.stale ? 1 : 0),
           itemBuilder: (context, i) {
-            final r = reviews[i];
+            if (remote.stale && i == 0) {
+              return OfflineBanner(fetchedAt: remote.fetchedAt);
+            }
+            final r = reviews[remote.stale ? i - 1 : i];
             final statusColor = switch (r.status) {
               'done' => theme.colorScheme.primary,
               'overdue' => theme.colorScheme.error,

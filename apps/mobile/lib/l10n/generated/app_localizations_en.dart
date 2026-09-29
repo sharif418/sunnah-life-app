@@ -1694,4 +1694,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get leaderboard_band_bottom => 'Bottom 25%';
+
+  @override
+  String get offline_banner => 'Offline — showing saved data';
+
+  @override
+  String get last_updated => 'Last updated';
 }

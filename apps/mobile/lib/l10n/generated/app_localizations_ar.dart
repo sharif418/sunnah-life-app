@@ -1685,4 +1685,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get leaderboard_band_bottom => 'أدنى ٢٥٪';
+
+  @override
+  String get offline_banner => 'بدون اتصال — يتم عرض البيانات المحفوظة';
+
+  @override
+  String get last_updated => 'آخر تحديث';
 }

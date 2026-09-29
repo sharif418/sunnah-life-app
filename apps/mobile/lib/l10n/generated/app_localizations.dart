@@ -3381,6 +3381,18 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'নিচের ২৫%'**
   String get leaderboard_band_bottom;
+
+  /// No description provided for @offline_banner.
+  ///
+  /// In bn, this message translates to:
+  /// **'অফলাইন — দেখানো হচ্ছে সংরক্ষিত তথ্য'**
+  String get offline_banner;
+
+  /// No description provided for @last_updated.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ হালনাগাদ'**
+  String get last_updated;
 }
 
 class _AppLocalizationsDelegate

@@ -1698,4 +1698,10 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get leaderboard_band_bottom => 'নিচের ২৫%';
+
+  @override
+  String get offline_banner => 'অফলাইন — দেখানো হচ্ছে সংরক্ষিত তথ্য';
+
+  @override
+  String get last_updated => 'সর্বশেষ হালনাগাদ';
 }

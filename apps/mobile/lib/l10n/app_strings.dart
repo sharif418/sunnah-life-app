@@ -608,6 +608,8 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'leaderboard_band_top50' => l.leaderboard_band_top50,
   'leaderboard_band_top75' => l.leaderboard_band_top75,
   'leaderboard_band_bottom' => l.leaderboard_band_bottom,
+  'offline_banner' => l.offline_banner,
+  'last_updated' => l.last_updated,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────
