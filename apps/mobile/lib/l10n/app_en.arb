@@ -599,5 +599,11 @@
   "detox_notif_title": "Screen-time check",
   "detox_notif_body": "How long was today on the screen? Take a look.",
   "more_groups": "Our groups",
-  "group_open_failed": "Could not open"
+  "group_open_failed": "Could not open",
+  "dawah_share_card": "Share Da'wah card",
+  "dawah_card_title": "Da'wah card",
+  "dawah_card_tagline": "Join me in building life upon the Sunnah",
+  "dawah_card_preview_note": "The card below is shared as an image",
+  "dawah_share_now": "Share",
+  "dawah_card_shared_toast": "Card shared — Jazakumullahu khairan"
 }

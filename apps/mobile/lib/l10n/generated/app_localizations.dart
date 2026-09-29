@@ -3699,6 +3699,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'খোলা যায়নি'**
   String get group_open_failed;
+
+  /// No description provided for @dawah_share_card.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াত কার্ড শেয়ার করুন'**
+  String get dawah_share_card;
+
+  /// No description provided for @dawah_card_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াত কার্ড'**
+  String get dawah_card_title;
+
+  /// No description provided for @dawah_card_tagline.
+  ///
+  /// In bn, this message translates to:
+  /// **'সুন্নাহর পথে জীবন গড়তে আমার সাথে যুক্ত হন'**
+  String get dawah_card_tagline;
+
+  /// No description provided for @dawah_card_preview_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিচের কার্ডটাই ছবি হিসেবে শেয়ার হবে'**
+  String get dawah_card_preview_note;
+
+  /// No description provided for @dawah_share_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'শেয়ার করুন'**
+  String get dawah_share_now;
+
+  /// No description provided for @dawah_card_shared_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'কার্ড শেয়ার করা হয়েছে — জাযাকুমুল্লাহু খাইরান'**
+  String get dawah_card_shared_toast;
 }
 
 class _AppLocalizationsDelegate

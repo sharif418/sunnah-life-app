@@ -599,5 +599,11 @@
   "detox_notif_title": "محاسبة وقت الشاشة",
   "detox_notif_body": "كم قضيت اليوم أمام الشاشة؟ ألقِ نظرة.",
   "more_groups": "مجموعاتنا",
-  "group_open_failed": "تعذّر الفتح"
+  "group_open_failed": "تعذّر الفتح",
+  "dawah_share_card": "شارك بطاقة الدعوة",
+  "dawah_card_title": "بطاقة الدعوة",
+  "dawah_card_tagline": "انضم إليّ في بناء الحياة على السنّة",
+  "dawah_card_preview_note": "تُشارَك البطاقة أدناه كصورة",
+  "dawah_share_now": "شارك",
+  "dawah_card_shared_toast": "تمت مشاركة البطاقة — جزاكم الله خيرًا"
 }

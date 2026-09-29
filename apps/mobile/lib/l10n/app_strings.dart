@@ -661,6 +661,12 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'detox_notif_body' => l.detox_notif_body,
   'more_groups' => l.more_groups,
   'group_open_failed' => l.group_open_failed,
+  'dawah_share_card' => l.dawah_share_card,
+  'dawah_card_title' => l.dawah_card_title,
+  'dawah_card_tagline' => l.dawah_card_tagline,
+  'dawah_card_preview_note' => l.dawah_card_preview_note,
+  'dawah_share_now' => l.dawah_share_now,
+  'dawah_card_shared_toast' => l.dawah_card_shared_toast,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

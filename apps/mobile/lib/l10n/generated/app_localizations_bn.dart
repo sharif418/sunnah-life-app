@@ -1861,4 +1861,23 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get group_open_failed => 'খোলা যায়নি';
+
+  @override
+  String get dawah_share_card => 'দাওয়াত কার্ড শেয়ার করুন';
+
+  @override
+  String get dawah_card_title => 'দাওয়াত কার্ড';
+
+  @override
+  String get dawah_card_tagline => 'সুন্নাহর পথে জীবন গড়তে আমার সাথে যুক্ত হন';
+
+  @override
+  String get dawah_card_preview_note => 'নিচের কার্ডটাই ছবি হিসেবে শেয়ার হবে';
+
+  @override
+  String get dawah_share_now => 'শেয়ার করুন';
+
+  @override
+  String get dawah_card_shared_toast =>
+      'কার্ড শেয়ার করা হয়েছে — জাযাকুমুল্লাহু খাইরান';
 }

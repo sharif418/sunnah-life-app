@@ -599,5 +599,11 @@
   "detox_notif_title": "স্ক্রিন-টাইম হিসাব",
   "detox_notif_body": "আজ কতক্ষণ স্ক্রিনে কাটালেন? একবার দেখে নিন।",
   "more_groups": "আমাদের গ্রুপ",
-  "group_open_failed": "খোলা যায়নি"
+  "group_open_failed": "খোলা যায়নি",
+  "dawah_share_card": "দাওয়াত কার্ড শেয়ার করুন",
+  "dawah_card_title": "দাওয়াত কার্ড",
+  "dawah_card_tagline": "সুন্নাহর পথে জীবন গড়তে আমার সাথে যুক্ত হন",
+  "dawah_card_preview_note": "নিচের কার্ডটাই ছবি হিসেবে শেয়ার হবে",
+  "dawah_share_now": "শেয়ার করুন",
+  "dawah_card_shared_toast": "কার্ড শেয়ার করা হয়েছে — জাযাকুমুল্লাহু খাইরান"
 }

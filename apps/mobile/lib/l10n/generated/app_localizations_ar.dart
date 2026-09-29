@@ -1847,4 +1847,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get group_open_failed => 'تعذّر الفتح';
+
+  @override
+  String get dawah_share_card => 'شارك بطاقة الدعوة';
+
+  @override
+  String get dawah_card_title => 'بطاقة الدعوة';
+
+  @override
+  String get dawah_card_tagline => 'انضم إليّ في بناء الحياة على السنّة';
+
+  @override
+  String get dawah_card_preview_note => 'تُشارَك البطاقة أدناه كصورة';
+
+  @override
+  String get dawah_share_now => 'شارك';
+
+  @override
+  String get dawah_card_shared_toast => 'تمت مشاركة البطاقة — جزاكم الله خيرًا';
 }

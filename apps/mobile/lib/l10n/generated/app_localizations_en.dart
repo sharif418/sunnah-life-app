@@ -1859,4 +1859,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get group_open_failed => 'Could not open';
+
+  @override
+  String get dawah_share_card => 'Share Da\'wah card';
+
+  @override
+  String get dawah_card_title => 'Da\'wah card';
+
+  @override
+  String get dawah_card_tagline => 'Join me in building life upon the Sunnah';
+
+  @override
+  String get dawah_card_preview_note => 'The card below is shared as an image';
+
+  @override
+  String get dawah_share_now => 'Share';
+
+  @override
+  String get dawah_card_shared_toast => 'Card shared — Jazakumullahu khairan';
 }
