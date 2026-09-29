@@ -278,6 +278,7 @@ class _ThreadRow extends StatelessWidget {
                         // Unread dot — the last message is a support reply.
                         if (thread.unreadForUser) ...[
                           Container(
+                            key: const ValueKey('support_unread_dot'),
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
