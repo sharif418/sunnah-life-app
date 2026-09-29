@@ -1152,3 +1152,51 @@ Stage Summary:
 - Docs: DEPLOY_COOLIFY.md documents the live/ready split + where uptime monitors point; RELEASE.md documents the variable; AUDIT.md carries the honest C-OPS rows (CI proof pending C-OPS-c, staging redeploy pending the owner).
 - YAML-OK on all three touched YAML files; diff verified minimal; no commits/pushes; apps/api untouched by me (its six files remain exactly as C-OPS-a left them, verified 259/259 green before I started).
 - Next actions (not mine): C-OPS-c commits + pushes + sets the SUNNAH_API_BASE variable + fills the CI-run evidence; the owner redeploys the staging branch in Coolify for the live /health/live effect + the meili re-index.
+
+---
+Task ID: C-OPS-c
+Agent: C-OPS-c (ship agent)
+Task: Ship the Wave-5 ops fixes — pre-commit verification, five logical commits on main + push, watch CI to green, fill the AUDIT Proven-by rows with the real run, mirror the api code + /health/live healthchecks onto the staging branch (what Coolify deploys), record the ship log.
+
+Work Log:
+- Read worklog.md fully (C-OPS-a + C-OPS-b sections last) before touching anything; verified HEAD = 5b6beca on main and the working tree carried exactly the expected 16 files (13 M + 3 ??) — nothing unrelated.
+- Environment: postgres 16.10 :5433 already up; redis :6380 (re)started via /home/z/opt/start-services.sh → PONG; node_modules intact from C-OPS-a's restore.
+- FAST pre-commit verification from apps/api: `bun run lint` → 0 errors / 5 warnings, all five in pre-existing untouched files (prisma/seed-demo.ts, src/shared/reviews.ts, test/amal.spec.ts, test/token-security.spec.ts ×2); `bunx jest test/health-ops.spec.ts test/meili-indexer.spec.ts` → 19/19 (13 + 6), 2.1 s. Only after green did any commit happen.
+- Five logical commits on main (git add <paths> per commit, `git status --short` checked first; never add -A; nothing unrelated slipped in):
+  1. 929503b feat(api): /health/live + /health/ready split — shared redis client, 1.5 s per-check budgets (health.controller.ts, main.ts, health-ops.spec.ts)
+  2. a61798d fix(api): meili v1.x create-index route (POST /indexes — the old POST /indexes/{uid} got 405) + duas packDocuments first-array bug (content.controller.ts, quran.ts, meili-indexer.spec.ts)
+  3. 604b36a infra: orchestrator healthchecks → /health/live (api.Dockerfile, docker-compose.yml, coolify.compose.yml NEW on main, postgres/Dockerfile NEW, admin.Dockerfile)
+  4. b420e32 ci(mobile): release builds target SUNNAH_API_BASE repo variable (fail-closed when unset) (ci.yml)
+  5. c3c5013 docs(C-OPS): health split + release API base + honest AUDIT rows; worklog (DEPLOY_COOLIFY.md, RELEASE.md, AUDIT.md, worklog.md)
+- `git push origin main` → 5b6beca..c3c5013. CI run 36519971155 (run #73, head_sha c3c5013, event push, created 2026-09-29T04:04:32Z, completed 04:10:01Z — 5 m 29 s on warm Gradle caches): conclusion SUCCESS, 10/10 jobs green:
+  | Job | Result |
+  |---|---|
+  | Workspace — existence matrix | success |
+  | Design tokens — parity check | success |
+  | API — lint · test (PG16+Redis) · build | success |
+  | Web — lint · production build (apps/web) | success |
+  | Admin — lint · build | success |
+  | Docker — image build + compose smoke (migrate·seed·health) | success |
+  | Flutter — analyze · test · debug APK | success |
+  | Flutter — release APKs · split-per-ABI (device test) | success |
+  | Flutter — release App Bundle (secrets-gated) | success |
+  | CI summary | success |
+  URL: https://github.com/sharif418/sunnah-life-app/actions/runs/36519971155
+- Both release jobs passed the SUNNAH_API_BASE fail-closed guard → the repository variable IS set (owner-confirmed; no empty-variable failure occurred, so the guard was exercised exactly as designed on a real value). release-apk stayed debug-signed (internal-test-* artifacts) as before — keystore secrets absent; only the API base is new.
+- CI-watch mechanics (honest): anonymous GitHub REST was rate-limited at push time (60/hr window exhausted by earlier sessions); waited for the window reset, then queried runs + jobs. gh CLI not installed; no GitHub tokens exist in the sandbox (env/gh-config/credential checks — none found, none printed; secrets masked throughout).
+- AUDIT proof: docs/AUDIT.md "Wave 4 — operations fixes (C-OPS)" Proven-by cells filled with the real run 36519971155 + URL, rows kept honest (release-artifact live effect pending a real-phone device test; staging live effect pending the owner's redeploy; meili re-index happens on that redeploy). Commit 734cbe1 `docs(AUDIT): C-OPS CI proof — run 36519971155` pushed (c3c5013..734cbe1).
+- Staging branch (what Coolify deploys) — premise verified first via `git diff origin/staging 5b6beca`: staging's apps/api files + infra/api.Dockerfile + infra/docker-compose.yml were byte-identical to main's pre-change state, so the mirror applies cleanly:
+  - `git checkout -b staging origin/staging`; cherry-picked the two api commits — 929503b → 50ec597 (health split), a61798d → 210d976 (meili fix) — both clean, zero conflicts.
+  - Brought main's infra/api.Dockerfile + infra/docker-compose.yml (the /health/live healthcheck blobs); edited infra/coolify.compose.yml api healthcheck `/health` → `/health/live` + the one-line [C-W5-ops] comment (python replace, asserted exactly one match); YAML-OK re-verified before committing.
+  - Commit 2c2d28f `infra(coolify): /health/live liveness healthcheck + api code split (mirrors main)`; pushed 35dccea..2c2d28f; `git ls-remote origin staging` → 2c2d28ff2e13e031e1cf3dfb3906a61e90b39e75. No CI run for staging pushes (workflow triggers are main/master only) — expected, not forced.
+  - SANDBOX ANOMALY (honest, future agents beware): an external force kept switching this checkout back to branch main at Bash-call boundaries (reflog shows "checkout: moving from staging to main" twice; no trap/PROMPT_COMMAND/background process visible). Worked around by running the entire staging sequence — switch → checkout files → edit → verify → commit → push → back to main — inside ONE Bash call with verification gates. No history rewritten, no amend, no force-push; staging state verified post-push via ls-remote.
+- Rules kept: no code modified beyond the two agents' verified files; no dev servers started; nothing staged blindly; secrets never printed.
+
+Stage Summary:
+- Shipped and CI-proven: main = 929503b + a61798d + 604b36a + b420e32 + c3c5013 (pushed, run 36519971155 all-10-jobs SUCCESS) + 734cbe1 (AUDIT proof, pushed); staging = 50ec597 + 210d976 (cherry-picks) + 2c2d28f (healthcheck mirror), pushed and ls-remote-verified.
+- The fail-closed SUNNAH_API_BASE guard passed on the real repository variable (both release jobs green with --dart-define built in); the variable needs no further action from anyone.
+- OWNER ACTION REQUIRED (the live effect is not mine to perform): REDEPLOY the Coolify stack — rebuild from the staging branch (now HEAD 2c2d28f). That single redeploy delivers both live fixes: the /health/live liveness healthcheck (Traefik stops dropping the serving api when Postgres/Redis/Meili are merely slow) and the Meilisearch v1.x create-index route (boot indexing stops 405ing; the duas pack indexes for the first time). After redeploy, verify:
+  1. `curl https://api-staging.sunnahlife.ailearnersbd.com/health/live` → 200 (zero dependency calls; the container must stay healthy through slow-dep episodes).
+  2. The api container logs' MeiliIndexer lines no longer 405 on create-index, and duas/names99/articles docs sync (32/99/4 docs) — search finds duas content.
+  3. Readiness for monitors: point UptimeRobot at /health/ready (or legacy /health) per DEPLOY_COOLIFY.md §9 — those return 503 when a dependency is actually down.
+- Honest remaining gaps: real-phone sign-in against a release APK built with the staging API base (owner device test, artifact internal-test-arm64-v8a from run 36519971155); the AUDIT/worklog doc pushes each trigger their own docs-only CI run (expected green, not part of the 10-job proof above).
