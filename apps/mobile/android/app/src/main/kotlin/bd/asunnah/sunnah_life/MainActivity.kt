@@ -14,9 +14,11 @@ import android.os.Build
 import android.os.Process
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
+import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 import java.util.Calendar
 
 /**
@@ -26,7 +28,10 @@ import java.util.Calendar
  *    (NotificationManager.setInterruptionFilter) and the jama'at auto-silent
  *    window alarms (AutoSilentReceiver).
  *  · "sunnahlife/widget" — home-widget text updates (RemoteViews).
- *  · "sunnahlife/system" — native share sheet (ACTION_SEND), zero plugins.
+ *  · "sunnahlife/system" — native share sheet (ACTION_SEND), zero plugins:
+ *    plain text, or the rendered referral-card PNG (W4e) as image/* +
+ *    EXTRA_STREAM through the app's FileProvider (authority
+ *    "${applicationId}.fileprovider", paths declared in res/xml/file_paths).
  *  · "sunnahlife/usage" — UsageStatsManager screen-time for the detox
  *    screen (W4d Guard-module seed).
  */
@@ -118,6 +123,43 @@ class MainActivity : FlutterActivity() {
                         }
                         startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
                         result.success(true)
+                    }
+                    // W4e — branded referral card: ACTION_SEND with the
+                    // rendered PNG via a FileProvider content URI. Only the
+                    // cache/share/ subtree is exposable (file_paths.xml),
+                    // so no storage permission is needed. Returns false when
+                    // the file is gone; errors (e.g. undeclared authority)
+                    // surface as a channel error so the Dart side can fall
+                    // back to plain-text sharing.
+                    "shareFile" -> {
+                        val path = call.argument<String>("path") ?: ""
+                        val mime = call.argument<String>("mimeType") ?: "image/png"
+                        val text = call.argument<String>("text") ?: ""
+                        val file = File(path)
+                        if (!file.isFile) {
+                            result.success(false)
+                        } else {
+                            try {
+                                val uri = FileProvider.getUriForFile(
+                                    this,
+                                    "${packageName}.fileprovider",
+                                    file
+                                )
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = mime
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    if (text.isNotEmpty()) {
+                                        putExtra(Intent.EXTRA_TEXT, text)
+                                    }
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    putExtra(Intent.EXTRA_TITLE, "সুন্নাহ লাইফ")
+                                }
+                                startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
+                                result.success(true)
+                            } catch (e: IllegalArgumentException) {
+                                result.error("SHARE_FILE_ERROR", e.message, null)
+                            }
+                        }
                     }
                     else -> result.notImplemented()
                 }

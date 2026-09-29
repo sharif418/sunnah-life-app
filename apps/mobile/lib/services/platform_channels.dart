@@ -5,7 +5,8 @@
 ///    + canScheduleExactAlarms + ACTION_REQUEST_SCHEDULE_EXACT_ALARM),
 ///    (b) DND/auto-silent (NotificationManager.setInterruptionFilter).
 ///  · sunnahlife/widget — home-widget text updates (RemoteViews).
-///  · sunnahlife/system — share sheet (ACTION_SEND) without a plugin.
+///  · sunnahlife/system — share sheet (ACTION_SEND) without a plugin: text,
+///    or a rendered image file through the app's FileProvider (W4e).
 ///  · sunnahlife/usage — UsageStatsManager screen-time (Guard-module
 ///    detox seed, W4d): permission probe + today's totals.
 library;
@@ -181,6 +182,31 @@ class SystemChannel {
       // Web/desktop/test fallback: the UI layer also copies to clipboard.
     } on PlatformException {
       // ignore
+    }
+  }
+
+  /// Native share sheet carrying a FILE (Android ACTION_SEND image/* +
+  /// EXTRA_STREAM through a FileProvider content URI — W4e referral card).
+  ///
+  /// Returns false when the platform can't carry a file (iOS stub, tests,
+  /// missing file, undeclared authority) so the caller can honestly fall
+  /// back to [shareText] instead of silently doing nothing.
+  static Future<bool> shareFile({
+    required String path,
+    String mimeType = 'image/png',
+    String text = '',
+  }) async {
+    try {
+      return await _ch.invokeMethod<bool>('shareFile', {
+            'path': path,
+            'mimeType': mimeType,
+            'text': text,
+          }) ??
+          false;
+    } on MissingPluginException {
+      return false; // iOS stub / tests — caller falls back to text
+    } on PlatformException {
+      return false;
     }
   }
 }
