@@ -38,7 +38,9 @@ export function AppTitle({ className }: { className?: string }) {
   return (
     <div className={cn("flex flex-col leading-none", className)}>
       <span className="text-lg font-bold tracking-tight">সুন্নাহ লাইফ</span>
-      <span className="text-[10px] text-muted-foreground font-medium">আস-সুন্নাহ ফাউন্ডেশন</span>
+      {/* opacity (not a fixed muted color) so the subtitle stays readable on
+          the green top bar too — the header passes text-primary-foreground. */}
+      <span className="text-[10px] font-medium opacity-70">আস-সুন্নাহ ফাউন্ডেশন</span>
     </div>
   );
 }
