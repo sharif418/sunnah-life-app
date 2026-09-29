@@ -63,7 +63,7 @@ class _TodayView extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
     final amal = ref.watch(amalProvider);
-    final today = dateKey(DateTime.now());
+    final today = dateKey(ref.watch(headerNowProvider));
     final bn = context.isBn;
 
     if (defs.isEmpty) {
@@ -137,7 +137,7 @@ class _TodayView extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    formatDayHeaderBn(DateTime.now(), bengali: bn),
+                    formatDayHeaderBn(ref.watch(headerNowProvider), bengali: bn),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),

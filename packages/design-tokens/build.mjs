@@ -47,7 +47,19 @@ const fhex = (c) => c.replace("#", "").toUpperCase();
 const dart = `// GENERATED from packages/design-tokens/tokens.json — do not edit by hand.
 // Single source of truth for Sunnah Life's visual language on Flutter.
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+/// The app's Bengali-first family. The TTFs under assets/google_fonts/ are
+/// ALSO declared in pubspec.yaml, so the engine registers the family BEFORE
+/// the first frame: every widget — Material components included — resolves
+/// it synchronously. No google_fonts runtime loading, no platform-font
+/// fallback, no tofu; golden tests render the real glyphs with zero warm-up.
+const String kAppFontFamily = '${tokens.typography.families.bengali.replace(/ /g, '')}';
+
+/// Uthmani Qur'an family (pubspec-declared, bundled TTF).
+const String kQuranFontFamily = '${tokens.typography.families.quran.replace(/ /g, '')}';
+
+/// Arabic du'a family (pubspec-declared, bundled TTF).
+const String kArabicFontFamily = '${tokens.typography.families.arabic.replace(/ /g, '')}';
 
 class SLColors {
   // Brand
@@ -120,6 +132,15 @@ class SLElevation {
       ];
 }
 
+/// A family-bearing style with NO color — components merge these over their
+/// state-resolved defaults (focus/error/selection colors stay correct).
+TextStyle _appFontStyle(double size, [FontWeight? weight]) => TextStyle(
+  fontFamily: kAppFontFamily,
+  fontSize: size,
+  fontWeight: weight,
+  height: 1.45,
+);
+
 class SLType {
   static const double caption = ${tokens.typography.scale.caption.size};
   static const double body = ${tokens.typography.scale.body.size};
@@ -128,38 +149,110 @@ class SLType {
   static const double headingLarge = ${tokens.typography.scale.headingLarge.size};
   static const double display = ${tokens.typography.scale.display.size};
 
-  /// Bengali-first text theme using Google Fonts (Hind Siliguri).
+  // The six token-scale styles the app's own chrome renders with.
+  static const TextStyle _displayStyle = TextStyle(
+    fontFamily: kAppFontFamily,
+    fontSize: ${tokens.typography.scale.display.size},
+    height: ${tokens.typography.scale.display.lineHeight},
+    fontWeight: FontWeight.w700,
+  );
+  static const TextStyle _headingLargeStyle = TextStyle(
+    fontFamily: kAppFontFamily,
+    fontSize: ${tokens.typography.scale.headingLarge.size},
+    height: ${tokens.typography.scale.headingLarge.lineHeight},
+    fontWeight: FontWeight.w700,
+  );
+  static const TextStyle _headingStyle = TextStyle(
+    fontFamily: kAppFontFamily,
+    fontSize: ${tokens.typography.scale.heading.size},
+    height: ${tokens.typography.scale.heading.lineHeight},
+    fontWeight: FontWeight.w600,
+  );
+  static const TextStyle _bodyLargeStyle = TextStyle(
+    fontFamily: kAppFontFamily,
+    fontSize: ${tokens.typography.scale.bodyLarge.size},
+    height: ${tokens.typography.scale.bodyLarge.lineHeight},
+  );
+  static const TextStyle _bodyStyle = TextStyle(
+    fontFamily: kAppFontFamily,
+    fontSize: ${tokens.typography.scale.body.size},
+    height: ${tokens.typography.scale.body.lineHeight},
+  );
+  static const TextStyle _captionStyle = TextStyle(
+    fontFamily: kAppFontFamily,
+    fontSize: ${tokens.typography.scale.caption.size},
+    height: ${tokens.typography.scale.caption.lineHeight},
+  );
+
+  /// Bengali-first text theme — EVERY role carries the bundled Hind Siliguri
+  /// family so no Material component (tab bars, chips, buttons, snackbars,
+  /// dialogs, list tiles, inputs, menus…) ever falls back to the platform
+  /// font (mixed typefaces on a real phone, tofu in bundle-only renders).
+  /// The six app-styled roles use the token scale; the remaining M3 roles
+  /// keep their default size/weight/letter-spacing and only swap the family
+  /// plus a Bengali-appropriate line-height.
   static TextTheme textTheme(TextTheme base) => base.copyWith(
-        displaySmall: GoogleFonts.hindSiliguri(
-            fontSize: ${tokens.typography.scale.display.size}, height: ${tokens.typography.scale.display.lineHeight},
-            fontWeight: FontWeight.w700),
-        headlineMedium: GoogleFonts.hindSiliguri(
-            fontSize: ${tokens.typography.scale.headingLarge.size}, height: ${tokens.typography.scale.headingLarge.lineHeight},
-            fontWeight: FontWeight.w700),
-        titleMedium: GoogleFonts.hindSiliguri(
-            fontSize: ${tokens.typography.scale.heading.size}, height: ${tokens.typography.scale.heading.lineHeight},
-            fontWeight: FontWeight.w600),
-        bodyLarge: GoogleFonts.hindSiliguri(
-            fontSize: ${tokens.typography.scale.bodyLarge.size}, height: ${tokens.typography.scale.bodyLarge.lineHeight}),
-        bodyMedium: GoogleFonts.hindSiliguri(
-            fontSize: ${tokens.typography.scale.body.size}, height: ${tokens.typography.scale.body.lineHeight}),
-        bodySmall: GoogleFonts.hindSiliguri(
-            fontSize: ${tokens.typography.scale.caption.size}, height: ${tokens.typography.scale.caption.lineHeight}),
-      );
+    // Token-scale roles (what app chrome asks for by name).
+    displaySmall: _displayStyle,
+    headlineMedium: _headingLargeStyle,
+    titleMedium: _headingStyle,
+    bodyLarge: _bodyLargeStyle,
+    bodyMedium: _bodyStyle,
+    bodySmall: _captionStyle,
+    // M3 roles — family + Bengali line-height, default metrics otherwise.
+    displayLarge: base.displayLarge?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.35,
+    ),
+    displayMedium: base.displayMedium?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.35,
+    ),
+    headlineLarge: base.headlineLarge?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.4,
+    ),
+    headlineSmall: base.headlineSmall?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.45,
+    ),
+    titleLarge: base.titleLarge?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.45,
+    ),
+    titleSmall: base.titleSmall?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.5,
+    ),
+    labelLarge: base.labelLarge?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.45,
+    ),
+    labelMedium: base.labelMedium?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.45,
+    ),
+    labelSmall: base.labelSmall?.copyWith(
+      fontFamily: kAppFontFamily,
+      height: 1.45,
+    ),
+  );
 
   /// Uthmani Qur'an text.
-  static TextStyle quran({Color? color}) => GoogleFonts.amiriQuran(
-        fontSize: ${tokens.typography.scale.quran.size},
-        height: ${tokens.typography.scale.quran.lineHeight},
-        color: color,
-      );
+  static TextStyle quran({Color? color}) => TextStyle(
+    fontFamily: kQuranFontFamily,
+    fontSize: ${tokens.typography.scale.quran.size},
+    height: ${tokens.typography.scale.quran.lineHeight},
+    color: color,
+  );
 
   /// Arabic du'a text.
-  static TextStyle dua({Color? color}) => GoogleFonts.amiri(
-        fontSize: ${tokens.typography.scale.dua.size},
-        height: ${tokens.typography.scale.dua.lineHeight},
-        color: color,
-      );
+  static TextStyle dua({Color? color}) => TextStyle(
+    fontFamily: kArabicFontFamily,
+    fontSize: ${tokens.typography.scale.dua.size},
+    height: ${tokens.typography.scale.dua.lineHeight},
+    color: color,
+  );
 }
 
 /// Light ThemeData built from the tokens (cream + deep green + gold).
@@ -186,7 +279,12 @@ ThemeData buildSunnahLightTheme() {
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: SLColors.lightBackground,
-    textTheme: SLType.textTheme(ThemeData(brightness: Brightness.light).textTheme),
+    textTheme: SLType.textTheme(
+      ThemeData(brightness: Brightness.light).textTheme,
+    ),
+    primaryTextTheme: SLType.textTheme(
+      ThemeData(brightness: Brightness.light).primaryTextTheme,
+    ),
     splashFactory: InkSparkle.splashFactory,
     dividerColor: SLColors.lightBorder,
   ).applyThemeTweaks(Brightness.light);
@@ -216,86 +314,167 @@ ThemeData buildSunnahDarkTheme() {
     useMaterial3: true,
     colorScheme: scheme,
     scaffoldBackgroundColor: SLColors.darkBackground,
-    textTheme: SLType.textTheme(ThemeData(brightness: Brightness.dark).textTheme),
+    textTheme: SLType.textTheme(
+      ThemeData(brightness: Brightness.dark).textTheme,
+    ),
+    primaryTextTheme: SLType.textTheme(
+      ThemeData(brightness: Brightness.dark).primaryTextTheme,
+    ),
     dividerColor: SLColors.darkBorder,
   ).applyThemeTweaks(Brightness.dark);
 }
 
 extension _ThemeTweaks on ThemeData {
   ThemeData applyThemeTweaks(Brightness brightness) => copyWith(
-        appBarTheme: AppBarTheme(
-          backgroundColor: brightness == Brightness.light
-              ? SLColors.lightBackground
-              : SLColors.darkBackground,
-          foregroundColor: brightness == Brightness.light
-              ? SLColors.lightForeground
-              : SLColors.darkForeground,
-          elevation: 0,
-          centerTitle: false,
+    appBarTheme: AppBarTheme(
+      backgroundColor: brightness == Brightness.light
+          ? SLColors.lightBackground
+          : SLColors.darkBackground,
+      foregroundColor: brightness == Brightness.light
+          ? SLColors.lightForeground
+          : SLColors.darkForeground,
+      elevation: 0,
+      centerTitle: false,
+    ),
+    cardTheme: CardThemeData(
+      color: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: SLRadius.brLg,
+        side: BorderSide(
+          color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
+          width: 1,
         ),
-        cardTheme: CardThemeData(
-          color: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: SLRadius.brLg,
-            side: BorderSide(
-              color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
-              width: 1,
-            ),
-          ),
+      ),
+    ),
+    // ── Font consistency: every component theme carries the bundled Hind
+    // Siliguri family (belt-and-braces on top of the full textTheme — a
+    // component that reads its label style from HERE can never fall back
+    // to the platform font either). The _appFontStyle helpers are
+    // color-less so state-resolved colors (focus/error/selected) merge
+    // through untouched.
+    tabBarTheme: TabBarThemeData(
+      labelStyle: _appFontStyle(14, FontWeight.w600),
+      unselectedLabelStyle: _appFontStyle(14, FontWeight.w500),
+    ),
+    chipTheme: ChipThemeData(
+      labelStyle: _appFontStyle(14, FontWeight.w500),
+      shape: RoundedRectangleBorder(borderRadius: SLRadius.brPill),
+      side: BorderSide(
+        color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
+      ),
+    ),
+    // ActionChip reads chipTheme (no separate actionChipTheme on this
+    // Flutter pin) — the labelStyle above covers it.
+    filledButtonTheme: FilledButtonThemeData(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(64, SLSpacing.minTapTarget),
+        shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
+        textStyle: _appFontStyle(14, FontWeight.w600),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(64, SLSpacing.minTapTarget),
+        shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
+        textStyle: _appFontStyle(14, FontWeight.w600),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        textStyle: _appFontStyle(14, FontWeight.w600),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        textStyle: _appFontStyle(14, FontWeight.w600),
+      ),
+    ),
+    segmentedButtonTheme: SegmentedButtonThemeData(
+      style: ButtonStyle(
+        textStyle: WidgetStatePropertyAll(_appFontStyle(14)),
+      ),
+    ),
+    snackBarTheme: SnackBarThemeData(
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
+      // M3 snackbar = inverseSurface bg + inverseOnSurface fg.
+      contentTextStyle: _appFontStyle(16).copyWith(
+        color: brightness == Brightness.light
+            ? SLColors.darkForeground
+            : SLColors.lightForeground,
+      ),
+    ),
+    dialogTheme: DialogThemeData(
+      titleTextStyle: _appFontStyle(22, FontWeight.w600),
+      contentTextStyle: _appFontStyle(16),
+    ),
+    listTileTheme: ListTileThemeData(
+      titleTextStyle: _appFontStyle(16),
+      subtitleTextStyle: _appFontStyle(14),
+    ),
+    popupMenuTheme: PopupMenuThemeData(
+      textStyle: _appFontStyle(14, FontWeight.w500),
+    ),
+    dropdownMenuTheme: DropdownMenuThemeData(
+      textStyle: _appFontStyle(16),
+    ),
+    tooltipTheme: TooltipThemeData(
+      textStyle: _appFontStyle(12).copyWith(
+        color: brightness == Brightness.light
+            ? Colors.white
+            : SLColors.darkBackground,
+      ),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      extendedTextStyle: _appFontStyle(14, FontWeight.w600),
+    ),
+    inputDecorationTheme: InputDecorationTheme(
+      filled: true,
+      fillColor: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
+      border: OutlineInputBorder(
+        borderRadius: SLRadius.brMd,
+        borderSide: BorderSide(
+          color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
         ),
-        filledButtonTheme: FilledButtonThemeData(
-          style: FilledButton.styleFrom(
-            minimumSize: const Size(64, SLSpacing.minTapTarget),
-            shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
-            textStyle: const TextStyle(fontWeight: FontWeight.w600),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            minimumSize: const Size(64, SLSpacing.minTapTarget),
-            shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
-          border: OutlineInputBorder(
-            borderRadius: SLRadius.brMd,
-            borderSide: BorderSide(
-              color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
-            ),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-              horizontal: SLSpacing.s4, vertical: SLSpacing.s3),
-        ),
-        chipTheme: ChipThemeData(
-          shape: RoundedRectangleBorder(borderRadius: SLRadius.brPill),
-          side: BorderSide(
-            color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
-          ),
-        ),
-        navigationBarTheme: NavigationBarThemeData(
-          backgroundColor: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
-          indicatorColor: brightness == Brightness.light
-              ? SLColors.lightPrimarySoft
-              : SLColors.darkPrimarySoft,
-          height: 68,
-          labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-        ),
-        bottomSheetTheme: const BottomSheetThemeData(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(SLRadius.lg)),
-          ),
-          showDragHandle: true,
-        ),
-        snackBarTheme: SnackBarThemeData(
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
-        ),
-      );
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+          horizontal: SLSpacing.s4, vertical: SLSpacing.s12),
+      // Family on every decoration text slot (label/floating/hint/helper/
+      // error/prefix/suffix/counter) — color-less so the state colors
+      // (focused primary, error red…) keep resolving from the defaults.
+      labelStyle: _appFontStyle(16),
+      floatingLabelStyle: _appFontStyle(16, FontWeight.w600),
+      hintStyle: _appFontStyle(16),
+      helperStyle: _appFontStyle(12),
+      errorStyle: _appFontStyle(12),
+      prefixStyle: _appFontStyle(16),
+      suffixStyle: _appFontStyle(14),
+      counterStyle: _appFontStyle(12),
+    ),
+    navigationBarTheme: NavigationBarThemeData(
+      backgroundColor: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
+      indicatorColor: brightness == Brightness.light
+          ? SLColors.lightPrimarySoft
+          : SLColors.darkPrimarySoft,
+      height: 68,
+      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+      labelTextStyle: WidgetStatePropertyAll(
+        _appFontStyle(12, FontWeight.w600),
+      ),
+    ),
+    // bottomSheetTheme carries no text styles by design — sheet content
+    // inherits the family through the textTheme roles above.
+    bottomSheetTheme: const BottomSheetThemeData(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(SLRadius.lg)),
+      ),
+      showDragHandle: true,
+    ),
+  );
 }
 `;
+
 writeFileSync(join(__dirname, "dist/flutter/design_tokens.dart"), dart);
 
 // ── 3) --check: globals.css parity guard ─────────────────────────────────────

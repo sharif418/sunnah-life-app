@@ -341,7 +341,7 @@ class _MostUsedSection extends ConsumerWidget {
         ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
     final amal = ref.watch(amalProvider);
     final lang = context.lang;
-    final today = dateKey(DateTime.now());
+    final today = dateKey(ref.watch(headerNowProvider));
     // Flatten the provider's date→(key→entry) window — mostUsedAmals itself
     // windows to the last 30 days and counts DISTINCT full-point days.
     final entries = [
@@ -616,7 +616,7 @@ class _AmalPreviewSection extends ConsumerWidget {
     final defs =
         ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
     final amal = ref.watch(amalProvider);
-    final today = dateKey(DateTime.now());
+    final today = dateKey(ref.watch(headerNowProvider));
     // Same grouping rule as today_screen: effective hijri adjust (user ±2 +
     // admin ±2) decides ayyam-beez cadence membership.
     final todayDefs = defs
@@ -816,7 +816,7 @@ class _PostPrayerPrompt extends ConsumerWidget {
     final theme = Theme.of(context);
     final key = prayer.postPrayerKey!;
     final label = _prayerLabel(key, context.lang);
-    final today = dateKey(DateTime.now());
+    final today = dateKey(ref.watch(headerNowProvider));
     final entry = ref.watch(
       amalProvider.select((s) => s.entry(today, 'salat_${key.name}')),
     );

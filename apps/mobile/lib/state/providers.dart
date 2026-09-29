@@ -33,6 +33,11 @@ final sharedPrefsProvider = FutureProvider<SharedPreferences>(
   (ref) => SharedPreferences.getInstance(),
 );
 
+/// Injectable "now" for the always-visible chrome (global header date bar,
+/// today-diary keys). Production reads the wall clock; goldens pin it so a
+/// capture never flakes across days (day-of-week amals, Bangla/Hijri dates).
+final headerNowProvider = Provider<DateTime>((ref) => DateTime.now());
+
 // ── Profile / settings (backed by the GuestProfile row) ──────────────────────
 
 class ProfileState {

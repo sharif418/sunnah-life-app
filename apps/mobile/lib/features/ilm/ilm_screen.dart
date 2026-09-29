@@ -121,7 +121,9 @@ class _IlmScreenState extends State<IlmScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: SLSpacing.s12,
                 crossAxisSpacing: SLSpacing.s12,
-                childAspectRatio: 1.55,
+                // 1.3 — Hind Siliguri's real Bengali metrics wrap the longest
+                // labels to three lines; the tofu-era 1.55 clipped them.
+                childAspectRatio: 1.3,
               ),
               itemCount: entries.length,
               itemBuilder: (context, i) {
@@ -144,10 +146,10 @@ class _IlmScreenState extends State<IlmScreen> {
                           children: [
                             Icon(
                               e.icon,
-                              size: 32,
+                              size: 28,
                               color: theme.colorScheme.primary,
                             ),
-                            const SizedBox(height: SLSpacing.s8),
+                            const SizedBox(height: SLSpacing.s4 + 2),
                             Text(
                               e.title,
                               textAlign: TextAlign.center,

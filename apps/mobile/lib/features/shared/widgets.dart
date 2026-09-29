@@ -201,27 +201,33 @@ class _SkeletonState extends State<Skeleton>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    return Column(
-      children: List.generate(widget.count, (i) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: SLSpacing.s12),
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, _) {
-              final opacity = 0.35 + 0.3 * _controller.value;
-              return Container(
-                height: widget.height,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surfaceContainerHighest.withValues(
-                    alpha: opacity,
+    // Scroll-safe: at large text scales (1.3×) the fixed-height rows can
+    // exceed a short viewport — the skeleton must never overflow while the
+    // real content is on its way.
+    return SingleChildScrollView(
+      physics: const ClampingScrollPhysics(),
+      child: Column(
+        children: List.generate(widget.count, (i) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: SLSpacing.s12),
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, _) {
+                final opacity = 0.35 + 0.3 * _controller.value;
+                return Container(
+                  height: widget.height,
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(
+                      alpha: opacity,
+                    ),
+                    borderRadius: SLRadius.brLg,
                   ),
-                  borderRadius: SLRadius.brLg,
-                ),
-              );
-            },
-          ),
-        );
-      }),
+                );
+              },
+            ),
+          );
+        }),
+      ),
     );
   }
 }

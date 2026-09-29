@@ -85,15 +85,35 @@ flutter:
   assets:
     - assets/content/
     - assets/google_fonts/
+  fonts:
+  # App typefaces — the same TTFs under assets/google_fonts/ are ALSO
+  # declared here so the ENGINE registers the families before the first
+  # frame: every Material component resolves them synchronously (no
+  # google_fonts runtime loading, no platform-font fallback / tofu — and
+  # golden tests render the real glyphs with zero warm-up).
+  # HindSiliguri-SemiBold ↔ w600, Bold ↔ w700 (the bundle has no
+  # Light/Medium — other weights synthesize from the nearest).
+  - family: HindSiliguri
+    fonts:
+      - asset: assets/google_fonts/HindSiliguri-Regular.ttf
+      - asset: assets/google_fonts/HindSiliguri-SemiBold.ttf
+        weight: 600
+      - asset: assets/google_fonts/HindSiliguri-Bold.ttf
+        weight: 700
+  - family: Amiri
+    fonts:
+      - asset: assets/google_fonts/Amiri-Regular.ttf
+  - family: AmiriQuran
+    fonts:
+      - asset: assets/google_fonts/AmiriQuran-Regular.ttf
   # Vendored Phosphor icon fonts (see lib/design/phosphor_icons.dart for
   # the why — the pub package doesn't compile on this Flutter pin).
-  fonts:
-    - family: PhosphorRegular
-      fonts:
-        - asset: assets/fonts/phosphor-regular.ttf
-    - family: PhosphorFill
-      fonts:
-        - asset: assets/fonts/phosphor-fill.ttf
-    - family: PhosphorBold
-      fonts:
-        - asset: assets/fonts/phosphor-bold.ttf
+  - family: PhosphorRegular
+    fonts:
+      - asset: assets/fonts/phosphor-regular.ttf
+  - family: PhosphorFill
+    fonts:
+      - asset: assets/fonts/phosphor-fill.ttf
+  - family: PhosphorBold
+    fonts:
+      - asset: assets/fonts/phosphor-bold.ttf
