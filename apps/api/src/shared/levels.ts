@@ -83,7 +83,14 @@ function parseRules(node: Record<string, unknown>): LevelRules {
 }
 
 const g = globalThis as unknown as {
-  slLevelRulesAll?: Partial<Record<LevelKey, { at: number; rules: LevelRules }>>;
+  slLevelRulesDoc?: {
+    at: number;
+    /** Raw per-level rule nodes (DB override over the pack file). */
+    nodes: Partial<Record<LevelKey, Record<string, unknown>>>;
+    /** Where each level's node came from — shown by the admin editor. */
+    sources: Partial<Record<LevelKey, "db" | "pack" | "default">>;
+    packNote: string | null;
+  };
 };
 const TTL_MS = 60_000;
 
@@ -93,6 +100,13 @@ export function contentDir(): string {
     path.resolve(process.cwd(), "..", "..", "packages", "content")
   );
 }
+
+/** AppConfigRow reader — both PrismaService and a transaction client fit. */
+export type AppConfigReader = {
+  appConfigRow: {
+    findUnique(args: { where: { key: string } }): Promise<{ valueJson: unknown } | null>;
+  };
+};
 
 function numOr(v: unknown, fallback: number): number {
   const n = Number(v);
@@ -116,50 +130,118 @@ function parseChecklist(raw: unknown): LevelChecklistItem[] {
   return items;
 }
 
+/** The per-level nodes of a raw level-rules document (pack file OR DB row).
+ * `flatFallback` (pack only) also accepts the legacy flat shapes for
+ * muhibbus: `{ minMonths: … }` / `{ muhibbus_sunnah: … }` /
+ * `{ levels: { muhibbus_sunnah_level: … } }`. DB rows are always the strict
+ * `{ levels: { … } }` shape this module writes — falling back to "the whole
+ * document" for a DB row would treat metadata as rule fields. */
+function docNodes(
+  raw: unknown,
+  flatFallback = false
+): Partial<Record<LevelKey, Record<string, unknown>>> {
+  if (!raw || typeof raw !== "object") return {};
+  const r = raw as { levels?: Record<string, unknown>; muhibbus_sunnah?: unknown };
+  const levels = (r.levels ?? {}) as Record<string, unknown>;
+  const out: Partial<Record<LevelKey, Record<string, unknown>>> = {};
+  for (const key of ["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"] as LevelKey[]) {
+    const node =
+      levels[key] ??
+      (flatFallback && key === "muhibbus_sunnah"
+        ? (r.muhibbus_sunnah ?? levels.muhibbus_sunnah_level ?? r)
+        : undefined);
+    if (node && typeof node === "object") out[key] = node as Record<string, unknown>;
+  }
+  return out;
+}
+
 /**
- * Reads level-rules.json from the content dir (cached 60s). Accepts both a
- * flat shape and a nested `{ muhibbus_sunnah: { … } }` /
- * `{ levels: { muhibbus_sunnah: { … } } }` shape; falls back to documented
- * defaults on any error.
+ * The effective level-rules document (W4h): AppConfigRow (key "level_rules",
+ * written by the admin level-rules editor — PUT/DELETE /api/admin/level-rules)
+ * per level OVER the content-pack file (packages/content/level-rules.json —
+ * the seed default). Cached 60s per process; invalidateLevelRulesCache()
+ * busts it on write.
  */
-export async function loadLevelRules(level: LevelKey = "muhibbus_sunnah"): Promise<LevelRules> {
-  const cache = (g.slLevelRulesAll ??= {});
-  const hit = cache[level];
-  if (hit && Date.now() - hit.at < TTL_MS) return hit.rules;
-  let rules: LevelRules =
+export async function loadLevelRulesDoc(reader?: AppConfigReader): Promise<{
+  nodes: Partial<Record<LevelKey, Record<string, unknown>>>;
+  sources: Partial<Record<LevelKey, "db" | "pack" | "default">>;
+  /** The pack's top-level assumptionNote — shown read-only in the editor. */
+  packNote: string | null;
+}> {
+  const hit = g.slLevelRulesDoc;
+  if (hit && Date.now() - hit.at < TTL_MS) return { nodes: hit.nodes, sources: hit.sources, packNote: hit.packNote };
+
+  // 1) pack file (the seed default)
+  let packNodes: Partial<Record<LevelKey, Record<string, unknown>>> = {};
+  let packNote: string | null = null;
+  try {
+    const raw = JSON.parse(await fs.readFile(path.join(contentDir(), "level-rules.json"), "utf8"));
+    packNodes = docNodes(raw, true); // the pack accepts the legacy flat muhibbus shapes
+    packNote = typeof raw?.assumptionNote === "string" ? raw.assumptionNote : null;
+  } catch {
+    /* no pack → defaults below */
+  }
+
+  // 2) DB override row (AppConfigRow is RLS-exempt — direct read is the
+  // documented pattern for exempt tables, same as readAppConfig)
+  let dbNodes: Partial<Record<LevelKey, Record<string, unknown>>> = {};
+  if (reader) {
+    try {
+      const row = await reader.appConfigRow.findUnique({ where: { key: "level_rules" } });
+      if (row) dbNodes = docNodes(row.valueJson);
+    } catch {
+      /* DB not reachable → pack */
+    }
+  }
+
+  const nodes: Partial<Record<LevelKey, Record<string, unknown>>> = {};
+  const sources: Partial<Record<LevelKey, "db" | "pack" | "default">> = {};
+  for (const key of ["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"] as LevelKey[]) {
+    if (dbNodes[key]) {
+      nodes[key] = dbNodes[key];
+      sources[key] = "db";
+    } else if (packNodes[key]) {
+      nodes[key] = packNodes[key];
+      sources[key] = "pack";
+    }
+  }
+  g.slLevelRulesDoc = { at: Date.now(), nodes, sources, packNote };
+  return { nodes, sources, packNote };
+}
+
+/**
+ * One level's parsed rules: the DB override over the pack file over the
+ * documented defaults. `reader` (the caller's Prisma client/tx) enables the
+ * DB override read — every production call site passes its tx; the pure
+ * pack-only path stays available for tests.
+ */
+export async function loadLevelRules(
+  level: LevelKey = "muhibbus_sunnah",
+  reader?: AppConfigReader
+): Promise<LevelRules> {
+  const fallback: LevelRules =
     level === "muhibbus_sunnah"
       ? DEFAULT_LEVEL_RULES
       : { ...DEFAULT_LEVEL_RULES, outlineReviewRequired: false, requireAssessmentPassed: true, minMonths: 0 };
-  try {
-    const raw = JSON.parse(
-      await fs.readFile(path.join(contentDir(), "level-rules.json"), "utf8")
-    );
-    const node =
-      raw?.levels?.[level] ??
-      (level === "muhibbus_sunnah"
-        ? (raw?.muhibbus_sunnah ?? raw?.levels?.muhibbus_sunnah_level ?? raw)
-        : undefined);
-    if (node && typeof node === "object") {
-      rules = parseRules(node as Record<string, unknown>);
-    }
-  } catch {
-    /* keep defaults */
-  }
-  cache[level] = { at: Date.now(), rules };
-  return rules;
+  const { nodes } = await loadLevelRulesDoc(reader);
+  const node = nodes[level];
+  if (!node) return fallback;
+  return parseRules(node);
 }
 
-export async function loadAllLevelRules(): Promise<Record<LevelKey, LevelRules>> {
+export async function loadAllLevelRules(
+  reader?: AppConfigReader
+): Promise<Record<LevelKey, LevelRules>> {
   const [muhibbus, fa1, fa2] = await Promise.all([
-    loadLevelRules("muhibbus_sunnah"),
-    loadLevelRules("farze_ain_1"),
-    loadLevelRules("farze_ain_2"),
+    loadLevelRules("muhibbus_sunnah", reader),
+    loadLevelRules("farze_ain_1", reader),
+    loadLevelRules("farze_ain_2", reader),
   ]);
   return { muhibbus_sunnah: muhibbus, farze_ain_1: fa1, farze_ain_2: fa2 };
 }
 
 export function invalidateLevelRulesCache(): void {
-  g.slLevelRulesAll = undefined;
+  g.slLevelRulesDoc = undefined;
 }
 
 /** Whole months spent in the current level (30.44-day months). */
@@ -291,6 +373,126 @@ export async function gatherLevelFacts(
   return { months, assessmentPassed: !!passed, referralsAtLevel };
 }
 
+// ── W4h: admin level-rules editor validation ────────────────────────────────
+
+/** Every field the engine (parseRules/buildLevelChecklist) reads, plus the two
+ * display strings the pack carries for the farze_ain levels. Nothing else is
+ * accepted — an unknown key is REJECTED with the key named, so a typo can
+ * never silently drop a rule. */
+const RULE_FIELDS: Record<string, "string" | "int" | "bool" | "checklist"> = {
+  titleBn: "string",
+  minMonths: "int",
+  minMonthsLabelBn: "string",
+  requireAssessmentPassed: "bool",
+  outlineReviewRequired: "bool",
+  outlineReviewLabelBn: "string",
+  minReferralsAtLevel: "int",
+  minReferralsLabelBn: "string",
+  assessmentKey: "string",
+  assessmentCategory: "int",
+  assessmentRuleBn: "string",
+  categoryDescriptionBn: "string",
+  autoPromote: "bool",
+  checklistBn: "checklist",
+};
+
+const LIMITS: Record<string, number> = {
+  titleBn: 120,
+  minMonths: 120,
+  minMonthsLabelBn: 300,
+  outlineReviewLabelBn: 500,
+  minReferralsAtLevel: 10_000,
+  minReferralsLabelBn: 500,
+  assessmentKey: 100,
+  assessmentRuleBn: 1000,
+  categoryDescriptionBn: 2000,
+};
+
+/**
+ * PURE validator (unit-testable) of one level's rule node for the admin
+ * editor (PUT /api/admin/level-rules/:level). Returns the NORMALIZED node —
+ * strings trimmed, exactly the known keys — or throws the Bengali 400 the
+ * editor shows. Merge semantics live in the caller: the validated node is
+ * layered over the level's current effective node.
+ */
+export function validateLevelRulesNode(input: unknown): Record<string, unknown> {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    throw new LevelRulesValidationError("নিয়মের তথ্য অবজেক্ট আকারে দিন");
+  }
+  const src = input as Record<string, unknown>;
+  const unknown = Object.keys(src).filter((k) => !(k in RULE_FIELDS));
+  if (unknown.length) {
+    throw new LevelRulesValidationError(`অজানা ফিল্ড: ${unknown.join(", ")}`);
+  }
+
+  const out: Record<string, unknown> = {};
+  for (const [key, kind] of Object.entries(RULE_FIELDS)) {
+    if (!(key in src)) continue;
+    const v = src[key];
+    if (kind === "bool") {
+      if (typeof v !== "boolean") throw new LevelRulesValidationError(`${key} সত্য/মিথ্যা (boolean) হতে হবে`);
+      out[key] = v;
+    } else if (kind === "int") {
+      if (typeof v !== "number" || !Number.isInteger(v)) {
+        throw new LevelRulesValidationError(`${key} পূর্ণসংখ্যা হতে হবে`);
+      }
+      const limit = LIMITS[key] ?? Number.MAX_SAFE_INTEGER;
+      const min = key === "assessmentCategory" ? 1 : 0;
+      if (v < min || v > limit) {
+        throw new LevelRulesValidationError(`${key} ${min}–${limit} এর মধ্যে হতে হবে`);
+      }
+      out[key] = v;
+    } else if (kind === "string") {
+      if (typeof v !== "string") throw new LevelRulesValidationError(`${key} লেখা (string) হতে হবে`);
+      const trimmed = v.trim();
+      const limit = LIMITS[key] ?? 500;
+      if (trimmed.length > limit) {
+        throw new LevelRulesValidationError(`${key} সর্বোচ্চ ${limit} অক্ষরের হতে হবে`);
+      }
+      if (key === "assessmentKey" && !trimmed) continue; // optional: absent beats empty
+      out[key] = trimmed;
+    } else if (kind === "checklist") {
+      if (!Array.isArray(v)) throw new LevelRulesValidationError("checklistBn তালিকা (array) হতে হবে");
+      if (v.length > 100) throw new LevelRulesValidationError("checklistBn সর্বোচ্চ ১০০টি আইটেম হতে হবে");
+      const items: Record<string, string>[] = [];
+      for (const item of v) {
+        if (!item || typeof item !== "object" || Array.isArray(item)) {
+          throw new LevelRulesValidationError("চেকলিস্টের প্রতিটি আইটেম অবজেক্ট হতে হবে");
+        }
+        const obj = item as Record<string, unknown>;
+        const label = typeof obj.label === "string" ? obj.label.trim() : "";
+        if (!label || label.length > 1000) {
+          throw new LevelRulesValidationError("চেকলিস্টের প্রতিটি আইটেমের label দরকার (১–১০০০ অক্ষর)");
+        }
+        const unknownItem = Object.keys(obj).filter((k) => !["key", "categoryBn", "label"].includes(k));
+        if (unknownItem.length) {
+          throw new LevelRulesValidationError(`চেকলিস্ট আইটেমে অজানা ফিল্ড: ${unknownItem.join(", ")}`);
+        }
+        items.push({
+          ...(typeof obj.key === "string" && obj.key.trim() ? { key: obj.key.trim().slice(0, 60) } : {}),
+          ...(typeof obj.categoryBn === "string" && obj.categoryBn.trim()
+            ? { categoryBn: obj.categoryBn.trim().slice(0, 60) }
+            : {}),
+          label,
+        });
+      }
+      out.checklistBn = items;
+    }
+  }
+  if (Object.keys(src).length === 0) {
+    throw new LevelRulesValidationError("কোনো নিয়ম পাঠানো হয়নি");
+  }
+  return out;
+}
+
+/** Validation failure carrying the Bengali user-facing message. */
+export class LevelRulesValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "LevelRulesValidationError";
+  }
+}
+
 /**
  * The muhibbus-sunnah promotion checklist for a user (member-facing shape):
  * months in level, passed assessment, downline muhibbus-sunnah count, plus
@@ -305,7 +507,7 @@ export async function computeRequirements(
   // via outline review; muhibbus → farze_ain via the assessment).
   const target = nextLevelOf(user.level);
   const [rules, facts] = await Promise.all([
-    loadLevelRules(target === "none" ? "muhibbus_sunnah" : target),
+    loadLevelRules(target === "none" ? "muhibbus_sunnah" : target, tx),
     gatherLevelFacts(tx, user),
   ]);
   const { rows } = buildLevelChecklist(rules, facts);

@@ -1,4 +1,4 @@
-import { Req, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Req, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import {
@@ -28,6 +28,13 @@ import { ApiError } from "../common/api-error";
 import { Roles } from "../common/roles.decorator";
 import { RolesGuard } from "../common/roles.guard";
 import { LevelsService, requireBengaliReason } from "../levels/levels.service";
+import {
+  invalidateLevelRulesCache,
+  loadLevelRulesDoc,
+  validateLevelRulesNode,
+  LevelRulesValidationError,
+  type LevelKey,
+} from "../shared/levels";
 import { SupportReplyDto } from "../support/support.controller";
 import {
   bdToday,
@@ -1555,6 +1562,111 @@ export class AdminService {
     return after;
   }
 
+  // ── W4h: level-rules editor (DB override over the pack) ─────────────────
+
+  /**
+   * GET /api/admin/level-rules — full_admin: the effective level-rules
+   * document. Per level: the raw merged node, where it comes from
+   * (db override | pack | default) and the parsed rules the engine sees.
+   */
+  async levelRules(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    const { nodes, sources, packNote } = await loadLevelRulesDoc(this.prisma);
+    const levels: Record<string, { node: Record<string, unknown>; source: string }> = {};
+    for (const key of ["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"] as LevelKey[]) {
+      const node = nodes[key];
+      if (node) {
+        levels[key] = { node, source: sources[key] ?? "default" };
+      }
+    }
+    return { levels, packNote };
+  }
+
+  /**
+   * PUT /api/admin/level-rules/:level — full_admin. MERGE semantics: the
+   * validated fields layer over the level's current effective node (pack or
+   * previous override); unmentioned fields keep their values. Persists to
+   * AppConfigRow (key "level_rules"), busts the engine cache and audits the
+   * changed keys (action level_rules_update).
+   */
+  async updateLevelRules(viewer: User | null, level: string, body: unknown) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const key = this.requireLevelKey(level);
+
+    let patch: Record<string, unknown>;
+    try {
+      patch = validateLevelRulesNode(body);
+    } catch (err) {
+      if (err instanceof LevelRulesValidationError) throw new ApiError(400, err.message);
+      throw err;
+    }
+
+    const { nodes } = await loadLevelRulesDoc(this.prisma);
+    const before = nodes[key] ?? {};
+    const after = { ...before, ...patch };
+
+    const row = await this.prisma.appConfigRow.findUnique({ where: { key: "level_rules" } });
+    const doc = (row?.valueJson ?? {}) as { levels?: Record<string, unknown> };
+    const levelsDoc = { ...(doc.levels ?? {}), [key]: after };
+    await this.prisma.appConfigRow.upsert({
+      where: { key: "level_rules" },
+      create: { key: "level_rules", valueJson: { levels: levelsDoc } as never },
+      update: { valueJson: { levels: levelsDoc } as never },
+    });
+    invalidateLevelRulesCache();
+
+    const changed = Object.keys(after).filter(
+      (k) => JSON.stringify(before[k] ?? null) !== JSON.stringify(after[k] ?? null)
+    );
+    await this.guard.audit(user.id, "level_rules_update", "level_rules", key, {
+      level: key,
+      changed,
+    });
+
+    return { level: key, node: after, changed };
+  }
+
+  /**
+   * DELETE /api/admin/level-rules/:level — full_admin. Drops the DB override
+   * for one level so the engine falls back to the pack file (the seed
+   * default). Audited (action level_rules_update, meta.reset = true).
+   */
+  async resetLevelRules(viewer: User | null, level: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const key = this.requireLevelKey(level);
+
+    const row = await this.prisma.appConfigRow.findUnique({ where: { key: "level_rules" } });
+    const doc = (row?.valueJson ?? {}) as { levels?: Record<string, unknown> };
+    if (!doc.levels || !(key in doc.levels)) {
+      // nothing overridden — idempotent no-op
+      return { level: key, reset: false };
+    }
+    const levelsDoc = { ...doc.levels };
+    delete levelsDoc[key];
+    await this.prisma.appConfigRow.upsert({
+      where: { key: "level_rules" },
+      create: { key: "level_rules", valueJson: { levels: levelsDoc } as never },
+      update: { valueJson: { levels: levelsDoc } as never },
+    });
+    invalidateLevelRulesCache();
+    await this.guard.audit(user.id, "level_rules_update", "level_rules", key, {
+      level: key,
+      reset: true,
+    });
+    return { level: key, reset: true };
+  }
+
+  private requireLevelKey(level: string): LevelKey {
+    if (!["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"].includes(level)) {
+      throw new ApiError(404, "স্তর পাওয়া যায়নি");
+    }
+    return level as LevelKey;
+  }
+
   /** GET /api/admin/audit — full_admin: last 100 audit entries with actor names. */
   async audit(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -2025,6 +2137,33 @@ export class AdminController {
   @Roles("full_admin")
   audit(@Req() req: AuthedRequest) {
     return this.service.audit(currentUser(req));
+  }
+
+  // ── W4h: level-rules editor (DB override over the pack seed) ────────────
+
+  @Get("level-rules")
+  @ApiOperation({ summary: "full_admin: effective level rules (db override | pack) per level" })
+  @Roles("full_admin")
+  levelRules(@Req() req: AuthedRequest) {
+    return this.service.levelRules(currentUser(req));
+  }
+
+  @Put("level-rules/:level")
+  @ApiOperation({ summary: "full_admin: edit one level's rules (merge, validated, audited)" })
+  @Roles("full_admin")
+  updateLevelRules(
+    @Param("level") level: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest
+  ) {
+    return this.service.updateLevelRules(currentUser(req), level, body);
+  }
+
+  @Delete("level-rules/:level")
+  @ApiOperation({ summary: "full_admin: reset one level to the pack default (audited)" })
+  @Roles("full_admin")
+  resetLevelRules(@Param("level") level: string, @Req() req: AuthedRequest) {
+    return this.service.resetLevelRules(currentUser(req), level);
   }
 
   @Get("support")
