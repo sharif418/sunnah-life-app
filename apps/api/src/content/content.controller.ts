@@ -100,15 +100,25 @@ export class MeiliIndexer {
         const data = await loadPack(pack);
         const docs = packDocuments(data);
         if (!docs.length) continue;
-        const res = await fetch(`${host}/indexes/${uid}`, {
+        // POST /indexes with the uid in the BODY is the Meilisearch v1.x
+        // create route [C-W5-ops]. The old code POSTed /indexes/{uid}, which
+        // v1.x answers with 405 Method Not Allowed — seen on the live staging
+        // deployment as "create index … → 405" on every boot, so the indexes
+        // were never created and the document adds below always failed.
+        const res = await fetch(`${host}/indexes`, {
           method: "POST",
           headers: this.headers(),
           body: JSON.stringify({ uid, primaryKey: "id" }),
         });
-        if (!res.ok && res.status !== 400) {
-          // 400 = already exists — fine.
-          this.logger.warn(`Meilisearch create index ${uid} → ${res.status}`);
-          continue;
+        if (!res.ok) {
+          const detail = await res.text().catch(() => "");
+          // 400 index_already_exists = normal second-boot path — sync the
+          // documents anyway. Any other failure: warn with the meili error
+          // body (it names the real cause) and skip this index.
+          if (!(res.status === 400 && detail.includes("index_already_exists"))) {
+            this.logger.warn(`Meilisearch create index ${uid} → ${res.status} ${detail.slice(0, 200)}`);
+            continue;
+          }
         }
         const add = await fetch(`${host}/indexes/${uid}/documents?primaryKey=id`, {
           method: "POST",
