@@ -137,6 +137,37 @@ class _RiverpodListenable extends ChangeNotifier {
   }
 }
 
+/// W4f: the shared pushed-route transition — fade-through on the motion
+/// tokens (one helper, no per-route ad-hoc). The shell branches (the five
+/// tabs) stay instant by design.
+CustomTransitionPage<T> slFadePage<T>({
+  required Widget child,
+  Object? arguments,
+  String? name,
+}) {
+  return CustomTransitionPage<T>(
+    arguments: arguments,
+    name: name,
+    transitionDuration: SLMotion.base,
+    reverseTransitionDuration: SLMotion.fast,
+    transitionsBuilder: (context, animation, secondary, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: SLMotion.decelerate,
+        reverseCurve: SLMotion.accelerate,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.98, end: 1).animate(curved),
+          child: child,
+        ),
+      );
+    },
+    child: child,
+  );
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   final listenable = _RiverpodListenable(ref);
   ref.onDispose(listenable.dispose);
@@ -189,21 +220,25 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'month',
-                    builder: (c, s) => const MonthGridScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const MonthGridScreen()),
                   ),
                   GoRoute(
                     path: 'habit',
-                    builder: (c, s) => const HabitBuilderScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const HabitBuilderScreen()),
                   ),
                   GoRoute(
                     path: 'self-test',
-                    builder: (c, s) => const SelfTestScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const SelfTestScreen()),
                   ),
                   // W4c: আমার লক্ষ্য — personal-goal lifecycle (propose →
                   // head approval → status chips).
                   GoRoute(
                     path: 'goals',
-                    builder: (c, s) => const GoalsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const GoalsScreen()),
                   ),
                 ],
               ),
@@ -219,11 +254,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // parity with the web views).
                   GoRoute(
                     path: 'questions',
-                    builder: (c, s) => const UsrahQuestionsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const UsrahQuestionsScreen()),
                   ),
                   GoRoute(
                     path: 'requirements',
-                    builder: (c, s) => const DawahRequirementsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const DawahRequirementsScreen()),
                   ),
                 ],
               ),
@@ -238,61 +275,75 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // B9: courses + self-paced quizzes + live usrah quiz.
                   GoRoute(
                     path: 'courses',
-                    builder: (c, s) => const CoursesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const CoursesScreen()),
                     routes: [
                       GoRoute(
                         path: ':courseId',
-                        builder: (c, s) => CourseDetailScreen(
-                          courseId: s.pathParameters['courseId'] ?? '',
-                          openLessonId: s.uri.queryParameters['lesson'],
+                        pageBuilder: (c, s) => slFadePage(
+                          child: CourseDetailScreen(
+                            courseId: s.pathParameters['courseId'] ?? '',
+                            openLessonId: s.uri.queryParameters['lesson'],
+                          ),
                         ),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'quizzes',
-                    builder: (c, s) => const QuizzesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const QuizzesScreen()),
                     routes: [
                       GoRoute(
                         path: ':quizId',
-                        builder: (c, s) => QuizPlayerScreen(
-                          quizId: s.pathParameters['quizId'] ?? '',
+                        pageBuilder: (c, s) => slFadePage(
+                          child: QuizPlayerScreen(
+                            quizId: s.pathParameters['quizId'] ?? '',
+                          ),
                         ),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'live-quiz',
-                    builder: (c, s) => const LiveQuizScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const LiveQuizScreen()),
                   ),
                   GoRoute(
                     path: 'quran',
-                    builder: (c, s) => const QuranReaderScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const QuranReaderScreen()),
                   ),
                   GoRoute(
                     path: 'adhkar',
-                    builder: (c, s) => const AdhkarScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const AdhkarScreen()),
                   ),
                   GoRoute(path: 'duas', builder: (c, s) => const DuasScreen()),
                   GoRoute(
                     path: 'names99',
-                    builder: (c, s) => const Names99Screen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const Names99Screen()),
                   ),
                   GoRoute(
                     path: 'islamic-names',
-                    builder: (c, s) => const IslamicNamesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const IslamicNamesScreen()),
                   ),
                   GoRoute(
                     path: 'iman-branches',
-                    builder: (c, s) => const ImanBranchesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ImanBranchesScreen()),
                   ),
                   GoRoute(
                     path: 'sunnahs',
-                    builder: (c, s) => const SunnahsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const SunnahsScreen()),
                   ),
                   GoRoute(
                     path: 'articles',
-                    builder: (c, s) => const ArticlesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ArticlesScreen()),
                   ),
                 ],
               ),
@@ -306,54 +357,65 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'zakat',
-                    builder: (c, s) => const ZakatScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ZakatScreen()),
                   ),
                   GoRoute(
                     path: 'qibla',
-                    builder: (c, s) => const QiblaScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const QiblaScreen()),
                   ),
                   GoRoute(
                     path: 'autosilent',
-                    builder: (c, s) => const AutoSilentScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const AutoSilentScreen()),
                   ),
                   // W4d: সোশ্যাল মিডিয়া ডিটক্স — Guard-module seed (the
                   // More tile itself is config-gated; the screen also gates).
                   GoRoute(
                     path: 'detox',
-                    builder: (c, s) => const DetoxScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const DetoxScreen()),
                   ),
                   // W4d: জিজ্ঞাসা (FAQ) — bundled faq.json, expandable.
                   GoRoute(path: 'faq', builder: (c, s) => const FaqScreen()),
                   GoRoute(
                     path: 'mosques',
-                    builder: (c, s) => const MosquesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const MosquesScreen()),
                   ),
                   GoRoute(
                     path: 'masala',
-                    builder: (c, s) => const MasalaScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const MasalaScreen()),
                   ),
                   GoRoute(path: 'live', builder: (c, s) => const LiveScreen()),
                   // W4d: লাইভ সাপোর্ট — own threads + the conversation view
                   // (guest → sign-in gate inside the screen).
                   GoRoute(
                     path: 'support',
-                    builder: (c, s) => const SupportScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const SupportScreen()),
                     routes: [
                       GoRoute(
                         path: ':threadId',
-                        builder: (c, s) => SupportThreadScreen(
-                          id: s.pathParameters['threadId'] ?? '',
+                        pageBuilder: (c, s) => slFadePage(
+                          child: SupportThreadScreen(
+                            id: s.pathParameters['threadId'] ?? '',
+                          ),
                         ),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'about',
-                    builder: (c, s) => const AboutScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const AboutScreen()),
                   ),
                   GoRoute(
                     path: 'profile',
-                    builder: (c, s) => const ProfileScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ProfileScreen()),
                   ),
                 ],
               ),
@@ -469,7 +531,11 @@ class _SplashLogo extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: const Center(
-            child: Icon(PhosphorIconsFill.star, color: SLColors.primaryDeep, size: 40),
+            child: Icon(
+              PhosphorIconsFill.star,
+              color: SLColors.primaryDeep,
+              size: 40,
+            ),
           ),
         ),
         const SizedBox(height: SLSpacing.s16),
