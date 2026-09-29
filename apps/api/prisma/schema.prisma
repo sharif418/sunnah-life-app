@@ -79,6 +79,9 @@ model User {
   feedbacks             Feedback[]
   usrahQuestions        UsrahQuestion[]  @relation("UsrahQuestionAuthor")
   usrahAnswers          UsrahQuestion[]  @relation("UsrahQuestionAnswerer")
+  supportThreads        SupportThread[]
+  supportMessages       SupportMessage[] @relation("SupportMessageAuthor")
+  usrahJoinRequests     UsrahJoinRequest[]
 
   // Lookup index for the social sign-in find-by-email path — created in raw
   // SQL by *_social_auth; declared here (Phase C/W4c) so `prisma migrate dev`
@@ -442,4 +445,63 @@ model UsrahQuestion {
   updatedAt      DateTime  @default(now())
 
   @@index([usrahId, createdAt])
+}
+
+// ─────────────────────────── Live support threads (W4d) ───────────────────────────
+// User ↔ admin support conversation. A member opens a thread (status "open");
+// every admin reply flips it to "answered"; a member reply on an answered
+// thread flips it back to "open" (awaits the support team again); an admin can
+// close it (terminal — appending to a closed thread is refused with 400).
+// RLS (migrations/*_support_threads): members see/write ONLY their own rows
+// (admins are full_admin — bypass), full_admin/system read + moderate all.
+model SupportThread {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     String
+  status      String    @default("open") // open | answered | closed
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  closedAt    DateTime?
+  closedById  String? // the admin who closed (name resolved via system reads)
+  messages    SupportMessage[]
+
+  @@index([userId, createdAt])
+}
+
+// One message inside a support thread. authorId is ALWAYS set — it is the
+// member (isAdmin=false) or the full_admin actor (isAdmin=true); there are no
+// anonymous/system messages today (nullable would only be needed for those).
+model SupportMessage {
+  id        String   @id @default(cuid())
+  threadId  String
+  thread    SupportThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("SupportMessageAuthor", fields: [authorId], references: [id])
+  body      String
+  isAdmin   Boolean  @default(false) // true = written by the support team (full_admin)
+  createdAt DateTime @default(now())
+
+  @@index([threadId, createdAt])
+}
+
+// ─────────────────────────── Usrah join requests (W4d) ───────────────────────────
+// A member WITHOUT an usrah asks to be assigned; full_admin approves into a
+// concrete usrah (which sets User.usrahId — the assignment) or rejects with a
+// reason. ONE pending request per user is enforced in the service (the POST is
+// idempotent while a request is pending). Statuses pending|approved|rejected.
+model UsrahJoinRequest {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message     String? // the member's note to the tarbiyah office
+  status      String    @default("pending")
+  handledById String? // the admin who approved/rejected
+  handledAt   DateTime?
+  usrahId     String? // the usrah assigned on approve
+  reason      String? // admin's note on rejection
+  createdAt   DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
