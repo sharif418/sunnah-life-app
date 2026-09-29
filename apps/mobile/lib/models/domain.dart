@@ -14,6 +14,7 @@ export 'ilm_engagement.dart';
 export 'leaderboard.dart';
 export 'live.dart';
 export 'review.dart';
+export 'search.dart';
 export 'support.dart';
 export 'user.dart';
 export 'usrah.dart';

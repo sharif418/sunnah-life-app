@@ -894,4 +894,17 @@ class ApiClient {
     );
     return QuizLiveTokenResponse.fromJson(j);
   }
+
+  /// GET /api/search?q=…&limit= — unified content search over meili
+  /// (public; W4j). Throws ApiException(0) when the network is down and
+  /// 503 when the server's search engine is unavailable — both cases are
+  /// the caller's cue to fall back to the bundled-pack matcher.
+  Future<SearchResults> search(String q, {int limit = 20}) async {
+    final j = await _req(
+      'GET',
+      '/api/search',
+      query: {'q': q, 'limit': limit.toString()},
+    );
+    return SearchResults.fromJson(j);
+  }
 }
