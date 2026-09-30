@@ -1,16 +1,21 @@
-// Font-consistency goldens (V1) — the five tab surfaces (Home, Amal Today,
-// Dawah, Ilm, More) in bn light, rendered with ONLY the bundled fonts:
-// the families are pubspec-declared (engine-registered before the first
-// frame) and this test deliberately does NOT warm any google_fonts family,
-// so a widget that falls back to the platform font shows tofu in the
-// golden AND trips the explicit RenderParagraph family walk below.
+// Font-consistency goldens (V1→W5) — the five tab surfaces (Home, Amal
+// Today, Dawah, Ilm, More) in bn light. The engine in flutter test loads
+// NO pubspec-declared family on its own, so warmAppFonts (see
+// test/golden_fonts.dart) registers the real Hind Siliguri / Amiri /
+// AmiriQuran / Phosphor TTFs first: the committed pixels must show real
+// glyphs, never tofu boxes (the W5 lesson — every golden in this suite
+// used to be tofu because only the icons were warmed).
 //
-// Tofu guard, two layers:
-//  1. matchesGoldenFile — pixel truth; tofu boxes change pixels → CI fails.
+// Tofu guard, three layers:
+//  1. matchesGoldenFile — pixel truth; with the real TTFs warmed (see
+//     warmAppFonts), tofu boxes change pixels → CI fails.
 //  2. expectNoPlatformFont — walks every RenderParagraph/EditableText in
 //     the tree and requires the resolved family to be one of the app's
 //     bundled families. Reports the offending text, so a regression says
 //     exactly which widget fell back.
+//  3. test/tofu_guard_test.dart — advance-width truth: a glyph that falls
+//     back to the test engine's Ahem renders as a fontSize-advance box; the
+//     guard fails if any bundled family stops carrying real glyphs.
 //
 // Determinism contract:
 //  * headerNowProvider pinned to 2025-06-15 14:30 — the header date bar,
@@ -332,9 +337,10 @@ void main() {
     // cancelled before the binding checks for pending timers.
     addTearDown(db.close);
 
-    // Icons render with the real Phosphor glyphs (not tofu boxes) — the
-    // whole point of this suite's pixel truth extends to icon shapes.
-    await warmPhosphorFonts(tester);
+    // Real glyphs before the first capture — BOTH text families and icons
+    // (test/golden_fonts.dart). Pixel truth only means something when the
+    // pixels show actual Bengali/Arabic shaping, not tofu boxes.
+    await warmAppFonts(tester);
 
     await tester.pumpWidget(
       UncontrolledProviderScope(

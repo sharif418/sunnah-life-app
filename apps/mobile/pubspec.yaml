@@ -91,9 +91,13 @@ flutter:
   fonts:
   # App typefaces — the same TTFs under assets/google_fonts/ are ALSO
   # declared here so the ENGINE registers the families before the first
-  # frame: every Material component resolves them synchronously (no
-  # google_fonts runtime loading, no platform-font fallback / tofu — and
-  # golden tests render the real glyphs with zero warm-up).
+  # frame ON A DEVICE: every Material component resolves them synchronously
+  # (no google_fonts runtime loading, no platform-font fallback / tofu).
+  # NOTE (W5): `flutter test` does NOT load pubspec-declared families —
+  # only MaterialIcons comes pre-registered — so golden tests must warm
+  # them explicitly through test/golden_fonts.dart (warmAppFonts); without
+  # it every committed golden rendered tofu and the pixel layer proved
+  # nothing.
   # HindSiliguri-SemiBold ↔ w600, Bold ↔ w700 (the bundle has no
   # Light/Medium — other weights synthesize from the nearest).
   - family: HindSiliguri
