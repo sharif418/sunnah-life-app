@@ -187,8 +187,10 @@ rides the owner's next staging redeploy; Wave 5 (clean-up + reporting) is next.
   3 pre-existing warnings; tsc clean.
 - Web (2d54df3 gates): eslint clean, tsc clean, `next build` green (/, /join,
   /join/[code], apple-app-site-association), dev smoke 200.
-- CI proof for the full W5 state: the run for this push's head — recorded in
-  worklog W5-c (the docs-only CI-proof commit that follows this one).
+- CI proof for the full W5 state: **run 36676230539
+  (https://github.com/sharif418/sunnah-life-app/actions/runs/36676230539) — all
+  10 jobs green on head 790bf59** (job-by-job table in worklog W5-c; the mobile
+  job's passing-test annotations count 337, matching the local run).
 
 **Honest VLM observations (recorded, not bugs):**
 - The Home header date row and the sync-sheet's "সর্বশেষ হালনাগাদ" message sit

@@ -67,7 +67,7 @@ completed the work.
 | Mobile analyze/tests | Done | apps/mobile | latest verified at the W5 head (this commit's tree): `flutter analyze` → "No issues found! (ran in 1.5s)" · `flutter test` → "+337: All tests passed!" (337/337; 330 at W4j + 7 new-executed: theme_contrast ×2 [one per brightness], tofu_guard ×2, day_part ×3) |
 | Web typecheck | Done | apps/web | `bunx tsc --noEmit` → exit 0 (verified on a FRESH CLONE — the generated `packages/shared-types/dist/schema.d.ts` is committed); W5 dependency removal re-verified tsc clean after −38 packages (2d54df3) |
 | Swagger/OpenAPI | Done | `src/main.ts` DocumentBuilder | `GET :3001/openapi.json` |
-| CI green (lint/test/build on GitHub runners) | Done | `.github/workflows/ci.yml` (10 jobs incl. docker compose smoke + both release jobs) | run 36616631396 (65658fc) all-10-jobs green; the W5 head's run is recorded in worklog W5-c; three stacked bugs fixed on the way (B11): job-level hashFiles → workspace probe; zod `.min(8).default("")` boot failure; jest worker OTP race → --runInBand |
+| CI green (lint/test/build on GitHub runners) | Done | `.github/workflows/ci.yml` (10 jobs incl. docker compose smoke + both release jobs) | **W5 head 790bf59: run 36676230539 (https://github.com/sharif418/sunnah-life-app/actions/runs/36676230539) — all 10 jobs success** (worklog W5-c carries the job-by-job table); prior proof lineage: 36616631396 (65658fc) all-green. Three stacked bugs fixed on the way (B11): job-level hashFiles → workspace probe; zod `.min(8).default("")` boot failure; jest worker OTP race → --runInBand |
 | Debug APK artifact on CI | Done — verified end-to-end | mobile job → `actions/upload-artifact@v4` (`if-no-files-found: error`) | run #25 artifact `mobile-debug-apk` (id 10955835922): zip CRCs + valid Android package verified via the Actions API; shrank 386 MB → ~88 MB after the keepDebugSymbols removal (W3i) |
 | Release appbundle behind secrets | Done (gated) | release-bundle job | skips cleanly without ANDROID_KEYSTORE_BASE64; builds+uploads `mobile-release-aab` with it; the fail-closed SUNNAH_API_BASE guard passed on the real repo variable (run 36519971155) |
 | **§9 / delivery** | | | |
@@ -236,7 +236,7 @@ Five "not premium enough" findings on the merged W4a–W4c work, fixed BEFORE co
 
 ## Wave 5 — Part E (clean-up + reporting)
 
-The wave the PLAN promised: visual debt found on the merged W4 state, web bloat removed, the flaky CI test made deterministic, and the docs set (this file's Proven-by rewrite included). On-device confirmation of the five mobile fixes = **PHONE_TEST_CHECKLIST §1**.
+The wave the PLAN promised: visual debt found on the merged W4 state, web bloat removed, the flaky CI test made deterministic, and the docs set (this file's Proven-by rewrite included). **CI-proven: run 36676230539 (https://github.com/sharif418/sunnah-life-app/actions/runs/36676230539) — all 10 jobs green on the W5 head 790bf59** (the mobile job's passing-test annotations count 337, matching the local run). On-device confirmation of the five mobile fixes = **PHONE_TEST_CHECKLIST §1**.
 
 | Item | Status | Proven by |
 |---|---|---|
