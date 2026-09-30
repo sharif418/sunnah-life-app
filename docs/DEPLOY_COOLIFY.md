@@ -2,9 +2,16 @@
 
 Target: the client's own virtual server, managed with
 [Coolify](https://coolify.io) (Docker + docker compose under the hood), with
-**Cloudflare** in front. Everything below maps 1:1 to `infra/docker-compose.yml`
-— if a value here and a value there disagree, the compose file wins; fix the
-docs when you change it.
+**Cloudflare** in front. **This is the actual working flow** — everything here
+is grounded in `infra/coolify.compose.yml`, the file the Coolify resource
+runs (mirrored on the `staging` branch; see §7). If this doc and that compose
+file ever disagree, the compose file wins — fix the doc.
+
+> **Two compose files, two jobs.** `infra/coolify.compose.yml` is the Coolify
+> stack (this doc). `infra/docker-compose.yml` is the local / CI dev stack
+> (adds MinIO + a Caddy proxy profile, host ports, fixed network name).
+> Never deploy the dev stack in Coolify — the Coolify file is the one kept in
+> sync with what is really running.
 
 ---
 
@@ -12,446 +19,492 @@ docs when you change it.
 
 | Item | Requirement |
 |---|---|
-| VPS | **2 vCPU / 4 GB RAM / 40 GB SSD minimum** (the full stack idles ≈ 2.2 GB). 4 vCPU / 8 GB recommended for production headroom. Debian 12/13 or Ubuntu 22.04+. |
-| Docker | installed by Coolify itself (Coolify requires a fresh server with SSH root access — it installs Docker Engine, configures the firewall, and runs as a set of containers). |
-| Compose | docker compose **v2** (plugin) — required for per-Dockerfile `.dockerignore` support and healthcheck conditions. Ships with any Docker installed by Coolify. |
-| DNS | a domain at Cloudflare (free tier is fine) — see §5. |
-| Git | the repo (GitHub/GitLab/Forgejo) reachable from the VPS; Coolify deploys from it. |
-| Off-site S3 | a bucket + keypair for pgBackRest (any S3-compatible provider, e.g. AWS S3, Backblaze B2, Wasabi). Required for §6 backups. |
-
-> **No root beyond Coolify's own install** is needed afterwards — every
-> operational command below runs through `docker compose` (the `docker` group)
-> or the Coolify UI.
+| VPS | 2 vCPU / 4 GB RAM minimum (the compose file caps the seven services at ≈ 4.5 GB of `mem_limit` — caps, not reservations; real usage idles well below). 4 vCPU / 8 GB recommended for production headroom. Debian 12/13 or Ubuntu 22.04+. |
+| Coolify | installed per coolify.io docs (it installs Docker Engine itself). The stack below is deployed as ONE Coolify resource of the **Docker Compose** build pack. |
+| Docker | compose **v2** (plugin) — ships with any Docker Coolify installs; required for per-Dockerfile `.dockerignore` support and `depends_on: condition: service_healthy`. |
+| DNS | the client's domain at Cloudflare — proxied records per §3 and docs/HUMAN_STEPS.md §6. |
+| Git | the repo reachable from the VPS. Today Coolify clones the **public** repo and deploys the `staging` branch (§7); going private is a production step (§8). |
+| Secrets | everything marked **✔** in §4 set in the Coolify resource's environment before the first deploy. |
 
 ---
 
-## 2. What gets deployed (the 10 services)
+## 2. The Coolify resource — "Docker Compose" build pack, repo-root contexts
 
-| Service | Image | Host port | Notes |
-|---|---|---|---|
-| `postgres` | postgres:16 | — (internal) | `sunnahlife` DB; RLS bootstrap on first init; volume `pgdata` |
-| `redis` | redis:7 | — (internal) | BullMQ queues + cache; AOF everysec [C/W2h] — queued jobs survive restarts |
-| `minio` | quay.io/minio/minio | — (internal) | S3 API :9000 + console :9001, internal only; volume `miniodata`; pinned [C/W2h] — MinIO left Docker Hub, see compose comment |
-| `minio-init` | quay.io/minio/mc | — | one-shot: creates the `sunnahlife` bucket |
-| `meilisearch` | getmeili/meilisearch:v1.54.0 | — (internal) | Bengali typo-tolerant search; volume `meili` |
-| `api` | built from the repo root (`apps/api` + `packages/content`) via `infra/api.Dockerfile` | — (internal `api:4000`) | NestJS; runs migrations + idempotent seed then serves; no host port [C/W2h] — caddy (the only ingress) talks to it over the `sunnah` network, `--scale api=N` for REST capacity |
-| `worker` | same image as `api` | — | BullMQ workers, different command; no HTTP — health = liveness probe (PID 1 + Redis ping) |
-| `web` | built from `apps/web` via `infra/web.Dockerfile` | **3000** | Next.js PWA (standalone). **No local database** — all data via the NestJS API (`NEXT_PUBLIC_API_BASE`, default `http://api:4000` inside the compose network). Gender isolation is enforced by Postgres RLS inside the api service. |
-| `admin` | built from `apps/admin` via `infra/admin.Dockerfile` | **3002** → 3000 | Next.js admin panel |
-| `proxy` (optional profile) | caddy:2-alpine | 80/443 | reverse proxy; Cloudflare sits in front anyway |
+One resource, one deploy button, seven services. In Coolify:
 
-Everything runs on the internal `sunnah` bridge network with `restart:
-unless-stopped` and a healthcheck each — `docker compose ps` must show every
-service `(healthy)` (minio-init shows `exited (0)` — that is success).
+**Resources → New → Docker Compose (Empty/Custom)**, then point it at the repo
+and the compose file path `infra/coolify.compose.yml`, and fill the §4
+environment variables in the resource's **Environment Variables** editor.
 
-**Minimal start** (if you only want the data layer while apps/* are still
-landing): `docker compose --env-file .env -f infra/docker-compose.yml up -d
-postgres redis minio minio-init meilisearch`.
+The critical, easy-to-miss part: **build contexts are relative to the
+REPOSITORY ROOT**. Coolify runs compose with `--project-directory` set to the
+checkout root, and the compose file says so verbatim:
+
+```yaml
+# Build contexts are relative to the REPOSITORY ROOT: Coolify runs compose
+# with --project-directory set to the checkout root.
+```
+
+The actual context/dockerfile lines from `infra/coolify.compose.yml`:
+
+```yaml
+  postgres:
+    build:
+      context: ./infra/postgres
+      dockerfile: Dockerfile
+```
+```yaml
+  api:
+    build:
+      context: .                    # ← the repo ROOT
+      dockerfile: infra/api.Dockerfile
+```
+```yaml
+  worker:
+    build:
+      context: .                    # ← the repo ROOT
+      dockerfile: infra/api.Dockerfile
+```
+```yaml
+  web:
+    build:
+      context: .                    # ← the repo ROOT
+      dockerfile: infra/web.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?set NEXT_PUBLIC_API_BASE}
+```
+```yaml
+  admin:
+    build:
+      context: ./apps/admin
+      dockerfile: ../../infra/admin.Dockerfile
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?set NEXT_PUBLIC_API_BASE}
+        NEXT_PUBLIC_DEMO: ${NEXT_PUBLIC_DEMO:-}
+```
+
+Why the root matters:
+
+- **api + worker** need `apps/api` AND `packages/content` (the entrypoint seed
+  reads the amal catalog + assessment packs; the content routes serve the
+  Qur'an + packs from `CONTENT_DIR=/app/packages/content`) — see the header of
+  `infra/api.Dockerfile`.
+- **web** imports types from `packages/shared-types` and sets
+  `outputFileTracingRoot` to the repo root (`apps/web/next.config.ts`), so its
+  standalone output mirrors repo-relative paths.
+- **admin** is the one exception — its context is `apps/admin` only.
+- **postgres** is not the stock image here: it is **built from
+  `infra/postgres/Dockerfile`**, which bakes `init-rls.sql` (the
+  `sunnah_app` NOBYPASSRLS role bootstrap) and `init-walarchive.sh` into the
+  image — Coolify does not provide repo files to runtime bind mounts, which
+  is exactly why the dev compose's bind mount could not be reused.
+
+### What runs (7 services)
+
+| Service | Built from | Container port | Volume | `mem_limit` |
+|---|---|---|---|---|
+| `postgres` | `infra/postgres/Dockerfile` (postgres:16 + RLS init) | 5432 internal | `pgdata` | 1g |
+| `redis` | image `redis:7` (AOF on) | 6379 internal | `redisdata` | 256m |
+| `meilisearch` | image `getmeili/meilisearch:v1.54.0` | 7700 internal | `meili` | 512m |
+| `api` | `infra/api.Dockerfile` (NestJS; migrates + seeds then serves) | **4000** | `apistorage` | 1g |
+| `worker` | same image as api, worker command (BullMQ) | none | `apistorage` | 768m |
+| `web` | `infra/web.Dockerfile` (Next.js PWA) | **3000** | — | 512m |
+| `admin` | `infra/admin.Dockerfile` (Next.js admin) | **3000** | — | 512m |
+
+No host ports are published and there is no proxy service in this file —
+**Coolify's own Traefik owns 80/443** and routes the domains you assign per
+service (§3).
 
 ---
 
-## 3. Bring-up — three supported paths
+## 3. Domains — set per service in Coolify, pointing at the CONTAINER port
 
-### Path A — plain docker compose from a git clone (fastest, recommended)
+In the Coolify resource, each service that must be reachable gets a domain
+(`Networking` / domains field, or the per-service `FQDN` env). The compose
+header documents the mapping (container port after the colon):
 
-```bash
-ssh user@your-vps
-git clone https://github.com/<org>/sunnahlife.git && cd sunnahlife
-cp .env.example .env && nano .env      # fill the secrets (§4)
-docker compose --env-file .env -f infra/docker-compose.yml up -d --build
+```yaml
+# Domains (set in Coolify per service, container port after the colon):
+#   web   → https://<web-domain>:3000
+#   admin → https://<admin-domain>:3000
+#   api   → https://<api-domain>:4000
 ```
 
-`--env-file .env` matters: compose looks for `.env` **next to the compose file**
-(`infra/`), but the repo keeps it at the root. The convenience wrapper
-`./infra/up.sh` runs exactly this.
+- **api** → `https://api.<domain>:4000` — e.g. the current staging deployment
+  answers at `https://api-staging.sunnahlife.ailearnersbd.com` (the
+  `:4000` is the container port; Coolify's Traefik terminates TLS, the public
+  URL never shows it).
+- **web** → `https://<domain>:3000` — the public PWA.
+- **admin** → `https://admin.<domain>:3000` — the admin console.
+- postgres / redis / meilisearch / worker get **no domain** — internal only;
+  reach them through the Coolify terminal (`docker exec`) or SSH.
 
-First boot order is orchestrated by healthchecks: postgres/redis/meili/minio
-become healthy → `minio-init` creates the bucket → `api` runs
-`prisma migrate deploy` + the idempotent seed → `worker` starts after the api
-is healthy → `web` serves the PWA talking to `http://api:4000` (no local database) →
-`admin` comes up.
+Point the clients at the public API origin (§4): `NEXT_PUBLIC_API_BASE` for
+web/admin builds, `CORS_ORIGINS` + `APP_DOMAIN` for the api. DNS records +
+Cloudflare proxying: docs/HUMAN_STEPS.md §6.
 
-Verify:
+---
 
-```bash
-docker compose --env-file .env -f infra/docker-compose.yml ps
-curl -s http://localhost:4000/health   # api — readiness (postgres·redis·meili·storage)
-curl -s http://localhost:3000/api/config | head -c 200   # web
-```
+## 4. Environment variables (complete reference for the Coolify resource)
 
-### Path B — Coolify "Docker Compose" stack
+Every `${VAR}` below is set in the Coolify resource's environment editor.
+`openssl rand -base64 48` generates good secrets. The compose file
+**hard-fails the deploy** (`:?` interpolation) on any variable marked **✔**
+that is empty — Coolify shows which one in the deploy log.
 
-1. Coolify → **Resources → New → Docker Compose** (Empty/Custom).
-2. Paste/upload `infra/docker-compose.yml` (or point Coolify at the repo and
-   the compose file path).
-3. Add the environment variables from §4 in the resource's **Environment
-   Variables** section (Coolify injects them into the stack).
-4. **Caveats:**
-   - Coolify rewrites/rewrites bind-mount paths for some templates — the only
-     bind mount in the stack is `./postgres/init-rls.sql` (and `./Caddyfile`
-     for the proxy profile). If Coolify clones the repo for you, keep the
-     working copy path stable, or switch the two mounts to absolute paths
-     (`/data/coolify/applications/<uuid>/infra/postgres/init-rls.sql`).
-   - Alternatively use Path C for the `postgres` service only and keep the
-     rest as a stack — the RLS init only needs to exist at first database init.
-5. **Deploy**. Coolify streams the build logs; the stack comes up exactly like
-   Path A.
+### PostgreSQL
 
-### Path C — one Coolify application per service (maximum Coolify-ness)
-
-Create each service with a **Build pack: Dockerfile** (⚠ the api + worker
-build contexts are the **repo root**, not apps/api — the image bundles
-`packages/content` for the seed + content routes):
-
-| Coolify app | Dockerfile location | Build context |
+| Variable | Req | Notes |
 |---|---|---|
-| `api` | `/infra/api.Dockerfile` | `/` (repo root — needs `apps/api` + `packages/content`) |
-| `worker` | `/infra/api.Dockerfile` (same image; override the command with the worker line from the compose file) | `/` (repo root) |
-| `web` | `/infra/web.Dockerfile` | `/` (repo root) |
-| `admin` | `/infra/admin.Dockerfile` | `/apps/admin` |
-| `postgres` / `redis` / `minio` / `meilisearch` | — (public images, create as Coolify "Docker Image" resources) | — |
+| `POSTGRES_PASSWORD` | **✔** | owner/migration role password (`DIRECT_URL`) |
+| `SUNNAH_APP_PASSWORD` | **✔** | password of the NOBYPASSRLS runtime role `sunnah_app`, created on first init by the baked-in `init-rls.sql`; interpolated into `DATABASE_URL` |
+| `POSTGRES_USER` | opt | default `postgres` |
+| `POSTGRES_DB` | opt | default `sunnahlife` — **keep it**: the RLS grants target this exact database |
+| `PG_SHARED_BUFFERS` / `PG_MAX_CONNECTIONS` | opt | defaults `256MB` / `100` |
 
-Attach a Coolify network named `sunnah` to all of them (equivalent of the
-compose network) and copy each service's environment block from the compose
-file. More clicking, but every app gets its own deploy button, healthcheck UI
-and log stream.
+### Search / Redis (hard-wired, listed for completeness)
 
----
+`MEILI_HOST` (`http://meilisearch:7700`), `MEILI_KEY` (=
+`MEILI_MASTER_KEY`), `REDIS_URL` (`redis://redis:6379`), `DATABASE_URL`
+(`postgresql://sunnah_app:…@postgres:5432/sunnahlife`), `DIRECT_URL`
+(`postgresql://<POSTGRES_USER>:…@postgres:5432/sunnahlife`) — all composed
+inside the file from the two Postgres passwords + `MEILI_MASTER_KEY`; you set
+none of them yourself.
 
-## 4. Environment variables (complete reference)
-
-Copy `.env.example` → `.env` at the repo root (or into the Coolify stack's
-environment editor). `openssl rand -base64 48` generates good secrets.
-
-### PostgreSQL (postgres service)
-
-| Variable | Example | Req | Notes |
-|---|---|---|---|
-| `POSTGRES_USER` | `postgres` | ✔ | owner/migration role (used in `DIRECT_URL`) |
-| `POSTGRES_PASSWORD` | `xK7…` | **✔** | strong secret |
-| `POSTGRES_DB` | `sunnahlife` | ✔ | keep the default — the API's RLS migration grants on this exact database name |
-| `SUNNAH_APP_PASSWORD` | `aN3…` | **✔** | password of the NOBYPASSRLS runtime role `sunnah_app` — created by `infra/postgres/init-rls.sql` on first init; compose interpolates it into `DATABASE_URL` |
-| `PG_SHARED_BUFFERS` | `256MB` | opt | postgres tuning (default 256MB) |
-| `PG_MAX_CONNECTIONS` | `100` | opt | default 100 |
-
-### Object storage (minio + api)
-
-| Variable | Example | Req | Notes |
-|---|---|---|---|
-| `MINIO_ROOT_USER` | `sunnahlife` | **✔** | **= `S3_ACCESS_KEY`** (compose maps them) |
-| `MINIO_ROOT_PASSWORD` | `qM9…` | **✔** | **= `S3_SECRET_KEY`** |
-| `S3_BUCKET` | `sunnahlife` | ✔ | created by `minio-init` |
-| `S3_PUBLIC_BASE` | *(empty)* | opt | CDN base for public object URLs; empty = served via the api |
-
-(`S3_ENDPOINT` is hard-wired by compose to `http://minio:9000`; the api reads
-`S3_ENDPOINT`, `S3_BUCKET`, `S3_ACCESS_KEY`, `S3_SECRET_KEY`, `S3_PUBLIC_BASE`
-per `apps/api/src/config/env.validation.ts`.)
-
-### Search (meilisearch + api)
-
-| Variable | Example | Req | Notes |
-|---|---|---|---|
-| `MEILI_MASTER_KEY` | `b2F…` (≥16 bytes) | **✔** | meili container env; the api receives the same value as `MEILI_KEY` |
-
-### Redis / connections (api + worker)
-
-| Variable | Example | Req | Notes |
-|---|---|---|---|
-| `REDIS_URL` | `redis://redis:6379` | ✔ | hard-wired inside compose; set it yourself only when running apps outside compose |
-| `DATABASE_URL` | `postgresql://sunnah_app:…@postgres:5432/sunnahlife` | ✔ | composed automatically from `SUNNAH_APP_PASSWORD`; this is the **RLS-bound runtime** connection |
-| `DIRECT_URL` | `postgresql://postgres:…@postgres:5432/sunnahlife` | ✔ | owner connection for `prisma migrate deploy` + seed |
-| `MEILI_HOST` | `http://meilisearch:7700` | ✔ | hard-wired in compose |
-
-Redis runs with **AOF persistence (`appendfsync everysec`)** since C/W2h —
-queued BullMQ jobs survive a restart (up to 1 s of fsync skew).
-
-### API / worker (apps/api)
-
-| Variable | Example | Req | Notes |
-|---|---|---|---|
-| `API_PORT` | *(unused)* | — | **removed in C/W2h** — the api publishes **no host port**; caddy (the only ingress) talks to `api:4000` over the `sunnah` network, so REST capacity scales with `--scale api=N` (quiz rooms stay single-instance: in-process room state) |
-| `METRICS_TOKEN` | `b1a…` | opt | unlocks `GET /metrics` via `Authorization: Bearer …` or `?token=…`; unset ⇒ /metrics 403s in production |
-| `DOCS_ENABLED` | `false` | opt | `false` disables the Swagger UI (`/docs`) + `/openapi.json`; unset ⇒ enabled outside production only |
-| `JWT_SECRET` | `J4v…` (min 8) | **✔** | signs access tokens (and refresh tokens when `JWT_REFRESH_SECRET` is unset); rotation + family revocation via the `RefreshToken` table |
-| QUIZ_SECRET | required | HMAC secret for live-quiz room tokens (compose hard-fails without it) |
-| `JWT_REFRESH_SECRET` | *(empty)* | opt | separate secret for refresh tokens; empty ⇒ `JWT_SECRET` is used |
-| `ACCESS_TOKEN_TTL_MIN` | `15` | opt | |
-| `REFRESH_TOKEN_TTL_DAYS` | `7` | opt | |
-| `APP_DOMAIN` | `sunnahlife.app` | opt | canonical domain used in referral links (`https://<APP_DOMAIN>/?join=DS-XXXXXX`) |
-| `CORS_ORIGINS` | `https://sunnahlife.app,https://admin.sunnahlife.app` | opt | comma list of browser origins |
-| `SMS_PROVIDER` | `mock` | opt | `mock` (dev — OTP returned as `devCode`) · `sslwireless` · `infobip` |
-| `SMS_SSLWIRELESS_URL` / `_USER` / `_PASS` | | opt | SSL Wireless credentials |
-| `SMS_INFOBIP_URL` / `_KEY` | | opt | Infobip credentials |
-| `FCM_SERVICE_ACCOUNT_JSON` | *(empty)* | opt | Firebase service-account JSON (object string **or** a file path) for FCM HTTP v1 pushes — create via docs/RELEASE.md §Firebase. Empty ⇒ the no-op transport (pushes logged, never delivered). Passed to **both** `api` and `worker` (the worker is the main fan-out process). |
-| `GOOGLE_CLIENT_ID` | `1234…apps.googleusercontent.com` | opt | Google sign-in (Task B5): the OAuth **web** client id — the id_token audience the api accepts (`POST /api/auth/social`). Empty ⇒ Google disabled (buttons hidden, endpoint 400 Bengali). Compose passes it to the `api` only. Setup: docs/RELEASE.md §social-login. |
-| `GOOGLE_IOS_CLIENT_ID` | *(empty)* | opt | Extra accepted Google audience (the iOS OAuth client id) — only needed if iOS tokens are minted for it. |
-| `APPLE_SERVICES_ID` | *(empty)* | opt | Apple sign-in: the Services ID (web-flow id_token audience). |
-| `APPLE_IOS_BUNDLE_ID` | `bd.asunnah.sunnahLife` | opt | Apple sign-in: the **native iOS** flow audience (native ASAuthorization tokens carry the bundle id as `aud`). Set this (and/or `APPLE_SERVICES_ID`) to enable Apple. |
-| `APPLE_TEAM_ID` | *(empty)* | opt | Reserved for a future Android/web Apple flow (needs a hosted redirect) — not used today. |
-
-### Web (repo-root Next.js)
-
-| Variable | Example | Req | Notes |
-|---|---|---|---|
-| `WEB_PORT` | `3000` | ✔ | host port |
-
-| `NEXT_PUBLIC_API_BASE` | `http://api:4000` | opt | where the web PWA sends its API calls (baked at build time; same compose-network name by default, or the public `https://api.<domain>` behind Cloudflare) |
-
-### Admin (apps/admin)
-
-| Variable | Example | Req | Notes |
-|---|---|---|---|
-| `ADMIN_PORT` | `3002` | ✔ | host port |
-| `PUBLIC_API_BASE` | `https://api.sunnahlife.app` | ✔ for prod | **build arg** (`NEXT_PUBLIC_API_BASE` inside apps/admin) — baked into the client bundle, rebuild to change |
-
-### Reverse proxy profile (optional)
-
-| Variable | Example | Notes |
+| Variable | Req | Notes |
 |---|---|---|
-| `WEB_DOMAIN` / `ADMIN_DOMAIN` / `API_DOMAIN` | `sunnahlife.app` / `admin.sunnahlife.app` / `api.sunnahlife.app` | Caddy site addresses (infra/Caddyfile) |
-| `ACME_EMAIL` | `admin@sunnahlife.app` | origin cert email |
+| `MEILI_MASTER_KEY` | **✔** | meili container env; the api receives the same value as `MEILI_KEY` |
 
-### Housekeeping
+### api + worker (shared `&api-env` anchor — both get the whole block)
 
-| Variable | Example | Notes |
+| Variable | Req | Notes |
 |---|---|---|
-| `STACK_TAG` | `latest` | image tag; set to a git SHA for rollback-able releases (§10) |
+| `JWT_SECRET` | **✔** | signs access tokens (min 8 chars; production boot refuses the dev default) |
+| `JWT_REFRESH_SECRET` | **✔** | refresh tokens (production requires it, different from `JWT_SECRET`) |
+| `QUIZ_SECRET` | **✔** | HMAC secret for live-quiz room tokens |
+| `APP_DOMAIN` | **✔** | canonical domain for referral links |
+| `CORS_ORIGINS` | **✔** | comma list of browser origins (production refuses empty) |
+| `NODE_ENV` | opt | default `production` in the compose file. Set `staging` on the staging stack (§6 demo seed, §8 production) |
+| `SMS_PROVIDER` | opt | default `mock`; `sslwireless` or `infobip` in production (§8) |
+| `SMS_SSLWIRELESS_URL` / `_USER` / `_PASS` | opt | SSL Wireless v3 API credentials (see docs/HUMAN_STEPS.md §2) |
+| `SMS_INFOBIP_URL` / `_KEY` | opt | Infobip alternative |
+| `FCM_SERVICE_ACCOUNT_JSON` | opt | Firebase service-account JSON (object string or file path) for push — docs/HUMAN_STEPS.md §1 |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_IOS_CLIENT_ID` | opt | social-login audiences — docs/HUMAN_STEPS.md §3 |
+| `APPLE_SERVICES_ID` / `APPLE_IOS_BUNDLE_ID` / `APPLE_TEAM_ID` | opt | social-login audiences — docs/HUMAN_STEPS.md §3 |
+| `METRICS_TOKEN` | opt | unlocks `GET /metrics`; unset ⇒ /metrics 403s in production |
+| `DOCS_ENABLED` | opt | `false` disables Swagger UI + `/openapi.json`; unset ⇒ enabled outside production only |
+| `ACCESS_TOKEN_TTL_MIN` / `REFRESH_TOKEN_TTL_DAYS` | opt | defaults `15` / `7` |
+| `S3_ENDPOINT` / `S3_BUCKET` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` / `S3_PUBLIC_BASE` | opt | all four ⇒ S3 storage adapter activates; otherwise local volume (§5) |
+
+### web + admin builds
+
+| Variable | Req | Notes |
+|---|---|---|
+| `NEXT_PUBLIC_API_BASE` | **✔** | **build arg**, not runtime env — see below |
+| `NEXT_PUBLIC_DEMO` | opt | admin build arg; `"true"` shows the demo quick-login grid (staging/demo builds only) |
+
+### NEXT_PUBLIC_API_BASE is a BUILD ARG (rebuild to change)
+
+Next.js inlines `NEXT_PUBLIC_*` into the client bundle at **build** time, so
+the compose file passes it as a build argument and the Dockerfiles bake it:
+
+```yaml
+# infra/coolify.compose.yml — the web service
+    build:
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:?set NEXT_PUBLIC_API_BASE}
+```
+
+```dockerfile
+# infra/web.Dockerfile
+ARG NEXT_PUBLIC_API_BASE=""
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_API_BASE=${NEXT_PUBLIC_API_BASE}
+```
+
+(`infra/admin.Dockerfile` does exactly the same, plus `NEXT_PUBLIC_DEMO`.)
+Consequences:
+
+- the value must be the **public, browser-reachable** API origin —
+  `https://api-staging.sunnahlife.ailearnersbd.com` on the current staging
+  stack (NOT `http://api:4000`, which only exists inside the Docker network —
+  browsers cannot resolve it);
+- changing it means **redeploying so the images rebuild** — editing the env
+  alone is not enough. The `:?` in the compose line means an unset value
+  blocks the deploy outright.
 
 ---
 
-## 5. Domains & Cloudflare
+## 5. Health checks — `/health/live` gates the orchestrator, `/health/ready` is for monitors
 
-1. **DNS:** in the Cloudflare dashboard create proxied (orange-cloud) records:
-   - `A  sunnahlife.app        → <VPS IP>` (web)
-   - `A  admin.sunnahlife.app  → <VPS IP>` (admin)
-   - `A  api.sunnahlife.app    → <VPS IP>` (api)
-2. **SSL mode: "Full (strict)"** — the origin (Caddy from the `proxy` profile,
-   or Coolify's own Traefik if you prefer) must serve a valid cert. With the
-   compose `proxy` profile, Caddy obtains Let's Encrypt certs automatically
-   (`infra/Caddyfile`); Cloudflare validates whatever it serves.
-   - If you keep Cloudflare's free Universal SSL + "Flexible" mode instead,
-     TLS stops at the edge — acceptable for demos, **not** for sisters' data;
-     use Full (strict).
-3. **WebSockets:** enabled by default on Cloudflare — no page rule needed.
-   Live sessions (and any future LiveKit SFU) work over the proxied ports
-   443/2053/2083/2087/2096/8443. Caddy's `reverse_proxy` upgrades them
-   automatically.
-4. Recommended **cache rules**: cache `/_next/static/*` and `/icons/*`
-   (immutable, 1 year), bypass cache for `/api/*` and `/admin/*`.
-5. Point the apps at their public URLs (set in `.env`):
-   `PUBLIC_API_BASE=https://api.sunnahlife.app`,
-   `CORS_ORIGINS=https://sunnahlife.app,https://admin.sunnahlife.app`,
-   `APP_DOMAIN=sunnahlife.app`, and the `*_DOMAIN` values for the proxy.
-6. **Meilisearch and MinIO are never published** — compose gives them no host
-   ports. Access them only via `docker compose exec` / SSH tunnels.
+The api exposes a **liveness/readiness split** (C-W5-ops), and everything the
+orchestrator touches points at liveness only:
+
+- **`GET /health/live`** — liveness: the process is up, the event loop
+  turns, **zero dependency calls**. Always 200 while the app can answer at
+  all. This is what the Docker `HEALTHCHECK`, the compose healthcheck and
+  therefore **Coolify's Traefik** gate routing on.
+- **`GET /health/ready`** (and the legacy alias **`GET /health`**) —
+  readiness: probes postgres · redis · meili · storage with a 1.5 s
+  per-check budget, returns **503 when degraded**. Point uptime monitors
+  (UptimeRobot, Better Stack, …) HERE, never at `/health/live`.
+
+The compose healthcheck for the api, verbatim:
+
+```yaml
+    healthcheck:
+      # [C-W5-ops] liveness only — readiness (/health, /health/ready) is for
+      # monitoring; slow deps must not flip the container unhealthy
+      # (Traefik drops unhealthy containers).
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4000/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+```
+
+The endpoint lives in `apps/api/src/health/health.controller.ts`
+(`@Get("health/live")`, excluded from the `/api` global prefix in
+`src/main.ts`), and the same `curl …/health/live` also gates the image's own
+Dockerfile `HEALTHCHECK`. Why the split matters: on the live staging
+deployment a slow Postgres used to flip the *serving* api container
+"unhealthy" and Traefik dropped it ("no available server") — a liveness-only
+probe must never do that again.
+
+The other services' healthchecks (all in the compose file): postgres
+`pg_isready`, redis `redis-cli ping`, meili `curl -fsS
+http://localhost:7700/health`, worker = `kill -0 1` + a bun/ioredis `PING`,
+web/admin `curl -fsS http://localhost:3000/`.
+
+### First deploy, service by service
+
+Boot order is orchestrated by `depends_on: condition: service_healthy`:
+postgres/redis/meili become healthy → **api** runs `prisma migrate deploy`
+(owner role via `DIRECT_URL`) + the idempotent **reference seed** (amal
+catalog, farze-ain template, app config — never deletes), then serves →
+**worker** starts after the api is healthy → **web** + **admin** come up.
+`start_period: 90s` on the api covers the first-boot migration.
+
+**Verify after each service** (Coolify terminal or SSH on the VPS; the public
+commands work from anywhere):
+
+```bash
+# postgres / redis / meili — Coolify's service list shows (healthy); on the
+# host (Coolify names the compose project itself — plain docker ps):
+docker ps --format "table {{.Names}}\t{{.Status}}"   # every service (healthy)
+
+# api — liveness (what routing gates on):
+curl -s https://api-staging.sunnahlife.ailearnersbd.com/health/live
+#  → {"status":"ok","uptimeSeconds":…,"pid":…,"version":"…"}
+
+# api — readiness (what monitors watch; also proves postgres+redis+meili+storage):
+curl -s https://api-staging.sunnahlife.ailearnersbd.com/health/ready
+#  → {"status":"ok","checks":{"postgres":true,"redis":true,"meilisearch":"ok","storage":"local"},…}
+
+# worker — no HTTP; check it holds healthy + logs show BullMQ queues:
+docker logs <worker-container> 2>&1 | tail   # or Coolify's log stream
+
+# web — open https://<web-domain> in a browser (page shell loads; sign-in modal
+#       appears; API errors would surface as /api/* failures in the console):
+curl -s -o /dev/null -w "%{http_code}\n" https://<web-domain>/   # 200
+
+# admin — open https://admin.<domain>; the login page renders:
+curl -s -o /dev/null -w "%{http_code}\n" https://admin.<domain>/   # 200
+```
+
+First boot also indexes the content packs into Meilisearch (v1.x API) — the
+duas/adhkar/names indexes appear in the meili logs. Then demo-login to the
+web app with any phone from docs/DEMO_ACCOUNTS.md §1 (staging only, §6).
 
 ---
 
-## 6. Volumes & backup strategy
+## 6. No MinIO — local storage volume, S3 via env when one exists
 
-Docker named volumes: `pgdata` (critical — also holds the archived WAL
-segments at `walarchive/` inside the volume: postgres copies them there
-via `archive_command` to `pgdata/walarchive`, and pgBackRest reads them
-from that same path for PITR [C/W2h]; the backup cron itself stays
-owner-run), `miniodata` (media), `meili` (rebuildable indexes).
+The Coolify stack deliberately runs **without MinIO**: anonymous pulls of
+MinIO images stopped being available (see the `infra/docker-compose.yml`
+header comment), so the api falls back to its **local storage adapter**:
 
-> Why inside `pgdata` and not a dedicated `pgwal` volume: the postgres
-> entrypoint chowns PGDATA before dropping privileges, so a directory
-> created there is writable by the `postgres` user. A separate named
-> volume is created `root:root` by docker (the path doesn't exist in the
-> image) and the entrypoint re-execs as `postgres` before the initdb
-> scripts run — neither the init script nor the archiver could write it
-> ("cp: Permission denied").
+```yaml
+# infra/coolify.compose.yml — api + worker both mount it:
+    environment:
+      STORAGE_DIR: /app/storage
+    volumes:
+      - apistorage:/app/storage
+```
 
-### 6.1 PostgreSQL — pgBackRest to off-site S3 (the critical backup)
+- Generated objects (monthly PDF reports, etc.) land under the `apistorage`
+  named volume — persistent across restarts/redeploys, shared by api +
+  worker.
+- The storage probe in `apps/api/src/storage/storage.module.ts` activates the
+  **S3 adapter only when `S3_ENDPOINT` + `S3_BUCKET` + `S3_ACCESS_KEY` +
+  `S3_SECRET_KEY` are ALL set** — the same probe the `/health/ready` storage
+  check uses (it reports `"local"` vs `"s3"`). When the client provisions a
+  real bucket, set the four `S3_*` variables in Coolify and redeploy — no
+  code change. `S3_PUBLIC_BASE` optionally fronts object URLs with a CDN.
+- The demo login grid on the admin console is build-gated by
+  `NEXT_PUBLIC_DEMO` — leave it unset for anything client-facing.
 
-Configure `infra/postgres/pgbackrest.conf` (placeholders marked `<…>`): a
-REMOTE S3 repo, AES-256 repo encryption, retention 2 full + 6 diff backups,
-30-day archive (PITR-capable WAL). The backup containers reach postgres over
-the shared `pgsocket` volume (unix socket — the official image trusts local
-connections, so no passwords travel between containers).
+### The demo seed — NON-PRODUCTION only
 
-The volume triple every pgBackRest command needs (repo root on the VPS):
+The api's boot seed is **reference data only** (idempotent, never deletes).
+The demo dataset (15 users, usrahs, 30 days of amal history — the accounts in
+docs/DEMO_ACCOUNTS.md) is seeded manually, and the seed **refuses to run when
+`NODE_ENV=production`** (`apps/api/prisma/seed-demo.ts` exits 1: "SEED_DEMO=true
+is REFUSED in production — demo data would wipe real users"):
 
 ```bash
-PGBR="-v sunnahlife_pgdata:/var/lib/postgresql/data:ro \
-      -v sunnahlife_pgsocket:/var/run/postgresql \
-      -v $PWD/infra/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro"
+# inside the running api container (Coolify terminal → api service, or):
+docker exec -it <api-container> bun run seed:demo
+# = SEED_DEMO=true bun prisma/seed.ts   (apps/api package.json)
 ```
 
-The read-only `pgdata` mount above is all WAL reading needs: archived
-segments live at `<pgdata-mount>/walarchive` (i.e.
-`/var/lib/postgresql/data/walarchive` inside the one-shot containers), so
-there is no separate WAL volume to mount.
-
-One-shot containers (from the repo root on the VPS):
-
-```bash
-# first use: create the stanza (also self-heals after major upgrades)
-docker run --rm $PGBR pgbackrest/pgbackrest:latest \
-  --stanza=sunnahlife stanza-create
-
-# nightly full backup (cron 03:15 Asia/Dhaka) — add to the VPS crontab
-docker run --rm $PGBR pgbackrest/pgbackrest:latest \
-  --stanza=sunnahlife --type=full backup
-
-# a differential backup mid-day
-docker run --rm $PGBR pgbackrest/pgbackrest:latest \
-  --stanza=sunnahlife --type=diff backup
-
-# verify + list backups (repo-side, does not touch the database)
-docker run --rm $PGBR pgbackrest/pgbackrest:latest \
-  --stanza=sunnahlife info
-```
-
-**Restore drill (do it once before you need it):**
-
-```bash
-docker compose --env-file .env -f infra/docker-compose.yml stop api worker postgres
-docker run --rm \
-  -v sunnahlife_pgdata:/var/lib/postgresql/data \
-  -v sunnahlife_pgsocket:/var/run/postgresql \
-  -v "$PWD/infra/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro" \
-  pgbackrest/pgbackrest:latest \
-  --stanza=sunnahlife --delta restore
-docker compose --env-file .env -f infra/docker-compose.yml start postgres api worker
-```
-
-### 6.2 MinIO bucket → off-site copy
-
-The local MinIO holds media + generated PDFs. Mirror it to the same off-site
-S3 with `mc`:
-
-```bash
-docker run --rm --network sunnah \
-  -e MC_HOST_src="http://$MINIO_ROOT_USER:$MINIO_ROOT_PASSWORD@minio:9000" \
-  -e MC_HOST_dst="https://<offsite-key>:<offsite-secret>@s3.<region>.amazonaws.com" \
-  quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z \
-  mc mirror --overwrite --remove src/sunnahlife dst/sunnahlife-minio
-```
-
-### 6.3 Schedule it
-
-Crontab on the VPS (`crontab -e` — assumes the repo at `/opt/sunnahlife`):
-
-```cron
-# m h  dom mon dow   command
-15 3 * * *  cd /opt/sunnahlife && PGBR="-v sunnahlife_pgdata:/var/lib/postgresql/data:ro -v sunnahlife_pgsocket:/var/run/postgresql -v $PWD/infra/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro" && docker run --rm $PGBR pgbackrest/pgbackrest:latest --stanza=sunnahlife --type=full backup
-0  5 * * 1  cd /opt/sunnahlife && PGBR="-v sunnahlife_pgdata:/var/lib/postgresql/data:ro -v sunnahlife_pgsocket:/var/run/postgresql -v $PWD/infra/postgres/pgbackrest.conf:/etc/pgbackrest/pgbackrest.conf:ro" && docker run --rm $PGBR pgbackrest/pgbackrest:latest --stanza=sunnahlife --type=diff backup
-30 4 * * *  cd /opt/sunnahlife && docker run --rm --network sunnah -e MC_HOST_src="http://$MINIO_ROOT_USER:$MINIO_ROOT_PASSWORD@minio:9000" -e MC_HOST_dst="https://<offsite-key>:<offsite-secret>@s3.<region>.amazonaws.com" quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z mc mirror --overwrite --remove src/sunnahlife dst/sunnahlife-minio
-```
-
-Test restores quarterly; a backup that has never been restored is a hope, not
-a backup.
+Requires the staging stack to run with `NODE_ENV=staging` (or anything ≠
+`production`) — the api's env.validation accepts `staging` as a value. The
+demo seed wipes **user-domain tables only** (users, usrahs, amal entries) and
+never touches reference data. Verify afterwards by OTP-logging in as
+`01000000001` (mock SMS returns `devCode` — docs/DEMO_ACCOUNTS.md §3).
 
 ---
 
-## 7. Scaling notes
+## 7. The git flow — main → staging → Coolify redeploy
 
-- **The wall is the database, not the containers.** At 2 vCPU/4 GB keep one
-  `api` replica; PostgreSQL's `max_connections=100` is plenty (Prisma pools
-  ~10 per process).
-- `docker compose … up -d --scale api=2` works (stateless behind the proxy);
-  only the FIRST replica should run the seed race — the entrypoint tolerates
-  seed races (logs a warning, continues).
-- The `worker` scales horizontally too (`--scale worker=2`) — BullMQ queues
-  distribute jobs; keep at 1 on a 2 vCPU box.
-- Meilisearch: give it RAM (`meili` volume grows with the corpus); rebuild
-  indexes from the API after major content changes.
-- Redis now persists with **AOF (`appendfsync everysec`)** [C/W2h] —
-  queued BullMQ jobs and repeatable schedules survive restarts (previously
-  "no persistence by design"); the diary sync protocol is still idempotent
-  and client-side retries still cover any tail skew.
-- For >10 k users move Postgres to a dedicated box (same pgBackRest config,
-  `pg1-host` set accordingly) and put Cloudflare in front of a horizontally
-  scaled api.
+What is actually happening today (and this doc's contract with it):
+
+1. **All work lands on `main`** — commits, CI (`ci.yml` runs on pushes to
+   main: api jest, flutter analyze/test/debug APK, release-APK jobs, docker
+   smoke), review.
+2. **`infra/coolify.compose.yml` is mirrored on the `staging` branch** — the
+   file carries the reminder verbatim:
+   ```yaml
+   # [C-W5-ops] This file is mirrored on the `staging` branch — that is what
+   # Coolify actually deploys. Keep the two copies in sync: the api healthcheck
+   # targets /health/live here AND on staging (same change on both branches).
+   ```
+3. **To deploy, the owner merges `main` into `staging`** (nothing deploys
+   straight from main):
+   ```bash
+   git checkout staging && git merge main && git push origin staging
+   ```
+4. **Then hits Redeploy on the Coolify resource.** Coolify pulls the staging
+   branch, rebuilds changed images and recreates the services — migrations
+   run in the api entrypoint before serving (`prisma migrate deploy`,
+   non-interactive, ordered, idempotent), the worker waits for the api's
+   healthcheck.
+5. Verify the redeploy: `curl https://<api-domain>/health/live` → 200, then
+   `/health/ready` → all checks true; open the web domain; check the Coolify
+   service list is all `(healthy)`.
+
+This is exactly how the live fixes went out (worklog C-OPS/W5-ops): the api
+code + `/health/live` healthchecks were mirrored to staging (HEAD `2c2d28f`
+at the time) and one redeploy delivered both the Traefik-outage fix and the
+Meilisearch v1.x create-index route.
+
+### Update / rollback
+
+- **Update** = the flow above (merge → redeploy). Pick up NEW env variables
+  by diffing `.env.example` against the Coolify resource's env list before
+  redeploying.
+- **Rollback** = redeploy an older staging commit: `git checkout <sha>` on
+   staging (or revert the merge) → push → Redeploy. Database migrations are
+   **forward-only** by policy — if a migration must be reverted, write a new
+   compensating migration; if data was lost, restore from backups (§8).
+- Destructive schema changes: take a full backup FIRST (§8), deploy in a
+  low-traffic window (the amal locking rule is Dhaka-time anchored —
+  mid-morning BD time, after yesterday's diary is locked).
 
 ---
 
-## 8. Update procedure
+## 8. Production differences (staging today → the client's production)
 
-```bash
-ssh user@your-vps && cd sunnahlife
-git pull
-cp .env.example /tmp/env.new && diff .env /tmp/env.new   # pick up NEW variables!
-docker compose --env-file .env -f infra/docker-compose.yml build          # rebuild
-docker compose --env-file .env -f infra/docker-compose.yml up -d          # recreate
-```
+Exactly these five items change between the current staging stack and a
+production deployment:
 
-**Migration policy:** `prisma migrate deploy` (non-interactive, ordered,
-idempotent — only unapplied migrations run) executes automatically in the
-`api` container's entrypoint **before** the new server process starts; the
-worker waits for the api's healthcheck. For schema changes:
+1. **`NODE_ENV=production`.** The compose file defaults it already
+   (`NODE_ENV: ${NODE_ENV:-production}`) — the point is what it switches on:
+   the api's env.validation **refuses to boot** on the dev-default
+   `JWT_SECRET`, a missing/duplicate `JWT_REFRESH_SECRET`, the dev
+   `QUIZ_SECRET`, empty `CORS_ORIGINS`, and `SMS_PROVIDER=mock` (the
+   production-boot rules in `apps/api/src/config/env.validation.ts`); `/docs`
+   + `/metrics` clamp shut without opt-ins. It also (correctly) makes
+   `bun run seed:demo` impossible (§6).
+2. **A real SMS provider — not the mock.** The repo's Bangladesh provider is
+   **SSL Wireless** (v3 HTTP API): `SMS_PROVIDER=sslwireless` plus
+   `SMS_SSLWIRELESS_URL` / `SMS_SSLWIRELESS_USER` / `SMS_SSLWIRELESS_PASS`
+   (the sender id is hard-coded `SUNNAHLIFE` in
+   `apps/api/src/auth/sms/sms-providers.ts`). Production refuses mock AND
+   refuses `sslwireless` with missing credentials — get the three values from
+   the client's SSL Wireless account (docs/HUMAN_STEPS.md §2). `infobip`
+   (`SMS_INFOBIP_URL`/`_KEY`) is the wired alternative.
+3. **The client's domain behind Cloudflare, websockets enabled for
+   `/socket.io`.** The live usrah quiz rides socket.io **on the api's own
+   HTTP server at the `/socket.io` path** (`apps/api/src/main.ts` — one
+   backend, one auth, Redis adapter across replicas). Cloudflare proxies
+   websockets by default; keep them ON (Network → WebSockets) and make sure
+   any page rule/zone setting that disables them excludes the api hostname.
+   DNS: proxied `A` records for the web/admin/api hostnames → VPS IP; SSL
+   mode **Full (strict)** (Coolify's Traefik serves the origin cert). Full
+   DNS walkthrough: docs/HUMAN_STEPS.md §6.
+4. **Off-site backups.** The stack already archives WAL into the `pgdata`
+   volume (`archive_mode=on`, `archive_command` copies segments to
+   `walarchive/` inside the volume — see the postgres `command:` in the
+   compose file), and `infra/postgres/pgbackrest.conf` is a ready pgBackRest
+   template (remote S3 repo, AES-256, retention). The **scheduled backup cron
+   + off-site bucket are owner-side** — nothing in the repo schedules them
+   (honest TODO; see docs/HUMAN_STEPS.md §7 for the exact arrangement: a
+   nightly `pgbackrest` one-shot container over the `pgdata` volume + a copy
+   of the `apistorage` volume). Test a restore once before you need it.
+5. **Repo private + connected through the GitHub App.** Make the GitHub repo
+   private, then in Coolify install/authorize the **Coolify GitHub App**
+   (Coolify → Sources → GitHub) and point the resource at the private repo —
+   the App token is how Coolify clones private repositories over HTTPS
+   without a personal access token. Redeploys continue unchanged (§7).
+   (On GitHub's side: Settings → General → Danger Zone → Change visibility.)
 
-1. additive columns/tables → safe, deploy freely;
-2. destructive changes → take a full pgBackRest backup **first** (§6.1), then
-   deploy during a low-traffic window (the locking rule is Dhaka-time
-   anchored — pick mid-morning BD time when yesterday's diary is already
-   locked);
-3. never edit an applied migration — always add a new one.
-
-Coolify Path B/C: the same flow is "pull latest → redeploy" per resource.
+Staging extras that must NOT ship to production: `NODE_ENV=staging`, the
+demo seed (§6), `NEXT_PUBLIC_DEMO=true` on the admin build, and
+`SMS_PROVIDER=mock` (devCodes in API responses).
 
 ---
 
 ## 9. Observability
 
-- **`GET /health/live`** on the api (port 4000) — **liveness**: the process is
-  up and can serve HTTP, zero dependency calls. This is what the Dockerfile
-  HEALTHCHECK, the compose healthchecks and Coolify's Traefik gate on
-  [C/W5-ops].
-- **`GET /health/ready`** (and the legacy alias **`GET /health`**) on the api
-  — **readiness**: probes postgres · redis · meili · storage, returns 503 when
-  degraded, per-check 1.5 s budget, one shared Redis client. Point uptime
-  monitors (UptimeRobot etc.) HERE. Why the split: a slow dependency used to
-  flip the serving container unhealthy and Traefik dropped it ("no available
-  server" on the live staging deployment) [C/W5-ops].
-- **`GET /metrics`** on the api — Prometheus text format (prom-client):
-  request latency histograms, error rates, queue depths. Scrape example:
-  `curl -s http://localhost:4000/metrics | head`. Point a Prometheus/Grafana
-  agent (or UptimeRobot on `/health`) at it.
-- **Container health:** `docker compose ps` — every service must read
-  `(healthy)`; `minio-init` exits 0.
-- **Logs:** `docker compose logs -f api worker` (JSON-file driver, 10 MB × 3
-  rotation per container, configured via the compose `x-logging` anchor).
-  Structured logs on the api (`src/common/structured-logger.ts`); no PII in
-  logs.
-- **Web sanity:** `GET /` (200) is the web healthcheck — the page shell must load; data errors would surface in the browser console as `/api/*` failures against the api service.
-- Coolify shows per-service CPU/RAM graphs on Path C.
+- **`/health/live`** (api, port 4000) — liveness; what Traefik + Docker gate
+  on. Monitor NOT here.
+- **`/health/ready`** (alias `/health`) — readiness with per-check detail;
+  503 when degraded. **Point UptimeRobot here.**
+- **`GET /metrics`** — Prometheus exposition (request latency, error rates,
+  queue depths). Needs `METRICS_TOKEN` in production:
+  `curl -s -H "Authorization: Bearer <token>" https://<api-domain>/metrics`.
+- **Container health:** the Coolify resource view must show every service
+  `(healthy)` — same info on the host via `docker ps` (Coolify names the
+  compose project itself).
+- **Logs:** Coolify's per-service log stream (json-file driver, 10 MB × 3
+  rotation per container — the `x-logging` anchor). No PII in api logs
+  (phones are masked even in the mock SMS path).
+- **Web sanity:** `GET /` 200 is the web healthcheck — the shell loads; data
+  errors surface as `/api/*` failures in the browser console.
 
 ---
 
-## 10. Rollback
-
-Images are tagged `sunnahlife/{api,web,admin}:${STACK_TAG:-latest}`. Two ways:
-
-1. **Image tag rollback (preferred, instant):** deploy with a tag you kept:
-   ```bash
-   STACK_TAG=<previous-git-sha> docker compose --env-file .env \
-     -f infra/docker-compose.yml up -d
-   ```
-   (requires the earlier `build` to have run with the same `STACK_TAG` — see
-   `.env` §Housekeeping).
-2. **Git rollback:** `git checkout <previous-tag/sha>` → rebuild (§8).
-
-Database rollbacks are **forward-only** by policy: if a migration must be
-reverted, write a new compensating migration. If data was lost, restore from
-pgBackRest (§6.1 restore drill) into a fresh volume and restart the stack.
-
-Verify after any rollback: `/health/ready` green, `docker compose ps` all healthy,
-demo login works (docs/DEMO_ACCOUNTS.md §5).
-
----
-
-## 11. Troubleshooting quick hits
+## 10. Troubleshooting quick hits
 
 | Symptom | Check |
 |---|---|
-| `postgres` unhealthy | `docker compose logs postgres`; if it loops on init, the `pgdata` volume was initialised with different `POSTGRES_*` values — either set them back or `docker volume rm sunnahlife_pgdata` (destroys data!) and re-up |
-| api unhealthy, log shows RLS/permission errors | role `sunnah_app` missing grants → `docker compose exec postgres psql -U postgres -d sunnahlife -f -` and replay `infra/postgres/init-rls.sql` (it is idempotent) |
-| api log: `JWT_SECRET must be set` | a `:?` variable is missing from `.env` — compose prints which one |
-| web data errors / 500s | the PWA has no local DB — check the `api` service health first (`docker compose ps`, `docker compose logs api`); the web healthcheck is the shell only |
-| admin blank / CORS errors | `PUBLIC_API_BASE` baked wrong (rebuild the admin image) or `CORS_ORIGINS` missing the admin origin |
-| minio-init fails | `MINIO_ROOT_USER`/`MINIO_ROOT_PASSWORD` mismatch — they must satisfy MinIO's ≥8-char rule |
-| builds fail on the api | context must contain `apps/api` with its `bun.lock`; `docker compose build api` shows the failing layer |
-| everything healthy but 502 | Cloudflare origin rules or the `proxy` profile isn't running (`docker compose --profile proxy up -d`) |
+| deploy fails with `set POSTGRES_PASSWORD` (or another `set …` line) | a `:?` variable is missing in the Coolify resource env — the log names it (§4) |
+| build fails on api/web | build context must be the **repo root** (§2) — if the context was pasted from the dev compose or started as a plain-Dockerfile resource, rebuild the resource from `infra/coolify.compose.yml` |
+| api restart-loops with `Invalid environment configuration` | env.validation refused the boot — read the message (production rules, §8.1): dev-default JWT_SECRET, mock SMS in production, empty CORS_ORIGINS, … |
+| web loads but every action errors | `NEXT_PUBLIC_API_BASE` baked wrong (must be the public api origin) — set it correctly and REDEPLOY so the image rebuilds (§4) |
+| admin login blank / CORS errors in console | `CORS_ORIGINS` missing the admin origin, or `NEXT_PUBLIC_API_BASE` wrong |
+| quiz connects then dies at load | Cloudflare websockets disabled for the api hostname (§8.3) |
+| api `(healthy)` but `/health/ready` says degraded | read `checks` in the response — the named dependency is down; the api keeps serving (that is the split working) |
+| demo login 400/404 | demo dataset not seeded (§6) or the stack runs `NODE_ENV=production` |
+| meili indexes empty after first boot | check the meili + api logs; the api boot indexer populates them (needs meili healthy, which `depends_on` guarantees) — indexes broken by an older deploy can be wiped; the `meili` volume is rebuildable from the database |
+| `postgres` unhealthy loop | the `pgdata` volume was initialised with different `POSTGRES_*` values — either restore them or wipe the volume (destroys data!) |
+
+---
+
+*Cross-references: human-only setup steps (Firebase/push, SSL Wireless,
+OAuth ids, signing keys, DNS, backups) → docs/HUMAN_STEPS.md; mobile release
+artifacts + the device-test checklist → docs/RELEASE.md,
+docs/PHONE_TEST_CHECKLIST.md; demo accounts → docs/DEMO_ACCOUNTS.md; local
+dev stack → docs/ENVIRONMENT.md + `infra/docker-compose.yml`.*
