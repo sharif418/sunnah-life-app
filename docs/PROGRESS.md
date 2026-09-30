@@ -201,6 +201,11 @@ rides the owner's next staging redeploy; Wave 5 (clean-up + reporting) is next.
   every screen, Uthmani Arabic connected in the reader, the previously-invisible
   requirements/chip text now dark. The dawah golden (8a9e1bf) shows the full
   'মোট দাওয়াত দিয়েছি' label.
+- At the TOP scroll position the contact FAB still floats over list content —
+  standard Material floating-action behaviour, kept by design (the note rides
+  commit 8a4a657's own message); the W5 guarantee is clearance at the END of
+  the scroll extent (kContactFabClearance 80dp bottom padding on the five
+  root-tab ListViews).
 
 **Remaining:** on-device confirmation of the five mobile fixes =
 PHONE_TEST_CHECKLIST §1 (internal-test-arm64-v8a artifact); the owner-side

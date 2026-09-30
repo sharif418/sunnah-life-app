@@ -1655,3 +1655,21 @@ Work Log:
 
 Stage Summary:
 - W5-c COMPLETE: AUDIT rewritten with the Proven-by column (no status upgrades — 4 Partial + 1 Not-started-with-pointer preserved, all Done (code) qualifiers intact, W4 regression disclosures kept), PROGRESS W5 section added, main pushed (c76db24..790bf59), and the head's CI run 36676230539 VERIFIED all-10-jobs-green by the job-by-job API table BEFORE any "green" claim was written. This worklog section + the run references in AUDIT/PROGRESS land as the final docs commit, whose own CI run must also be green before the report is trusted.
+
+---
+Task ID: W5-c1
+Agent: audit-docs-agent
+Task: AUDIT + PROGRESS W5 rewrite — verification/refresh pass over the landed W5-c rewrite; commit only, NO push (the lead pushes).
+
+Work Log:
+- Read worklog.md COMPLETELY (all 1657 lines, in chunks) + docs/AUDIT.md, docs/PLAN.md, docs/PROGRESS.md fully before touching anything. Starting state verified: HEAD 5be31b5 == origin/main, tree clean — the W5-c rewrite (790bf59) and its worklog entry had already landed and been pushed; this W5-c1 pass therefore VERIFIES + REFRESHES rather than duplicating (the brief's "the final docs commit notes its own sha" is only satisfiable after a first docs commit exists).
+- Cross-checked every W5 proven-by claim against the actual commit stats: 25ed835 (design_tokens.dart + NEW test/theme_contrast_test.dart + 3 goldens), ee7c5fb (NEW test/tofu_guard_test.dart + golden_fonts.dart rework + exactly 11 regenerated golden PNGs), c906d9b (calendars.dart + NEW test/day_part_test.dart + home golden), 8a4a657 (6 .dart files, ZERO PNG changes — the commit MESSAGE's "goldens regenerated" claim is not in its stat; the AUDIT row already records this honestly — preserved), 8a9e1bf (dawah golden 221737→221458 bytes, VLM-verified). No invented CI run IDs used: the brief's example run 36619820709 appears in NO record (worklog or git) and was NOT cited; the only runs cited are the recorded ones (latest: 36676230539 on 790bf59, 10/10 jobs green).
+- Re-ran the local mobile gates at the current head before any doc claim: `flutter analyze` → "No issues found! (ran in 1.5s)"; `flutter test` → "01:02 +337: All tests passed!" (337/337 — matches the W5-c record).
+- Status-preservation proof: status cells counted old↔new — Done 124 / Partial 4 / Not started 1 / Found+worked-around 1 (+7 status-less group-header rows; 137 table data rows total) — identical before and after; the four Partial rows and the "W4d..W4j | Not started at the time of this first-units table" row untouched.
+- docs/AUDIT.md: ONE change — the final Wave-5 row's "this commit" self-reference resolved to the landed sha 790bf59 (with its CI run 36676230539) + this W5-c1 refresh commit. No other row, status, or disclosure touched.
+- docs/PROGRESS.md: added the missing W5 honest observation — at the TOP scroll position the contact FAB still floats over content by design (Material floating behaviour; the guarantee is clearance at the end of the scroll extent, kContactFabClearance 80dp, commit 8a4a657).
+- Committed ONLY docs/AUDIT.md + docs/PROGRESS.md + worklog.md. NO push (the lead handles it); staging branch never touched; no amend/rebase.
+
+Stage Summary:
+- AUDIT row counts (before == after, nothing upgraded): 124 Done / 4 Partial / 1 Not started / 1 "Found + worked around" + 7 group headers = 137 table data rows. W4 regression disclosures (red-APK-since-W4e, the two hallucinated Android APIs) preserved verbatim; device-pending rows resolve to docs/PHONE_TEST_CHECKLIST.md §1–§9.
+- W5 rows all carry concrete proven-by: 25ed835 · ee7c5fb · c906d9b · 8a4a657 (with the golden-stat honesty note) · 8a9e1bf · 2d54df3+a4b76e1 · 26cc105 (jest 27/27 suites, 383/383 both modes on the local CI-replica) · 8df9c8c · 790bf59 + this commit.
