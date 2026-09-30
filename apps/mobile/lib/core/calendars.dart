@@ -220,13 +220,24 @@ int effectiveHijriAdjust(int user, int admin) => (user + admin).clamp(-4, 4);
 
 // ── Bengali clock ────────────────────────────────────────────────────────────
 
-String timePeriodBn(int hour) {
-  if (hour < 4) return 'রাত';
-  if (hour < 6) return 'ভোর';
-  if (hour < 12) return 'সকাল';
-  if (hour < 16) return 'দুপুর';
-  if (hour < 18) return 'বিকাল';
-  if (hour < 19) return 'সন্ধ্যা';
+String timePeriodBn(int hour) => timePeriodBnFromMinutes(hour * 60);
+
+/// Minute-precision Bengali day parts. The boundaries matter at the half
+/// hour: Zuhr at 11:59 is দুপুর, not সকাল (W5 fix — the old hour-only
+/// boundary labelled it morning). সন্ধ্যা starts at 17:00 because Maghrib
+/// — the সন্ধ্যা prayer itself — sets anywhere between 17:12 (Dec) and
+/// 18:47 (Jun) in Bangladesh; the old 18:00 cut labelled a 17:51 Maghrib
+/// "বিকাল". Full map (minutes from midnight):
+///   রাত < 4:00 · ভোর 4:00–6:00 · সকাল 6:00–11:30 · দুপুর 11:30–15:00 ·
+///   বিকাল 15:00–17:00 · সন্ধ্যা 17:00–19:00 · রাত ≥ 19:00.
+String timePeriodBnFromMinutes(int minutesFromMidnight) {
+  final m = ((minutesFromMidnight % 1440) + 1440) % 1440;
+  if (m < 4 * 60) return 'রাত';
+  if (m < 6 * 60) return 'ভোর';
+  if (m < 11 * 60 + 30) return 'সকাল';
+  if (m < 15 * 60) return 'দুপুর';
+  if (m < 17 * 60) return 'বিকাল';
+  if (m < 19 * 60) return 'সন্ধ্যা';
   return 'রাত';
 }
 
@@ -237,7 +248,7 @@ String formatTimeBn(double minutes, {bool bengali = true}) {
   final mm = (m % 60).round().toString().padLeft(2, '0');
   final h12 = h24 % 12 == 0 ? 12 : h24 % 12;
   if (bengali) {
-    return '${timePeriodBn(h24)} ${toBn(h12)}:${toBn(mm)}';
+    return '${timePeriodBnFromMinutes(m.round())} ${toBn(h12)}:${toBn(mm)}';
   }
   final ampm = h24 < 12 ? 'AM' : 'PM';
   return '$h12:$mm $ampm';

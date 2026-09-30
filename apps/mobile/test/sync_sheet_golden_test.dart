@@ -22,7 +22,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunnah_life/db/database.dart';
@@ -34,6 +33,8 @@ import 'package:sunnah_life/l10n/app_strings.dart';
 import 'package:sunnah_life/l10n/generated/app_localizations.dart';
 import 'package:sunnah_life/state/amal_state.dart';
 import 'package:sunnah_life/state/providers.dart';
+
+import 'golden_fonts.dart' show warmAppFonts;
 
 /// The pinned instant: 2025-06-15 12:00 (local-wall irrelevant — only the
 /// FIXED difference between `now` and `lastSyncedAt` is ever rendered).
@@ -60,23 +61,10 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    // Warm the theme's family through google_fonts' own loader (asset-backed
-    // since runtime fetching is off) — first capture would show tofu.
-    await tester.runAsync(() async {
-      GoogleFonts.hindSiliguri(fontSize: 10);
-      // Icon families too — see test/golden_fonts.dart.
-      for (final entry in [
-        ('PhosphorRegular', 'assets/fonts/phosphor-regular.ttf'),
-        ('PhosphorFill', 'assets/fonts/phosphor-fill.ttf'),
-        ('PhosphorBold', 'assets/fonts/phosphor-bold.ttf'),
-      ]) {
-        final loader = FontLoader(entry.$1)
-          ..addFont(rootBundle.load(entry.$2));
-        await loader.load();
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 400));
-    });
-    await tester.pump();
+    // W5: real glyphs through the shared helper — text families AND icons,
+    // deterministic (the old google_fonts lazy warm could still capture
+    // tofu on a slow first frame).
+    await warmAppFonts(tester);
 
     final db = AppDatabase.forTesting(NativeDatabase.memory());
     addTearDown(db.close);

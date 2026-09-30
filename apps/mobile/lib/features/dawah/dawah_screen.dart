@@ -11,6 +11,7 @@ import 'package:go_router/go_router.dart';
 import '../../api/api_client.dart' show ApiException;
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
+import '../shared/contact_fab.dart' show kContactFabClearance;
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
 import '../../state/goals_state.dart';
@@ -181,7 +182,14 @@ class _DawahOverviewTab extends ConsumerWidget {
         );
 
         return ListView(
-          padding: const EdgeInsets.all(SLSpacing.s16),
+          // W5: scroll clear of the floating contact button (see
+          // kContactFabClearance) — it used to cover the last rows.
+          padding: const EdgeInsets.fromLTRB(
+            SLSpacing.s16,
+            SLSpacing.s16,
+            SLSpacing.s16,
+            kContactFabClearance,
+          ),
           children: [
             // W4-fix4: cache-served snapshot — subtle banner + the stamp.
             if (remote.stale) OfflineBanner(fetchedAt: remote.fetchedAt),
@@ -472,7 +480,9 @@ class _StatCell extends StatelessWidget {
             children: [
               Text(
                 label,
-                maxLines: 1,
+                // W5: "মোট দাওয়াত দিয়েছি" truncated with an ellipsis at
+                // 412dp — the label wraps to a second line instead.
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall,
               ),

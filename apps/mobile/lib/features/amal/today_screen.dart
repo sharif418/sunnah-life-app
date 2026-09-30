@@ -14,6 +14,7 @@ import '../../core/bn_digits.dart';
 import '../../core/calendars.dart';
 import '../../core/date_keys.dart';
 import '../../design/design_tokens.dart';
+import '../shared/contact_fab.dart' show kContactFabClearance;
 import '../../db/database.dart' show CustomChecklistItem;
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
@@ -118,11 +119,13 @@ class _TodayView extends ConsumerWidget {
     final tilawatDays = tilawatMinutesDaysDone(entries);
 
     return ListView(
+      // W5: scroll clear of the floating contact button (80dp) — it used
+      // to cover the last rows.
       padding: const EdgeInsets.fromLTRB(
         SLSpacing.s16,
         SLSpacing.s8,
         SLSpacing.s16,
-        SLSpacing.s24,
+        kContactFabClearance,
       ),
       children: [
         // Header: date + streak + sync

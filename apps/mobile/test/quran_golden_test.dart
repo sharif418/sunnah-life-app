@@ -24,7 +24,6 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunnah_life/api/api_client.dart';
@@ -35,6 +34,8 @@ import 'package:sunnah_life/features/ilm/quran_reader_screen.dart';
 import 'package:sunnah_life/models/quran_models.dart';
 import 'package:sunnah_life/state/providers.dart';
 import 'package:sunnah_life/state/remote_state.dart';
+
+import 'golden_fonts.dart' show warmAppFonts;
 
 /// Offline-shaped config with NO audioBase — the reader's play buttons are
 /// hidden on every machine that runs this, CI or laptop. Nisab prices use
@@ -78,26 +79,13 @@ void main() {
     addTearDown(QuranRepository.resetForTesting);
     await tester.runAsync(() async {
       await QuranRepository.surahList();
-      // google_fonts registers families lazily — calling the style builders
-      // starts loadFontIfNecessary (asset-backed, since setUp disabled
-      // runtime fetching). Give the REAL event loop a beat to finish
-      // registering, or the FIRST reader capture shows tofu boxes.
-      GoogleFonts.amiriQuran(fontSize: 10);
-      GoogleFonts.amiri(fontSize: 10);
-      // Icon families too — see test/golden_fonts.dart (goldens render the
-      // real Phosphor glyphs, never tofu boxes).
-      for (final entry in [
-        ('PhosphorRegular', 'assets/fonts/phosphor-regular.ttf'),
-        ('PhosphorFill', 'assets/fonts/phosphor-fill.ttf'),
-        ('PhosphorBold', 'assets/fonts/phosphor-bold.ttf'),
-      ]) {
-        final loader = FontLoader(entry.$1)
-          ..addFont(rootBundle.load(entry.$2));
-        await loader.load();
-      }
-      await Future<void>.delayed(const Duration(milliseconds: 400));
     });
-    await tester.pump();
+    // W5: the real text families (Hind Siliguri ×3 weights, Amiri,
+    // AmiriQuran) + the Phosphor icons, registered through the shared
+    // FontLoader helper — deterministic, no google_fonts lazy-load race
+    // and no 400ms settle guess (the old approach could still capture
+    // tofu on a slow first frame).
+    await warmAppFonts(tester);
   }
 
   for (final scenario in [

@@ -227,7 +227,9 @@ void main() {
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    await warmPhosphorFonts(tester);
+    // W5: the referral golden needs the real text families too — the old
+    // Phosphor-only warm left every Bengali glyph on this PNG tofu.
+    await warmAppFonts(tester);
 
     await tester.pumpWidget(
       MaterialApp(

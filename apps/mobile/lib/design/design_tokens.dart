@@ -2,11 +2,11 @@
 // Single source of truth for Sunnah Life's visual language on Flutter.
 import 'package:flutter/material.dart';
 
-/// The app's Bengali-first family. The TTFs under assets/google_fonts/ are
-/// ALSO declared in pubspec.yaml, so the engine registers the family BEFORE
-/// the first frame: every widget — Material components included — resolves
-/// it synchronously. No google_fonts runtime loading, no platform-font
-/// fallback, no tofu; golden tests render the real glyphs with zero warm-up.
+/// The app's Bengali-first family. On a DEVICE the pubspec declaration makes
+/// the engine register the family before the first frame. NOTE (W5):
+/// `flutter test` does NOT load pubspec-declared families — golden tests
+/// warm them explicitly through test/golden_fonts.dart (warmAppFonts),
+/// and test/tofu_guard_test.dart fails if the glyphs ever go missing.
 const String kAppFontFamily = 'HindSiliguri';
 
 /// Uthmani Qur'an family (pubspec-declared, bundled TTF).
@@ -138,39 +138,50 @@ class SLMotion {
 
 class SLElevation {
   static List<BoxShadow> card(bool dark) => [
-        BoxShadow(
-          color: Color(0x0D1F4D3D),
-          blurRadius: 16,
-          offset: const Offset(0, 4),
-        ),
-        BoxShadow(
-          color: Color(0x081F4D3D),
-          blurRadius: 2,
-          offset: const Offset(0, 1),
-        ),
-      ];
+    BoxShadow(
+      color: Color(0x0D1F4D3D),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
+    ),
+    BoxShadow(
+      color: Color(0x081F4D3D),
+      blurRadius: 2,
+      offset: const Offset(0, 1),
+    ),
+  ];
   static List<BoxShadow> lifted(bool dark) => [
-        BoxShadow(
-          color: Color(0x1F1F4D3D),
-          blurRadius: 32,
-          offset: const Offset(0, 12),
-        ),
-        BoxShadow(
-          color: Color(0x141F4D3D),
-          blurRadius: 4,
-          offset: const Offset(0, 2),
-        ),
-      ];
+    BoxShadow(
+      color: Color(0x1F1F4D3D),
+      blurRadius: 32,
+      offset: const Offset(0, 12),
+    ),
+    BoxShadow(
+      color: Color(0x141F4D3D),
+      blurRadius: 4,
+      offset: const Offset(0, 2),
+    ),
+  ];
 }
 
-/// A family-bearing style with NO color — components merge these over their
-/// state-resolved defaults (focus/error/selection colors stay correct).
-TextStyle _appFontStyle(double size, [FontWeight? weight]) => TextStyle(
-  fontFamily: kAppFontFamily,
-  fontSize: size,
-  fontWeight: weight,
-  height: 1.45,
-);
+/// A family-bearing component style. IMPORTANT (W5, verified against the
+/// SDK): ThemeData merges the textTheme roles over typography.black/white,
+/// so a color-less textTheme role still resolves a color — but COMPONENT
+/// themes (ListTileThemeData.titleTextStyle, ChipThemeData.labelStyle,
+/// DialogThemeData.titleTextStyle…) REPLACE their M3 defaults wholesale:
+/// a color-less style there leaves the label with NO color and the engine
+/// paints it near-white on the cream surface. That was the W5 bug —
+/// invisible ListTile titles and near-invisible chip labels, hidden until
+/// the goldens started rendering real glyphs. Every component style now
+/// passes an explicit token color. (The inputDecorationTheme styles below
+/// are the verified exception — see the comment there.)
+TextStyle _appFontStyle(double size, [FontWeight? weight, Color? color]) =>
+    TextStyle(
+      fontFamily: kAppFontFamily,
+      fontSize: size,
+      fontWeight: weight,
+      height: 1.45,
+      color: color,
+    );
 
 class SLType {
   static const double caption = 12;
@@ -356,151 +367,224 @@ ThemeData buildSunnahDarkTheme() {
 }
 
 extension _ThemeTweaks on ThemeData {
-  ThemeData applyThemeTweaks(Brightness brightness) => copyWith(
-    appBarTheme: AppBarTheme(
-      backgroundColor: brightness == Brightness.light
-          ? SLColors.lightBackground
-          : SLColors.darkBackground,
-      foregroundColor: brightness == Brightness.light
-          ? SLColors.lightForeground
-          : SLColors.darkForeground,
-      elevation: 0,
-      centerTitle: false,
-    ),
-    cardTheme: CardThemeData(
-      color: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: SLRadius.brLg,
-        side: BorderSide(
-          color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
-          width: 1,
-        ),
-      ),
-    ),
-    // ── Font consistency: every component theme carries the bundled Hind
-    // Siliguri family (belt-and-braces on top of the full textTheme — a
-    // component that reads its label style from HERE can never fall back
-    // to the platform font either). The _appFontStyle helpers are
-    // color-less so state-resolved colors (focus/error/selected) merge
-    // through untouched.
-    tabBarTheme: TabBarThemeData(
-      labelStyle: _appFontStyle(14, FontWeight.w600),
-      unselectedLabelStyle: _appFontStyle(14, FontWeight.w500),
-    ),
-    chipTheme: ChipThemeData(
-      labelStyle: _appFontStyle(14, FontWeight.w500),
-      shape: RoundedRectangleBorder(borderRadius: SLRadius.brPill),
-      side: BorderSide(
-        color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
-      ),
-    ),
-    // ActionChip reads chipTheme (no separate actionChipTheme on this
-    // Flutter pin) — the labelStyle above covers it.
-    filledButtonTheme: FilledButtonThemeData(
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(64, SLSpacing.minTapTarget),
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
-        textStyle: _appFontStyle(14, FontWeight.w600),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        minimumSize: const Size(64, SLSpacing.minTapTarget),
-        shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
-        textStyle: _appFontStyle(14, FontWeight.w600),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        textStyle: _appFontStyle(14, FontWeight.w600),
-      ),
-    ),
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        textStyle: _appFontStyle(14, FontWeight.w600),
-      ),
-    ),
-    segmentedButtonTheme: SegmentedButtonThemeData(
-      style: ButtonStyle(
-        textStyle: WidgetStatePropertyAll(_appFontStyle(14)),
-      ),
-    ),
-    snackBarTheme: SnackBarThemeData(
-      behavior: SnackBarBehavior.floating,
-      shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
-      // M3 snackbar = inverseSurface bg + inverseOnSurface fg.
-      contentTextStyle: _appFontStyle(16).copyWith(
-        color: brightness == Brightness.light
-            ? SLColors.darkForeground
-            : SLColors.lightForeground,
-      ),
-    ),
-    dialogTheme: DialogThemeData(
-      titleTextStyle: _appFontStyle(22, FontWeight.w600),
-      contentTextStyle: _appFontStyle(16),
-    ),
-    listTileTheme: ListTileThemeData(
-      titleTextStyle: _appFontStyle(16),
-      subtitleTextStyle: _appFontStyle(14),
-    ),
-    popupMenuTheme: PopupMenuThemeData(
-      textStyle: _appFontStyle(14, FontWeight.w500),
-    ),
-    dropdownMenuTheme: DropdownMenuThemeData(
-      textStyle: _appFontStyle(16),
-    ),
-    tooltipTheme: TooltipThemeData(
-      textStyle: _appFontStyle(12).copyWith(
-        color: brightness == Brightness.light
-            ? Colors.white
+  ThemeData applyThemeTweaks(Brightness brightness) {
+    // Role colors for the component themes below — onSurface / its variant /
+    // onPrimary / primary from the tokens, per brightness. Selected vs
+    // unselected (tab bar, nav bar, chip disabled state) resolve through
+    // WidgetState* so the state distinction survives.
+    final onSurface = brightness == Brightness.light
+        ? SLColors.lightForeground
+        : SLColors.darkForeground;
+    final onSurfaceVariant = brightness == Brightness.light
+        ? SLColors.lightMutedForeground
+        : SLColors.darkMutedForeground;
+    final onPrimary = brightness == Brightness.light
+        ? SLColors.lightPrimaryForeground
+        : SLColors.darkPrimaryForeground;
+    final primary = brightness == Brightness.light
+        ? SLColors.lightPrimary
+        : SLColors.darkPrimary;
+    // M3 snackbars sit on the scheme's inverseSurface, which this
+    // ColorScheme doesn't control — pin an explicit inverse pair so the
+    // content color is always readable (14.2:1 light / 16.1:1 dark).
+    final snackBg = brightness == Brightness.light
+        ? SLColors.darkCard
+        : SLColors.lightCard;
+    final snackFg = brightness == Brightness.light
+        ? SLColors.darkForeground
+        : SLColors.lightForeground;
+    return copyWith(
+      appBarTheme: AppBarTheme(
+        backgroundColor: brightness == Brightness.light
+            ? SLColors.lightBackground
             : SLColors.darkBackground,
+        foregroundColor: brightness == Brightness.light
+            ? SLColors.lightForeground
+            : SLColors.darkForeground,
+        elevation: 0,
+        centerTitle: false,
       ),
-    ),
-    floatingActionButtonTheme: FloatingActionButtonThemeData(
-      extendedTextStyle: _appFontStyle(14, FontWeight.w600),
-    ),
-    inputDecorationTheme: InputDecorationTheme(
-      filled: true,
-      fillColor: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
-      border: OutlineInputBorder(
-        borderRadius: SLRadius.brMd,
-        borderSide: BorderSide(
-          color: brightness == Brightness.light ? SLColors.lightBorder : SLColors.darkBorder,
+      cardTheme: CardThemeData(
+        color: brightness == Brightness.light
+            ? SLColors.lightCard
+            : SLColors.darkCard,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: SLRadius.brLg,
+          side: BorderSide(
+            color: brightness == Brightness.light
+                ? SLColors.lightBorder
+                : SLColors.darkBorder,
+            width: 1,
+          ),
         ),
       ),
-      contentPadding: const EdgeInsets.symmetric(
-          horizontal: SLSpacing.s4, vertical: SLSpacing.s12),
-      // Family on every decoration text slot (label/floating/hint/helper/
-      // error/prefix/suffix/counter) — color-less so the state colors
-      // (focused primary, error red…) keep resolving from the defaults.
-      labelStyle: _appFontStyle(16),
-      floatingLabelStyle: _appFontStyle(16, FontWeight.w600),
-      hintStyle: _appFontStyle(16),
-      helperStyle: _appFontStyle(12),
-      errorStyle: _appFontStyle(12),
-      prefixStyle: _appFontStyle(16),
-      suffixStyle: _appFontStyle(14),
-      counterStyle: _appFontStyle(12),
-    ),
-    navigationBarTheme: NavigationBarThemeData(
-      backgroundColor: brightness == Brightness.light ? SLColors.lightCard : SLColors.darkCard,
-      indicatorColor: brightness == Brightness.light
-          ? SLColors.lightPrimarySoft
-          : SLColors.darkPrimarySoft,
-      height: 68,
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
-      labelTextStyle: WidgetStatePropertyAll(
-        _appFontStyle(12, FontWeight.w600),
+      // ── Font consistency + explicit colors (W5): every component theme
+      // carries the bundled Hind Siliguri family AND a token color — see
+      // _appFontStyle for why color-less styles were invisible text.
+      tabBarTheme: TabBarThemeData(
+        labelColor: onSurface,
+        unselectedLabelColor: onSurfaceVariant,
+        labelStyle: _appFontStyle(14, FontWeight.w600, onSurface),
+        unselectedLabelStyle: _appFontStyle(
+          14,
+          FontWeight.w500,
+          onSurfaceVariant,
+        ),
       ),
-    ),
-    // bottomSheetTheme carries no text styles by design — sheet content
-    // inherits the family through the textTheme roles above.
-    bottomSheetTheme: const BottomSheetThemeData(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(SLRadius.lg)),
+      chipTheme: ChipThemeData(
+        // WidgetStateColor so the disabled state keeps its own color (the
+        // M3 chip default: enabled = onSurfaceVariant, disabled = onSurface).
+        labelStyle: _appFontStyle(
+          14,
+          FontWeight.w500,
+          WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.disabled)
+                ? onSurface
+                : onSurfaceVariant,
+          ),
+        ),
+        shape: RoundedRectangleBorder(borderRadius: SLRadius.brPill),
+        side: BorderSide(
+          color: brightness == Brightness.light
+              ? SLColors.lightBorder
+              : SLColors.darkBorder,
+        ),
       ),
-      showDragHandle: true,
-    ),
-  );
+      // ActionChip reads chipTheme (no separate actionChipTheme on this
+      // Flutter pin) — the labelStyle above covers it.
+      filledButtonTheme: FilledButtonThemeData(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(64, SLSpacing.minTapTarget),
+          shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
+          textStyle: _appFontStyle(14, FontWeight.w600, onPrimary),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(64, SLSpacing.minTapTarget),
+          shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
+          textStyle: _appFontStyle(14, FontWeight.w600, primary),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          textStyle: _appFontStyle(14, FontWeight.w600, primary),
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          textStyle: _appFontStyle(14, FontWeight.w600, primary),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          textStyle: WidgetStatePropertyAll(_appFontStyle(14, null, onSurface)),
+        ),
+      ),
+      snackBarTheme: SnackBarThemeData(
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: SLRadius.brMd),
+        backgroundColor: snackBg,
+        contentTextStyle: _appFontStyle(16, null, snackFg),
+      ),
+      dialogTheme: DialogThemeData(
+        titleTextStyle: _appFontStyle(22, FontWeight.w600, onSurface),
+        contentTextStyle: _appFontStyle(16, null, onSurfaceVariant),
+      ),
+      listTileTheme: ListTileThemeData(
+        titleTextStyle: _appFontStyle(16, null, onSurface),
+        subtitleTextStyle: _appFontStyle(14, null, onSurfaceVariant),
+      ),
+      popupMenuTheme: PopupMenuThemeData(
+        textStyle: _appFontStyle(14, FontWeight.w500, onSurface),
+      ),
+      dropdownMenuTheme: DropdownMenuThemeData(
+        textStyle: _appFontStyle(16, null, onSurface),
+      ),
+      tooltipTheme: TooltipThemeData(
+        textStyle: _appFontStyle(12).copyWith(
+          color: brightness == Brightness.light
+              ? Colors.white
+              : SLColors.darkBackground,
+        ),
+      ),
+      floatingActionButtonTheme: FloatingActionButtonThemeData(
+        // The M3 FAB container is primaryContainer; readable on it:
+        // primaryDeep on lightPrimarySoft (10.8:1), darkForeground on
+        // darkPrimarySoft (12.7:1).
+        extendedTextStyle: _appFontStyle(
+          14,
+          FontWeight.w600,
+          brightness == Brightness.light
+              ? SLColors.primaryDeep
+              : SLColors.darkForeground,
+        ),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: brightness == Brightness.light
+            ? SLColors.lightCard
+            : SLColors.darkCard,
+        border: OutlineInputBorder(
+          borderRadius: SLRadius.brMd,
+          borderSide: BorderSide(
+            color: brightness == Brightness.light
+                ? SLColors.lightBorder
+                : SLColors.darkBorder,
+          ),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: SLSpacing.s4,
+          vertical: SLSpacing.s12,
+        ),
+        // Family on every decoration text slot (label/floating/hint/helper/
+        // error/prefix/suffix/counter). VERIFIED EXCEPTION to the explicit
+        // colors above: the InputDecorator merges these UNDER its M3 default
+        // styles, which are WidgetStateTextStyles — the focused (primary)
+        // and error (destructive) label colors resolve through that state
+        // machine. An explicit color here would freeze the label color
+        // across states (input_decorator.dart _getInlineLabelStyle: default
+        // merges over state, then this style merges last but is color-less,
+        // so the state color survives).
+        labelStyle: _appFontStyle(16),
+        floatingLabelStyle: _appFontStyle(16, FontWeight.w600),
+        hintStyle: _appFontStyle(16),
+        helperStyle: _appFontStyle(12),
+        errorStyle: _appFontStyle(12),
+        prefixStyle: _appFontStyle(16),
+        suffixStyle: _appFontStyle(14),
+        counterStyle: _appFontStyle(12),
+      ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: brightness == Brightness.light
+            ? SLColors.lightCard
+            : SLColors.darkCard,
+        indicatorColor: brightness == Brightness.light
+            ? SLColors.lightPrimarySoft
+            : SLColors.darkPrimarySoft,
+        height: 68,
+        labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => _appFontStyle(
+            12,
+            FontWeight.w600,
+            states.contains(WidgetState.selected)
+                ? onSurface
+                : onSurfaceVariant,
+          ),
+        ),
+      ),
+      // bottomSheetTheme carries no text styles by design — sheet content
+      // inherits the family through the textTheme roles above.
+      bottomSheetTheme: const BottomSheetThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(SLRadius.lg),
+          ),
+        ),
+        showDragHandle: true,
+      ),
+    );
+  }
 }

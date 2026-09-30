@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/design_tokens.dart';
+import '../shared/contact_fab.dart' show kContactFabClearance;
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
@@ -98,11 +99,13 @@ class _IlmScreenState extends State<IlmScreen> {
       body: SafeArea(
         bottom: false,
         child: ListView(
+          // W5: the list must scroll CLEAR of the floating contact button
+          // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
           padding: const EdgeInsets.fromLTRB(
             SLSpacing.s16,
             SLSpacing.s8,
             SLSpacing.s16,
-            SLSpacing.s24,
+            kContactFabClearance,
           ),
           children: [
             // C-W4a: the shared global header (logo, location, triple
