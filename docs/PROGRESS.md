@@ -146,3 +146,61 @@ Bengali, grouped, public) + the mobile Ilm search screen + the WEB Ilm search
 head: api jest 383/383 · mobile 330/330 · web lint 0/tsc/build ✓ · browser E2E (the
 503→fallback path, deep links, 390px). Remaining honest gaps: live-meili verification
 rides the owner's next staging redeploy; Wave 5 (clean-up + reporting) is next.
+
+## Wave 5 — clean-up + reporting (W5) ✅
+
+**Built (the ten W5 commits, main only, plain pushes):**
+- **Mobile ×5** — component theme text colors (25ed835: every component theme in
+  applyThemeTweaks carries an explicit token color, both brightnesses — component
+  themes REPLACE their M3 defaults, so color-less styles had left ListTile/chip
+  labels near-white on cream); real-font goldens (ee7c5fb: flutter test does NOT
+  load pubspec-declared families, so all eleven goldens were tofu — golden_fonts
+  now warms Hind Siliguri ×3 weights + Amiri + Amiri Quran + 3 Phosphor families
+  through FontLoader); minute-precision day parts (c906d9b: যোহর 11:59 was
+  'সকাল ১১:৫৯'; দুপুর 11:30–15:00, সন্ধ্যা from 17:00 — a 17:51 Maghrib was
+  'বিকাল'); contact-FAB clearance (8a4a657: kContactFabClearance 80dp bottom
+  padding on the five root-tab ListViews — the 52dp floating button covered the
+  last rows' chevrons); dawah stat-cell wrap (8a9e1bf: 'মোট দাওয়াত দি…' → the
+  label wraps two lines).
+- **Web** — 38 unused dependencies + the 28 dead shadcn components holding them +
+  dead tailwind.config.ts removed (2d54df3); root lockfile landed separately
+  (a4b76e1).
+- **API** — token-security de-flake (26cc105): the racing-refresh test drives the
+  family revoke sequentially; the W4j-CI-FIX-pt3 flake (run 36617854673,
+  docs-only push) is addressed at the root.
+- **Docs ×2** — DEPLOY_COOLIFY rewritten to the real coolify.compose.yml flow +
+  HUMAN_STEPS.md (7 owner-side setups) + PHONE_TEST_CHECKLIST.md (created NEW —
+  the old AUDIT reference to it was dangling) (8df9c8c); AUDIT rewritten with
+  the **Proven by** column + this PROGRESS section (this commit).
+
+**Verified (raw, this session at the W5 head):**
+- `flutter analyze` → "No issues found! (ran in 1.5s)"
+- `flutter test` → "01:06 +337: All tests passed!" (337/337 = 330 at W4j +
+  theme_contrast ×2 [ListTile title/subtitle + chip label ≥4.5:1 both
+  brightnesses, proven red on the pre-fix theme] + tofu_guard ×2 [the
+  advance-width detector: an unregistered family falls back to Ahem where every
+  glyph advances exactly fontSize; negative control included] + day_part ×3
+  [every Bengali day-part boundary at minute edges])
+- API (worklog W5-a, local CI-replica PG 16.10 :5433 + Redis 7.0.15 :6380,
+  meili deliberately absent): `bun run test` → 27/27 suites, 383/383 tests in
+  BOTH modes (parallel 19.2 s / CI-exact `--runInBand` 16.5 s); lint 0 errors /
+  3 pre-existing warnings; tsc clean.
+- Web (2d54df3 gates): eslint clean, tsc clean, `next build` green (/, /join,
+  /join/[code], apple-app-site-association), dev smoke 200.
+- CI proof for the full W5 state: the run for this push's head — recorded in
+  worklog W5-c (the docs-only CI-proof commit that follows this one).
+
+**Honest VLM observations (recorded, not bugs):**
+- The Home header date row and the sync-sheet's "সর্বশেষ হালনাগাদ" message sit
+  at 12px onSurfaceVariant ≈8:1 — WCAG AA-passing but flagged "faint-looking" by
+  the VLM inspection of the regenerated goldens; kept as an observation for the
+  owner's own visual pass.
+- The eleven regenerated goldens were visually inspected: Bengali readable on
+  every screen, Uthmani Arabic connected in the reader, the previously-invisible
+  requirements/chip text now dark. The dawah golden (8a9e1bf) shows the full
+  'মোট দাওয়াত দিয়েছি' label.
+
+**Remaining:** on-device confirmation of the five mobile fixes =
+PHONE_TEST_CHECKLIST §1 (internal-test-arm64-v8a artifact); the owner-side
+HUMAN_STEPS (Firebase, SMS creds, OAuth ids, upload keystore, iOS, domain,
+backups) are unchanged.
