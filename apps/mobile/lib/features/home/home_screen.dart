@@ -1072,23 +1072,42 @@ class _Schedule extends StatelessWidget {
                   ),
                 )
               : null,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                formatTimeBn(mins, bengali: bn),
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w600,
-                  fontFeatures: const [FontFeature.tabularFigures()],
+          // W5: the corrected midday label 'দুপুর' is wider than the old
+          // 'সকাল' — at 360dp @1.3× text scale the time + bell needed ~6px
+          // more than the tile had, and ListTile hard-asserts when the
+          // trailing consumes the ENTIRE tile width (an exact == compare,
+          // so anything that can fill the free space exactly — a Flexible
+          // alone, or a wrapping Padding whose own size adds up to the
+          // tile — trips it). The ConstrainedBox keeps the trailing a
+          // SIZED widget strictly narrower than the smallest supported
+          // tile (360dp viewport → 304px tile; cap 296), and the
+          // Flexible/FittedBox shrinks the time the few percent it needs
+          // at large text scales; default scales render full size.
+          trailing: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 296),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      formatTimeBn(mins, bengali: bn),
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              const SizedBox(width: SLSpacing.s4),
-              _BellButton(
-                on: bellOn,
-                onToggle: () => onBell(key),
-                onLongPress: () => onBellLongPress(key),
-              ),
-            ],
+                const SizedBox(width: SLSpacing.s4),
+                _BellButton(
+                  on: bellOn,
+                  onToggle: () => onBell(key),
+                  onLongPress: () => onBellLongPress(key),
+                ),
+              ],
+            ),
           ),
         ),
       ),
