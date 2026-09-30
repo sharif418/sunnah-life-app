@@ -1,15 +1,12 @@
-// FirebaseOptions — PLACEHOLDER (Task B2).
+// FirebaseOptions — Firebase project `sunnah-life-ad79e`.
 //
-// ⚠️ This file mirrors the exact structure `flutterfire configure`
-//    generates, but every value is a FAKE placeholder that pairs with
-//    android/app/google-services.example.json. With these values the app
-//    builds everywhere (CI has no real google-services.json) and
-//    Firebase.initializeApp succeeds structurally, but FCM getToken fails
-//    gracefully — PushService catches it and runs local-notification-only.
+// ANDROID: real values (from the project's google-services.json). These are
+// client identifiers, not secrets — Firebase ships them inside every APK;
+// access is controlled by the API-key restrictions in Google Cloud and by
+// server-side credentials (the FCM service account lives only on the API).
 //
-// PRODUCTION: run `flutterfire configure` (see docs/RELEASE.md §Firebase)
-// to overwrite this file with the real project's options, then place the
-// real google-services.json / GoogleService-Info.plist (docs/IOS_BUILD.md).
+// iOS: still a PLACEHOLDER until the Mac step (docs/IOS_BUILD.md) registers
+// the iOS app and `flutterfire configure` rewrites that block.
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
@@ -37,11 +34,11 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA-PLACEHOLDER-REPLACE-VIA-flutterfire-configure-000000',
-    appId: '1:000000000000:android:placeholder0000000000000000',
-    messagingSenderId: '000000000000',
-    projectId: 'sunnah-life-placeholder',
-    storageBucket: 'sunnah-life-placeholder.appspot.com',
+    apiKey: 'AIzaSyC4c7veUxyqrPn2unyTmjbTsG_KIeZgqAo',
+    appId: '1:56502386040:android:96fd239a5de12e30565c8d',
+    messagingSenderId: '56502386040',
+    projectId: 'sunnah-life-ad79e',
+    storageBucket: 'sunnah-life-ad79e.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
