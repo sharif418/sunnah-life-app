@@ -1,4 +1,4 @@
-import { Injectable, type ExecutionContext } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ThrottlerGuard } from "@nestjs/throttler";
 
 /**
@@ -12,7 +12,8 @@ import { ThrottlerGuard } from "@nestjs/throttler";
  *     generous because a legit phone user makes many calls, but a flood
  *     still gets 429).
  *
- * Both named throttlers are declared in AppModule (ThrottlerModule.forRoot).
+ * Both named throttlers are declared in AppModule (ThrottlerModule.forRoot);
+ * the otp-phone one is scoped to the OTP route there via skipIf.
  */
 @Injectable()
 export class AuthThrottlerGuard extends ThrottlerGuard {
@@ -30,9 +31,4 @@ export class AuthThrottlerGuard extends ThrottlerGuard {
     return `ip:${http.ip ?? "unknown"}`;
   }
 
-  protected getThrottlerName(context: ExecutionContext): string {
-    const req = context.switchToHttp().getRequest<{ url?: string }>();
-    const isOtpRequest = typeof req.url === "string" && req.url.includes("/auth/otp/request");
-    return isOtpRequest ? "otp-phone" : "ip";
-  }
 }

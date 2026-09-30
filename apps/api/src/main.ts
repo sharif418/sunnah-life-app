@@ -27,6 +27,12 @@ async function bootstrap(): Promise<void> {
   // from here on — the docker json-file driver and Loki both parse them. [C-W2h]
   app.useLogger(app.get(StructuredLogger));
 
+  // Behind Coolify's Traefik (and later Cloudflare) every request arrives from
+  // the proxy's address. Trust the private-network proxy hops so req.ip is the
+  // real client (X-Forwarded-For) and the per-IP throttle is per user, not
+  // shared by everyone. TRUST_PROXY overrides (Express "trust proxy" syntax).
+  app.set("trust proxy", process.env.TRUST_PROXY || "loopback, linklocal, uniquelocal");
+
   // Product routes under /api (web + mobile contract); infra endpoints bare.
   // health/live + health/ready joined health here [C-W5-ops] — the liveness
   // URL must stay stable for orchestrators; readiness is its monitor twin.

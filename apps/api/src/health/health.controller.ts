@@ -1,5 +1,6 @@
 import { Res, Controller, Get, HttpException, HttpStatus, Req, Injectable, OnModuleDestroy } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
+import { SkipThrottle } from "@nestjs/throttler";
 import type Redis from "ioredis";
 import { metricsRegistry } from "../common/metrics";
 import type { Request, Response } from "express";
@@ -145,6 +146,10 @@ export class HealthService implements OnModuleDestroy {
 }
 
 @ApiTags("health")
+// Probes are polled by Docker/Coolify every few seconds from 127.0.0.1 —
+// never rate-limit them (a 429 marks the container unhealthy and Traefik
+// drops it from routing).
+@SkipThrottle({ ip: true, "otp-phone": true })
 @Controller()
 export class HealthController {
   constructor(private readonly service: HealthService) {}
