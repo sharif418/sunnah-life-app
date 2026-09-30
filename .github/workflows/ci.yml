@@ -306,6 +306,22 @@ jobs:
           docker compose -f infra/docker-compose.yml -f infra/ci-smoke.compose.yml exec -T api curl -fsS http://localhost:4000/health | tee /tmp/health.json
           grep -q '"status":"ok"' /tmp/health.json
 
+      # A liveness probe that 429s or flaps only shows up after several probe
+      # cycles (the OTP throttler once rate-limited /health/live: healthy at
+      # boot, unhealthy ~2 min later, Traefik dropped the api on Coolify).
+      - name: Smoke — API stays healthy for 3 minutes (probe throttling / flaps)
+        run: |
+          C="docker compose -f infra/docker-compose.yml -f infra/ci-smoke.compose.yml"
+          API=$($C ps -q api)
+          for i in $(seq 1 18); do
+            sleep 10
+            code=$($C exec -T api curl -s -o /dev/null -w '%{http_code}' http://localhost:4000/health/live)
+            state=$(docker inspect --format '{{.State.Health.Status}}' "$API")
+            echo "t+$((i*10))s /health/live=$code docker=$state"
+            if [ "$code" != "200" ]; then echo "::error::/health/live returned $code after $((i*10))s"; exit 1; fi
+            if [ "$state" = "unhealthy" ]; then echo "::error::api container went unhealthy after $((i*10))s"; exit 1; fi
+          done
+
       - name: Smoke — web / and admin / (HTTP 200 through published ports)
         run: |
           curl -fsS -o /dev/null -w "web:%{http_code}\n" http://localhost:3000/
@@ -448,6 +464,17 @@ jobs:
       # Same pattern as release-bundle, except absence of the secret is a
       # NOTICE (debug-signed device-test build), not a skip: the whole point
       # of this job is that the owner can install a release build TODAY.
+      - name: Decode google-services.json (Firebase Android config)
+        working-directory: apps/mobile/android
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::notice::GOOGLE_SERVICES_JSON_BASE64 not set — building without google-services.json (lib/firebase_options.dart still carries the Android config)."
+            exit 0
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > app/google-services.json
+
       - name: Decode signing key (debug-signed when secrets absent)
         id: keystore
         working-directory: apps/mobile/android
@@ -477,6 +504,7 @@ jobs:
           flutter build apk --release --split-per-abi
           --target-platform android-arm,android-arm64
           --dart-define=SUNNAH_API_BASE=${{ steps.apibase.outputs.base }}
+          --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ vars.GOOGLE_SERVER_CLIENT_ID }}
 
       - name: Sizes → job summary + arm64 < 40 MB gate
         working-directory: apps/mobile/build/app/outputs/flutter-apk
@@ -574,6 +602,17 @@ jobs:
 
       # The signing material is injected from secrets — see docs/RELEASE.md §3.
       # Without the secrets the step fails loudly with instructions.
+      - name: Decode google-services.json (Firebase Android config)
+        working-directory: apps/mobile/android
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "::notice::GOOGLE_SERVICES_JSON_BASE64 not set — building without google-services.json (lib/firebase_options.dart still carries the Android config)."
+            exit 0
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > app/google-services.json
+
       - name: Decode signing key (skips when secrets absent)
         id: keystore
         working-directory: apps/mobile/android
@@ -600,7 +639,7 @@ jobs:
       - name: Build release App Bundle
         if: steps.keystore.outputs.skip != 'true'
         working-directory: apps/mobile
-        run: flutter build appbundle --release --dart-define=SUNNAH_API_BASE=${{ steps.apibase.outputs.base }}
+        run: flutter build appbundle --release --dart-define=SUNNAH_API_BASE=${{ steps.apibase.outputs.base }} --dart-define=GOOGLE_SERVER_CLIENT_ID=${{ vars.GOOGLE_SERVER_CLIENT_ID }}
 
       - name: Upload release bundle
         if: steps.keystore.outputs.skip != 'true'
