@@ -13,6 +13,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../api/api_client.dart';
 import '../../core/external_urls.dart';
 import '../../design/design_tokens.dart';
+import '../shared/contact_fab.dart' show kContactFabClearance;
 import '../../models/domain.dart';
 import '../../services/platform_channels.dart';
 import '../../state/providers.dart';
@@ -47,11 +48,13 @@ class MoreScreen extends ConsumerWidget {
       body: SafeArea(
         bottom: false,
         child: ListView(
+          // W5: the list must scroll CLEAR of the floating contact button
+          // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
           padding: const EdgeInsets.fromLTRB(
             SLSpacing.s16,
             SLSpacing.s8,
             SLSpacing.s16,
-            SLSpacing.s24,
+            kContactFabClearance,
           ),
           children: [
             // C-W4a: the shared global header (logo, location, triple

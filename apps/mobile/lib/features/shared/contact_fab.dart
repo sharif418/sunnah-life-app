@@ -23,6 +23,13 @@ import '../../design/design_tokens.dart';
 import '../../state/remote_state.dart' show configProvider;
 import 'widgets.dart';
 
+/// Bottom clearance for scrollables that sit under the floating contact
+/// button on the five root tabs (W5): the FAB is 52dp tall and floats 16dp
+/// above the nav bar, so list content needs 52 + 16 + 12 (breathing gap)
+/// = 80dp of trailing padding to scroll clear of it — otherwise it covers
+/// the chevrons of the last visible rows.
+const double kContactFabClearance = 52 + SLSpacing.s16 + SLSpacing.s12;
+
 /// The floating action: a 52 dp primary circle, elevated, safe-area aware
 /// (its parent Stack lives in the scaffold body, ABOVE the bottom bar).
 class ContactFab extends ConsumerWidget {

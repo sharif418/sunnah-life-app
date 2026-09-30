@@ -19,6 +19,7 @@ import '../../core/date_keys.dart';
 import '../../core/most_used.dart';
 import '../../core/prayer_engine.dart';
 import '../../design/design_tokens.dart';
+import '../shared/contact_fab.dart' show kContactFabClearance;
 import '../../design/phosphor_icons.dart';
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
@@ -238,11 +239,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         bottom: false,
         child: ListView(
+          // W5: the list must scroll CLEAR of the floating contact button
+          // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
           padding: const EdgeInsets.fromLTRB(
             SLSpacing.s16,
             SLSpacing.s8,
             SLSpacing.s16,
-            SLSpacing.s24,
+            kContactFabClearance,
           ),
           children: [
             // ── Global header (C-W4a): logo, location, triple calendar,
