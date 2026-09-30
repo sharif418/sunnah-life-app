@@ -4,16 +4,22 @@ import android.app.AlarmManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.app.usage.UsageEvents
+import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.os.Process
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
+import androidx.core.content.FileProvider
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
+import java.util.Calendar
 
 /**
  * Sunnah Life platform surface:
@@ -22,7 +28,12 @@ import io.flutter.plugin.common.MethodChannel
  *    (NotificationManager.setInterruptionFilter) and the jama'at auto-silent
  *    window alarms (AutoSilentReceiver).
  *  · "sunnahlife/widget" — home-widget text updates (RemoteViews).
- *  · "sunnahlife/system" — native share sheet (ACTION_SEND), zero plugins.
+ *  · "sunnahlife/system" — native share sheet (ACTION_SEND), zero plugins:
+ *    plain text, or the rendered referral-card PNG (W4e) with an any-image
+ *    MIME type + EXTRA_STREAM through the app's FileProvider (authority
+ *    "${applicationId}.fileprovider", paths declared in res/xml/file_paths).
+ *  · "sunnahlife/usage" — UsageStatsManager screen-time for the detox
+ *    screen (W4d Guard-module seed).
  */
 /** Shared by MainActivity (channel plumbing) and PrayerAlarmReceiver (posting). */
 private const val NOTIFICATION_CHANNEL_ID = "sunnah_life_prayers"
@@ -35,6 +46,7 @@ class MainActivity : FlutterActivity() {
         private const val PRAYER_CHANNEL = "sunnahlife/prayer"
         private const val WIDGET_CHANNEL = "sunnahlife/widget"
         private const val SYSTEM_CHANNEL = "sunnahlife/system"
+        private const val USAGE_CHANNEL = "sunnahlife/usage"
         private const val ALARM_ACTION = "bd.asunnah.sunnah_life.ALARM_PRAYER"
     }
 
@@ -112,7 +124,60 @@ class MainActivity : FlutterActivity() {
                         startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
                         result.success(true)
                     }
+                    // W4e — branded referral card: ACTION_SEND with the
+                    // rendered PNG via a FileProvider content URI. Only the
+                    // cache/share/ subtree is exposable (file_paths.xml),
+                    // so no storage permission is needed. Returns false when
+                    // the file is gone; errors (e.g. undeclared authority)
+                    // surface as a channel error so the Dart side can fall
+                    // back to plain-text sharing.
+                    "shareFile" -> {
+                        val path = call.argument<String>("path") ?: ""
+                        val mime = call.argument<String>("mimeType") ?: "image/png"
+                        val text = call.argument<String>("text") ?: ""
+                        val file = File(path)
+                        if (!file.isFile) {
+                            result.success(false)
+                        } else {
+                            try {
+                                val uri = FileProvider.getUriForFile(
+                                    this,
+                                    "${packageName}.fileprovider",
+                                    file
+                                )
+                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                    type = mime
+                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                    if (text.isNotEmpty()) {
+                                        putExtra(Intent.EXTRA_TEXT, text)
+                                    }
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    putExtra(Intent.EXTRA_TITLE, "সুন্নাহ লাইফ")
+                                }
+                                startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
+                                result.success(true)
+                            } catch (e: IllegalArgumentException) {
+                                result.error("SHARE_FILE_ERROR", e.message, null)
+                            }
+                        }
+                    }
                     else -> result.notImplemented()
+                }
+            }
+
+        // W4d — Guard-module detox seed: AppOps usage-access state +
+        // today's UsageStats report (total foreground + top apps).
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, USAGE_CHANNEL)
+            .setMethodCallHandler { call, result ->
+                try {
+                    when (call.method) {
+                        "hasPermission" -> result.success(hasUsagePermission())
+                        "openSettings" -> result.success(openUsageSettings())
+                        "todayStats" -> result.success(todayUsageStats())
+                        else -> result.notImplemented()
+                    }
+                } catch (e: Exception) {
+                    result.error("USAGE_CHANNEL_ERROR", e.message, null)
                 }
             }
     }
@@ -233,6 +298,111 @@ class MainActivity : FlutterActivity() {
             )
             am.cancel(pending)
         }
+    }
+
+    // ── Usage stats (W4d detox seed) ──────────────────────────────────────
+
+    /**
+     * AppOps PACKAGE_USAGE_STATS state. MODE_DEFAULT (never asked / not
+     * granted) is treated as DENIED — only an explicit MODE_ALLOWED counts,
+     * mirroring the Settings toggle's own truth.
+     */
+    fun hasUsagePermission(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            // OPSTR_GET_USAGE_STATS ("android:get_usage_stats") is the PUBLIC
+            // app-op behind the Settings "usage access" toggle.
+            val appOps = getSystemService(Context.APP_OPS_SERVICE) as android.app.AppOpsManager
+            return appOps.unsafeCheckOpNoThrow(
+                android.app.AppOpsManager.OPSTR_GET_USAGE_STATS,
+                Process.myUid(),
+                packageName
+            ) == android.app.AppOpsManager.MODE_ALLOWED
+        }
+        // Pre-Q: the String-op AppOps checks are API-29; the one public
+        // truth older platforms offer is the events query itself — without
+        // the grant the system answers an EMPTY stream. A granted phone
+        // queried over the past hours has foreground events (the only false
+        // negative is the first minutes after a boot — the settings CTA
+        // stays correct meanwhile).
+        val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val end = System.currentTimeMillis()
+        val events = usm.queryEvents(end - 12 * 60 * 60 * 1000L, end)
+        return events.hasNextEvent()
+    }
+
+    /** Opens the system "apps with usage access" screen; true when fired. */
+    fun openUsageSettings(): Boolean = try {
+        startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+        true
+    } catch (e: Exception) {
+        false
+    }
+
+    /**
+     * Today's screen-time over UsageStatsManager.queryEvents: walk the
+     * foreground/background transitions, credit each interval to its package.
+     * Returns null while access is missing. The top-apps list excludes this
+     * app itself (reading the diary is not "screen time lost"), the total
+     * includes every package; capped to the top 5 by minutes.
+     */
+    fun todayUsageStats(): Map<String, Any?>? {
+        if (!hasUsagePermission()) return null
+        val usm = getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val end = System.currentTimeMillis()
+        val start = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+
+        val byPkg = HashMap<String, Long>()
+        var currentPkg: String? = null
+        var currentStart = 0L
+        val events = usm.queryEvents(start, end)
+        // UsageEvents fills a MUTABLE out-event per step — getNextEvent(event)
+        // returns Boolean (verified against the AOSP source; there is no
+        // zero-arg variant returning an event).
+        val event = UsageEvents.Event()
+        while (events.hasNextEvent() && events.getNextEvent(event)) {
+            val type = event.eventType
+            val resumed = type == UsageEvents.Event.MOVE_TO_FOREGROUND ||
+                type == UsageEvents.Event.ACTIVITY_RESUMED
+            val paused = type == UsageEvents.Event.MOVE_TO_BACKGROUND ||
+                type == UsageEvents.Event.ACTIVITY_PAUSED
+            if (resumed) {
+                currentPkg?.let { byPkg[it] = (byPkg[it] ?: 0L) + (event.timeStamp - currentStart) }
+                currentPkg = event.packageName
+                currentStart = event.timeStamp
+            } else if (paused && currentPkg != null) {
+                byPkg[currentPkg!!] = (byPkg[currentPkg!!] ?: 0L) + (event.timeStamp - currentStart)
+                currentPkg = null
+            }
+        }
+        currentPkg?.let { byPkg[it] = (byPkg[it] ?: 0L) + (end - currentStart) }
+
+        val totalMinutes = (byPkg.values.sum() / 60_000L).toInt()
+        val topApps = byPkg.entries
+            .filter { it.key != packageName }
+            .sortedByDescending { it.value }
+            .take(5)
+            .map { (pkg, ms) ->
+                val label = try {
+                    packageManager.getApplicationLabel(
+                        packageManager.getApplicationInfo(pkg, 0)
+                    ).toString()
+                } catch (e: Exception) {
+                    pkg
+                }
+                mapOf(
+                    "label" to label,
+                    "minutes" to (ms / 60_000L).toInt()
+                )
+            }
+        return mapOf(
+            "totalMinutes" to totalMinutes,
+            "apps" to topApps
+        )
     }
 }
 

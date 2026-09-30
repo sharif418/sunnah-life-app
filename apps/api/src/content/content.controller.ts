@@ -1,8 +1,9 @@
-import { Controller, Get, Param } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import { Injectable, Logger } from "@nestjs/common";
 import { loadPack, loadQuran, PACK_KEYS, packDocuments, type PackKey } from "../shared/quran";
 import { ApiError } from "../common/api-error";
+import { SearchService } from "./search.service";
 
 @Injectable()
 export class ContentService {
@@ -72,16 +73,45 @@ export class ContentService {
 }
 
 /**
+ * Per-pack Meilisearch settings [W4j]. `typoTolerance.minWordSizeForTypos`
+ * is the Bengali adjustment: Bengali vowels/signs are separate code points,
+ * so real-world words measure 4–10 cps — allowing ONE typo from 4 cps keeps
+ * short words like "নাম" adjacent while still refusing 2-cp fragments.
+ * `searchableAttributes` ranks the display title first (a title hit should
+ * outrank a body hit) and keeps ids/references out of the index query path.
+ */
+export function searchSettings(pack: PackKey): Record<string, unknown> {
+  const base = { typoTolerance: { minWordSizeForTypos: { oneTypo: 4, twoTypos: 8 } } };
+  const searchable: Record<PackKey, string[]> = {
+    duas: ["titleBn", "translationBn", "translitBn", "virtue", "arabic"],
+    adhkar: ["titleBn", "items.translationBn", "items.translitBn", "items.arabic"],
+    names99: ["translitBn", "meaningBn", "virtue", "arabic"],
+    "islamic-names": ["name", "meaningBn", "gender_note"],
+    articles: ["titleBn", "excerptBn", "bodyBn", "category"],
+    // packs below are not meili-indexed — settings kept for completeness
+    "iman-branches": [],
+    sunnahs: [],
+    courses: [],
+    quizzes: [],
+    mosques: [],
+    faq: [],
+  };
+  return { ...base, searchableAttributes: searchable[pack] };
+}
+
+/**
  * Meilisearch indexer — fire-and-forget on boot when MEILI_HOST is set.
- * Indexes duas / names99 / articles from the content packs. Never throws:
- * absence of Meilisearch must not crash the API.
+ * Indexes duas / adhkar / names99 / islamic-names / articles from the content
+ * packs. Never throws: absence of Meilisearch must not crash the API.
  */
 @Injectable()
 export class MeiliIndexer {
   private readonly logger = new Logger(MeiliIndexer.name);
   readonly indexes: { uid: string; pack: PackKey }[] = [
     { uid: "duas", pack: "duas" },
+    { uid: "adhkar", pack: "adhkar" },
     { uid: "names99", pack: "names99" },
+    { uid: "islamic-names", pack: "islamic-names" },
     { uid: "articles", pack: "articles" },
   ];
 
@@ -120,6 +150,21 @@ export class MeiliIndexer {
             continue;
           }
         }
+        // [W4j] Bengali typo tolerance + relevance: one typo allowed from
+        // 4-character words (Bengali vowels are separate code points, so the
+        // default 5 makes common words like "দোয়া" (5 cps) borderline and
+        // 3–4 cp words typo-deaf) and searchable fields ranked title-first so
+        // a title hit outranks a body hit. Settings are an enhancement: a
+        // non-2xx answer warns and the documents still sync (default
+        // typoTolerance remains active server-side).
+        const settings = await fetch(`${host}/indexes/${uid}/settings`, {
+          method: "PATCH",
+          headers: this.headers(),
+          body: JSON.stringify(searchSettings(pack)),
+        });
+        if (!settings.ok) {
+          this.logger.warn(`Meilisearch settings ${uid} → ${settings.status}`);
+        }
         const add = await fetch(`${host}/indexes/${uid}/documents?primaryKey=id`, {
           method: "POST",
           headers: this.headers(),
@@ -142,7 +187,10 @@ export class MeiliIndexer {
 @ApiTags("content")
 @Controller()
 export class ContentController {
-  constructor(private readonly service: ContentService) {}
+  constructor(
+    private readonly service: ContentService,
+    private readonly searchService: SearchService
+  ) {}
 
   @Get("quran/surahs")
   @ApiOperation({ summary: "Qur'an surah index (114)" })
@@ -158,6 +206,14 @@ export class ContentController {
       throw new ApiError(400, "সূরা নম্বর সঠিক নয়");
     }
     return this.service.surah(n);
+  }
+
+  /** GET /api/search — public (guests can search; content packs are public,
+   *  same convention as /api/content/:pack + /api/courses). */
+  @Get("search")
+  @ApiOperation({ summary: "Unified pack search: duas, adhkar, 99 names, Islamic names, articles" })
+  search(@Query("q") q?: string, @Query("limit") limit?: string) {
+    return this.searchService.search(q, limit);
   }
 
   @Get("content/:pack")

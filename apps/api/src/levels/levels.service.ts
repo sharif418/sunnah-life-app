@@ -65,7 +65,7 @@ export class LevelsService {
   ): Promise<{ rules: LevelRules; checklist: LevelChecklist; nextLevel: Level }> {
     const nextLevel = nextLevelOf(user.level);
     const [rules, facts] = await Promise.all([
-      loadLevelRules(nextLevel === "none" ? "muhibbus_sunnah" : nextLevel),
+      loadLevelRules(nextLevel === "none" ? "muhibbus_sunnah" : nextLevel, tx),
       gatherLevelFacts(tx, user),
     ]);
     return { rules, checklist: buildLevelChecklist(rules, facts), nextLevel };

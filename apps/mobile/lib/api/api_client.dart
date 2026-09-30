@@ -19,6 +19,31 @@ class ApiException implements Exception {
   String toString() => message;
 }
 
+/// A GET read with offline provenance (W4-fix4): [data] is the parsed
+/// payload; [fetchedAt] is when it last came over the network; [stale] is
+/// true when the network failed and this came from the local cache — the
+/// UI then shows the offline banner + the "সর্বশেষ হালনাগাদ" stamp.
+class ApiCached<T> {
+  const ApiCached(this.data, {required this.fetchedAt, this.stale = false});
+  final T data;
+  final DateTime fetchedAt;
+  final bool stale;
+}
+
+/// Pluggable last-good cache behind [ApiClient] (implemented over Drift in
+/// lib/db/api_cache.dart; injected in providers.dart so tests stay
+/// hermetic — a null store simply disables the offline path).
+abstract class ApiCacheStore {
+  Future<void> write(
+    String key,
+    Map<String, dynamic> payload,
+    DateTime fetchedAt,
+  );
+  Future<({Map<String, dynamic> payload, DateTime fetchedAt})?> read(
+    String key,
+  );
+}
+
 class OtpResponse {
   const OtpResponse({required this.ok, this.devCode});
   final bool ok;
@@ -153,7 +178,8 @@ class SurahBrief {
 }
 
 class ApiClient {
-  ApiClient({http.Client? innerClient}) : _inner = innerClient ?? http.Client();
+  ApiClient({http.Client? innerClient, this.cacheStore})
+    : _inner = innerClient ?? http.Client();
 
   /// Closes the inner HTTP client (riverpod onDispose).
   void dispose() => _inner.close();
@@ -164,6 +190,10 @@ class ApiClient {
   );
 
   final http.Client _inner;
+
+  /// Last-good cache for the offline-capable GET reads. Nullable — absent
+  /// in tests that don't exercise the cache (and for pure guest use).
+  final ApiCacheStore? cacheStore;
   String? _token;
 
   /// Bearer token (OTP-issued). Seams: cookie sessions also accepted by the
@@ -226,6 +256,37 @@ class ApiClient {
       );
     }
     return decoded;
+  }
+
+  /// Cached GET pipeline (W4-fix4): success overwrites the cache row for
+  /// `key` and returns fresh; a NETWORK failure (status 0) serves the last
+  /// good envelope with `stale: true` — and rethrows only when nothing was
+  /// ever cached. A real server rejection (any 4xx/5xx) always rethrows:
+  /// stale data must never mask a live refusal. `scope` (user id) keys the
+  /// row so cached reads can never cross a user boundary.
+  Future<ApiCached<T>> _cachedGet<T>(
+    String path, {
+    required String key,
+    required T Function(Map<String, dynamic>) parse,
+    String? scope,
+  }) async {
+    final cacheKey = scope == null ? key : '$key:$scope';
+    Map<String, dynamic> raw;
+    final fetchedAt = DateTime.now();
+    try {
+      raw = await _req('GET', path);
+    } on ApiException catch (e) {
+      if (e.status != 0 || cacheStore == null) rethrow;
+      final hit = await cacheStore!.read(cacheKey);
+      if (hit == null) rethrow;
+      return ApiCached(
+        parse(hit.payload),
+        fetchedAt: hit.fetchedAt,
+        stale: true,
+      );
+    }
+    await cacheStore?.write(cacheKey, raw, fetchedAt);
+    return ApiCached(parse(raw), fetchedAt: fetchedAt);
   }
 
   // ── Auth ────────────────────────────────────────────────────────────────────
@@ -446,13 +507,110 @@ class ApiClient {
   Future<LeaderboardMe> leaderboardMe() async =>
       LeaderboardMe.fromJson(await _req('GET', '/api/leaderboard/me'));
 
+  // ── Live support threads (W4d) ───────────────────────────────────────────
+
+  /// GET /api/support — own threads (newest activity first).
+  Future<List<SupportThread>> supportThreads() async {
+    final j = await _req('GET', '/api/support');
+    return ((j['threads'] as List?) ?? [])
+        .whereType<Map>()
+        .map((e) => SupportThread.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/support — open a support thread (subject + first message;
+  /// max 5 non-closed threads server-side).
+  Future<SupportThread> supportCreate({
+    required String subject,
+    required String message,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/support',
+      body: {'subject': subject, 'message': message},
+    );
+    return SupportThread.fromJson(
+      (j['thread'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// GET /api/support/:id — own thread + its messages (asc).
+  Future<(SupportThread, List<SupportMessage>)> supportThread(String id) async {
+    final j = await _req('GET', '/api/support/$id');
+    return (
+      SupportThread.fromJson(
+        (j['thread'] as Map).cast<String, dynamic>(),
+      ),
+      ((j['messages'] as List?) ?? [])
+          .whereType<Map>()
+          .map((e) => SupportMessage.fromJson(e.cast<String, dynamic>()))
+          .toList(),
+    );
+  }
+
+  /// POST /api/support/:id/messages — append (400 once the thread is closed).
+  Future<SupportMessage> supportAppend({
+    required String id,
+    required String message,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/support/$id/messages',
+      body: {'message': message},
+    );
+    return SupportMessage.fromJson(
+      (j['message'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  // ── Usrah join requests (W4d) ────────────────────────────────────────────
+
+  /// POST /api/usrah/join-request — ask for an usrah assignment. 409 when the
+  /// member is already in one; idempotent while a request is pending (the
+  /// same pending row is returned).
+  Future<UsrahJoinRequest> joinRequestCreate({String? message}) async {
+    final j = await _req(
+      'POST',
+      '/api/usrah/join-request',
+      body: {
+        if (message != null && message.isNotEmpty) 'message': message,
+      },
+    );
+    return UsrahJoinRequest.fromJson(
+      (j['request'] as Map).cast<String, dynamic>(),
+    );
+  }
+
+  /// GET /api/usrah/join-request — own current/last request (null when none).
+  Future<UsrahJoinRequest?> joinRequestStatus() async {
+    final j = await _req('GET', '/api/usrah/join-request');
+    final raw = j['request'];
+    return raw is Map<String, dynamic> ? UsrahJoinRequest.fromJson(raw) : null;
+  }
+
   // ── Dawah engine ────────────────────────────────────────────────────────────
 
-  Future<DawahOverview> dawahOverview() async =>
-      DawahOverview.fromJson(await _req('GET', '/api/dawah'));
+  /// GET /api/dawah — cached offline (W4-fix4). [scope] = user id so one
+  /// member's overview can never surface for another account.
+  Future<ApiCached<DawahOverview>> dawahOverview({String? scope}) =>
+      _cachedGet(
+        '/api/dawah',
+        key: 'dawah/overview',
+        scope: scope,
+        parse: DawahOverview.fromJson,
+      );
 
-  Future<(Usrah?, List<Announcement>)> usrah() async {
-    final j = await _req('GET', '/api/usrah');
+  /// GET /api/usrah — cached offline (W4-fix4). One body carries both the
+  /// roster and the announcements; `usrah: null` = not in an usrah yet.
+  Future<ApiCached<(Usrah?, List<Announcement>)>> usrah({String? scope}) =>
+      _cachedGet(
+        '/api/usrah',
+        key: 'dawah/usrah',
+        scope: scope,
+        parse: _parseUsrah,
+      );
+
+  static (Usrah?, List<Announcement>) _parseUsrah(Map<String, dynamic> j) {
     final usrahRaw = j['usrah'];
     final usrah = usrahRaw is Map<String, dynamic>
         ? Usrah.fromJson(usrahRaw)
@@ -464,12 +622,71 @@ class ApiClient {
     return (usrah, announcements);
   }
 
-  Future<List<WeeklyReview>> reviews() async {
-    final j = await _req('GET', '/api/reviews');
-    return ((j['reviews'] as List?) ?? [])
+  /// GET /api/reviews — cached offline (W4-fix4).
+  Future<ApiCached<List<WeeklyReview>>> reviews({String? scope}) =>
+      _cachedGet(
+        '/api/reviews',
+        key: 'dawah/reviews',
+        scope: scope,
+        parse: _parseReviews,
+      );
+
+  static List<WeeklyReview> _parseReviews(Map<String, dynamic> j) =>
+      ((j['reviews'] as List?) ?? [])
+          .whereType<Map>()
+          .map((e) => WeeklyReview.fromJson(e.cast<String, dynamic>()))
+          .toList();
+
+  // ── Assessments (W4i — the assessee's own acknowledgment flow) ──────────────
+
+  /// GET /api/assessments/me — own (assessee) assessments, every status,
+  /// with scores. The dawah tab's assessment cards read this.
+  Future<List<AssessmentDetail>> myAssessments() async {
+    final j = await _req('GET', '/api/assessments/me');
+    return ((j['assessments'] as List?) ?? [])
         .whereType<Map>()
-        .map((e) => WeeklyReview.fromJson(e.cast<String, dynamic>()))
+        .map((e) => AssessmentDetail.fromJson(e.cast<String, dynamic>()))
         .toList();
+  }
+
+  /// POST /api/assessments/:id/confirm-request — issue the OTP to the
+  /// ASSESSEE's own phone (the auth OTP service, same throttle + hashing).
+  Future<OtpResponse> assessmentConfirmRequest(String id) async {
+    final j = await _req('POST', '/api/assessments/$id/confirm-request');
+    return OtpResponse(
+      ok: j['ok'] as bool? ?? false,
+      devCode: j['devCode'] as String?,
+    );
+  }
+
+  /// POST /api/assessments/:id/confirm {code} — verify → the result becomes
+  /// FINAL (status confirmed + the OTP-confirmed signature).
+  Future<AssessmentDetail> assessmentConfirm({
+    required String id,
+    required String code,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/assessments/$id/confirm',
+      body: {'code': code},
+    );
+    return AssessmentDetail.fromJson(j['assessment'] as Map<String, dynamic>);
+  }
+
+  /// POST /api/assessments/:id/decline {reason?} — the assessee refuses the
+  /// result (the invigilator is notified server-side).
+  Future<AssessmentDetail> assessmentDecline({
+    required String id,
+    String? reason,
+  }) async {
+    final j = await _req(
+      'POST',
+      '/api/assessments/$id/decline',
+      body: {
+        if (reason != null && reason.isNotEmpty) 'reason': reason,
+      },
+    );
+    return AssessmentDetail.fromJson(j['assessment'] as Map<String, dynamic>);
   }
 
   // ── Reminders / live / misc ─────────────────────────────────────────────────
@@ -657,9 +874,15 @@ class ApiClient {
     );
   }
 
-  /// GET /api/dawah/requirements — live next-level checklist (daee+).
-  Future<DawahRequirements> dawahRequirements() async =>
-      DawahRequirements.fromJson(await _req('GET', '/api/dawah/requirements'));
+  /// GET /api/dawah/requirements — live next-level checklist (daee+),
+  /// cached offline (W4-fix4).
+  Future<ApiCached<DawahRequirements>> dawahRequirements({String? scope}) =>
+      _cachedGet(
+        '/api/dawah/requirements',
+        key: 'dawah/requirements',
+        scope: scope,
+        parse: DawahRequirements.fromJson,
+      );
 
   /// GET /api/quiz/live-token?quizId=… — HMAC room token for the API's own
   /// socket.io gateway (apps/api/src/engagement/quiz.gateway.ts).
@@ -670,5 +893,18 @@ class ApiClient {
       query: quizId.isEmpty ? null : {'quizId': quizId},
     );
     return QuizLiveTokenResponse.fromJson(j);
+  }
+
+  /// GET /api/search?q=…&limit= — unified content search over meili
+  /// (public; W4j). Throws ApiException(0) when the network is down and
+  /// 503 when the server's search engine is unavailable — both cases are
+  /// the caller's cue to fall back to the bundled-pack matcher.
+  Future<SearchResults> search(String q, {int limit = 20}) async {
+    final j = await _req(
+      'GET',
+      '/api/search',
+      query: {'q': q, 'limit': limit.toString()},
+    );
+    return SearchResults.fromJson(j);
   }
 }

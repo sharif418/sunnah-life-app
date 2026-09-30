@@ -50,44 +50,64 @@ final configProvider = FutureProvider<AppConfig>((ref) async {
   }
 });
 
-/// Da'wah overview — null while a guest (the UI shows the gate instead).
-final dawahProvider = FutureProvider<DawahOverview?>((ref) async {
+/// Da'wah overview (W4-fix4: cached offline). Null while a guest (the UI
+/// shows the gate instead). Network failure + cached envelope → the stale
+/// snapshot (the tab shows the offline banner + "সর্বশেষ হালনাগাদ");
+/// never cached → null (the error state stays, as specced).
+final dawahProvider = FutureProvider<ApiCached<DawahOverview>?>((ref) async {
   final auth = ref.watch(authProvider);
   final user = auth.userOrNull;
   if (user == null || !user.canSeeDawah) return null;
   try {
-    return await ref.watch(apiProvider).dawahOverview();
+    return await ref.watch(apiProvider).dawahOverview(scope: user.id);
   } on ApiException {
     return null;
   }
 });
 
 class UsrahBundle {
-  const UsrahBundle({required this.usrah, required this.announcements});
+  const UsrahBundle({
+    required this.usrah,
+    required this.announcements,
+    this.fetchedAt,
+    this.stale = false,
+  });
   final Usrah? usrah;
   final List<Announcement> announcements;
+
+  /// W4-fix4: when the envelope last came over the network; `stale` marks
+  /// a cache-served snapshot (offline banner stamp).
+  final DateTime? fetchedAt;
+  final bool stale;
 }
 
 final usrahProvider = FutureProvider<UsrahBundle?>((ref) async {
   final auth = ref.watch(authProvider);
   if (!auth.signedIn) return null;
   try {
-    final (usrah, announcements) = await ref.watch(apiProvider).usrah();
-    return UsrahBundle(usrah: usrah, announcements: announcements);
+    final c = await ref.watch(apiProvider).usrah(scope: auth.user!.id);
+    return UsrahBundle(
+      usrah: c.data.$1,
+      announcements: c.data.$2,
+      fetchedAt: c.fetchedAt,
+      stale: c.stale,
+    );
   } on ApiException {
     return null;
   }
 });
 
-final reviewsProvider = FutureProvider<List<WeeklyReview>?>((ref) async {
-  final auth = ref.watch(authProvider);
-  if (!auth.signedIn) return null;
-  try {
-    return await ref.watch(apiProvider).reviews();
-  } on ApiException {
-    return null;
-  }
-});
+final reviewsProvider = FutureProvider<ApiCached<List<WeeklyReview>>?>(
+  (ref) async {
+    final auth = ref.watch(authProvider);
+    if (!auth.signedIn) return null;
+    try {
+      return await ref.watch(apiProvider).reviews(scope: auth.user!.id);
+    } on ApiException {
+      return null;
+    }
+  },
+);
 
 final liveProvider = FutureProvider<List<LiveProgramItem>>((ref) async {
   return ref.watch(apiProvider).live();
@@ -168,13 +188,21 @@ final usrahQuestionsProvider = FutureProvider<List<UsrahQuestion>>((ref) async {
   }
 });
 
-/// Live level-requirements checklist (daee+; null while a guest/offline).
-final dawahRequirementsProvider = FutureProvider<DawahRequirements?>((ref) async {
-  final auth = ref.watch(authProvider);
-  final user = auth.userOrNull;
-  if (user == null || !user.canSeeDawah) return null;
-  return ref.watch(apiProvider).dawahRequirements();
-});
+/// Live level-requirements checklist (daee+; null while a guest/never
+/// cached offline — W4-fix4 serves the stale envelope with its banner).
+final dawahRequirementsProvider =
+    FutureProvider<ApiCached<DawahRequirements>?>((ref) async {
+      final auth = ref.watch(authProvider);
+      final user = auth.userOrNull;
+      if (user == null || !user.canSeeDawah) return null;
+      try {
+        return await ref.watch(apiProvider).dawahRequirements(
+          scope: user.id,
+        );
+      } on ApiException {
+        return null;
+      }
+    });
 
 /// Own gender-scoped leaderboard band (W4c) — the scholars' config gate:
 /// hidden entirely (null) while the flag is off (including while the

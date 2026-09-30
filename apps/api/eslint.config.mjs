@@ -38,5 +38,17 @@ export default tseslint.config(
       "prefer-const": "off",
       "no-case-declarations": "off",
     },
+  },
+  {
+    // Plain-Node CJS dev scripts (scripts/dev-run.cjs) — require/__dirname
+    // are the point there (the module-cache aliasing needs require.cache).
+    files: ["scripts/**/*.cjs"],
+    languageOptions: {
+      sourceType: "commonjs",
+      globals: { require: "readonly", module: "readonly", console: "readonly", __dirname: "readonly" },
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
+    },
   }
 );

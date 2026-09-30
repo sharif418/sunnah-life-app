@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useApp } from "@/lib/store";
+import { translate } from "@/lib/i18n";
 import { ROLE_LABELS_BN, LEVEL_LABELS_BN } from "@/types/domain";
 import {
   ChevronLeft,
@@ -21,19 +22,20 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-const ITEMS: { view: string; icon: LucideIcon; title: string; desc: string; highlight?: boolean }[] = [
-  { view: "settings", icon: AlarmClock, title: "নামাজের সেটিংস", desc: "হিসাব পদ্ধতি, মাযহাব ও শহর" },
-  { view: "qibla", icon: Compass, title: "কিবলা কম্পাস", desc: "কাবার দিক খুঁজুন" },
-  { view: "zakat", icon: Calculator, title: "যাকাত ক্যালকুলেটর", desc: "নিসাব ও প্রদেয় হিসাব", highlight: true },
-  { view: "mosques", icon: Landmark, title: "মসজিদ", desc: "নিকটবর্তী মসজিদের তালিকা" },
-  { view: "masala", icon: MessageCircleQuestion, title: "মাসআলা জিজ্ঞাসা", desc: "মুফতির কাছে প্রশ্ন করুন" },
-  { view: "contacts", icon: LinkIcon, title: "যোগাযোগ ও লিংক", desc: "প্রতিষ্ঠান ও গ্রুপসমূহ" },
-  { view: "about", icon: Info, title: "অ্যাপ সম্পর্কে", desc: "সংস্করণ ও মতামত" },
+const ITEMS: { view: string; icon: LucideIcon; titleKey: string; descKey: string; highlight?: boolean }[] = [
+  { view: "settings", icon: AlarmClock, titleKey: "more.prayerSettings", descKey: "more.desc.settings" },
+  { view: "qibla", icon: Compass, titleKey: "more.qibla", descKey: "more.desc.qibla" },
+  { view: "zakat", icon: Calculator, titleKey: "more.zakat", descKey: "more.desc.zakat", highlight: true },
+  { view: "mosques", icon: Landmark, titleKey: "more.mosques", descKey: "more.desc.mosques" },
+  { view: "masala", icon: MessageCircleQuestion, titleKey: "more.masala", descKey: "more.desc.masala" },
+  { view: "contacts", icon: LinkIcon, titleKey: "more.contacts", descKey: "more.desc.contacts" },
+  { view: "about", icon: Info, titleKey: "more.about", descKey: "more.desc.about" },
 ];
 
 export function MoreMenu() {
   const { user, profile, nav } = useApp();
-  const name = user?.name || profile.name || "অতিথি";
+  const t = (k: string) => translate(profile.language, k);
+  const name = user?.name || profile.name || t("auth.guest");
   const initials = name.trim().slice(0, 2);
 
   return (
@@ -42,7 +44,7 @@ export function MoreMenu() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
     >
-      <h1 className="text-xl font-bold mb-4">আরও</h1>
+      <h1 className="text-xl font-bold mb-4">{t("nav.more")}</h1>
 
       {/* প্রোফাইল কার্ড */}
       <Card
@@ -53,7 +55,7 @@ export function MoreMenu() {
         onKeyDown={(e: React.KeyboardEvent) => {
           if (e.key === "Enter" || e.key === " ") nav("more", "profile");
         }}
-        aria-label="প্রোফাইল খুলুন"
+        aria-label={`${t("more.profile")} — ${t("app.name")}`}
       >
         <CardContent className="p-4 flex items-center gap-3.5">
           <span className="flex size-[52px] shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary text-lg font-bold">
@@ -68,7 +70,7 @@ export function MoreMenu() {
                   {user.memberCode ? ` · ${user.memberCode}` : ""}
                 </>
               ) : (
-                "অতিথি — সাইন ইন করে সব সুবিধা নিন"
+                t("more.guestHint")
               )}
             </span>
             {user && user.level !== "none" && (
@@ -83,7 +85,7 @@ export function MoreMenu() {
 
       {/* ফিচার গ্রিড */}
       <div className="mt-4 grid grid-cols-2 gap-3">
-        {ITEMS.map(({ view, icon: Icon, title, desc, highlight }) => (
+        {ITEMS.map(({ view, icon: Icon, titleKey, descKey, highlight }) => (
           <button
             key={view}
             onClick={() => nav("more", view)}
@@ -93,7 +95,7 @@ export function MoreMenu() {
                 ? "border-gold/40 bg-gold-soft/60"
                 : "border-border hover:border-primary/30")
             }
-            aria-label={title}
+            aria-label={t(titleKey)}
           >
             <span
               className={
@@ -103,15 +105,13 @@ export function MoreMenu() {
             >
               <Icon className="size-5" />
             </span>
-            <span className="mt-2.5 block text-sm font-semibold leading-snug">{title}</span>
-            <span className="mt-0.5 block text-[11.5px] text-muted-foreground leading-snug">{desc}</span>
+            <span className="mt-2.5 block text-sm font-semibold leading-snug">{t(titleKey)}</span>
+            <span className="mt-0.5 block text-[11.5px] text-muted-foreground leading-snug">{t(descKey)}</span>
           </button>
         ))}
       </div>
 
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        আস-সুন্নাহ ফাউন্ডেশন · দাওয়াতুস সুন্নাহ
-      </p>
+      <p className="mt-6 text-center text-xs text-muted-foreground">{t("app.tagline")}</p>
     </motion.div>
   );
 }

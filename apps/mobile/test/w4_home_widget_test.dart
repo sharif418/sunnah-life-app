@@ -84,8 +84,15 @@ void main() {
     // in-page-schedule affordance all exist.
     final hero = find.byKey(const ValueKey('home_ring_hero'));
     expect(hero, findsOneWidget);
+    // The RING is the hero's only painter-driven CustomPaint (the W4f
+    // khatam texture paints through foregroundPainter, not painter).
     expect(
-      find.descendant(of: hero, matching: find.byType(CustomPaint)),
+      find.descendant(
+        of: hero,
+        matching: find.byWidgetPredicate(
+          (w) => w is CustomPaint && w.painter != null,
+        ),
+      ),
       findsOneWidget,
     );
     final countdown = find.byKey(const ValueKey('home_countdown_text'));

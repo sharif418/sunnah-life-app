@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- W4e — referral share card: the ONLY exposable subtree is the app's own
+     cache/share/ directory, where the rendered PNG is written before each
+     share. getTemporaryDirectory() == context.getCacheDir() on Android, so
+     <cache-path> covers exactly the files the share flow creates. -->
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <cache-path
+        name="share"
+        path="share/" />
+</paths>

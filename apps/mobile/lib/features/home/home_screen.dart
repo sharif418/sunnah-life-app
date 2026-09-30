@@ -174,7 +174,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         post = kDefaultPostPrayerMinutes;
                         dirty = true;
                       }),
-                      icon: const Icon(Icons.restart_alt),
+                      icon: const Icon(PhosphorIconsRegular.arrowClockwise),
                       label: Text(sheetContext.t('bell_minutes_reset')),
                     ),
                     FilledButton(
@@ -267,7 +267,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             SectionHeader(
               key: _scheduleKey,
               context.t('prayer_schedule'),
-              icon: Icons.schedule_outlined,
+              icon: PhosphorIconsRegular.clock,
             ),
             _Schedule(
               prayer: prayer,
@@ -280,7 +280,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // ── Forbidden times ──
             SectionHeader(
               context.t('prayer_forbidden_times'),
-              icon: Icons.block_outlined,
+              icon: PhosphorIconsRegular.prohibit,
             ),
             _ForbiddenTimes(prayer: prayer, bn: bn),
 
@@ -341,7 +341,7 @@ class _MostUsedSection extends ConsumerWidget {
         ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
     final amal = ref.watch(amalProvider);
     final lang = context.lang;
-    final today = dateKey(DateTime.now());
+    final today = dateKey(ref.watch(headerNowProvider));
     // Flatten the provider's date→(key→entry) window — mostUsedAmals itself
     // windows to the last 30 days and counts DISTINCT full-point days.
     final entries = [
@@ -616,7 +616,7 @@ class _AmalPreviewSection extends ConsumerWidget {
     final defs =
         ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
     final amal = ref.watch(amalProvider);
-    final today = dateKey(DateTime.now());
+    final today = dateKey(ref.watch(headerNowProvider));
     // Same grouping rule as today_screen: effective hijri adjust (user ±2 +
     // admin ±2) decides ayyam-beez cadence membership.
     final todayDefs = defs
@@ -681,7 +681,7 @@ class _AmalPreviewSection extends ConsumerWidget {
                   ],
                 ),
               ),
-              const DirectionalIcon(Icons.chevron_right),
+              const DirectionalIcon(PhosphorIconsRegular.caretRight),
             ],
           ),
         ),
@@ -816,7 +816,7 @@ class _PostPrayerPrompt extends ConsumerWidget {
     final theme = Theme.of(context);
     final key = prayer.postPrayerKey!;
     final label = _prayerLabel(key, context.lang);
-    final today = dateKey(DateTime.now());
+    final today = dateKey(ref.watch(headerNowProvider));
     final entry = ref.watch(
       amalProvider.select((s) => s.entry(today, 'salat_${key.name}')),
     );
@@ -865,7 +865,7 @@ class _PostPrayerPrompt extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.task_alt, color: theme.colorScheme.tertiary, size: 20),
+              Icon(PhosphorIconsRegular.checkCircle, color: theme.colorScheme.tertiary, size: 20),
               const SizedBox(width: SLSpacing.s8),
               Expanded(
                 child: Text(
@@ -886,19 +886,19 @@ class _PostPrayerPrompt extends ConsumerWidget {
               option(
                 'jamaat',
                 context.t('amal_jamaat'),
-                Icons.groups_outlined,
+                PhosphorIconsRegular.usersThree,
                 theme.colorScheme.primary,
               ),
               option(
                 'alone',
                 context.t('amal_alone'),
-                Icons.person_outline,
+                PhosphorIconsRegular.user,
                 theme.colorScheme.secondary,
               ),
               option(
                 'qaza',
                 context.t('amal_qaza'),
-                Icons.schedule,
+                PhosphorIconsRegular.clock,
                 theme.colorScheme.error,
               ),
             ],
@@ -925,6 +925,12 @@ class _ForbiddenTimes extends StatelessWidget {
       (context.t('prayer_forbidden_sunset'), t.sunset - 15, t.sunset + 5),
     ];
     final theme = Theme.of(context);
+    // Spec §2.1 — a calm caution, not an alarm: light alert-tinted surface
+    // (#FCE4E4) with #C0392B text/icons and only a hairline border in the
+    // same hue. Never a saturated red fill.
+    final dark = theme.brightness == Brightness.dark;
+    final alertBg = dark ? SLColors.darkAlertSoft : SLColors.alertSoftLight;
+    final alertFg = dark ? SLColors.darkAlert : SLColors.lightDestructive;
     return Column(
       children: [
         for (final (label, from, to) in windows)
@@ -935,19 +941,38 @@ class _ForbiddenTimes extends StatelessWidget {
               vertical: SLSpacing.s8,
             ),
             decoration: BoxDecoration(
-              color: theme.colorScheme.errorContainer.withValues(alpha: 0.35),
+              color: alertBg,
               borderRadius: SLRadius.brMd,
-              border: Border.all(color: theme.colorScheme.error, width: 1),
+              border: Border.all(
+                color: alertFg.withValues(alpha: 0.25),
+                width: 1,
+              ),
             ),
             child: Row(
               children: [
-                Icon(Icons.block, color: theme.colorScheme.error, size: 18),
+                Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
                 const SizedBox(width: SLSpacing.s8),
-                Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-                Text(
-                  '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Text(
+                    label,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: alertFg,
+                    ),
+                  ),
+                ),
+                // W4f overflow sweep — at 360dp/1.3× the time range no
+                // longer fits next to the label; it shrinks to fit instead
+                // of spilling (the times are the point — never clipped).
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: alertFg,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -1022,12 +1047,12 @@ class _Schedule extends StatelessWidget {
           minVerticalPadding: 6,
           leading: isCurrent
               ? Icon(
-                  Icons.radio_button_checked,
+                  PhosphorIconsRegular.record,
                   color: theme.colorScheme.primary,
                   size: 20,
                 )
               : Icon(
-                  Icons.circle_outlined,
+                  PhosphorIconsRegular.circle,
                   color: theme.colorScheme.outline,
                   size: 12,
                 ),
@@ -1098,7 +1123,7 @@ class _BellButton extends StatelessWidget {
           width: SLSpacing.minTapTarget,
           height: SLSpacing.minTapTarget,
           child: Icon(
-            on ? Icons.notifications_active : Icons.notifications_none,
+            on ? PhosphorIconsRegular.bellRinging : PhosphorIconsRegular.bell,
             size: 20,
             color: on ? theme.colorScheme.tertiary : theme.colorScheme.outline,
           ),
@@ -1120,7 +1145,7 @@ class _ExactAlarmCard extends StatelessWidget {
     return AppCard(
       child: Row(
         children: [
-          Icon(Icons.alarm, color: theme.colorScheme.primary),
+          Icon(PhosphorIconsRegular.alarm, color: theme.colorScheme.primary),
           const SizedBox(width: SLSpacing.s12),
           Expanded(
             child: Column(

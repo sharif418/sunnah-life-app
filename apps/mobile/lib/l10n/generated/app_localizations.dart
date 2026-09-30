@@ -3381,6 +3381,492 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'নিচের ২৫%'**
   String get leaderboard_band_bottom;
+
+  /// No description provided for @offline_banner.
+  ///
+  /// In bn, this message translates to:
+  /// **'অফলাইন — দেখানো হচ্ছে সংরক্ষিত তথ্য'**
+  String get offline_banner;
+
+  /// No description provided for @last_updated.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ হালনাগাদ'**
+  String get last_updated;
+
+  /// No description provided for @more_section_foundation.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফাউন্ডেশন'**
+  String get more_section_foundation;
+
+  /// No description provided for @contact_email.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইমেইল'**
+  String get contact_email;
+
+  /// No description provided for @more_section_worship.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইবাদত ও টুলস'**
+  String get more_section_worship;
+
+  /// No description provided for @more_section_knowledge.
+  ///
+  /// In bn, this message translates to:
+  /// **'জ্ঞান'**
+  String get more_section_knowledge;
+
+  /// No description provided for @more_section_support.
+  ///
+  /// In bn, this message translates to:
+  /// **'সহায়তা'**
+  String get more_section_support;
+
+  /// No description provided for @more_section_app.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাপ'**
+  String get more_section_app;
+
+  /// No description provided for @more_support.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ সাপোর্ট'**
+  String get more_support;
+
+  /// No description provided for @support_signin_needed.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ সাপোর্ট ব্যবহার করতে সাইন ইন করুন'**
+  String get support_signin_needed;
+
+  /// No description provided for @support_new_thread.
+  ///
+  /// In bn, this message translates to:
+  /// **'নতুন আলাপ শুরু করুন'**
+  String get support_new_thread;
+
+  /// No description provided for @support_subject.
+  ///
+  /// In bn, this message translates to:
+  /// **'বিষয়'**
+  String get support_subject;
+
+  /// No description provided for @support_subject_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'সংক্ষেপে বিষয়টি লিখুন'**
+  String get support_subject_hint;
+
+  /// No description provided for @support_message.
+  ///
+  /// In bn, this message translates to:
+  /// **'বার্তা'**
+  String get support_message;
+
+  /// No description provided for @support_message_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার কথা লিখুন…'**
+  String get support_message_hint;
+
+  /// No description provided for @support_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোনো আলাপ নেই — প্রয়োজনে নতুন একটি শুরু করুন'**
+  String get support_empty;
+
+  /// No description provided for @support_status_open.
+  ///
+  /// In bn, this message translates to:
+  /// **'খোলা'**
+  String get support_status_open;
+
+  /// No description provided for @support_status_answered.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর দেওয়া হয়েছে'**
+  String get support_status_answered;
+
+  /// No description provided for @support_status_closed.
+  ///
+  /// In bn, this message translates to:
+  /// **'বন্ধ'**
+  String get support_status_closed;
+
+  /// No description provided for @support_team.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাপোর্ট টিম'**
+  String get support_team;
+
+  /// No description provided for @support_you.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনি'**
+  String get support_you;
+
+  /// No description provided for @support_created_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'আলাপ শুরু হয়েছে'**
+  String get support_created_toast;
+
+  /// No description provided for @support_sent_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর পাঠানো হয়েছে'**
+  String get support_sent_toast;
+
+  /// No description provided for @support_closed_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই আলাপ বন্ধ করা হয়েছে — নতুন আলাপ শুরু করুন'**
+  String get support_closed_toast;
+
+  /// No description provided for @more_usrah_join.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরায় যোগ দিন'**
+  String get more_usrah_join;
+
+  /// No description provided for @usrah_join_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোনো উসরায় যুক্ত না থাকলে অনুরোধ পাঠান — তারবিয়াত দপ্তর আপনাকে একটি উসরায় যুকত করবে ইনশাআল্লাহ'**
+  String get usrah_join_hint;
+
+  /// No description provided for @usrah_join_message_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'কিছু বলার থাকলে লিখুন (ঐচ্ছিক)'**
+  String get usrah_join_message_hint;
+
+  /// No description provided for @usrah_join_send.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুরোধ পাঠান'**
+  String get usrah_join_send;
+
+  /// No description provided for @usrah_join_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুরোধ পেন্ডিং — অনুমোদনের অপেক্ষায়'**
+  String get usrah_join_pending;
+
+  /// No description provided for @usrah_join_rejected.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুরোধ বাতিল হয়েছে'**
+  String get usrah_join_rejected;
+
+  /// No description provided for @usrah_join_reason_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'কারণ'**
+  String get usrah_join_reason_label;
+
+  /// No description provided for @usrah_join_in_usrah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনি ইতিমধ্যেই একটি উসরায় আছেন'**
+  String get usrah_join_in_usrah;
+
+  /// No description provided for @usrah_join_sent_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুরোধ পাঠানো হয়েছে — অনুমোদন হলে জানানো হবে ইনশাআল্লাহ'**
+  String get usrah_join_sent_toast;
+
+  /// No description provided for @usrah_join_signin_needed.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরায় যোগ হতে সাইন ইন করুন'**
+  String get usrah_join_signin_needed;
+
+  /// No description provided for @more_detox.
+  ///
+  /// In bn, this message translates to:
+  /// **'সোশ্যাল মিডিয়া ডিটক্স'**
+  String get more_detox;
+
+  /// No description provided for @detox_explain_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'স্ক্রিন-টাইম হিসাব'**
+  String get detox_explain_title;
+
+  /// No description provided for @detox_explain_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'সময় আমাদের আমানত। সোশ্যাল মিডিয়ায় কাটা প্রতিটি মিনিট পরকালের পুঁজি থেকে কমিয়ে দেয়। ব্যবহারের অনুমতি দিলে আজকের স্ক্রিন-টাইম ও সর্বাধিক ব্যবহৃত অ্যাপগুলো দেখাব — হিসাব সামনে থাকলে সংশোধন সহজ হয়, ইনশাআল্লাহ।'**
+  String get detox_explain_body;
+
+  /// No description provided for @detox_perm_status.
+  ///
+  /// In bn, this message translates to:
+  /// **'ব্যবহারের অনুমতি'**
+  String get detox_perm_status;
+
+  /// No description provided for @detox_perm_granted.
+  ///
+  /// In bn, this message translates to:
+  /// **'দেওয়া হয়েছে'**
+  String get detox_perm_granted;
+
+  /// No description provided for @detox_perm_not_granted.
+  ///
+  /// In bn, this message translates to:
+  /// **'দেওয়া হয়নি'**
+  String get detox_perm_not_granted;
+
+  /// No description provided for @detox_grant.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দিন'**
+  String get detox_grant;
+
+  /// No description provided for @detox_return_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুমতি দিয়ে অ্যাপে ফিরে আসুন'**
+  String get detox_return_hint;
+
+  /// No description provided for @detox_android_only.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই হিসাবটি শুধু অ্যান্ড্রয়েডে কাজ করে'**
+  String get detox_android_only;
+
+  /// No description provided for @detox_today_total.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের মোট স্ক্রিন-টাইম'**
+  String get detox_today_total;
+
+  /// No description provided for @detox_top_apps.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বাধিক ব্যবহৃত অ্যাপ'**
+  String get detox_top_apps;
+
+  /// No description provided for @detox_minutes_short.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট'**
+  String get detox_minutes_short;
+
+  /// No description provided for @detox_no_usage.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ এখনো তেমন কিছু নেই'**
+  String get detox_no_usage;
+
+  /// No description provided for @detox_reminder.
+  ///
+  /// In bn, this message translates to:
+  /// **'দৈনিক রিমাইন্ডার'**
+  String get detox_reminder;
+
+  /// No description provided for @detox_reminder_time.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিমাইন্ডারের সময়'**
+  String get detox_reminder_time;
+
+  /// No description provided for @detox_notif_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'স্ক্রিন-টাইম হিসাব'**
+  String get detox_notif_title;
+
+  /// No description provided for @detox_notif_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ কতক্ষণ স্ক্রিনে কাটালেন? একবার দেখে নিন।'**
+  String get detox_notif_body;
+
+  /// No description provided for @more_groups.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমাদের গ্রুপ'**
+  String get more_groups;
+
+  /// No description provided for @group_open_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'খোলা যায়নি'**
+  String get group_open_failed;
+
+  /// No description provided for @dawah_share_card.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াত কার্ড শেয়ার করুন'**
+  String get dawah_share_card;
+
+  /// No description provided for @dawah_card_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াত কার্ড'**
+  String get dawah_card_title;
+
+  /// No description provided for @dawah_card_tagline.
+  ///
+  /// In bn, this message translates to:
+  /// **'সুন্নাহর পথে জীবন গড়তে আমার সাথে যুক্ত হন'**
+  String get dawah_card_tagline;
+
+  /// No description provided for @dawah_card_preview_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিচের কার্ডটাই ছবি হিসেবে শেয়ার হবে'**
+  String get dawah_card_preview_note;
+
+  /// No description provided for @dawah_share_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'শেয়ার করুন'**
+  String get dawah_share_now;
+
+  /// No description provided for @dawah_card_shared_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'কার্ড শেয়ার করা হয়েছে — জাযাকুমুল্লাহু খাইরান'**
+  String get dawah_card_shared_toast;
+
+  /// No description provided for @assessment_status_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিশ্চয়ন বাকি'**
+  String get assessment_status_pending;
+
+  /// No description provided for @assessment_status_confirmed.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিশ্চিত হয়েছে'**
+  String get assessment_status_confirmed;
+
+  /// No description provided for @assessment_status_declined.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল করেছেন'**
+  String get assessment_status_declined;
+
+  /// No description provided for @assessment_confirm_cta.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিশ্চিত করুন'**
+  String get assessment_confirm_cta;
+
+  /// No description provided for @assessment_confirm_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'মূল্যায়ন নিশ্চিত করুন'**
+  String get assessment_confirm_title;
+
+  /// No description provided for @assessment_confirm_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল দেখে নিন। আপনার মোবাইল নম্বরে কোড পাঠানো হবে — কোড দিয়ে সই দিলেই ফলাফল চূড়ান্ত হবে।'**
+  String get assessment_confirm_body;
+
+  /// No description provided for @assessment_confirmed_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'আলহামদুলিল্লাহ — মূল্যায়ন নিশ্চিত হয়েছে'**
+  String get assessment_confirmed_toast;
+
+  /// No description provided for @assessment_decline_cta.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল বাতিল করুন'**
+  String get assessment_decline_cta;
+
+  /// No description provided for @assessment_decline_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল বাতিল করবেন?'**
+  String get assessment_decline_title;
+
+  /// No description provided for @assessment_decline_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল করলে মূল্যায়নকারীকে জানানো হবে এবং পুনরায় মূল্যায়নের ব্যবস্থা হবে, ইনশাআল্লাহ।'**
+  String get assessment_decline_body;
+
+  /// No description provided for @assessment_decline_reason_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'কারণ (ঐচ্ছিক)'**
+  String get assessment_decline_reason_hint;
+
+  /// No description provided for @assessment_decline_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাতিল করুন'**
+  String get assessment_decline_label;
+
+  /// No description provided for @assessment_declined_toast.
+  ///
+  /// In bn, this message translates to:
+  /// **'মূল্যায়ন বাতিল করা হয়েছে — মূল্যায়নকারীকে জানানো হয়েছে'**
+  String get assessment_declined_toast;
+
+  /// No description provided for @assessment_decision_note_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার কারণ'**
+  String get assessment_decision_note_label;
+
+  /// No description provided for @assessment_result_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল'**
+  String get assessment_result_label;
+
+  /// No description provided for @assessment_score_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'স্কোর'**
+  String get assessment_score_label;
+
+  /// No description provided for @assessment_result_passed.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তীর্ণ'**
+  String get assessment_result_passed;
+
+  /// No description provided for @assessment_result_not_yet.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও উন্নতি প্রয়োজন'**
+  String get assessment_result_not_yet;
+
+  /// No description provided for @search_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুসন্ধান'**
+  String get search_title;
+
+  /// No description provided for @search_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…'**
+  String get search_hint;
+
+  /// No description provided for @search_no_results.
+  ///
+  /// In bn, this message translates to:
+  /// **'কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন'**
+  String get search_no_results;
+
+  /// No description provided for @search_offline_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল'**
+  String get search_offline_note;
 }
 
 class _AppLocalizationsDelegate

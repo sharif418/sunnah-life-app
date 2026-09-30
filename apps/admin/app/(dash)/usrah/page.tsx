@@ -4,12 +4,12 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Megaphone, Pin, Plus, TrendingDown, UserMinus, UserPlus, UserRound, UsersRound } from "lucide-react";
+import { Megaphone, Pin, Plus, TrendingDown, UserCheck, UserMinus, UserPlus, UserRound, UserRoundX, UsersRound } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { api, type Gender, type User, type UsrahMember } from "@/lib/api";
+import { api, type Gender, type UsrahJoinRequestItem, type User, type UsrahMember } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { relativeBn, toBn } from "@/lib/bn";
-import { ROLE_LABELS_BN } from "@/lib/labels";
+import { JOIN_STATUS_LABELS_BN, ROLE_LABELS_BN } from "@/lib/labels";
 import { BothGendersBadge, CategoryBadge, FScopeBadge, GenderBadge, LevelBadge, RoleBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -224,6 +224,170 @@ function OwnUsrahView() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+// ── W4d: full_admin join-request queue — approve (assign an usrah) / reject ─
+
+function JoinRequestSection() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const queue = useQuery({ queryKey: ["join-requests"], queryFn: () => api.joinRequests() });
+  const overview = useQuery({ queryKey: ["admin-overview"], queryFn: () => api.overview() });
+
+  const [usrahPick, setUsrahPick] = React.useState<Record<string, string>>({}); // per request
+  const [rejecting, setRejecting] = React.useState<UsrahJoinRequestItem | null>(null);
+  const [reason, setReason] = React.useState("");
+
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ["join-requests"] });
+    qc.invalidateQueries({ queryKey: ["admin-overview"] });
+    qc.invalidateQueries({ queryKey: ["admin-users", ""] });
+  };
+
+  const approve = useMutation({
+    mutationFn: (r: UsrahJoinRequestItem) => api.approveJoinRequest(r.id, usrahPick[r.id] ?? ""),
+    onSuccess: (_res, r) => {
+      toast(`${r.userName} — অনুরোধ অনুমোদিত, উসরায় যুক্ত হয়েছেন (অডিট লগড)`, "success");
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  const reject = useMutation({
+    mutationFn: (r: UsrahJoinRequestItem) => api.rejectJoinRequest(r.id, reason.trim() || undefined),
+    onSuccess: () => {
+      toast("অনুরোধ বাতিল করা হয়েছে (অডিট লগড)", "success");
+      setRejecting(null);
+      setReason("");
+      invalidate();
+    },
+    onError: (e: Error) => toast(e.message, "error"),
+  });
+
+  if (queue.isLoading) return <TableSkeleton rows={2} cols={3} />;
+  if (queue.isError) return <ErrorState error={queue.error} onRetry={() => queue.refetch()} />;
+
+  const usrahs = overview.data?.usrahs ?? [];
+  const pending = (queue.data?.requests ?? []).filter((r) => r.status === "pending");
+  const decided = (queue.data?.requests ?? []).filter((r) => r.status !== "pending").slice(0, 6);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <UserCheck className="h-[18px] w-[18px] text-primary" aria-hidden />
+          উসরা যোগানোর অনুরোধ
+        </CardTitle>
+        <CardDescription>
+          উসরাহীন সদস্যদের অনুরোধ — উপযুক্ত উসরা নির্বাচন করে অনুমোদন দিন (লিঙ্গ মিলতে হবে) বা কারণসহ বাতিল করুন। প্রতিটি সিদ্ধান্ত অডিট লগে সংরক্ষিত।
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {pending.length === 0 ? (
+          <EmptyState title="কোনো অপেক্ষমাণ অনুরোধ নেই ✓" hint="উসরাহীন কোনো সদস্য এই মুহূর্তে যোগ হতে অনুরোধ করেননি।" />
+        ) : (
+          <div className="space-y-2">
+            {pending.map((r) => {
+              const sameGenderUsrahs = usrahs.filter((u) => u.gender === r.userGender);
+              const pick = usrahPick[r.id] ?? "";
+              return (
+                <div key={r.id} className="rounded-md border border-border p-3">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-2 text-sm font-semibold">
+                        <UserRound className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                        {r.userName}
+                        <GenderBadge gender={r.userGender} />
+                      </p>
+                      {r.message ? (
+                        <p className="mt-1 max-w-xl text-sm text-muted-foreground">{r.message}</p>
+                      ) : null}
+                      <p className="mt-1 text-xs text-muted-foreground">{relativeBn(r.createdAt)} অনুরোধ করেছেন</p>
+                    </div>
+                    <Badge variant="warning">{JOIN_STATUS_LABELS_BN[r.status]}</Badge>
+                  </div>
+
+                  {rejecting?.id === r.id ? (
+                    <div className="mt-3 space-y-2 rounded-md border border-border/70 bg-muted/40 p-3">
+                      <Field label="বাতিলের কারণ (ঐচ্ছিক — সদস্য দেখতে পাবেন)" htmlFor={`join-reason-${r.id}`}>
+                        <Input
+                          id={`join-reason-${r.id}`}
+                          value={reason}
+                          onChange={(e) => setReason(e.target.value)}
+                          placeholder="যেমন: আপনার এলাকায় এখনো উসরা চালু হয়নি — ইনশাআল্লাহ শিগগির।"
+                          aria-label="বাতিলের কারণ"
+                        />
+                      </Field>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="destructive" loading={reject.isPending} onClick={() => reject.mutate(r)}>
+                          <UserRoundX className="h-4 w-4" aria-hidden /> বাতিল নিশ্চিত করুন
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => { setRejecting(null); setReason(""); }}>
+                          ফিরে যান
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex flex-wrap items-end gap-2">
+                      <div className="min-w-56 flex-1">
+                        <Field label="যে উসরায় যুক্ত হবেন" htmlFor={`join-usrah-${r.id}`}>
+                          <Select
+                            id={`join-usrah-${r.id}`}
+                            value={pick}
+                            onChange={(e) => setUsrahPick((m) => ({ ...m, [r.id]: e.target.value }))}
+                          >
+                            <option value="">উসরা নির্বাচন করুন…</option>
+                            {sameGenderUsrahs.map((u) => (
+                              <option key={u.id} value={u.id}>
+                                {u.name} {u.district ? `· ${u.district}` : ""}
+                              </option>
+                            ))}
+                          </Select>
+                        </Field>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={!pick}
+                        loading={approve.isPending && approve.variables?.id === r.id}
+                        onClick={() => approve.mutate(r)}
+                      >
+                        <UserCheck className="h-4 w-4" aria-hidden /> অনুমোদন
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => { setRejecting(r); setReason(""); }}>
+                        <UserRoundX className="h-4 w-4" aria-hidden /> বাতিল
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {decided.length > 0 ? (
+          <div className="border-t border-border pt-3">
+            <p className="mb-2 text-sm font-semibold">সাম্প্রতিক সিদ্ধান্ত</p>
+            <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+              {decided.map((r) => (
+                <li
+                  key={r.id}
+                  className="flex min-h-11 items-center justify-between gap-2 rounded-md border border-border/70 px-3 py-2 text-sm"
+                >
+                  <span className="min-w-0 truncate">
+                    {r.userName}
+                    {r.usrahName ? <span className="text-muted-foreground"> → {r.usrahName}</span> : null}
+                  </span>
+                  <Badge variant={r.status === "approved" ? "success" : "outline"}>
+                    {JOIN_STATUS_LABELS_BN[r.status] ?? r.status}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -619,10 +783,11 @@ export default function UsrahPage() {
   const { user, fullAdmin } = useSession();
   // Heads (and any supervisor inside a usrah) get the own-usrah member view;
   // invigilators get the cross-usrah health dashboard. full_admin additionally
-  // gets the management section (B6) on top.
+  // gets the join-request queue (W4d) + the management section (B6) on top.
   if (user?.usrahId && !fullAdmin) return <OwnUsrahView />;
   return (
     <div className="space-y-6">
+      {fullAdmin ? <JoinRequestSection /> : null}
       {fullAdmin ? <UsrahManageSection /> : null}
       <InvigilatorView />
     </div>

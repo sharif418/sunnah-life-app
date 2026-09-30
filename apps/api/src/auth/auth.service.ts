@@ -96,15 +96,15 @@ export class AuthService {
 
   // ── OTP verify (find-or-create + referral closure + guest merge) ──────────
 
-  async verifyOtp(
-    phone: string,
-    code: string,
-    name?: string,
-    gender?: "M" | "F",
-    referredByCode?: string,
-    guestEntries?: GuestEntryDto[]
-  ): Promise<VerifyResult> {
-    const normalized = (phone ?? "").replace(/[^\d+]/g, "");
+  /**
+   * Verify + CONSUME an OTP for a phone WITHOUT any sign-in side effects
+   * (W4i — the assessment acknowledgment reuses this to prove the assessee
+   * holds their own phone). Same rules as sign-in: newest non-expired code,
+   * atomic attempt counter (5 wrong → 429), and the deleteMany consume is
+   * the lock — a code never replays.
+   */
+  async consumeOtpCode(rawPhone: string, code: string): Promise<void> {
+    const normalized = (rawPhone ?? "").replace(/[^\d+]/g, "");
     if (!normalized || !code) throw new ApiError(400, "নম্বর ও কোড দিন");
 
     const otp = await this.rls.system((tx) =>
@@ -144,6 +144,21 @@ export class AuthService {
     if (consumed.count === 0) {
       throw new ApiError(400, "কোডটি ইতিমধ্যে ব্যবহৃত হয়েছে — আবার পাঠান");
     }
+  }
+
+  async verifyOtp(
+    phone: string,
+    code: string,
+    name?: string,
+    gender?: "M" | "F",
+    referredByCode?: string,
+    guestEntries?: GuestEntryDto[]
+  ): Promise<VerifyResult> {
+    const normalized = (phone ?? "").replace(/[^\d+]/g, "");
+    if (!normalized || !code) throw new ApiError(400, "নম্বর ও কোড দিন");
+
+    // shared atomic verify+consume (attempt counter + single-use lock)
+    await this.consumeOtpCode(normalized, code);
 
     // find or create the user (bootstrap context: pre-auth)
     const user = await this.rls.system(async (tx) => {

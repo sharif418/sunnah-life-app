@@ -6,14 +6,17 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
+
 import 'design/phosphor_icons.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'catalog/kit_gallery.dart';
 import 'design/design_tokens.dart';
 import 'core/bell_schedule.dart';
 import 'core/referral.dart';
@@ -33,6 +36,7 @@ import 'features/ilm/courses_screen.dart';
 import 'features/ilm/duas_screen.dart';
 import 'features/ilm/iman_branches_screen.dart';
 import 'features/ilm/islamic_names_screen.dart';
+import 'features/ilm/ilm_search_screen.dart';
 import 'features/ilm/ilm_screen.dart';
 import 'features/ilm/live_quiz_screen.dart';
 import 'features/ilm/names99_screen.dart';
@@ -41,12 +45,15 @@ import 'features/ilm/quizzes_screen.dart';
 import 'features/ilm/sunnahs_screen.dart';
 import 'features/more/about_screen.dart';
 import 'features/more/auto_silent_screen.dart';
+import 'features/more/detox_screen.dart';
+import 'features/more/faq_screen.dart';
 import 'features/more/live_screen.dart';
 import 'features/more/masala_screen.dart';
 import 'features/more/more_screen.dart';
 import 'features/more/mosques_screen.dart';
 import 'features/more/profile_screen.dart';
 import 'features/more/qibla_screen.dart';
+import 'features/more/support_screen.dart';
 import 'features/more/zakat_screen.dart';
 import 'features/onboarding/gender_completion_screen.dart';
 import 'features/onboarding/onboarding_screen.dart';
@@ -80,7 +87,9 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   NotificationService.instance.onAmalAction = (actionId, payload) async {
     final value = kAmalActionValues[actionId];
     if (value == null) return;
-    await ref.read(amalProvider.notifier).write(
+    await ref
+        .read(amalProvider.notifier)
+        .write(
           payload.amalKey,
           payload.dateKey,
           value,
@@ -131,6 +140,37 @@ class _RiverpodListenable extends ChangeNotifier {
   }
 }
 
+/// W4f: the shared pushed-route transition — fade-through on the motion
+/// tokens (one helper, no per-route ad-hoc). The shell branches (the five
+/// tabs) stay instant by design.
+CustomTransitionPage<T> slFadePage<T>({
+  required Widget child,
+  Object? arguments,
+  String? name,
+}) {
+  return CustomTransitionPage<T>(
+    arguments: arguments,
+    name: name,
+    transitionDuration: SLMotion.base,
+    reverseTransitionDuration: SLMotion.fast,
+    transitionsBuilder: (context, animation, secondary, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: SLMotion.decelerate,
+        reverseCurve: SLMotion.accelerate,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.98, end: 1).animate(curved),
+          child: child,
+        ),
+      );
+    },
+    child: child,
+  );
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   final listenable = _RiverpodListenable(ref);
   ref.onDispose(listenable.dispose);
@@ -147,8 +187,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       // the one-time gender+name step before anything else. The refresh
       // listener re-fires on the auth change, so finishing it lands on '/'.
       final auth = ref.read(authProvider);
-      if (auth.userOrNull != null &&
-          auth.userOrNull!.gender.needsCompletion) {
+      if (auth.userOrNull != null && auth.userOrNull!.gender.needsCompletion) {
         return loc == '/complete-profile' ? null : '/complete-profile';
       }
       // Da'wah engine is daee+ territory — hide the branch for everyone
@@ -184,21 +223,25 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'month',
-                    builder: (c, s) => const MonthGridScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const MonthGridScreen()),
                   ),
                   GoRoute(
                     path: 'habit',
-                    builder: (c, s) => const HabitBuilderScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const HabitBuilderScreen()),
                   ),
                   GoRoute(
                     path: 'self-test',
-                    builder: (c, s) => const SelfTestScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const SelfTestScreen()),
                   ),
                   // W4c: আমার লক্ষ্য — personal-goal lifecycle (propose →
                   // head approval → status chips).
                   GoRoute(
                     path: 'goals',
-                    builder: (c, s) => const GoalsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const GoalsScreen()),
                   ),
                 ],
               ),
@@ -214,11 +257,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // parity with the web views).
                   GoRoute(
                     path: 'questions',
-                    builder: (c, s) => const UsrahQuestionsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const UsrahQuestionsScreen()),
                   ),
                   GoRoute(
                     path: 'requirements',
-                    builder: (c, s) => const DawahRequirementsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const DawahRequirementsScreen()),
                   ),
                 ],
               ),
@@ -233,61 +278,82 @@ final routerProvider = Provider<GoRouter>((ref) {
                   // B9: courses + self-paced quizzes + live usrah quiz.
                   GoRoute(
                     path: 'courses',
-                    builder: (c, s) => const CoursesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const CoursesScreen()),
                     routes: [
                       GoRoute(
                         path: ':courseId',
-                        builder: (c, s) => CourseDetailScreen(
-                          courseId: s.pathParameters['courseId'] ?? '',
-                          openLessonId: s.uri.queryParameters['lesson'],
+                        pageBuilder: (c, s) => slFadePage(
+                          child: CourseDetailScreen(
+                            courseId: s.pathParameters['courseId'] ?? '',
+                            openLessonId: s.uri.queryParameters['lesson'],
+                          ),
                         ),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'quizzes',
-                    builder: (c, s) => const QuizzesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const QuizzesScreen()),
                     routes: [
                       GoRoute(
                         path: ':quizId',
-                        builder: (c, s) => QuizPlayerScreen(
-                          quizId: s.pathParameters['quizId'] ?? '',
+                        pageBuilder: (c, s) => slFadePage(
+                          child: QuizPlayerScreen(
+                            quizId: s.pathParameters['quizId'] ?? '',
+                          ),
                         ),
                       ),
                     ],
                   ),
                   GoRoute(
                     path: 'live-quiz',
-                    builder: (c, s) => const LiveQuizScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const LiveQuizScreen()),
                   ),
                   GoRoute(
                     path: 'quran',
-                    builder: (c, s) => const QuranReaderScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const QuranReaderScreen()),
                   ),
                   GoRoute(
                     path: 'adhkar',
-                    builder: (c, s) => const AdhkarScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const AdhkarScreen()),
+                  ),
+                  // W4j: the unified content search — the Ilm tab's entry
+                  // (public + its own offline fallback over the bundled packs).
+                  GoRoute(
+                    path: 'search',
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const IlmSearchScreen()),
                   ),
                   GoRoute(path: 'duas', builder: (c, s) => const DuasScreen()),
                   GoRoute(
                     path: 'names99',
-                    builder: (c, s) => const Names99Screen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const Names99Screen()),
                   ),
                   GoRoute(
                     path: 'islamic-names',
-                    builder: (c, s) => const IslamicNamesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const IslamicNamesScreen()),
                   ),
                   GoRoute(
                     path: 'iman-branches',
-                    builder: (c, s) => const ImanBranchesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ImanBranchesScreen()),
                   ),
                   GoRoute(
                     path: 'sunnahs',
-                    builder: (c, s) => const SunnahsScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const SunnahsScreen()),
                   ),
                   GoRoute(
                     path: 'articles',
-                    builder: (c, s) => const ArticlesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ArticlesScreen()),
                   ),
                 ],
               ),
@@ -301,32 +367,65 @@ final routerProvider = Provider<GoRouter>((ref) {
                 routes: [
                   GoRoute(
                     path: 'zakat',
-                    builder: (c, s) => const ZakatScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ZakatScreen()),
                   ),
                   GoRoute(
                     path: 'qibla',
-                    builder: (c, s) => const QiblaScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const QiblaScreen()),
                   ),
                   GoRoute(
                     path: 'autosilent',
-                    builder: (c, s) => const AutoSilentScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const AutoSilentScreen()),
                   ),
+                  // W4d: সোশ্যাল মিডিয়া ডিটক্স — Guard-module seed (the
+                  // More tile itself is config-gated; the screen also gates).
+                  GoRoute(
+                    path: 'detox',
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const DetoxScreen()),
+                  ),
+                  // W4d: জিজ্ঞাসা (FAQ) — bundled faq.json, expandable.
+                  GoRoute(path: 'faq', builder: (c, s) => const FaqScreen()),
                   GoRoute(
                     path: 'mosques',
-                    builder: (c, s) => const MosquesScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const MosquesScreen()),
                   ),
                   GoRoute(
                     path: 'masala',
-                    builder: (c, s) => const MasalaScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const MasalaScreen()),
                   ),
                   GoRoute(path: 'live', builder: (c, s) => const LiveScreen()),
+                  // W4d: লাইভ সাপোর্ট — own threads + the conversation view
+                  // (guest → sign-in gate inside the screen).
+                  GoRoute(
+                    path: 'support',
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const SupportScreen()),
+                    routes: [
+                      GoRoute(
+                        path: ':threadId',
+                        pageBuilder: (c, s) => slFadePage(
+                          child: SupportThreadScreen(
+                            id: s.pathParameters['threadId'] ?? '',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                   GoRoute(
                     path: 'about',
-                    builder: (c, s) => const AboutScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const AboutScreen()),
                   ),
                   GoRoute(
                     path: 'profile',
-                    builder: (c, s) => const ProfileScreen(),
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ProfileScreen()),
                   ),
                 ],
               ),
@@ -334,6 +433,16 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+      // W4f — the designer's kit gallery. Debug/profile builds only: the
+      // route never exists in release (tree-shaken — nothing inside the
+      // gallery can ship), and nothing in the UI links to it. Open by
+      // pushing '/__gallery' in a debug run (see lib/catalog/kit_gallery.dart).
+      if (!kReleaseMode)
+        GoRoute(
+          path: '/__gallery',
+          pageBuilder: (c, s) =>
+              slFadePage(child: const KitGalleryScreen()),
+        ),
     ],
   );
 });
@@ -417,9 +526,7 @@ class BootstrapGate extends ConsumerWidget {
         textDirection: TextDirection.ltr,
         child: MaterialApp(
           home: Scaffold(
-            body: Center(
-              child: Text('${S.tr(Lang.bn, 'boot_failed')}: $e'),
-            ),
+            body: Center(child: Text('${S.tr(Lang.bn, 'boot_failed')}: $e')),
           ),
         ),
       ),
@@ -444,13 +551,18 @@ class _SplashLogo extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: const Center(
-            child: Icon(Icons.star, color: SLColors.primaryDeep, size: 40),
+            child: Icon(
+              PhosphorIconsFill.star,
+              color: SLColors.primaryDeep,
+              size: 40,
+            ),
           ),
         ),
         const SizedBox(height: SLSpacing.s16),
         Text(
           S.tr(Lang.bn, 'app_title'),
-          style: GoogleFonts.hindSiliguri(
+          style: const TextStyle(
+            fontFamily: kAppFontFamily,
             fontSize: 24,
             fontWeight: FontWeight.w700,
             color: SLColors.lightPrimaryForeground,
@@ -484,13 +596,14 @@ class AppShellScaffold extends ConsumerWidget {
     // the role doesn't qualify).
     final current = navigationShell.currentIndex;
     final selectedTab = !canSeeDawah && current > 2 ? current - 1 : current;
-    final onRootTab = _rootTabPaths.contains(GoRouterState.of(context).uri.path);
+    final onRootTab = _rootTabPaths.contains(
+      GoRouterState.of(context).uri.path,
+    );
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            Theme.of(context).brightness == Brightness.dark
+        statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
             ? Brightness.light
             : Brightness.dark,
       ),

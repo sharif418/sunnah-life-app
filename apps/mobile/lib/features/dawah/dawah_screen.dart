@@ -12,13 +12,16 @@ import '../../api/api_client.dart' show ApiException;
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
-import '../../services/platform_channels.dart';
 import '../../state/amal_state.dart';
 import '../../state/goals_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
+import 'assessment_confirm_sheet.dart';
+import 'madu_tree.dart';
+import 'referral_share_sheet.dart';
+import '../../design/phosphor_icons.dart';
 
 class DawahScreen extends ConsumerWidget {
   const DawahScreen({super.key});
@@ -32,14 +35,14 @@ class DawahScreen extends ConsumerWidget {
       body = const Skeleton(height: 72, count: 5);
     } else if (!auth.signedIn) {
       body = _Gate(
-        icon: Icons.login,
+        icon: PhosphorIconsRegular.signIn,
         message: context.t('dawah_signin_needed'),
         actionLabel: context.t('onb_signin'),
         onAction: () => context.push('/auth'),
       );
     } else if (!(auth.user?.canSeeDawah ?? false)) {
       body = _Gate(
-        icon: Icons.campaign_outlined,
+        icon: PhosphorIconsRegular.megaphone,
         message: context.t('dawah_role_needed'),
       );
     } else {
@@ -151,8 +154,8 @@ class _DawahOverviewTab extends ConsumerWidget {
           ),
         ],
       ),
-      data: (overview) {
-        if (overview == null) {
+      data: (remote) {
+        if (remote == null) {
           return ListView(
             children: [
               const SizedBox(height: SLSpacing.s24),
@@ -163,12 +166,25 @@ class _DawahOverviewTab extends ConsumerWidget {
             ],
           );
         }
+        final overview = remote.data;
+        final memberName = ref.watch(authProvider).userOrNull?.name ?? '';
 
         String joinLink(String code) => 'https://sunnahlife.app/join/$code';
+
+        // W4e — the branded referral card preview (renders the PNG on
+        // share). The sheet resolves all its strings from the locale.
+        void openCardSheet() => showReferralCardSheet(
+          context,
+          memberName: memberName,
+          memberCode: overview.memberCode,
+          joinLink: joinLink(overview.memberCode),
+        );
 
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
           children: [
+            // W4-fix4: cache-served snapshot — subtle banner + the stamp.
+            if (remote.stale) OfflineBanner(fetchedAt: remote.fetchedAt),
             // Member code + referral
             AppCard(
               child: Column(
@@ -193,7 +209,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                       ),
                       IconButton(
                         tooltip: context.t('copy'),
-                        icon: const Icon(Icons.copy),
+                        icon: const Icon(PhosphorIconsRegular.copy),
                         onPressed: () async {
                           await Clipboard.setData(
                             ClipboardData(text: overview.memberCode),
@@ -226,25 +242,23 @@ class _DawahOverviewTab extends ConsumerWidget {
                       ),
                       IconButton(
                         tooltip: context.t('share'),
-                        icon: const Icon(Icons.share),
-                        onPressed: () async {
-                          final text =
-                              '${context.t('dawah_share_message')} ${joinLink(overview.memberCode)}';
-                          await Clipboard.setData(ClipboardData(text: text));
-                          await SystemChannel.shareText(text);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  '${context.t('copied')} — ${context.t('share')}',
-                                ),
-                              ),
-                            );
-                          }
-                        },
+                        icon: const Icon(PhosphorIconsRegular.shareNetwork),
+                        onPressed: openCardSheet,
                       ),
                     ],
                   ),
+                  // W4e — the overview's primary share action: the branded
+                  // card preview (hidden when there is no code to invite
+                  // with — the empty-code edge stays honest).
+                  if (overview.memberCode.isNotEmpty) ...[
+                    const SizedBox(height: SLSpacing.s12),
+                    FilledButton.icon(
+                      key: const Key('dawahShareCardButton'),
+                      onPressed: openCardSheet,
+                      icon: const Icon(PhosphorIconsRegular.shareNetwork),
+                      label: Text(context.t('dawah_share_card')),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -275,10 +289,10 @@ class _DawahOverviewTab extends ConsumerWidget {
             // (GET /api/dawah/requirements, B9 mobile parity with the web).
             SectionHeader(
               context.t('dawah_requirements'),
-              icon: Icons.checklist,
+              icon: PhosphorIconsRegular.listChecks,
               action: TextButton.icon(
                 onPressed: () => context.push('/dawah/requirements'),
-                icon: const Icon(Icons.bolt, size: 16),
+                icon: const Icon(PhosphorIconsRegular.lightning, size: 16),
                 label: Text(context.t('dawah_req_live_action')),
               ),
             ),
@@ -291,8 +305,8 @@ class _DawahOverviewTab extends ConsumerWidget {
                       dense: true,
                       leading: Icon(
                         overview.requirements[i].done
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
+                            ? PhosphorIconsFill.checkCircle
+                            : PhosphorIconsRegular.circle,
                         color: overview.requirements[i].done
                             ? theme.colorScheme.primary
                             : theme.colorScheme.outline,
@@ -311,49 +325,30 @@ class _DawahOverviewTab extends ConsumerWidget {
               ),
             ),
 
-            // Madu tree
-            SectionHeader(context.t('dawah_madu'), icon: Icons.account_tree),
+            // Madu tree — W4e: the flat depth-sorted downline rendered as
+            // an indented tree with connector rails (read-only — the API
+            // carries depth but no parentage; madu_tree.dart notes why).
+            SectionHeader(
+              context.t('dawah_madu'),
+              icon: PhosphorIconsRegular.gitFork,
+            ),
             if (overview.downline.isEmpty)
               EmptyState(
                 message: overview.level == Level.none
                     ? context.t('dawah_level_none_next')
                     : context.t('empty_generic'),
-                icon: Icons.park_outlined,
+                icon: PhosphorIconsRegular.tree,
               )
             else
-              AppCard(
-                padding: EdgeInsets.zero,
-                child: Column(
-                  children: [
-                    for (final node in overview.downline)
-                      ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsetsDirectional.only(
-                          start: SLSpacing.s12 + (node.depth - 1) * 24,
-                          end: SLSpacing.s12,
-                        ),
-                        leading: node.depth == 1
-                            ? const Icon(Icons.person_outline)
-                            // Mirrors under RTL so the tree keeps branching
-                            // inward from the leading edge.
-                            : const DirectionalIcon(
-                                Icons.subdirectory_arrow_right,
-                                size: 18,
-                              ),
-                        title: Text(node.name),
-                        subtitle: Text(
-                          '${node.memberCode ?? ''} · ${context.t(node.level.labelKey)}',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+              MaduTree(nodes: overview.downline),
 
-            // Assessments
+            // Assessments — W4i: every row carries the acknowledgment STATUS
+            // (pending_confirmation | confirmed | declined); a pending result
+            // only becomes final after the member's own OTP confirmation, so
+            // those rows get the নিশ্চিত করুন CTA that opens the OTP sheet.
             SectionHeader(
               context.t('dawah_assessments'),
-              icon: Icons.fact_check_outlined,
+              icon: PhosphorIconsRegular.clipboardText,
             ),
             if (overview.assessments.isEmpty)
               EmptyState(message: context.t('empty_generic'))
@@ -362,31 +357,88 @@ class _DawahOverviewTab extends ConsumerWidget {
                 padding: EdgeInsets.zero,
                 child: Column(
                   children: [
-                    for (final a in overview.assessments)
+                    for (final a in overview.assessments) ...[
                       ListTile(
                         dense: true,
+                        key: ValueKey('assessment_row_${a.id}'),
                         leading: Icon(
-                          a.result == 'passed'
-                              ? Icons.verified
-                              : Icons.timelapse,
-                          color: a.result == 'passed'
+                          a.status == AssessmentStatus.declined
+                              ? PhosphorIconsRegular.warningCircle
+                              : a.result == 'passed'
+                              ? PhosphorIconsRegular.sealCheck
+                              : PhosphorIconsRegular.hourglass,
+                          color: a.status == AssessmentStatus.declined
+                              ? theme.colorScheme.error
+                              : a.result == 'passed'
                               ? theme.colorScheme.primary
                               : theme.colorScheme.tertiary,
                         ),
                         title: Text(a.templateKey),
-                        subtitle: Text(a.createdAt.substring(0, 10)),
-                        trailing: a.scorePct == null
-                            ? null
-                            : Text(
-                                '${bn ? toBn(a.scorePct!) : a.scorePct}%',
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w700,
-                                  color: a.result == 'passed'
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.tertiary,
+                        subtitle:
+                            a.status == AssessmentStatus.declined &&
+                                (a.decisionNote ?? '').isNotEmpty
+                            ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(a.createdAt.substring(0, 10)),
+                                  Text(
+                                    '${context.t('assessment_decision_note_label')}: ${a.decisionNote}',
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.error,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Text(a.createdAt.substring(0, 10)),
+                        trailing: FittedBox(
+                          // Score + chip never overflow the row when the
+                          // subtitle wraps to two lines (declined reason).
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              if (a.scorePct != null)
+                                Text(
+                                  '${bn ? toBn(a.scorePct!) : a.scorePct}%',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: a.result == 'passed'
+                                        ? theme.colorScheme.primary
+                                        : theme.colorScheme.tertiary,
+                                  ),
                                 ),
-                              ),
+                              AssessmentStatusChip(status: a.status),
+                            ],
+                          ),
+                        ),
+                        onTap: a.status == AssessmentStatus.pendingConfirmation
+                            ? () => showAssessmentConfirmSheet(context, a)
+                            : null,
                       ),
+                      if (a.status == AssessmentStatus.pendingConfirmation)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(
+                            SLSpacing.s16,
+                            0,
+                            SLSpacing.s16,
+                            SLSpacing.s8,
+                          ),
+                          child: Align(
+                            alignment: AlignmentDirectional.centerEnd,
+                            child: FilledButton.tonalIcon(
+                              key: ValueKey('assessmentConfirmCta_${a.id}'),
+                              onPressed: () =>
+                                  showAssessmentConfirmSheet(context, a),
+                              icon: const Icon(
+                                PhosphorIconsRegular.sealCheck,
+                                size: 18,
+                              ),
+                              label: Text(context.t('assessment_confirm_cta')),
+                            ),
+                          ),
+                        ),
+                    ],
                   ],
                 ),
               ),
@@ -475,11 +527,14 @@ class _UsrahTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
           children: [
+            // W4-fix4: cache-served snapshot — subtle banner + the stamp.
+            if (bundle.stale && bundle.fetchedAt != null)
+              OfflineBanner(fetchedAt: bundle.fetchedAt!),
             if (usrah == null) ...[
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
                 message: context.t('dawah_no_usrah'),
-                icon: Icons.groups_outlined,
+                icon: PhosphorIconsRegular.usersThree,
               ),
             ] else ...[
               AppCard(
@@ -488,7 +543,10 @@ class _UsrahTab extends ConsumerWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.groups, color: theme.colorScheme.primary),
+                        Icon(
+                          PhosphorIconsRegular.usersThree,
+                          color: theme.colorScheme.primary,
+                        ),
                         const SizedBox(width: SLSpacing.s8),
                         Expanded(
                           child: Text(
@@ -547,7 +605,7 @@ class _UsrahTab extends ConsumerWidget {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.forum_outlined,
+                      PhosphorIconsRegular.chats,
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: SLSpacing.s12),
@@ -556,17 +614,17 @@ class _UsrahTab extends ConsumerWidget {
                         context.t('usrah_q_title'),
                         style: theme.textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                      ),
+                        ),
                       ),
                     ),
-                    const DirectionalIcon(Icons.chevron_right),
+                    const DirectionalIcon(PhosphorIconsRegular.caretRight),
                   ],
                 ),
               ),
               const SizedBox(height: SLSpacing.s4),
               SectionHeader(
                 context.t('dawah_announcements'),
-                icon: Icons.campaign_outlined,
+                icon: PhosphorIconsRegular.megaphone,
               ),
               if (bundle.announcements.isEmpty)
                 EmptyState(message: context.t('empty_generic'))
@@ -580,7 +638,7 @@ class _UsrahTab extends ConsumerWidget {
                           children: [
                             if (a.pinned)
                               Icon(
-                                Icons.push_pin,
+                                PhosphorIconsRegular.pushPin,
                                 size: 14,
                                 color: theme.colorScheme.tertiary,
                               ),
@@ -610,7 +668,7 @@ class _UsrahTab extends ConsumerWidget {
               const SizedBox(height: SLSpacing.s12),
               SectionHeader(
                 context.t('goals_queue_title'),
-                icon: Icons.fact_check_outlined,
+                icon: PhosphorIconsRegular.clipboardText,
               ),
               const _GoalQueueSection(),
             ],
@@ -643,7 +701,7 @@ class _GoalQueueSection extends ConsumerWidget {
         if (queue.isEmpty) {
           return EmptyState(
             message: context.t('goals_queue_empty'),
-            icon: Icons.fact_check_outlined,
+            icon: PhosphorIconsRegular.clipboardText,
           );
         }
         return Column(
@@ -681,7 +739,10 @@ class _GoalQueueCard extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.flag_outlined, color: theme.colorScheme.primary),
+                Icon(
+                  PhosphorIconsRegular.flagBanner,
+                  color: theme.colorScheme.primary,
+                ),
                 const SizedBox(width: SLSpacing.s8),
                 Expanded(
                   child: Column(
@@ -714,7 +775,7 @@ class _GoalQueueCard extends ConsumerWidget {
                 Expanded(
                   child: FilledButton.icon(
                     onPressed: () => _decide(context, ref),
-                    icon: const Icon(Icons.check, size: 18),
+                    icon: const Icon(PhosphorIconsRegular.check, size: 18),
                     label: Text(context.t('goals_approve')),
                   ),
                 ),
@@ -722,7 +783,7 @@ class _GoalQueueCard extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () => _openRejectSheet(context, ref),
-                    icon: const Icon(Icons.close, size: 18),
+                    icon: const Icon(PhosphorIconsRegular.x, size: 18),
                     label: Text(context.t('goals_reject')),
                   ),
                 ),
@@ -740,16 +801,13 @@ class _GoalQueueCard extends ConsumerWidget {
       ref.invalidate(goalQueueProvider);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(context.t('goals_approved_toast')),
-          ),
+          SnackBar(content: Text(context.t('goals_approved_toast'))),
         );
       }
     } on ApiException catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -799,9 +857,8 @@ class _RejectReasonSheetState extends ConsumerState<_RejectReasonSheet> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -882,8 +939,8 @@ class _ReviewsTab extends ConsumerWidget {
         message: '$e',
         onRetry: () => ref.invalidate(reviewsProvider),
       ),
-      data: (reviews) {
-        if (reviews == null) {
+      data: (remote) {
+        if (remote == null) {
           return ListView(
             children: [
               const SizedBox(height: SLSpacing.s24),
@@ -894,22 +951,28 @@ class _ReviewsTab extends ConsumerWidget {
             ],
           );
         }
+        final reviews = remote.data;
         if (reviews.isEmpty) {
           return ListView(
             children: [
+              // W4-fix4: even the empty state deserves the staleness stamp.
+              if (remote.stale) OfflineBanner(fetchedAt: remote.fetchedAt),
               const SizedBox(height: SLSpacing.s24),
               EmptyState(
                 message: context.t('dawah_no_reviews'),
-                icon: Icons.rate_review_outlined,
+                icon: PhosphorIconsRegular.star,
               ),
             ],
           );
         }
         return ListView.builder(
           padding: const EdgeInsets.all(SLSpacing.s16),
-          itemCount: reviews.length,
+          itemCount: reviews.length + (remote.stale ? 1 : 0),
           itemBuilder: (context, i) {
-            final r = reviews[i];
+            if (remote.stale && i == 0) {
+              return OfflineBanner(fetchedAt: remote.fetchedAt);
+            }
+            final r = reviews[remote.stale ? i - 1 : i];
             final statusColor = switch (r.status) {
               'done' => theme.colorScheme.primary,
               'overdue' => theme.colorScheme.error,
@@ -978,8 +1041,8 @@ class _ReviewsTab extends ConsumerWidget {
                         for (var s = 1; s <= 5; s++)
                           Icon(
                             s <= (r.rating ?? 0)
-                                ? Icons.star
-                                : Icons.star_border,
+                                ? PhosphorIconsFill.star
+                                : PhosphorIconsRegular.star,
                             size: 16,
                             color: theme.colorScheme.tertiary,
                           ),

@@ -13,6 +13,7 @@ import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../../state/amal_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class AdhkarScreen extends ConsumerStatefulWidget {
   const AdhkarScreen({super.key});
@@ -42,7 +43,7 @@ class _AdhkarScreenState extends ConsumerState<AdhkarScreen> {
           if (sets.isEmpty) {
             return EmptyState(
               message: context.t('empty_generic'),
-              icon: Icons.spa_outlined,
+              icon: PhosphorIconsRegular.plant,
             );
           }
           final morning = sets.where((s) => s.period == 'morning').toList();
@@ -55,7 +56,7 @@ class _AdhkarScreenState extends ConsumerState<AdhkarScreen> {
                 (context.t('adhkar_evening'), evening, 'adhkar_evening'),
               ]) ...[
                 if (list.isNotEmpty) ...[
-                  SectionHeader(title, icon: Icons.wb_twilight_outlined),
+                  SectionHeader(title, icon: PhosphorIconsRegular.sunHorizon),
                   for (final set in list)
                     _DhikrSetCard(
                       set: set,
@@ -126,7 +127,7 @@ class _DhikrSetCard extends StatelessWidget {
               ),
               if (_allDone())
                 Icon(
-                  Icons.check_circle,
+                  PhosphorIconsFill.checkCircle,
                   color: theme.colorScheme.primary,
                   size: 22,
                 ),
@@ -224,7 +225,7 @@ class _DhikrItemRow extends StatelessWidget {
                 ),
                 const SizedBox(width: SLSpacing.s4),
                 Icon(
-                  done ? Icons.check_circle : Icons.touch_app_outlined,
+                  done ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.handTap,
                   size: 18,
                   color: done
                       ? theme.colorScheme.primary

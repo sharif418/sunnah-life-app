@@ -6,6 +6,7 @@
 
 import * as React from "react";
 import { useApp } from "@/lib/store";
+import { translate } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { PrayerHero } from "@/components/home/prayer-hero";
 import { QiblaCard } from "@/components/home/qibla-card";
@@ -39,6 +40,8 @@ export function HomeView() {
 /** অবস্থান নেই — শহর বাছাই বা GPS; ব্যর্থ হলে ঢাকা ডিফল্টই থাকে। */
 function LocationPrompt() {
   const [open, setOpen] = React.useState(false);
+  const lang = useApp((s) => s.profile.language);
+  const t = (k: string) => translate(lang, k);
   return (
     <>
       <div className="rounded-xl border border-gold/40 bg-gold-soft p-4 flex items-center gap-3">
@@ -46,13 +49,11 @@ function LocationPrompt() {
           <MapPin className="size-5" />
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold">অবস্থান নির্বাচন করুন</p>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            নামাজের সময় ও কিবলা ঠিক করতে আপনার শহর জানা দরকার।
-          </p>
+          <p className="text-sm font-semibold">{t("home.chooseLocation")}</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">{t("home.locationHint")}</p>
         </div>
         <Button size="sm" className="h-11 rounded-xl shrink-0" onClick={() => setOpen(true)}>
-          <Navigation className="size-4" /> শহর
+          <Navigation className="size-4" /> {t("home.city")}
         </Button>
       </div>
       <LocationSheet open={open} onOpenChange={setOpen} />

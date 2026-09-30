@@ -17,6 +17,7 @@ import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Pure: mosques sorted by great-circle distance from (lat, lng).
 /// Exported for unit tests (sorting from real coords vs city fallback).
@@ -112,7 +113,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
           if (mosques.isEmpty) {
             return EmptyState(
                 message: context.t('empty_generic'),
-                icon: Icons.mosque_outlined);
+                icon: PhosphorIconsRegular.mosque);
           }
           final origin = mosqueListOrigin(_fix, profile.lat, profile.lng);
           final sorted = sortMosquesByDistance(
@@ -133,7 +134,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
                     horizontal: SLSpacing.s12, vertical: SLSpacing.s8),
                 child: Row(
                   children: [
-                    Icon(Icons.mosque,
+                    Icon(PhosphorIconsFill.mosque,
                         size: 32, color: theme.colorScheme.primary),
                     const SizedBox(width: SLSpacing.s12),
                     Expanded(
@@ -156,7 +157,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
                       child: Transform.rotate(
                         angle: bearing * math.pi / 180,
                         child: Icon(
-                          Icons.navigation_rounded,
+                          PhosphorIconsRegular.navigationArrow,
                           size: 18,
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -205,7 +206,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
           child: Row(
             children: [
               Icon(
-                fromGps ? Icons.my_location : Icons.location_city_outlined,
+                fromGps ? PhosphorIconsRegular.crosshair : PhosphorIconsRegular.buildings,
                 size: 20,
                 color: theme.colorScheme.primary,
               ),

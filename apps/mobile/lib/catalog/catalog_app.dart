@@ -65,8 +65,8 @@ class _CatalogStateState extends State<_CatalogState> {
                 tooltip: 'Light / Dark',
                 icon: Icon(
                   _mode == ThemeMode.light
-                      ? Icons.dark_mode_outlined
-                      : Icons.light_mode_outlined,
+                      ? PhosphorIconsRegular.moonStars
+                      : PhosphorIconsRegular.sun,
                 ),
                 onPressed: () => setState(
                   () => _mode = _mode == ThemeMode.light
@@ -76,7 +76,7 @@ class _CatalogStateState extends State<_CatalogState> {
               ),
               IconButton(
                 tooltip: 'RTL',
-                icon: const Icon(Icons.swap_horiz),
+                icon: const Icon(PhosphorIconsRegular.arrowsLeftRight),
                 isSelected: _rtl,
                 onPressed: () => setState(() => _rtl = !_rtl),
               ),
@@ -115,7 +115,7 @@ class _CatalogStateState extends State<_CatalogState> {
                       _P(
                         'ActionChip',
                         child: ActionChip(
-                          avatar: Icon(Icons.grid_view_outlined, size: 18),
+                          avatar: Icon(PhosphorIconsRegular.squaresFour, size: 18),
                           label: Text('মাসের গ্রিড'),
                           onPressed: () {},
                         ),
@@ -192,7 +192,7 @@ class _CatalogStateState extends State<_CatalogState> {
                 children: [
                   EmptyState(
                     message: 'এখনো কিছু নেই',
-                    icon: Icons.inbox_outlined,
+                    icon: PhosphorIconsRegular.tray,
                   ),
                   SizedBox(height: SLSpacing.s8),
                   ErrorState(
@@ -208,7 +208,7 @@ class _CatalogStateState extends State<_CatalogState> {
                 children: [
                   SectionHeader(
                     'আজকের সময়সূচি',
-                    icon: Icons.schedule_outlined,
+                    icon: PhosphorIconsRegular.clock,
                   ),
                   AppCard(
                     child: Text(

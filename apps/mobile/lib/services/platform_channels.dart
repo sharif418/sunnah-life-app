@@ -5,7 +5,10 @@
 ///    + canScheduleExactAlarms + ACTION_REQUEST_SCHEDULE_EXACT_ALARM),
 ///    (b) DND/auto-silent (NotificationManager.setInterruptionFilter).
 ///  · sunnahlife/widget — home-widget text updates (RemoteViews).
-///  · sunnahlife/system — share sheet (ACTION_SEND) without a plugin.
+///  · sunnahlife/system — share sheet (ACTION_SEND) without a plugin: text,
+///    or a rendered image file through the app's FileProvider (W4e).
+///  · sunnahlife/usage — UsageStatsManager screen-time (Guard-module
+///    detox seed, W4d): permission probe + today's totals.
 library;
 
 import 'package:flutter/services.dart';
@@ -179,6 +182,106 @@ class SystemChannel {
       // Web/desktop/test fallback: the UI layer also copies to clipboard.
     } on PlatformException {
       // ignore
+    }
+  }
+
+  /// Native share sheet carrying a FILE (Android ACTION_SEND image/* +
+  /// EXTRA_STREAM through a FileProvider content URI — W4e referral card).
+  ///
+  /// Returns false when the platform can't carry a file (iOS stub, tests,
+  /// missing file, undeclared authority) so the caller can honestly fall
+  /// back to [shareText] instead of silently doing nothing.
+  static Future<bool> shareFile({
+    required String path,
+    String mimeType = 'image/png',
+    String text = '',
+  }) async {
+    try {
+      return await _ch.invokeMethod<bool>('shareFile', {
+            'path': path,
+            'mimeType': mimeType,
+            'text': text,
+          }) ??
+          false;
+    } on MissingPluginException {
+      return false; // iOS stub / tests — caller falls back to text
+    } on PlatformException {
+      return false;
+    }
+  }
+}
+
+/// One app row of today's screen-time report (label resolved via the
+/// PackageManager — falls back to the package name when unavailable).
+class UsageApp {
+  const UsageApp({required this.label, required this.minutes});
+  final String label;
+  final int minutes;
+}
+
+/// Today's UsageStats snapshot (W4d Guard-module seed): total foreground
+/// minutes + the top apps (the list excludes the app itself).
+class UsageToday {
+  const UsageToday({required this.totalMinutes, required this.apps});
+  final int totalMinutes;
+  final List<UsageApp> apps;
+}
+
+/// sunnahlife/usage — Android UsageStatsManager reads for the social-media
+/// detox screen. iOS/desktop/tests have no handler: [hasPermission] returns
+/// null there so the UI can render its "supported on Android only" state.
+class UsageChannel {
+  const UsageChannel._();
+
+  static const MethodChannel _ch = MethodChannel('sunnahlife/usage');
+
+  /// Usage-access (AppOps) state: true = granted, false = denied,
+  /// null = no platform handler (iOS / desktop / tests).
+  static Future<bool?> hasPermission() async {
+    try {
+      return await _ch.invokeMethod<bool>('hasPermission');
+    } on MissingPluginException {
+      return null; // unsupported platform — the screen shows Android-only
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  /// Opens the system "apps with usage access" screen. Returns whether an
+  /// intent was actually fired.
+  static Future<bool> openSettings() async {
+    try {
+      return await _ch.invokeMethod<bool>('openSettings') ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
+  }
+
+  /// Today's screen-time report. Null when the platform has no handler OR
+  /// usage access is missing — the caller decides which (via
+  /// [hasPermission] first).
+  static Future<UsageToday?> todayStats() async {
+    try {
+      final raw = await _ch.invokeMethod<Map>('todayStats');
+      if (raw == null) return null;
+      return UsageToday(
+        totalMinutes: (raw['totalMinutes'] as num?)?.toInt() ?? 0,
+        apps: ((raw['apps'] as List?) ?? const [])
+            .whereType<Map>()
+            .map(
+              (e) => UsageApp(
+                label: e['label'] as String? ?? '',
+                minutes: (e['minutes'] as num?)?.toInt() ?? 0,
+              ),
+            )
+            .toList(),
+      );
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
     }
   }
 }

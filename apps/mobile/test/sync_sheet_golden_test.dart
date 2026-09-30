@@ -22,6 +22,7 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart' show FontLoader, rootBundle;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunnah_life/db/database.dart';
@@ -63,6 +64,16 @@ void main() {
     // since runtime fetching is off) — first capture would show tofu.
     await tester.runAsync(() async {
       GoogleFonts.hindSiliguri(fontSize: 10);
+      // Icon families too — see test/golden_fonts.dart.
+      for (final entry in [
+        ('PhosphorRegular', 'assets/fonts/phosphor-regular.ttf'),
+        ('PhosphorFill', 'assets/fonts/phosphor-fill.ttf'),
+        ('PhosphorBold', 'assets/fonts/phosphor-bold.ttf'),
+      ]) {
+        final loader = FontLoader(entry.$1)
+          ..addFont(rootBundle.load(entry.$2));
+        await loader.load();
+      }
       await Future<void>.delayed(const Duration(milliseconds: 400));
     });
     await tester.pump();

@@ -18,6 +18,7 @@ import '../../services/platform_channels.dart';
 import '../../services/prayer_bell_scheduler.dart';
 import '../../state/prayer_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class AutoSilentScreen extends ConsumerStatefulWidget {
   const AutoSilentScreen({super.key});
@@ -185,7 +186,7 @@ class _AutoSilentScreenState extends ConsumerState<AutoSilentScreen>
           IconButton(
             tooltip: context.t('autosilent_recheck'),
             onPressed: _recheckDnd,
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(PhosphorIconsRegular.arrowClockwise),
           ),
         ],
       ),
@@ -200,7 +201,7 @@ class _AutoSilentScreenState extends ConsumerState<AutoSilentScreen>
                 Row(
                   children: [
                     Icon(
-                      Icons.do_not_disturb_on,
+                      PhosphorIconsFill.minusCircle,
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: SLSpacing.s12),
@@ -222,7 +223,7 @@ class _AutoSilentScreenState extends ConsumerState<AutoSilentScreen>
                 Row(
                   children: [
                     Icon(
-                      granted ? Icons.check_circle : Icons.error_outline,
+                      granted ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.warningCircle,
                       size: 18,
                       color: granted
                           ? theme.colorScheme.tertiary
@@ -243,7 +244,7 @@ class _AutoSilentScreenState extends ConsumerState<AutoSilentScreen>
                 if (!granted) ...[
                   const SizedBox(height: SLSpacing.s12),
                   FilledButton.icon(
-                    icon: const Icon(Icons.admin_panel_settings_outlined),
+                    icon: const Icon(PhosphorIconsRegular.shieldCheck),
                     label: Text(context.t('autosilent_grant')),
                     onPressed: _requestAccess,
                   ),

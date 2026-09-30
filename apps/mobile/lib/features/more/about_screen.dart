@@ -9,6 +9,7 @@ import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class AboutScreen extends ConsumerStatefulWidget {
   const AboutScreen({super.key});
@@ -66,7 +67,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                     color: SLColors.gold,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.star,
+                  child: const Icon(PhosphorIconsFill.star,
                       color: SLColors.primaryDeep, size: 32),
                 ),
                 const SizedBox(height: SLSpacing.s12),
@@ -86,7 +87,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
           const SizedBox(height: SLSpacing.s16),
 
           // FAQ
-          SectionHeader(context.t('more_faq'), icon: Icons.help_outline),
+          SectionHeader(context.t('more_faq'), icon: PhosphorIconsRegular.question),
           FutureBuilder<List<FaqItem>>(
             future: ContentPack.faq(),
             builder: (context, snap) {
@@ -97,7 +98,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
               if (faqs.isEmpty) {
                 return EmptyState(
                     message: context.t('empty_generic'),
-                    icon: Icons.help_outline);
+                    icon: PhosphorIconsRegular.question);
               }
               return AppCard(
                 padding: EdgeInsets.zero,
@@ -131,12 +132,12 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
           const SizedBox(height: SLSpacing.s16),
 
           // Feedback
-          SectionHeader(context.t('more_feedback'), icon: Icons.rate_review),
+          SectionHeader(context.t('more_feedback'), icon: PhosphorIconsRegular.star),
           if (_sent)
             AppCard(
               child: Row(
                 children: [
-                  Icon(Icons.check_circle,
+                  Icon(PhosphorIconsFill.checkCircle,
                       color: theme.colorScheme.primary),
                   const SizedBox(width: SLSpacing.s8),
                   Expanded(child: Text(context.t('feedback_sent'))),
@@ -165,7 +166,7 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                               height: 18,
                               child: CircularProgressIndicator(
                                   strokeWidth: 2))
-                          : const Icon(Icons.send_outlined),
+                          : const Icon(PhosphorIconsRegular.paperPlaneTilt),
                       label: Text(context.t('send')),
                     ),
                   ),

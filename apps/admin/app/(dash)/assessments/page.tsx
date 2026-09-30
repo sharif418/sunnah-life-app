@@ -400,6 +400,23 @@ function AssessmentHistory() {
         ),
       },
       {
+        // W4i: the member's OTP-confirmed acknowledgment lifecycle —
+        // read-only here; the confirm is the ASSESSEE's own action.
+        accessorKey: "status",
+        header: "নিশ্চয়ন",
+        cell: ({ row }) => {
+          const st = (row.original as { status?: string }).status ?? "pending_confirmation";
+          const map: Record<string, { label: string; variant: "success" | "warning" | "alert" }> = {
+            confirmed: { label: "নিশ্চিত", variant: "success" },
+            declined: { label: "বাতিল", variant: "alert" },
+            pending_confirmation: { label: "নিশ্চয়ন বাকি", variant: "warning" },
+          };
+          const cfg = map[st] ?? map.pending_confirmation;
+          return <Badge variant={cfg.variant}>{cfg.label}</Badge>;
+        },
+        enableSorting: false,
+      },
+      {
         accessorKey: "signatures",
         header: "স্বাক্ষর",
         cell: ({ row }) => (
@@ -424,13 +441,18 @@ function AssessmentHistory() {
       emptyTitle="এখনো কোনো মূল্যায়ন রেকর্ড হয়নি"
       emptyHint="নতুন মূল্যায়ন ট্যাব থেকে প্রথম মূল্যায়ন শুরু করুন।"
       csvFilename="assessments.csv"
-      csvHeaders={["মূল্যায়নার্থী", "মূল্যায়নকারী", "তারিখ", "স্কোর (%)", "ফলাফল", "টেমপ্লেট"]}
+      csvHeaders={["মূল্যায়নার্থী", "মূল্যায়নকারী", "তারিখ", "স্কোর (%)", "ফলাফল", "নিশ্চয়ন", "টেমপ্লেট"]}
       csvRow={(a) => [
         a.assesseeName ?? "",
         a.assessorName ?? "",
         a.createdAt.slice(0, 10),
         a.scorePct ?? "",
         ASSESSMENT_RESULT_LABELS_BN[a.result],
+        (a as { status?: string }).status === "confirmed"
+          ? "নিশ্চিত"
+          : (a as { status?: string }).status === "declined"
+            ? "বাতিল"
+            : "নিশ্চয়ন বাকি",
         a.template.titleBn,
       ]}
     />

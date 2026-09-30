@@ -10,8 +10,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
+import '../../api/api_client.dart' show ApiCached;
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class DawahRequirementsScreen extends ConsumerWidget {
   const DawahRequirementsScreen({super.key});
@@ -29,9 +31,15 @@ class DawahRequirementsScreen extends ConsumerWidget {
       body: liveAsync.when(
         loading: () => const Skeleton(height: 72, count: 5),
         error: (_, _) => _FallbackBody(overviewAsync: overviewAsync),
+        // W4-fix4: a cache-served snapshot still renders the live body,
+        // banner on top.
         data: (live) => live == null
             ? _FallbackBody(overviewAsync: overviewAsync)
-            : _LiveBody(requirements: live),
+            : _LiveBody(
+                requirements: live.data,
+                stale: live.stale,
+                fetchedAt: live.fetchedAt,
+              ),
       ),
     );
   }
@@ -40,8 +48,16 @@ class DawahRequirementsScreen extends ConsumerWidget {
 // ── live checklist ────────────────────────────────────────────────────────────
 
 class _LiveBody extends StatelessWidget {
-  const _LiveBody({required this.requirements});
+  const _LiveBody({
+    required this.requirements,
+    this.stale = false,
+    this.fetchedAt,
+  });
   final DawahRequirements requirements;
+
+  /// W4-fix4: cache-served snapshot (offline banner + stamp).
+  final bool stale;
+  final DateTime? fetchedAt;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +66,8 @@ class _LiveBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(SLSpacing.s16),
       children: [
+        if (stale && fetchedAt != null)
+          OfflineBanner(fetchedAt: fetchedAt!),
         _LevelRow(level: live.level, nextLevel: live.nextLevel),
         const SizedBox(height: SLSpacing.s12),
         AppCard(
@@ -88,7 +106,7 @@ class _LiveBody extends StatelessWidget {
 
 class _FallbackBody extends ConsumerWidget {
   const _FallbackBody({required this.overviewAsync});
-  final AsyncValue<DawahOverview?> overviewAsync;
+  final AsyncValue<ApiCached<DawahOverview>?> overviewAsync;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,8 +124,8 @@ class _FallbackBody extends ConsumerWidget {
           ),
         ],
       ),
-      data: (overview) {
-        if (overview == null) {
+      data: (remote) {
+        if (remote == null) {
           return ListView(
             children: [
               const SizedBox(height: SLSpacing.s24),
@@ -121,6 +139,7 @@ class _FallbackBody extends ConsumerWidget {
             ],
           );
         }
+        final overview = remote.data;
         final theme = Theme.of(context);
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
@@ -143,8 +162,8 @@ class _FallbackBody extends ConsumerWidget {
                       dense: true,
                       leading: Icon(
                         r.done
-                            ? Icons.check_circle
-                            : Icons.radio_button_unchecked,
+                            ? PhosphorIconsFill.checkCircle
+                            : PhosphorIconsRegular.circle,
                         color: r.done
                             ? theme.colorScheme.primary
                             : theme.colorScheme.outline,
@@ -315,7 +334,7 @@ class _CheckRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsetsDirectional.only(top: 2),
             child: Icon(
-              row.met ? Icons.check_circle : Icons.radio_button_unchecked,
+              row.met ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.circle,
               size: 20,
               color: row.met
                   ? theme.colorScheme.primary
@@ -420,7 +439,7 @@ class _OutcomeCard extends StatelessWidget {
     return _OutcomeCard._(
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.primaryContainer,
-      icon: Icons.emoji_events,
+      icon: PhosphorIconsFill.trophy,
       message: message,
     );
   }
@@ -430,7 +449,7 @@ class _OutcomeCard extends StatelessWidget {
     return _OutcomeCard._(
       color: theme.colorScheme.primary,
       backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.06),
-      icon: Icons.auto_awesome,
+      icon: PhosphorIconsRegular.sparkle,
       message: message,
     );
   }

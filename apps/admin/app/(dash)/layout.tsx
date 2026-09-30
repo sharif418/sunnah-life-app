@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "@/lib/session";
+import { routeAllowed } from "@/lib/routes";
 import { AppShell } from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,11 +11,22 @@ import { ShieldAlert } from "lucide-react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { status, user } = useSession();
+  const pathname = usePathname();
   const router = useRouter();
 
   React.useEffect(() => {
     if (status === "anonymous") router.replace("/login");
   }, [status, router]);
+
+  // W4h — URL-level role gate: a role opening a page outside its map is
+  // redirected to their dashboard (not a 403 wall). The nav filters links;
+  // this catches direct URLs / stale bookmarks. The API re-checks everything.
+  const allowed = routeAllowed(pathname, user?.role);
+  React.useEffect(() => {
+    if (status === "authenticated" && user && !routeAllowed(pathname, user.role)) {
+      router.replace("/");
+    }
+  }, [status, user, pathname, router]);
 
   if (status === "loading") {
     return (
@@ -55,6 +67,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   if (status !== "authenticated") return null;
+
+  // redirecting to the dashboard — render nothing (no forbidden flash)
+  if (!allowed && user) return null;
 
   return <AppShell>{children}</AppShell>;
 }

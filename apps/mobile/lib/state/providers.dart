@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
+import '../db/api_cache.dart';
 import '../db/database.dart';
 import '../models/domain.dart';
 import '../core/cities.dart';
@@ -19,7 +20,10 @@ final dbProvider = Provider<AppDatabase>((ref) {
 });
 
 final apiProvider = Provider<ApiClient>((ref) {
-  final client = ApiClient();
+  // W4-fix4: the Da'wah GET reads cache their last-good envelope in the
+  // local sqlite file — offline the tab renders it with a staleness banner
+  // instead of an error wall.
+  final client = ApiClient(cacheStore: DriftApiCacheStore(ref.watch(dbProvider)));
   // 401 anywhere → the token is dead: clear it and drop to guest mode
   // without a network round-trip (signOut() calls the server).
   client.onUnauthorized = () {
@@ -32,6 +36,11 @@ final apiProvider = Provider<ApiClient>((ref) {
 final sharedPrefsProvider = FutureProvider<SharedPreferences>(
   (ref) => SharedPreferences.getInstance(),
 );
+
+/// Injectable "now" for the always-visible chrome (global header date bar,
+/// today-diary keys). Production reads the wall clock; goldens pin it so a
+/// capture never flakes across days (day-of-week amals, Bangla/Hijri dates).
+final headerNowProvider = Provider<DateTime>((ref) => DateTime.now());
 
 // ── Profile / settings (backed by the GuestProfile row) ──────────────────────
 

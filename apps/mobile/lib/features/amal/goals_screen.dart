@@ -16,6 +16,7 @@ import '../../state/amal_state.dart';
 import '../../state/goals_state.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Max open goals the server allows (proposed + approved).
 const int kMaxOpenGoals = 14;
@@ -33,7 +34,7 @@ class GoalsScreen extends ConsumerWidget {
       appBar: AppBar(title: Text(context.t('goals_title'))),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openProposeSheet(context, ref),
-        icon: const Icon(Icons.flag_outlined),
+        icon: const Icon(PhosphorIconsRegular.flagBanner),
         label: Text(context.t('goals_new')),
       ),
       body: async.when(
@@ -61,7 +62,7 @@ class GoalsScreen extends ConsumerWidget {
                 const SizedBox(height: SLSpacing.s24),
                 EmptyState(
                   message: context.t('goals_empty'),
-                  icon: Icons.flag_outlined,
+                  icon: PhosphorIconsRegular.flagBanner,
                 ),
               ],
             );
@@ -179,7 +180,7 @@ class _GoalCard extends ConsumerWidget {
                 alignment: AlignmentDirectional.centerEnd,
                 child: TextButton.icon(
                   onPressed: () => _confirmRemove(context, ref),
-                  icon: const Icon(Icons.delete_outline, size: 18),
+                  icon: const Icon(PhosphorIconsRegular.trash, size: 18),
                   label: Text(context.t('goals_remove')),
                 ),
               ),

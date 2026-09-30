@@ -7,14 +7,15 @@ import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class ImanBranchesScreen extends StatelessWidget {
   const ImanBranchesScreen({super.key});
 
   static const _groupLabels = <String, (String, IconData)>{
-    'heart': ('iman_branch_heart', Icons.favorite_outline),
-    'tongue': ('iman_branch_tongue', Icons.record_voice_over_outlined),
-    'body': ('iman_branch_body', Icons.accessibility_new_outlined),
+    'heart': ('iman_branch_heart', PhosphorIconsRegular.heart),
+    'tongue': ('iman_branch_tongue', PhosphorIconsRegular.userSound),
+    'body': ('iman_branch_body', PhosphorIconsRegular.personArmsSpread),
   };
 
   @override
@@ -36,7 +37,7 @@ class ImanBranchesScreen extends StatelessWidget {
           if (branches.isEmpty) {
             return EmptyState(
                 message: context.t('empty_generic'),
-                icon: Icons.favorite_outline);
+                icon: PhosphorIconsRegular.heart);
           }
           return ListView(
             padding: const EdgeInsets.all(SLSpacing.s16),

@@ -8,6 +8,7 @@ import '../../api/api_client.dart';
 import '../../design/design_tokens.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class MasalaScreen extends ConsumerStatefulWidget {
   const MasalaScreen({super.key});
@@ -74,7 +75,7 @@ class _MasalaScreenState extends ConsumerState<MasalaScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.mark_email_read_outlined,
+                    Icon(PhosphorIconsRegular.envelopeSimpleOpen,
                         size: 64, color: theme.colorScheme.primary),
                     const SizedBox(height: SLSpacing.s16),
                     Text(
@@ -135,7 +136,7 @@ class _MasalaScreenState extends ConsumerState<MasalaScreen> {
                             height: 18,
                             child:
                                 CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.send_outlined),
+                        : const Icon(PhosphorIconsRegular.paperPlaneTilt),
                     label: Text(context.t('send')),
                   ),
                   const SizedBox(height: SLSpacing.s8),

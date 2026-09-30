@@ -14,6 +14,7 @@ import '../../core/most_used.dart';
 import '../../core/prayer_engine.dart';
 import '../../core/waqt_progress.dart';
 import '../../design/design_tokens.dart';
+import '../../design/texture.dart';
 import '../../design/phosphor_icons.dart';
 import '../../l10n/app_strings.dart';
 import '../shared/widgets.dart';
@@ -64,113 +65,125 @@ class CountdownRingHero extends StatelessWidget {
         borderRadius: SLRadius.brXl,
         boxShadow: SLElevation.lifted(theme.brightness == Brightness.dark),
       ),
-      child: Column(
-        children: [
-          SizedBox(
-            width: 168,
-            height: 168,
-            child: CustomPaint(
-              painter: _WaqtRingPainter(
-                fraction: interval.remainingFraction,
-                // goldSoftLight track in light; the dark-adjusted gold in dark
-                // — both read as a subtle warm track on the constant green.
-                track: _trackColor(theme),
-                // Explicit resolution (painters get no BuildContext): the
-                // Arabic tree flips the arc's decay direction with its
-                // reading direction.
-                rtl: Directionality.of(context) == TextDirection.rtl,
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: SLColors.gold,
-                        borderRadius: SLRadius.brPill,
-                      ),
-                      child: Text(
-                        '${S.tr(lang, 'prayer_current')}: $currentLabel',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: SLColors.primaryDeep,
-                          fontWeight: FontWeight.w700,
-                        ),
+      // W4f: the whisper-quiet khatam lattice behind the content — 5 %
+      // foreground, lines only, clipped to the card's rounded corners.
+      child: ClipRRect(
+        borderRadius: SLRadius.brXl,
+        child: Stack(
+          children: [
+            const Positioned.fill(child: SLGeometricTexture(opacity: 0.05)),
+            Column(
+              children: [
+                SizedBox(
+                  width: 168,
+                  height: 168,
+                  child: CustomPaint(
+                    painter: _WaqtRingPainter(
+                      fraction: interval.remainingFraction,
+                      // goldSoftLight track in light; the dark-adjusted gold in dark
+                      // — both read as a subtle warm track on the constant green.
+                      track: _trackColor(theme),
+                      // Explicit resolution (painters get no BuildContext): the
+                      // Arabic tree flips the arc's decay direction with its
+                      // reading direction.
+                      rtl: Directionality.of(context) == TextDirection.rtl,
+                    ),
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: SLColors.gold,
+                              borderRadius: SLRadius.brPill,
+                            ),
+                            child: Text(
+                              '${S.tr(lang, 'prayer_current')}: $currentLabel',
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: SLColors.primaryDeep,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: SLSpacing.s8),
+                          Text(
+                            prayer.countdownText(bengali: bn),
+                            key: const ValueKey('home_countdown_text'),
+                            maxLines: 1,
+                            style: theme.textTheme.displaySmall?.copyWith(
+                              color: SLColors.gold,
+                              fontWeight: FontWeight.w700,
+                              fontFeatures: const [
+                                FontFeature.tabularFigures(),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: SLSpacing.s4),
+                          Text(
+                            '${S.tr(lang, 'prayer_next')}: $nextLabel',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: SLColors.lightPrimaryForeground.withValues(
+                                alpha: 0.85,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: SLSpacing.s8),
-                    Text(
-                      prayer.countdownText(bengali: bn),
-                      key: const ValueKey('home_countdown_text'),
-                      maxLines: 1,
-                      style: theme.textTheme.displaySmall?.copyWith(
-                        color: SLColors.gold,
-                        fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const SizedBox(height: SLSpacing.s4),
-                    Text(
-                      '${S.tr(lang, 'prayer_next')}: $nextLabel',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: SLColors.lightPrimaryForeground.withValues(
-                          alpha: 0.85,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ),
-          const SizedBox(height: SLSpacing.s8),
-          // Affordance: smooth in-page scroll to the schedule section.
-          Material(
-            color: Colors.transparent,
-            child: InkWell(
-              key: const ValueKey('home_to_schedule'),
-              borderRadius: SLRadius.brMd,
-              onTap: onShowSchedule,
-              child: SizedBox(
-                height: SLSpacing.minTapTarget,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      PhosphorIconsRegular.clock,
-                      size: 18,
-                      color: SLColors.lightPrimaryForeground.withValues(
-                        alpha: 0.8,
+                const SizedBox(height: SLSpacing.s8),
+                // Affordance: smooth in-page scroll to the schedule section.
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    key: const ValueKey('home_to_schedule'),
+                    borderRadius: SLRadius.brMd,
+                    onTap: onShowSchedule,
+                    child: SizedBox(
+                      height: SLSpacing.minTapTarget,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            PhosphorIconsRegular.clock,
+                            size: 18,
+                            color: SLColors.lightPrimaryForeground.withValues(
+                              alpha: 0.8,
+                            ),
+                          ),
+                          const SizedBox(width: SLSpacing.s8),
+                          Text(
+                            S.tr(lang, 'countdown_to_schedule'),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: SLColors.lightPrimaryForeground,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: SLSpacing.s4),
+                          DirectionalIcon(
+                            PhosphorIconsBold.caretRight,
+                            size: 14,
+                            color: SLColors.lightPrimaryForeground.withValues(
+                              alpha: 0.8,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: SLSpacing.s8),
-                    Text(
-                      S.tr(lang, 'countdown_to_schedule'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: SLColors.lightPrimaryForeground,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(width: SLSpacing.s4),
-                    DirectionalIcon(
-                      PhosphorIconsBold.caretRight,
-                      size: 14,
-                      color: SLColors.lightPrimaryForeground.withValues(
-                        alpha: 0.8,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -179,8 +192,8 @@ class CountdownRingHero extends StatelessWidget {
 
   Color _trackColor(ThemeData theme) =>
       (theme.brightness == Brightness.dark
-          ? SLColors.darkAccent
-          : SLColors.goldSoftLight)
+              ? SLColors.darkAccent
+              : SLColors.goldSoftLight)
           .withValues(alpha: theme.brightness == Brightness.dark ? 0.30 : 0.55);
 }
 

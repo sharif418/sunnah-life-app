@@ -373,7 +373,13 @@ export async function seedDemo(db: PrismaClient): Promise<DemoSeedResult> {
           ? "আলহামদুলিল্লাহ, সামগ্রিকভাবে সন্তোষজনক। কিছু ক্ষেত্রে আরও গভীরতা আসলে ভালো হবে।"
           : "আখলাক অংশে উন্নতি দরকার — বিশেষত পর্দা ও মিথ্যা পরিহারে আরও মনোযোগী হতে হবে। ইনশাআল্লাহ পরবর্তী মূল্যায়নে আবার মিলব।",
         assessorSignedAt: d(10),
-        assesseeSignedAt: d(10, -1),
+        // W4i — the two passed rows are historical CONFIRMED results (the
+        // signature is the acknowledgment); the not_yet row stays
+        // pending_confirmation with no signature, so the demo data honestly
+        // showcases the OTP-acknowledge state.
+        ...(passed
+          ? { status: "confirmed" as const, confirmedAt: d(10, -1), assesseeSignedAt: d(10, -1) }
+          : { status: "pending_confirmation" as const, assesseeSignedAt: null }),
         result: passed ? "passed" : "not_yet",
         createdAt: d(10, 1),
       },

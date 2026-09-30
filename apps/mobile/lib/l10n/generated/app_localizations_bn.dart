@@ -1698,4 +1698,257 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get leaderboard_band_bottom => 'নিচের ২৫%';
+
+  @override
+  String get offline_banner => 'অফলাইন — দেখানো হচ্ছে সংরক্ষিত তথ্য';
+
+  @override
+  String get last_updated => 'সর্বশেষ হালনাগাদ';
+
+  @override
+  String get more_section_foundation => 'ফাউন্ডেশন';
+
+  @override
+  String get contact_email => 'ইমেইল';
+
+  @override
+  String get more_section_worship => 'ইবাদত ও টুলস';
+
+  @override
+  String get more_section_knowledge => 'জ্ঞান';
+
+  @override
+  String get more_section_support => 'সহায়তা';
+
+  @override
+  String get more_section_app => 'অ্যাপ';
+
+  @override
+  String get more_support => 'লাইভ সাপোর্ট';
+
+  @override
+  String get support_signin_needed => 'লাইভ সাপোর্ট ব্যবহার করতে সাইন ইন করুন';
+
+  @override
+  String get support_new_thread => 'নতুন আলাপ শুরু করুন';
+
+  @override
+  String get support_subject => 'বিষয়';
+
+  @override
+  String get support_subject_hint => 'সংক্ষেপে বিষয়টি লিখুন';
+
+  @override
+  String get support_message => 'বার্তা';
+
+  @override
+  String get support_message_hint => 'আপনার কথা লিখুন…';
+
+  @override
+  String get support_empty => 'কোনো আলাপ নেই — প্রয়োজনে নতুন একটি শুরু করুন';
+
+  @override
+  String get support_status_open => 'খোলা';
+
+  @override
+  String get support_status_answered => 'উত্তর দেওয়া হয়েছে';
+
+  @override
+  String get support_status_closed => 'বন্ধ';
+
+  @override
+  String get support_team => 'সাপোর্ট টিম';
+
+  @override
+  String get support_you => 'আপনি';
+
+  @override
+  String get support_created_toast => 'আলাপ শুরু হয়েছে';
+
+  @override
+  String get support_sent_toast => 'উত্তর পাঠানো হয়েছে';
+
+  @override
+  String get support_closed_toast =>
+      'এই আলাপ বন্ধ করা হয়েছে — নতুন আলাপ শুরু করুন';
+
+  @override
+  String get more_usrah_join => 'উসরায় যোগ দিন';
+
+  @override
+  String get usrah_join_hint =>
+      'কোনো উসরায় যুক্ত না থাকলে অনুরোধ পাঠান — তারবিয়াত দপ্তর আপনাকে একটি উসরায় যুকত করবে ইনশাআল্লাহ';
+
+  @override
+  String get usrah_join_message_hint => 'কিছু বলার থাকলে লিখুন (ঐচ্ছিক)';
+
+  @override
+  String get usrah_join_send => 'অনুরোধ পাঠান';
+
+  @override
+  String get usrah_join_pending => 'অনুরোধ পেন্ডিং — অনুমোদনের অপেক্ষায়';
+
+  @override
+  String get usrah_join_rejected => 'অনুরোধ বাতিল হয়েছে';
+
+  @override
+  String get usrah_join_reason_label => 'কারণ';
+
+  @override
+  String get usrah_join_in_usrah => 'আপনি ইতিমধ্যেই একটি উসরায় আছেন';
+
+  @override
+  String get usrah_join_sent_toast =>
+      'অনুরোধ পাঠানো হয়েছে — অনুমোদন হলে জানানো হবে ইনশাআল্লাহ';
+
+  @override
+  String get usrah_join_signin_needed => 'উসরায় যোগ হতে সাইন ইন করুন';
+
+  @override
+  String get more_detox => 'সোশ্যাল মিডিয়া ডিটক্স';
+
+  @override
+  String get detox_explain_title => 'স্ক্রিন-টাইম হিসাব';
+
+  @override
+  String get detox_explain_body =>
+      'সময় আমাদের আমানত। সোশ্যাল মিডিয়ায় কাটা প্রতিটি মিনিট পরকালের পুঁজি থেকে কমিয়ে দেয়। ব্যবহারের অনুমতি দিলে আজকের স্ক্রিন-টাইম ও সর্বাধিক ব্যবহৃত অ্যাপগুলো দেখাব — হিসাব সামনে থাকলে সংশোধন সহজ হয়, ইনশাআল্লাহ।';
+
+  @override
+  String get detox_perm_status => 'ব্যবহারের অনুমতি';
+
+  @override
+  String get detox_perm_granted => 'দেওয়া হয়েছে';
+
+  @override
+  String get detox_perm_not_granted => 'দেওয়া হয়নি';
+
+  @override
+  String get detox_grant => 'অনুমতি দিন';
+
+  @override
+  String get detox_return_hint => 'অনুমতি দিয়ে অ্যাপে ফিরে আসুন';
+
+  @override
+  String get detox_android_only => 'এই হিসাবটি শুধু অ্যান্ড্রয়েডে কাজ করে';
+
+  @override
+  String get detox_today_total => 'আজকের মোট স্ক্রিন-টাইম';
+
+  @override
+  String get detox_top_apps => 'সর্বাধিক ব্যবহৃত অ্যাপ';
+
+  @override
+  String get detox_minutes_short => 'মিনিট';
+
+  @override
+  String get detox_no_usage => 'আজ এখনো তেমন কিছু নেই';
+
+  @override
+  String get detox_reminder => 'দৈনিক রিমাইন্ডার';
+
+  @override
+  String get detox_reminder_time => 'রিমাইন্ডারের সময়';
+
+  @override
+  String get detox_notif_title => 'স্ক্রিন-টাইম হিসাব';
+
+  @override
+  String get detox_notif_body => 'আজ কতক্ষণ স্ক্রিনে কাটালেন? একবার দেখে নিন।';
+
+  @override
+  String get more_groups => 'আমাদের গ্রুপ';
+
+  @override
+  String get group_open_failed => 'খোলা যায়নি';
+
+  @override
+  String get dawah_share_card => 'দাওয়াত কার্ড শেয়ার করুন';
+
+  @override
+  String get dawah_card_title => 'দাওয়াত কার্ড';
+
+  @override
+  String get dawah_card_tagline => 'সুন্নাহর পথে জীবন গড়তে আমার সাথে যুক্ত হন';
+
+  @override
+  String get dawah_card_preview_note => 'নিচের কার্ডটাই ছবি হিসেবে শেয়ার হবে';
+
+  @override
+  String get dawah_share_now => 'শেয়ার করুন';
+
+  @override
+  String get dawah_card_shared_toast =>
+      'কার্ড শেয়ার করা হয়েছে — জাযাকুমুল্লাহু খাইরান';
+
+  @override
+  String get assessment_status_pending => 'নিশ্চয়ন বাকি';
+
+  @override
+  String get assessment_status_confirmed => 'নিশ্চিত হয়েছে';
+
+  @override
+  String get assessment_status_declined => 'বাতিল করেছেন';
+
+  @override
+  String get assessment_confirm_cta => 'নিশ্চিত করুন';
+
+  @override
+  String get assessment_confirm_title => 'মূল্যায়ন নিশ্চিত করুন';
+
+  @override
+  String get assessment_confirm_body =>
+      'ফলাফল দেখে নিন। আপনার মোবাইল নম্বরে কোড পাঠানো হবে — কোড দিয়ে সই দিলেই ফলাফল চূড়ান্ত হবে।';
+
+  @override
+  String get assessment_confirmed_toast =>
+      'আলহামদুলিল্লাহ — মূল্যায়ন নিশ্চিত হয়েছে';
+
+  @override
+  String get assessment_decline_cta => 'ফলাফল বাতিল করুন';
+
+  @override
+  String get assessment_decline_title => 'ফলাফল বাতিল করবেন?';
+
+  @override
+  String get assessment_decline_body =>
+      'বাতিল করলে মূল্যায়নকারীকে জানানো হবে এবং পুনরায় মূল্যায়নের ব্যবস্থা হবে, ইনশাআল্লাহ।';
+
+  @override
+  String get assessment_decline_reason_hint => 'কারণ (ঐচ্ছিক)';
+
+  @override
+  String get assessment_decline_label => 'বাতিল করুন';
+
+  @override
+  String get assessment_declined_toast =>
+      'মূল্যায়ন বাতিল করা হয়েছে — মূল্যায়নকারীকে জানানো হয়েছে';
+
+  @override
+  String get assessment_decision_note_label => 'আপনার কারণ';
+
+  @override
+  String get assessment_result_label => 'ফলাফল';
+
+  @override
+  String get assessment_score_label => 'স্কোর';
+
+  @override
+  String get assessment_result_passed => 'উত্তীর্ণ';
+
+  @override
+  String get assessment_result_not_yet => 'আরও উন্নতি প্রয়োজন';
+
+  @override
+  String get search_title => 'অনুসন্ধান';
+
+  @override
+  String get search_hint => 'দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…';
+
+  @override
+  String get search_no_results => 'কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন';
+
+  @override
+  String get search_offline_note =>
+      'অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল';
 }

@@ -1300,3 +1300,275 @@ Stage Summary:
 Addendum:
 - [C-W4c-CI-FIX] AUDIT citation corrected — the UI chain is proven by run 36539079890 (https://github.com/sharif418/sunnah-life-app/actions/runs/36539079890, head 137ab45, all 10 jobs green incl. Flutter — analyze · test · debug APK); 36529174552 covers only the backend (its head c80d5af predates the six UI commits).
 
+
+---
+Task ID: W4-FIX-1 (backfill — the previous session completed this work but ran out of context before logging it)
+Agent: lead (continued session)
+Task: Owner's visual review finding #1 — font consistency: some components fell back to platform fonts (tofu □□□ with only bundled fonts): Dawah TabBar labels, Amal Today's four top chips, the Dawah retry button. Set Hind Siliguri on EVERY component theme in the token-built ThemeData + a tofu-guard golden test.
+
+Work Log:
+- Commit 84d01f1 (verified this session: in main, tests green):
+  - pubspec.yaml declares HindSiliguri/Amiri/AmiriQuran as engine font families (the same bundled TTFs) so they resolve BEFORE the first frame — no google_fonts runtime loading, no platform fallback.
+  - design_tokens.dart regenerated via the updated build.mjs template: all 15 textTheme roles + primaryTextTheme carry the family; explicit family styles on tabBar/chip/button/segmented/snackbar/dialog/listTile/popup/dropdown/tooltip/fab/input/navigationBar themes.
+  - Riding along: alert #C0392B → #B93527 in tokens.json/generated file sync (B6+B7 WCAG pass had changed tokens.json but the Dart file was never regenerated) + goldText tokens finally reach Flutter.
+  - headerNowProvider made injectable (global header date bar + diary keys — goldens never flake across days); Ilm grid aspect 1.3 + icon 28 fits real Bengali metrics.
+  - NEW test/font_golden_test.dart: Home/Amal Today/Dawah/Ilm/More in bn light with ONLY bundled fonts — pixel goldens + a RenderParagraph family walk failing with the exact widget name on any fallback; quran/sync goldens regenerated (real glyphs).
+
+Stage Summary:
+- Finding #1 fixed at 84d01f1: analyze 0 + 266/266; tofu guard is now a standing CI gate on the five tab goldens.
+
+---
+Task ID: W4-FIX-2 (backfill — same previous session; the commit landed with an accidental UUID message, reworded this session)
+Agent: lead (continued session)
+Task: Owner's finding #2 — Amal Today density: every boolean amal was a tall card with a centered small switch; the diary scrolled for screens; the tilawat quantity input rendered abnormally tall/empty. Compact grouped rows + input repair.
+
+Work Log:
+- Commit 9f39734 (was e22d77d with a UUID message — AMENDED locally before push, message only, no content change; the UUID was an accident of the session dying mid-commit):
+  - _AmalGroupCard: ONE card per category; boolean amals compact single rows (minHeight 60) — title + one-line hint leading, switch trailing, hairline dividers between rows, the WHOLE row toggles on tap.
+  - Salat tristate rows unchanged. Custom checklist compacted to the same rhythm.
+  - Tilawat quantity input rebuilt: normal-height field, current value with unit inline (পৃষ্ঠা/পারা/মিনিট), beginner unit switch kept.
+  - Golden fonts_amal_today_bn_light.png regenerated; w4c widget tests re-fitted to the new row finders.
+
+Stage Summary:
+- Finding #2 fixed at 9f39734: analyze 0 + 266/266 verified this session before any new work.
+
+---
+Task ID: W4-FIX-3+4
+Agent: lead (this session)
+Task: Owner's findings #3 + #4 — forbidden-times card per spec §2.1 (#FCE4E4 + #C0392B) and the Dawah tab offline cache (Drift last-good cache + "সর্বশেষ হালনাগাদ" stamp + subtle banner; error state only when never cached).
+
+Work Log:
+- Finding #3 (commit f7675d7): _ForbiddenTimes in home_screen.dart — alertSoftLight (#FCE4E4) surface + lightDestructive (#C0392B) icon/label/time + hairline border @ 25% alpha; dark pairs darkAlertSoft #3A211D + darkAlert #E06A5A. Calm caution, never a saturated fill.
+- Finding #4 (commit 4dca89f-chain):
+  - Drift schema v3 → v4: RemoteCacheTable (key/payload/fetchedAt), pure CREATE TABLE migration; DAO remoteCache/saveRemoteCache.
+  - ApiClient: ApiCached<T> envelope + injectable ApiCacheStore + _cachedGet — fresh GET overwrites the row; NETWORK failure (status 0) serves the cached envelope stale:true (rethrow on miss); server 4xx/5xx ALWAYS rethrows (stale data never masks a live refusal); keys user-scoped endpoint:userId. Raw envelopes + existing fromJson = no toJson on any model. DriftApiCacheStore adapter in lib/db/api_cache.dart (dart:convert both ways).
+  - dawahOverview/usrah/reviews/dawahRequirements wrapped; providers expose the envelope (UsrahBundle carries fetchedAt/stale); three tabs + requirements screen + reviews empty-state render the new shared OfflineBanner (gold-on-cream wifi_off strip, injectable clock, bn/en/ar strings, _translate map cases added).
+  - Fakes updated: font_golden_test._GoldenApi + w4c FakeGoalsApi to ApiCached signatures (stale:false — goldens byte-identical, verified passing).
+  - NEW test/dawah_cache_test.dart — 14 tests incl. the full-tab integration: signed-in da'ee + dead network + pre-warmed cache → DawahScreen renders the overview + OfflineBanner with NO error wall.
+- Gates (verbatim, apps/mobile): flutter analyze → "No issues found! (ran in 1.8s)"; flutter test → "00:48 +280: All tests passed!" (280/280 = 266 prior + 14 new; home golden unaffected — its viewport sits above the forbidden strip).
+- Fix 5 (More tab §4.3) deliberately NOT done here — it is W4d itself, launched next.
+
+Stage Summary:
+- Findings #3 + #4 fixed: f7675d7 (forbidden card) + the offline-cache commit; AUDIT rows appended (W4-FIX section) with honest statuses. All five owner findings now: 1 ✓ 2 ✓ 3 ✓ 4 ✓ 5 → W4d (next).
+
+---
+Task ID: W4d-API
+Agent: W4d-API (backend agent — live support threads + usrah join requests)
+Task: W4d backend half — member↔admin live support threads and member→admin usrah join requests: Prisma + RLS migration, member/admin APIs, admin-panel surfaces, mobile typed contracts + jest suites.
+
+Work Log:
+- 0ac8d3b (schema + migration `20260929110617_support_threads`): SupportThread (userId→User, subject, status open|answered|closed, closedAt/closedById) + SupportMessage (threadId, authorId NOT NULL — every message has a real author; isAdmin bool) + UsrahJoinRequest (message?, status pending|approved|rejected, handledById/At, usrahId?, reason?, createdAt). Indexes: (userId, createdAt) threads, (threadId, createdAt) messages, (userId, createdAt) + (status, createdAt) join requests. RLS follows the *_usrah_questions per-command pattern: members see/write ONLY their own rows (support is private — NOT usrah-scoped, so a same-usrah peer sees nothing); thread UPDATE allows the owner (needed for member-reply reopen) and full_admin; message UPDATE/DELETE + all join-request decisions are full_admin/system only. `--create-only` + hand-appended GRANT/policy SQL, then applied (14 migrations, up to date).
+- e97aa03 (support member API + admin inbox): new src/support/ module — POST /api/support {subject 3..120, message 3..2000} creates thread + first message (max-5 non-closed threads per user, the max-14-goals anti-spam shape); GET /api/support own threads with messageCount/lastMessageAt/lastPreview/unreadForUser (= last message is an admin reply — NO read receipts, documented in code: opening doesn't clear it; a lastReadAt column is the honest follow-up); GET /api/support/:id own-only (system metadata pre-read → 404 missing / 403 someone else's, the goals loadForDecision pattern); POST /api/support/:id/messages — DECISION: appending to a CLOSED thread → 400 Bengali (no auto-reopen; closed is truthful terminal), a member reply on an ANSWERED thread flips it back to open. Admin half lives in admin.controller.ts: GET /api/admin/support (all threads, ?status=, open→answered→closed then lastMessageAt desc) + /:id/messages (isAdmin reply → status answered, audit support_reply) + /:id/close (idempotent, audit support_close; both @Roles("full_admin") method-override like patchUser).
+- test/support.spec.ts (15): create→list→append, too-short 400, cross-user 403 detail+append (same-usrah peer!), RLS-net probe (peer's own context sees 0 threads/messages), unauth 401, plain member on /api/admin/support 403, admin reply flips status + audit, member reply reopens, close→400 both member+admin, idempotent re-close (1 audit row), 404s, max-5 cap. afterAll hard-deletes the marked threads (audit rows stay — the goals pattern).
+- a7c00e6 (admin UI): GET /api/admin/support/:id detail route (full history + authorName — the inbox needed it) + apps/admin/(dash)/support/page.tsx: RoleGate'd DataTable (status filter, member/code/gender/subject+preview/count/badge/relative-time, CSV) + click-through wide Dialog with the conversation (admin replies on the primary side), reply box and close button; labels (SUPPORT_STATUS_LABELS_BN + 4 audit actions) + nav entry under প্রধান অ্যাডমিন.
+- f5bb9c8 (join-request API): src/usrah/join-request.controller.ts (placement decision: src/join is the PUBLIC referral landing only and the routes are /api/usrah/join-request*, so it lives in the usrah module) — POST /api/usrah/join-request {message?} for members WITHOUT an usrahId (409 "আপনি ইতিমধ্যেই একটি উসরায় আছেন" otherwise); DECISION: pending duplicates are IDEMPOTENT — 201 with the SAME row (the /api/enroll upsert precedent; one-pending-per-user enforced in service, no partial unique index needed); GET own current/last request. full_admin: GET /api/usrah/join-requests (pending first, member names + gender + assigned usrah name), POST /:id/approve {usrahId} — sets User.usrahId (THE assignment; gender must match, mirroring /api/admin/usrah/:id/members; runs in the full_admin RLS context so sl_guard_user_columns passes; updateMany status-guard against double-decide), audit join_request_approve; POST /:id/reject {reason?} — audit join_request_reject. Roles: full_admin ONLY — heads never assign membership anywhere in the codebase (the existing boundary); documented in-file.
+- test/usrah-join.spec.ts (17): fresh synthetic M users (phone 0177910…, hard-deleted afterAll — join rows cascade on user delete): in-usrah 409, create pending, duplicate idempotent (exactly 1 row), own-status, RLS zero-visibility probe, unauth 401, member 403 on admin routes, queue pending-first, opposite-gender approve 400, approve sets User.usrahId + audit, assigned member re-request 409, idempotent re-approve (1 audit), reject with reason (member sees it), re-request after reject (new row), approve-rejected 400, re-reject idempotent, 404s.
+- d8d596c (join-request admin UI): JoinRequestSection on app/(dash)/usrah/page.tsx above the B6 manage card — pending requests (member, gender badge, message, relative time) with a same-gender usrah picker (from the existing overview query) + অনুমোদন, or বাতিল with an optional reason the member sees; recent-decided rows with the assigned usrah + status chips; invalidates overview/users on decide.
+- 38767db (mobile contract, NO UI): models/support.dart (SupportThread + SupportMessage + SupportStatus with copyWith on thread), UsrahJoinRequest + JoinRequestStatus in models/usrah.dart, both exported through the domain barrel; ApiClient supportCreate/supportThreads/supportThread/supportAppend + joinRequestCreate/joinRequestStatus (admin methods deliberately absent). flutter test 280/280 unchanged.
+- GATES (all verbatim, postgres :5433 + redis :6380 up via /home/z/opt/start-services.sh):
+  - apps/api `bun run lint` → "✖ 5 problems (0 errors, 5 warnings)" — exactly the five pre-existing (seed-demo.ts, shared/reviews.ts, amal.spec.ts, token-security.spec.ts ×2).
+  - apps/api `bunx tsc --noEmit` → exit 0.
+  - apps/api `bun run test -- --runInBand` → "Test Suites: 22 passed, 22 total / Tests: 314 passed, 314 total" (was 20/282; +15 support +17 join).
+  - apps/api `bunx prisma migrate status` → "14 migrations found… Database schema is up to date!"
+  - apps/admin `bun run lint` → clean; `bun run build` → "/support /usrah … ○ (Static)" success.
+  - apps/mobile `flutter analyze` → "No issues found! (ran in 1.4s)".
+
+Stage Summary:
+- W4d backend COMPLETE, 6 commits 0ac8d3b..38767db on main (NOT pushed — lead pushes). API surface: member POST/GET /api/support, GET /api/support/:id, POST /api/support/:id/messages (@Roles user); full_admin GET /api/admin/support[?status=], GET /api/admin/support/:id, POST /api/admin/support/:id/{messages,close}; member POST/GET /api/usrah/join-request; full_admin GET /api/usrah/join-requests, POST /api/usrah/join-requests/:id/{approve,reject}. All 4 audit actions (support_reply, support_close, join_request_approve, join_request_reject) written via the GuardService.audit pattern and Bengali-labeled in the admin audit view.
+- Scoping decisions (all documented in code): unreadForUser = "last message is an admin reply" (no read receipts — lastReadAt is the honest follow-up); closed threads never accept appends (member 400; admin 400 too — reopen = new thread); join-request POST is 201-idempotent while pending; SupportMessage.authorId is NOT NULL (no system/anonymous messages exist); reason column added to UsrahJoinRequest (the spec's model list omitted it but the reject endpoint needs somewhere to persist the reason); member self-close of threads NOT offered (admin-only, per spec).
+- Honest gaps: mobile UI is W4d-UI's job (only the typed client + models shipped here); no push notification fires on admin support reply or join approval (a Reminder needs a new kind — the panel surface exists, adding kind "support"/"usrah" + a row is a small follow-up mission decision); support threads have no pagination beyond take-50/200; admin support inbox count shows only the current filter's rows (the filter buttons carry per-status counts computed from the unfiltered payload, so they stay correct).
+
+---
+Task ID: W4d-UI (completed by the lead after the agent's context died mid-task — the agent landed 7 commits, the lead repaired its test file + two real defects and shipped the tail)
+Agent: W4d-UI + lead
+Task: W4d mobile half — the More tab §4.3 complete assembly: sectioned list + new screens (support threads UI, usrah join sheet, detox, FAQ, share, groups, foundation services) + l10n + tests.
+
+Work Log:
+- Agent commits (all analyze-clean when landed): f4a98e2 (50 l10n keys ×3 + _translate cases), 9b37968 (sunnahlife/usage MethodChannel in MainActivity.kt: AppOps permission probe, openSettings, todayStats — total + top-5 apps foreground ms, app itself excluded), 8528fd2 (SupportScreen: own thread list w/ status chips + lastPreview + unread dot, create sheet, SupportThreadScreen conversation with mine-vs-admin bubbles + reply box + closed-400 toast), 7f8bc6a (usrah join sheet: in-usrah info / pending card / rejected + re-request / fresh form via joinRequestProvider), af06a6d (DetoxScreen config-gated: usage-access explainer → today's report + per-app rows + daily reminder through flutter_local_notifications), 041f12e (More rebuilt SECTIONED: ফাউন্ডেশন section = Donate card + five contacts with website/phone/email actions; ইবাদত ও টুলস = zakat/qibla/mosque/masala/live/autosilent/detox; জ্ঞান = 99 names + Islamic names + 70 branches (links to the existing ilm routes); সহায়তা = support + usrah join + feedback + FAQ; অ্যাপ = about + share + app-user groups (config links); + FAQ screen + routes under /more), 157c538 (More golden regenerated over an enriched config).
+- The agent then died mid-task leaving an untracked test file with 5 failing tests + a one-line support_screen key edit. Lead repairs:
+  1. FaqRepository REAL DEFECT: the memo was the FUTURE — a future completed inside tester.runAsync's real-async zone never resolves fake-zone listeners (the automated binding forks a zone whose microtasks bypass fake-async). Converted to the QuranRepository DATA-cache design (memo = decoded list; _loading only guards concurrent same-zone opens). The FAQ screen now renders after prewarm in tests and reopens instantly in production.
+  2. MoreScreen._shareApp REAL DEFECT: Clipboard.setData ran BEFORE SystemChannel.shareText with no guard — a platform without a clipboard service (or a test bed without a handler) threw MissingPluginException and the native share never fired. Now the share sheet fires first; clipboard is best-effort try/catch.
+  3. Test repairs (6ba104b): detox-hidden asserts inside the lazy build window (rows unbuild when scrolled past); the FAQ expand asserts run on-screen items (first question, then the masala one) instead of scrolling away and tapping an unbuilt row; the join fake's joinRequestCreate flips its own status (what the real backend returns on re-read) so the sheet lands on the pending card; the toast's SnackBar timer retired with a 5s pump; the closed-thread assertion split into its own testWidgets (two boots in one test leaves riverpod's 0-duration auto-dispose timer pending at the invariant check).
+- Gates (verbatim, apps/mobile): flutter analyze → "No issues found! (ran in 1.8s)"; flutter test → "00:51 +293: All tests passed!" (293/293 = 280 prior + 13 new; the other five tab goldens byte-identical — only fonts_more_bn_light.png regenerated 41818 → 44215 bytes over the enriched config).
+- Honest notes: share_plus was NOT added — the repo's zero-plugin SystemChannel.shareText (ACTION_SEND) does the same with no dependency (spec deviation, documented here + AUDIT); the Kotlin side is untested locally (no Android SDK in the sandbox) — CI's debug-APK job is the compile proof; detox is Android-only by design (iOS has no UsageStats equivalent — honest screen state on other beds); admin replies land as `answered` status with an unread dot (no push notification yet — W4h+ scope).
+
+Stage Summary:
+- W4d COMPLETE across both halves: backend (W4d-API: support threads + usrah join requests + admin inbox/queue, 314 jest) + mobile UI (this section: sectioned §4.3 More + 6 new screens/flows + detox channel, 293 flutter tests). Every §4.3 item has a home: Donate+Foundation (contacts) top → worship tools (zakat/qibla/mosque/masala/live/autosilent/detox) → knowledge (99 names/Islamic names/70 branches) → support (support threads/usrah join/feedback/FAQ) → app (about/share/groups). Head for the wave: 3afd454.
+
+---
+Task ID: W4e (agent landed 2 commits + the feature files; the lead repaired the test harness approach + a real sheet-layout defect and shipped the tail)
+Agent: W4e + lead
+Task: Dawah craft — the referral share card as a branded PNG + the real madu tree view.
+
+Work Log:
+- Agent commits: b1c4b81 (6 l10n keys ×3: card title/note/tagline/toast/share-now + more), 6e5bd71 (shareFile channel: ACTION_SEND image/* + EXTRA_STREAM + FileProvider exposing ONLY <cache>/share — Kotlin + manifest + res/xml/file_paths).
+- Feature files landed by the agent, finished + fixed by the lead:
+  - referral_card.dart — the 1080×1350 fixed design surface, token branding, no-text-scaling; stage/capture split for testability.
+  - referral_share_sheet.dart — live preview + শেয়ার করুন; REAL DEFECT the tests caught: the preview Column overflowed 359px (no height budget) — fixed with a bounded 85%-height modal + Expanded preview before anything was committed.
+  - madu_tree.dart — indented tree with CustomPainter connector rails, gender-tinted avatars, level chips, relative last-active; dawah_screen.dart wired (both share entry points + the tree replaces the flat list).
+- Lead's test-harness work (the agent's draft tests hung; root causes all found + fixed):
+  1. Directory.createTemp (async IO) at test start starves under fake-async → createTempSync everywhere.
+  2. toImage/toByteData/decodeImageFromList are REAL-async: restructured to the golden-matcher discipline (toImage called in the fake zone, awaited + PNG-encoded + decoded INSIDE tester.runAsync — mirrors flutter_test's own _matchers_io); added the @visibleForTesting referralCardCapture seam so sheet-UX tests stay hermetic while the real capture has its own dedicated runAsync test.
+  3. Sync PNG write in production (a real-async write also starves test beds).
+  4. Scrollable.first on the dawah screen is the TabBarView's horizontal PageView — the tree/empty tests now scope to the vertical ListView.
+  5. Rails finder looks through the Positioned.fill wrappers.
+- Gates (verbatim, apps/mobile): flutter analyze → "No issues found! (ran in 2.0s)"; flutter test → "00:51 +303: All tests passed!" (303 = 293 + 10 new; card golden NEW + dawah golden regenerated 38227 → 46834 bytes over the tree layout; other four tab goldens byte-identical).
+- Honest notes: iOS keeps the text-share fallback (no shareFile handler — noted in-code); the tree is read-only (API depth without parentage — noted in madu_tree.dart); FileProvider exposes only the share subdirectory.
+
+Stage Summary:
+- W4e COMPLETE: branded 1080×1350 referral PNG with preview sheet + native image share (Android) + text fallback, and the real madu tree — both over the offline cache. Head: the test commit after c11f0e7-series (see git log).
+
+---
+Task ID: W4f-a (agent landed the Phosphor migration + golden warm-up; the lead shipped the transitions + texture + verification)
+Agent: W4f-a + lead
+Task: Design-system craft core — Phosphor migration, shared page transitions, hero geometric texture, motion/haptics/line-height verification.
+
+Work Log:
+- Agent (ca91715): the FULL Material→Phosphor icon migration across the feature screens (glyph table additions in design/phosphor_icons.dart where needed) + test/golden_fonts.dart — the FontLoader prewarm so goldens render the REAL Phosphor glyph shapes (extends the suite's pixel truth to icons; all 12 goldens regenerated, 303/303 verified by the lead).
+- Lead (a6cb320): slFadePage — ONE shared fade-through for all 32 pushed sub-routes (SLMotion.base in / fast out, decelerate/accelerate, 0.98→1.0 scale); the five tab roots stay instant by design; entry flows keep plain builders. Navigation/smoke/rtl/deep-link tests green.
+- Lead (775927d-ish texture commit): SLGeometricTexture (design/texture.dart) — eight-point-star khatam lattice, plain line geometry, no assets/packages, const painter; 5% foreground over the home ring hero, corner-clipped. Ring test finder updated (painter-driven CustomPaint only). Home golden regenerated; other four byte-identical.
+- Verified already-done: appBarTheme token-built (elevation 0, surface colors, family via textTheme — the 30 pushed AppBars inherit it); SLMotion tokens exist and are now ACTUALLY used by the transition; body/bodyLarge carry height 1.6 (the ≥1.6 Bengali rule); haptics on TriStateChips/AmalToggle/CountStepper/tilawat ramp + the bottom bar.
+- Gates (verbatim, apps/mobile): flutter analyze → "No issues found! (ran in 1.7s)"; flutter test → "00:52 +303: All tests passed!".
+
+Stage Summary:
+- W4f CORE complete: one icon set everywhere (goldens prove the glyphs), one transition everywhere pushed, the hero texture, motion tokens in real use. Remaining for W4f-b (next): illustrated empty/error/offline states, dark-mode tuning pass, explicit 360×640 + 1.3× overflow sweep, Widgetbook entries.
+
+---
+Task ID: W4f-b (agent landed all 5 commits clean; the lead verified gates + wrote this section — the agent's context died before logging)
+Agent: W4f-b + lead
+Task: Design-system craft second half — illustrated states, dark-mode token sweep, 360×640 @1.3× overflow proof, debug gallery.
+
+Work Log:
+- 68d4f9b: illustrated EmptyState/ErrorState — painted khatam-language vignettes (CustomPainter, no assets), ErrorState on the calm alert-tinted idiom (#FCE4E4/#C0392B light, darkAlertSoft/darkAlert dark); optional CTA action on EmptyState; every existing call site still compiles (icon param kept).
+- 3a37350: the support thread list's empty state now carries the create-thread CTA.
+- 6b77ad7: dark-mode token sweep — the two raw Color(0x…) values in features/ (referral card) moved to tokens.
+- a643114: /__gallery — the debug-only in-app kit gallery (lib/catalog/kit_gallery.dart): AppCard/SectionHeader/states/OfflineBanner/TriStateChips/CountStepper/QuantityInput/StreakBadge/CompletionRing/LeaderboardBandCard/the khatam texture over the hero gradient/button states + dark toggle; registered only when !kReleaseMode — never in release.
+- 9772951: the 360×640 @1.3× overflow sweep — test/w4f_overflow_test.dart (562 lines) pumps the key screens (Home, Today, Dawah overview+tree, Ilm, More, Support list+thread, Detox, FAQ, referral sheet) at the small surface × 1.3 text and asserts takeException() == null; FOUR real spills found + fixed (the commit's lib diffs).
+- Gates (verbatim, apps/mobile, run by the lead): flutter analyze → "No issues found! (ran in 2.4s)"; flutter test → "01:16 +313: All tests passed!" (313 = 303 + 10 overflow tests; all existing goldens byte-identical — no regeneration needed).
+
+Stage Summary:
+- W4f COMPLETE (a + b): one icon set, one transition, hero texture, illustrated states, tokenized dark, overflow-proof small-screen + large-text behavior, debug gallery. Heads: ca91715 → 9772951.
+
+---
+Task ID: W4g
+Agent: W4g
+Task: Web §3.3 — top navigation (green header, spec items, permanently highlighted gold Donate), real service worker (installable PWA + offline), html lang/dir per locale, top-surface i18n finish.
+Work Log:
+- Read the last ~24 worklog sections (W4-FIX-*, W4d-*, W4e, W4f-*) for conventions; baseline gates verified GREEN before touching anything (lint 0, production build success).
+- Commit 1b9018b: i18n keys — nav.about/articles/services/donate/menu/primary/top, header.* (reminders sheet strings, theme, admin panel, sync badges, signed-out toast), offline.message, install.* (title/body/cta/later), home.* (ongoing/next/nextWaqt/changeCity/currentTime/offlineNote/chooseLocation/locationHint/city), quick.* (4 tiles + descs + label), more.* (prayerSettings/mosques/masala/contacts/guestHint + 7 descs) — bn/en/ar, Bengali Islamic register.
+- Commit c605b6b: PWA icons — scripts/gen-icons.mjs (sharp, already a dependency) renders public/icon.svg → icon-192.png + icon-512.png + icon-maskable-512.png (mark at 70% on a #1F4D3D canvas so the gold khatam sits inside the maskable safe circle); manifest hardened: id "/", scope "/", dir "ltr", categories, icon set = SVG any + 192/512 PNG any + 512 PNG maskable. The old manifest had ONLY the SVG with purpose "any maskable" and metadata referenced a non-existent /icon-192.png — both fixed.
+- Commit da54236: public/sw.js — precaches the app shell ("/" HTML, /offline.html, manifest, icons; prayer times are CLIENT-side per src/lib/prayer-times.ts and cities are bundled in the chunks, so the shell is all the offline core needs); cache-first for immutable /_next/static/* (build chunks + self-hosted next/font files); stale-while-revalidate for GET /api/config matched on ANY origin (the production NEXT_PUBLIC_API_BASE is cross-origin; those requests still pass through this SW); navigations network-first → cached URL → cached "/" → /offline.html (Bengali standalone page, dark-mode aware, reload button). Registration via src/components/app/sw-register.tsx (production-only — dev churns hashed output), scope "/", mounted from the root layout; layout also gained appleWebApp meta. VERSION-bumped cache names with activate purge + skipWaiting/clients.claim.
+- Commit f927bca: install banner — beforeinstallprompt captured with preventDefault, "অ্যাপ ইনস্টল করুন" card above the bottom nav, ইনস্টল করুন → prompt()/userChoice, এখন নয় → dismissal persisted in localStorage (sl-install-dismissed); appinstalled also persists so installed users never see it again.
+- Commit 20c2567: §3.3 top nav — header rebuilt as a solid GREEN bar (bg-primary text-primary-foreground; dark mode inherits the dark primary token) so the spec's "gold on green" reads literally. Desktop (≥xl): হোম + আমল + দাওয়াত(role-gated) + ইলম + আর্টিকেল/রুলস (nav("ilm","articles")) + সেবা (DropdownMenu → zakat/qibla/mosques/masala/contacts/prayer-settings, the same SERVICES list the sheet uses) + আমাদের সম্পর্কে; right cluster: sync badge, notification bell (the existing রিমাইন্ডার ও ঘোষণা sheet = the notification+reminder panel), দান করুন as the ONLY gold-filled element (bg-gold text-gold-foreground, config donationUrl via the new useDonationUrl hook with the bundled https://as-sunnah.org/donation fallback), theme toggle, সাইন ইন/প্রোফাইল. Below xl: hamburger Sheet (nav + services + account section with রিমাইন্ডার entry, theme, sign-in/out, admin for supervisors + gold Donate footer); the 5-tab bottom bar stays until xl; main padding + offline banner + install banner breakpoints moved lg→xl to match. AppTitle subtitle switched to opacity-based color so it reads on green; RTL flips the sheet side.
+- Commit 3e796cc: i18n sweep — prayer hero (চলছে/পরবর্তী/পরবর্তী ওয়াক্ত/aria labels/offline note keyed), quick links (all 4 tiles + descs + nav aria), more menu (7 items + descs + guest hint + footer via app.tagline), home location prompt; about.tsx refactored onto useDonationUrl (one fetch path for the donate URL now).
+- Commit 21a1d45: html lang/dir — layout now `<html lang="bn" dir="ltr" suppressHydrationWarning>` (static bn is the truth today) + LocaleSync client effect syncing documentElement.lang/dir on store locale change (ar → rtl, bn/en → ltr), mounted from the layout so the join landing + onboarding benefit too; AppShell's redundant div-dir removed (html is the single source now).
+- Commit b2c722d: PRE-EXISTING DEFECT found by the PWA smoke — `bun run start` served the page 200 but /_next/static chunks, CSS, manifest, icons ALL 404'd: with outputFileTracingRoot = the repo root, the standalone tree nests the server at .next/standalone/apps/web/server.js and resolves static/public relative to the app dir, while the build script copied them to the standalone ROOT (and start pointed at a non-existent root server.js). Fixed: build copies .next/static → .next/standalone/apps/web/.next/ and public → .next/standalone/apps/web/; start runs the app-dir server. Proof (curl matrix, before → after): chunks/css/manifest/sw/offline/icons 404 → 200 with correct content types; /api/config stays 404 on the sandbox standalone server (no reverse proxy — expected; real deployments use the cross-origin API base, which the SW's any-origin /api/config matcher covers).
+- Commit 0997071: menu guest fallback (auth.guest key) + profile-card aria through i18n.
+- Gates (verbatim, from apps/web): `bun run lint` → "eslint ." (zero output = 0 problems); `bun run typecheck` → "tsc --noEmit" (clean); `bun run build` → "✓ Compiled successfully … Route (app): / ○, /_not-found ○, /.well-known/apple-app-site-association ○, /join ○, /join/[code] ƒ" success; `bun run start` + curl smoke → every PWA asset 200. NO web test infra exists (no test script in apps/web/package.json — stated honestly; lint+typecheck+build+smoke are the proof).
+- AUDIT.md: new "Wave 4 — W4g (web §3.3)" section with per-item implementing files + proofs.
+Stage Summary:
+- W4g COMPLETE: 9 commits 1b9018b..0997071 on main (NOT pushed — lead pushes). Top nav = the spec's five items + the app tabs, green bar, gold Donate permanently the only gold-filled header element; PWA installable end-to-end (manifest+SW+registration+install banner with persisted dismissal) and offline-capable (shell precache + SWR config + offline navigation fallback); html lang/dir correct statically AND reactive to the store locale; top surfaces fully keyed bn/en/ar.
+- Honest gaps: (a) the actual beforeinstallprompt/install flow is browser-engagement-gated — proven by code + served assets + built HTML, not by a real headless install; (b) SW has no automated tests (no web test infra exists — the repo's web testing story is lint+typecheck+build); (c) i18n swept the TOP surfaces only — dawah/ilm/amal views + admin console + onboarding remain Bengali-first with hard-coded bn (content packs and ROLE/LEVEL_LABELS_BN label maps are bn by design); calendar-era words (বঙ্গাব্দ/হিজরি) and ইশরাক/দুহা/তাহাজ্জুদ remain bn-formatted by design; (d) the standalone 404 fix is verified in-sandbox — the Coolify/Docker deploy (infra/web.Dockerfile) should be re-smoked by whoever deploys next, since its runtime paths may differ; (e) three config() fetches can fire in parallel (header + about + hero hijriAdjust) — the codebase idiom, noted for a future react-query consolidation; (f) beforeinstallprompt can theoretically fire before hydration attaches the listener (raced once, not observed in practice).
+
+---
+Task ID: W4h-FINISH
+Agent: W4h-FINISH
+Task: The admin UI pages for the four W4h API endpoints the previous agent landed (level-rules editor, referral tree, invigilator health, CMS pack write) + the app-config/contacts settings page — apps/admin only.
+Work Log:
+- Read the last ~10 worklog sections (W4-FIX-*..W4g) + the five W4h commits' code first: admin.controller.ts (GET/PUT/DELETE level-rules, invigilator-health, referral-tree, PUT admin/content/:pack with the CMS_PACKS allowlist courses/quizzes/duas/articles/faq/mosques), shared/levels.ts (RULE_FIELDS validator = the exact editable field set), packages/content/level-rules.json + faq/articles/mosques/duas.json shapes, and the existing page patterns ((dash)/*, lib/api.ts — all client methods already existed from 13ee113, lib/labels.ts, components/ui/*).
+- Commit af6fb55 — /level-rules page (full_admin): per-level tab editor for every RULE_FIELDS field (titleBn, minMonths + label, minReferralsAtLevel + label, outline review flag + label, farze-ain assessment flag/key/category/rule/desc, autoPromote guard, checklistBn item editor with category/key/label + move/delete), source badge (db override | pack | default), packNote shown read-only, save = PUT merge semantics → "সংরক্ষিত" toast with changed-field count, DELETE = reset-to-pack behind a confirm dialog; form syncs off the PUT response node (reset re-reads the fresh pack doc from the query cache after invalidation — no render-phase ref access, react-hooks/refs clean). Nav: "লেভেল রুলস" (full_admin group) + PAGE_TITLES + routes.ts FULL_ADMIN_PREFIXES.
+- Commit eb56d2a — /referrals upgrade: the full_admin branch now feeds off the cursor-paginated GET /api/admin/referral-tree (50/page): roots page on mount, children fetched per-branch on expand, "আরও দেখুন (N জন বাকি)" button when nextCursor, childCount badge on the expander + "N মাদউ" chip; node = name + memberCode + LevelBadge + GenderBadge + role chip + gender-tinted avatar dot (M green / F gold) + relative last-active with ⚠ past 7 inactive days. The old whole-forest client build (all users via /api/admin/users in one response) is gone; the daee/usrah_head downline section unchanged. Deep-link from members page skipped (honest — no natural search path into the tree yet).
+- Commit 2b73568 — invigilator health on the (dash) home for the two roles the endpoint serves: invigilators get a self card (ScoreBadge + সাপ্তাহিক রিভিউ (৩৫%) / আমল সম্পূর্ণতা (৩৫%) / সক্রিয় সদস্য (২০%) as HealthBars + বিলম্বিত রিভিউ (১০%) count card + 30-day assessment/unsigned counts), full_admins get the per-invigilator expandable list (score + unsigned red badge per row, components inside); formula spelled out in Bengali in the card description; usrah_head never sees it (API 403s them); empty scope → honest "পরিসর খালি" states.
+- Commit 0c5b4d7 — /content CMS page (fills the dead "কন্টেন্ট ম্যানেজমেন্ট" nav link): tab per pack the PUT allows — faq/articles/mosques/duas get a field-config-driven list editor (add/edit dialog carrying each pack's REAL fields incl. RTL arabic + 280px article body, move up/down, delete), save PUTs the whole pack doc so untouched top-level keys survive (duas.categories), per-pack edit cache lifted to page level so TabsPanel unmounts never lose unsaved work, dirty badge, 90kb client size guard, last-item delete blocked (API needs ≥1 non-empty array); courses/quizzes are read-only summaries (nested lessons/questions — the endpoint is ready, the form is not). /settings app-config page (fills the LAST dead nav link): GET/PATCH /api/admin/config editor — donationUrl/domain/audioBase, hijriAdjust (−2..2), nisab gold+silver, leaderboard/detox BoolToggles, the CONTACTS list (org/desc/phone/email/website/address) + groups list, PATCH-response remount keeps the form server-synced. BoolToggle extracted to components/ui/bool-toggle.tsx (level-rules imports it).
+- Gates (verbatim, from apps/admin, after EVERY commit): `bun run lint` → "eslint ." with zero output = 0 problems; `bun run build` → "✓ Compiled successfully" + Route (app) 19 routes all ○ except /members/[id] ƒ — including the new /level-rules, /content, /settings. apps/api untouched (git status showed only apps/admin paths in all four commits; verified `git diff --stat HEAD~5..HEAD -- apps/api/` empty). `git status --short` clean at the end; 4 commits, no push.
+Stage Summary:
+- W4h COMPLETE (API by the previous agent + this UI tail): the four W4h endpoints now all have admin surfaces — /level-rules editor (DB override over the pack seed, audit-visible), /referrals (paginated forest browser), dash-home invigilator health (self + per-invigilator list with the Bengali formula labels), /content CMS pack editors + /settings app-config/contacts. Both previously-dead full_admin nav links (কন্টেন্ট ম্যানেজমেন্ট, অ্যাপ কনফিগারেশন) now resolve to real pages.
+- Honest gaps: (a) courses/quizzes packs are read-only in /content — nested lessons/questions need a dedicated form pass (PUT endpoint already supports them); (b) no member-profile deep-link from the referral tree; (c) no automated admin tests exist (lint+build are the gates — the repo's admin testing story), so the pages are verified by compile + the API's own 51 W4h jest tests pinning the contracts; (d) the container-redeploy-restores-pack limitation is inherent to the API design (documented on the page); (e) content-pack edits are whole-doc PUTs — no per-item diffing/undo, and concurrent two-admin edits last-write-win.
+
+---
+Task ID: W4i (agent landed the 4 API commits + the mobile files; the lead finished the test tail + two real fixes and shipped)
+Agent: W4i + lead
+Task: Assessment signature — the assessee's own OTP-confirmed acknowledgment makes the farze-ain result final.
+
+Work Log:
+- API (agent): 2f639b0 schema (status pending_confirmation/confirmed/declined + confirmedAt/declinedAt/decisionNote + signed-row backfill + demo seed), ede0f06 consumeOtpCode (the shared atomic OTP verify+consume, extracted from auth for non-sign-in flows), b1082db the flow (submit starts pending + Fajr reminder to the assessee, GET /api/assessments/me RLS-scoped, confirm-request/confirm over the auth OTP, decline + invigilator reminder, level facts read confirmed-only), 5ead9e7 e2e jest (pending+reminder, /me scoping, OTP issue + wrong-code 400, confirm + audit + level gate, decline + reminder).
+- Mobile (agent files + lead finish): the dawah assessments section shows status chips + the confirm sheet (OTP request → entry → confirm; decline with reason). Lead repairs: AssessmentStatus.json is snake_case on the wire (pending_confirmation — the API column; the enum-name getter broke the chip keys), the trailing score+chip column overflowed 5px on two-line declined reasons (FittedBox scaleDown), the tests needed the below-the-fold scroll (overviewScroll — the w4e lesson) + method-prefixed wire expectations.
+- Gates (verbatim): apps/api lint 0 errors + tsc clean + jest 372/372; apps/mobile analyze No issues + 319/319 (6 new); apps/admin untouched (the assessments page's status display was already landed by the agent's diff? — VERIFY: the agent's commits touched only api+mobile+admin? the status column: admin shows the status in the existing page read-only — noted honest).
+- Reminder panel: the assessee's reminder rides the existing assessment kind (verified mapping).
+
+Stage Summary:
+- W4i COMPLETE: the farze-ain result is final only after the member's own OTP confirmation; every path tested.
+
+---
+Task ID: W4i (agent: the 4 API commits + the mobile files; the lead: the test tail, two real fixes, the admin column, this section)
+Agent: W4i + lead
+Task: Assessment signature — the farze-ain result is final only after the member's own OTP-confirmed acknowledgment.
+
+Work Log:
+- API (agent commits 2f639b0, ede0f06, b1082db, 5ead9e7): schema status pending_confirmation|confirmed|declined (+confirmedAt/declinedAt/decisionNote, signed-row backfill, coherent demo seed); consumeOtpCode — the shared atomic OTP verify+consume extracted from auth; the flow — submit starts pending + a Fajr reminder to the assessee, GET /api/assessments/me (RLS), confirm-request/confirm over the auth OTP machinery (audit assessment_confirm), decline + invigilator reminder; the level engine reads confirmed-only. jest 372/372 (the e2e: pending+reminder, /me scoping, OTP issue + wrong-code 400, confirm + audit + the level gate, decline + reminder).
+- Mobile (agent files + lead finish): the dawah assessments section renders AssessmentStatusChip + score per row; pending rows carry the CTA; the confirm sheet = OTP request → entry (devCode auto-fills in debug) → confirm; decline with reason. Lead repairs: (1) AssessmentStatus.json is snake_case on the wire (pending_confirmation — the API column; the enum-name getter broke every chip key), (2) the trailing score+chip Column overflowed 5px on two-line declined reasons (FittedBox scaleDown), (3) test tail — the below-the-fold scroll (overviewScroll) + method-prefixed wire expectations.
+- Admin (lead): the assessment history's নিশ্চয়ন column (read-only) + the CSV column — the confirm stays the member's own action.
+- Gates (verbatim): api lint 0 errors / tsc clean / jest 372/372; mobile analyze No issues / 319/319 (6 new in test/w4i_assessment_confirm_test.dart); admin lint 0 / build ✓.
+
+Stage Summary:
+- W4i COMPLETE end to end: score → the member is reminded → sees the score in the app → OTP-confirms (or declines with a reason) → only then final for level transitions.
+
+---
+Task ID: W4j
+Agent: W4j (API + mobile by the previous session's agent; the web side, verification, docs and this section by the lead)
+Task: Search — Meilisearch query endpoint (duas/adhkar/names/articles/Islamic names, Bengali typo-tolerant) + mobile & web usage with offline fallback.
+
+Work Log:
+- API (previous agent, verified this session): 26fa5e6 the meili indexer (adhkar + islamic-names join the indexed packs; per-pack typoTolerance + title-first searchableAttributes; v1.x create-index route), 860eff1 GET /api/search?q=&limit= — one /multi-search round trip, grouped dua→dhikr→name99→islamic_name→article, short-q(<2cp)=200 empty, meili absent/fail=503 Bengali message, public.
+- Mobile (previous agent, verified this session): 59e2dc5 the contract (SearchHit/SearchResults + ApiClient.search + search_offline.dart — the bundled-pack normalized-substring matcher, mobile-parity honesty: NO typo tolerance), 2f9dbc9 the strings ×3, a333641 the Ilm search screen (debounce, grouped rows, the affordance on the Ilm app bar, 11 tests; the ilm golden regenerated over the icon).
+- Lead gates on the 5 commits (raw): apps/api lint "0 errors, 5 warnings" (all pre-existing unused-vars in W4j-untouched files) + tsc clean + jest --runInBand "27 passed, 383/383"; apps/mobile "flutter analyze: No issues found" + "01:05 +330: All tests passed!".
+- Web (the lead — the plan's "& web usage" was the real gap): b53c6ac the Ilm unified search — the field in the Ilm header (i18n'd label/placeholder/clear), ≥2cp swaps the tab area for grouped results; debounced /api/search client with a stale-response guard; the offline fallback is the PORT of search_offline.dart (same fields, same grouping, same subtitles, best-effort per-pack loads); deep links: dua→highlighted card, dhikr→adhkar, name99/islamic_name→screens, article→the dialog auto-open — FIXED A DEAD CHECK doing it (highlightId looked for view 'article'; the route is 'articles'); the pre-meili fuzzy stand-in lib/search.ts DELETED (dead code, superseded — one matcher, same as mobile). 9e8ad8f the SW serves /api/content/:pack SWR (any origin, VERSION w4g-1→w4j-1) so the packs survive a network loss — the persistence layer the fallback reads through getPack().
+- Local E2E enablement (d93ae1f): the API could NOT boot from the full monorepo — @nestjs/websockets' undeclared @nestjs/core peer resolves a DIFFERENT install instance (bun peer-hash) → 'app instanceof NestApplication' fails → the whole NestApplication reaches socket.io as the HTTP server → 'server.listeners is not a function'. CI/Docker install apps/api standalone and never hit it. scripts/dev-run.cjs aliases the module-cache entry (dev tool only, never imported by app code). Also: the sandbox shell exports the web app's DATABASE_URL=file:… which overrides .env in prod-mode boots — run with the API's DATABASE_URL explicitly.
+- Browser E2E (agent-browser, the real API on 3001 with meili ABSENT — so the browser exercised the 503→fallback path, the exact path users hit when the search engine is down): onboarding→home→ইলম; typing "রহম" → the gold offline strip "অফলাইন — সংরক্ষিত কন্টেন্ট থেকে ফলাফল" + grouped results in the server's order (দোয়া×2 → আল্লাহর নাম: আর-রহমান, আল-ওয়াসি' → ইসলামিক নাম: আব্দুর রহমান) with kind chips + subtitles; tap আর-রহমান → the 99-names screen (the field clears — a real defect found in testing: the search swap kept the results on screen; fixed with clear-on-tap BEFORE commit); "মসজিদে প্রবেশ" → the dua tab with the card; "মুহাসাবা" → the ArticlesView with the article dialog AUTO-OPEN (the highlightId fix proven); 1cp query keeps the tabs; মুছুন restores them; 390×844 scrollWidth 390 (no overflow); zero page errors (only the pre-existing about.tsx named-export warning). The ONLINE meili path is proven by jest (search.spec + meili-indexer.spec pin the wire + route shapes) — honest: no browser meili in the sandbox.
+- Docs: 46661c8 the AUDIT rows; this section; PROGRESS updated.
+
+Stage Summary:
+- W4j COMPLETE: the plan's C-W4j item is done end to end — the meili endpoint (Bengali typo-tolerant, grouped, public), the mobile search screen with the honest offline fallback, AND the web usage with its own offline fallback + SW persistence. All four gates green (api 383/383, mobile 330/330, web lint/tsc/build, browser E2E).
+- Honest gaps: (a) the meili ONLINE query is proven by jest stubs + CI, not against a live meili instance (none in the sandbox — the owner's staging redeploy runs the real indexer); (b) the SW pack cache has no automated test (no web test infra — the repo's web story: lint+typecheck+build+browser smoke); (c) the offline matcher is deliberately NOT typo-tolerant (documented on both platforms — the banner tells the user which corpus answered); (d) the dev-run.cjs shim is a local-monorepo convenience, not a product path.
+
+---
+Task ID: W4j-CI-FIX (found while closing W4j — a W4e regression)
+Agent: lead
+Task: The APK CI jobs had been RED since W4e — every push from 1cae221 (W4d docs) through 160254f (W4i) failed "Build debug APK"/"Build release APKs" with MainActivity.kt:499 "Syntax error: Unclosed comment".
+
+Work Log:
+- Found by reading the runs list before reporting the W4j head (the discipline that was missing from the W4e..W4i closes): runs 36567327689 (1cae221), 36577878577, 36583178635, 36587229096, 36590645367, 36597585832 (W4g..W4h heads), 36602057408 (160254f, W4i) — all failure, both APK jobs.
+- Root cause: 6e5bd71 (W4e shareFile channel) wrote "as image/* + EXTRA_STREAM" INSIDE the class KDoc. Kotlin NESTS block comments — the 'image/*' opened a second level, the block's closing '*/' closed the NESTED one, and the outer comment swallowed the rest of the file to EOF (the 499:1 error). A one-phrase KDoc reword fixes it ("with an any-image MIME type").
+- Proof available locally (no Android SDK): a nesting-aware comment scan — final depth 0, and NO other .kt file has a nested open (a second scan asserts none swallow code). The real proof is the APK job on the new head.
+- Record correction: the W4e..W4i worklog "gates" lines were true for the local gates those sessions ran but overstated CI — the APK jobs rode red. Nothing else in those waves is affected (analyze/test/jest/api/admin/web jobs were green throughout; the Kotlin file only gates the APK builds).
+- The W4j close-out verification (this session) re-ran every local gate on the FINAL head AND checks the CI runs — the standard going forward.
+
+Stage Summary:
+- 11ff487 fixes the only W4e..W4i CI regression; the APK jobs should go green on the run it triggers. The audit trail above is the honest correction of the W4e..W4i CI claims.
+
+---
+Task ID: W4j-CI-FIX (part 2 — the errors the un-swallowed file surfaced)
+Agent: lead
+Task: 11ff487 un-swallowed MainActivity.kt → the compiler saw the W4d usage channel for the FIRST time → the APK jobs failed on two hallucinated Android APIs (runs 36614184485, 36615386357).
+
+Work Log:
+- ee0a84f: AppOpsManager.OPSTR_USAGE_ACCESS does not exist — the public app-op behind the Settings "usage access" toggle is OPSTR_GET_USAGE_STATS ("android:get_usage_stats"); the pre-Q branch's String-op checkOpNoThrow is not public either — pre-Q now probes via the events query itself (an ungranted queryEvents answers an empty stream; the only false negative is the first minutes after a boot — the settings CTA stays correct meanwhile). UsageEvents.nextEvent() has no zero-arg returning variant — the walk reuses one mutable Event out-param.
+- 65658fc: the out-param method's real name is getNextEvent(Event) — guessed 'nextEvent' first (one more red APK cycle), then verified EVERY API the channel touches against the AOSP framework source itself (fetched UsageEvents.java + AppOpsManager.java from the aosp-mirror on GitHub): hasNextEvent/getNextEvent/Event()/getEventType/getTimeStamp/getPackageName/MOVE_TO_*/ACTIVITY_* public ✓, OPSTR_GET_USAGE_STATS public ✓, unsafeCheckOpNoThrow(String,int,String) public (deprecated — warning only) ✓, MODE_ALLOWED ✓. Settings.ACTION_USAGE_ACCESS_SETTINGS + UsageStatsManager.queryEvents were already compiler-proven by the earlier runs' error lists.
+- LESSON (the process fix): Kotlin written in a sandbox without the Android SDK is UNVERIFIED until an APK job compiles it — and a green local gate run says nothing about it. The W4e comment bug then MASKED the W4d bugs by swallowing the whole file, so two waves shipped broken Kotlin into main. The close-out now treats "read the actual CI jobs, both APK ones, per push" as mandatory, and AOSP source verification as the way to fix without Android-SDK roulette (each APK cycle costs ~15 min).
+- Final proof: run 36616631396 on 65658fc — ALL 10 JOBS GREEN including BOTH APK builds (the first fully-green run since 36558890112 on dcab440).
+
+Stage Summary:
+- The W4d/W4e Kotlin debt is fully paid: 3 fix commits (11ff487, ee0a84f, 65658fc) → main green end to end at 65658fc.
+
+---
+Task ID: W4j-CI-FIX (part 3 — a flake on the final docs push)
+Agent: lead
+Task: Run 36617854673 (docs-only edc17a9) failed the API job on token-security.spec.ts "two RACING refreshes with the same token → exactly one wins" — the final assertion (the winner's new token must be dead after the loser's reuse detection) resolved instead of rejecting.
+
+Work Log:
+- The commits between the all-green 36616631396 (65658fc) and this run are docs-only (worklog.md, docs/AUDIT.md) — the API code is byte-identical. The same test passed in every other run today (36614184485, 36615386357, 36616631396 — the API job was green even while the APK jobs were red).
+- Job re-run (the GitHub re-run API, id 109575782306): 36617854673 → completed success, all jobs green. Verdict: a TIMING FLAKE in the race test, not a regression.
+- FLAGGED for a follow-up wave (not W4j): the test's invariant is real (family revocation on racing reuse) but its outcome depends on the loser's failure MODE being reuse-detection; a different interleaving (e.g. a serialization loser that doesn't run the reuse path) lets the winner's token live. Worth a deterministic probe or a retry-stable assertion — the current test conflates "exactly one wins" with "the family is revoked".
+
+Stage Summary:
+- W4j + the W4d/W4e Kotlin debt are DONE: main green end to end (36616631396 on 65658fc; 36617854673 on edc17a9 after the flake re-run).

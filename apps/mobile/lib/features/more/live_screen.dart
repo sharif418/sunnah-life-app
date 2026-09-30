@@ -12,6 +12,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class LiveScreen extends ConsumerWidget {
   const LiveScreen({super.key});
@@ -47,7 +48,7 @@ class LiveScreen extends ConsumerWidget {
                 const SizedBox(height: SLSpacing.s24),
                 EmptyState(
                     message: context.t('empty_generic'),
-                    icon: Icons.podcasts_outlined),
+                    icon: PhosphorIconsRegular.broadcast),
               ],
             );
           }
@@ -57,7 +58,7 @@ class LiveScreen extends ConsumerWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeader(title, icon: Icons.podcasts_outlined),
+                SectionHeader(title, icon: PhosphorIconsRegular.broadcast),
                 for (final p in list)
                   AppCard(
                     child: Column(
@@ -115,7 +116,7 @@ class LiveScreen extends ConsumerWidget {
                           Padding(
                             padding: const EdgeInsets.only(top: SLSpacing.s8),
                             child: OutlinedButton.icon(
-                              icon: const Icon(Icons.notifications_none,
+                              icon: const Icon(PhosphorIconsRegular.bell,
                                   size: 18),
                               label: Text(context.t('live_notify')),
                               onPressed: () async {

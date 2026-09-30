@@ -17,6 +17,7 @@ import '../../state/amal_state.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
 import 'amal_widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class MonthGridScreen extends ConsumerStatefulWidget {
   const MonthGridScreen({super.key});
@@ -90,7 +91,7 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
                     tooltip: context.t('month_prev'),
                     onPressed: () => _shiftMonth(-1),
                     // Mirrors under RTL (previous points "backwards").
-                    icon: const DirectionalIcon(Icons.chevron_left),
+                    icon: const DirectionalIcon(PhosphorIconsRegular.caretLeft),
                   ),
                   Expanded(
                     child: Center(
@@ -104,7 +105,7 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
                   IconButton(
                     tooltip: context.t('month_next'),
                     onPressed: () => _shiftMonth(1),
-                    icon: const DirectionalIcon(Icons.chevron_right),
+                    icon: const DirectionalIcon(PhosphorIconsRegular.caretRight),
                   ),
                 ],
               ),
@@ -350,7 +351,7 @@ class MonthHeatmap extends ConsumerWidget {
                 ),
                 if (locked)
                   Chip(
-                    avatar: const Icon(Icons.lock, size: 14),
+                    avatar: const Icon(PhosphorIconsRegular.lockSimple, size: 14),
                     label: Text(context.t('amal_locked')),
                     visualDensity: VisualDensity.compact,
                   ),
@@ -372,7 +373,7 @@ class MonthHeatmap extends ConsumerWidget {
             if (locked) ...[
               const SizedBox(height: SLSpacing.s12),
               FilledButton.icon(
-                icon: const Icon(Icons.lock_open),
+                icon: const Icon(PhosphorIconsRegular.lockSimpleOpen),
                 label: Text(context.t('amal_unlock_request')),
                 onPressed: () => _requestUnlock(context, ref, day),
               ),
@@ -446,6 +447,6 @@ class _PointsDot extends StatelessWidget {
         : points > 0
         ? theme.colorScheme.tertiary
         : theme.colorScheme.outline;
-    return Icon(Icons.circle, size: 12, color: color);
+    return Icon(PhosphorIconsFill.circle, size: 12, color: color);
   }
 }

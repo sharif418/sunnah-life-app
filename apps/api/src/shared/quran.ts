@@ -68,7 +68,7 @@ export type PackKey =
   | "mosques"
   | "faq";
 
-const PACK_FILES: Record<PackKey, string> = {
+export const PACK_FILES: Record<PackKey, string> = {
   duas: "duas.json",
   adhkar: "adhkar.json",
   names99: "names99.json",
@@ -99,6 +99,13 @@ export async function loadPack(key: string): Promise<unknown | null> {
   } catch {
     return null;
   }
+}
+
+/** W4h — drop the pack cache after the admin CMS writes a pack (no key =
+ * drop everything, e.g. when CONTENT_DIR itself changed). */
+export function invalidatePackCache(key?: string): void {
+  if (key) packCache.delete(key);
+  else packCache.clear();
 }
 
 /** Documents of a pack for Meilisearch indexing (id field required).

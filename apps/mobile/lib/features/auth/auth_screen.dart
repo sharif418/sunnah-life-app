@@ -23,6 +23,7 @@ import '../../services/social_signin_service.dart';
 import '../../state/providers.dart';
 import '../../state/referral_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -177,7 +178,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         padding: const EdgeInsets.all(SLSpacing.s20),
         children: [
           Icon(
-            Icons.smartphone_outlined,
+            PhosphorIconsRegular.deviceMobile,
             size: 56,
             color: theme.colorScheme.primary,
           ),
@@ -209,7 +210,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.person_add_alt_1_outlined,
+                    PhosphorIconsRegular.userPlus,
                     size: 18,
                     color: theme.colorScheme.primary,
                   ),
@@ -234,7 +235,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 onPressed: _socialBusy
                     ? null
                     : () => _signInSocial(SocialProvider.google),
-                icon: const Icon(Icons.g_mobiledata_outlined),
+                icon: const Icon(PhosphorIconsRegular.googleLogo),
                 label: Text(context.t('auth_google')),
               ),
             const SizedBox(height: SLSpacing.s12),
@@ -243,7 +244,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 onPressed: _socialBusy
                     ? null
                     : () => _signInSocial(SocialProvider.apple),
-                icon: const Icon(Icons.apple),
+                icon: const Icon(PhosphorIconsRegular.appleLogo),
                 label: Text(context.t('auth_apple')),
               ),
             const SizedBox(height: SLSpacing.s16),
@@ -307,7 +308,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 child: Row(
                   children: [
                     Icon(
-                      Icons.developer_mode,
+                      PhosphorIconsRegular.code,
                       color: theme.colorScheme.tertiary,
                     ),
                     const SizedBox(width: SLSpacing.s8),

@@ -1,7 +1,28 @@
 /// Assessment models — port of the assessment group in src/types/domain.ts:
 /// summaries, templates (sections + criteria) and the detailed record with
 /// per-criterion scores (0 | 1 | 2) and comments.
+///
+/// W4i: the farze-ain result only becomes FINAL (counts toward level
+/// transitions) after the ASSESSEE's own OTP-confirmed acknowledgment —
+/// [AssessmentStatus] carries that lifecycle.
 library;
+
+enum AssessmentStatus { pendingConfirmation, confirmed, declined }
+
+extension AssessmentStatusJson on AssessmentStatus {
+  /// Wire format is snake_case (matches the API's status column).
+  String get json => switch (this) {
+    AssessmentStatus.pendingConfirmation => 'pending_confirmation',
+    AssessmentStatus.confirmed => 'confirmed',
+    AssessmentStatus.declined => 'declined',
+  };
+
+  static AssessmentStatus fromJson(String v) => switch (v) {
+    'confirmed' => AssessmentStatus.confirmed,
+    'declined' => AssessmentStatus.declined,
+    _ => AssessmentStatus.pendingConfirmation,
+  };
+}
 
 class AssessmentSummary {
   const AssessmentSummary({
@@ -13,6 +34,10 @@ class AssessmentSummary {
     this.assesseeSignedAt,
     required this.participantCategory,
     this.scorePct,
+    this.status = AssessmentStatus.pendingConfirmation,
+    this.confirmedAt,
+    this.declinedAt,
+    this.decisionNote,
   });
   final String id;
   final String templateKey;
@@ -22,6 +47,14 @@ class AssessmentSummary {
   final String? assesseeSignedAt;
   final int participantCategory;
   final int? scorePct;
+
+  /// W4i — final only when confirmed (see [AssessmentStatus]).
+  final AssessmentStatus status;
+  final String? confirmedAt;
+  final String? declinedAt;
+
+  /// The assessee's decline reason (declined only).
+  final String? decisionNote;
 
   factory AssessmentSummary.fromJson(Map<String, dynamic> j) =>
       AssessmentSummary(
@@ -33,6 +66,10 @@ class AssessmentSummary {
         assesseeSignedAt: j['assesseeSignedAt'] as String?,
         participantCategory: (j['participantCategory'] as num?)?.toInt() ?? 1,
         scorePct: (j['scorePct'] as num?)?.toInt(),
+        status: AssessmentStatusJson.fromJson(j['status'] as String? ?? ''),
+        confirmedAt: j['confirmedAt'] as String?,
+        declinedAt: j['declinedAt'] as String?,
+        decisionNote: j['decisionNote'] as String?,
       );
 }
 
@@ -124,6 +161,10 @@ class AssessmentDetail {
     this.assesseeSignedAt,
     required this.participantCategory,
     this.scorePct,
+    this.status = AssessmentStatus.pendingConfirmation,
+    this.confirmedAt,
+    this.declinedAt,
+    this.decisionNote,
     required this.template,
     this.assessorName,
     this.assesseeName,
@@ -138,6 +179,10 @@ class AssessmentDetail {
   final String? assesseeSignedAt;
   final int participantCategory;
   final int? scorePct;
+  final AssessmentStatus status;
+  final String? confirmedAt;
+  final String? declinedAt;
+  final String? decisionNote;
   final AssessmentTemplate template;
   final String? assessorName;
   final String? assesseeName;
@@ -154,6 +199,10 @@ class AssessmentDetail {
         assesseeSignedAt: j['assesseeSignedAt'] as String?,
         participantCategory: (j['participantCategory'] as num?)?.toInt() ?? 1,
         scorePct: (j['scorePct'] as num?)?.toInt(),
+        status: AssessmentStatusJson.fromJson(j['status'] as String? ?? ''),
+        confirmedAt: j['confirmedAt'] as String?,
+        declinedAt: j['declinedAt'] as String?,
+        decisionNote: j['decisionNote'] as String?,
         template: AssessmentTemplate.fromJson(
           j['template'] as Map<String, dynamic>? ?? const {},
         ),

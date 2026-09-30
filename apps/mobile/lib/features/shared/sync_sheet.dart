@@ -13,6 +13,7 @@ import '../../state/amal_state.dart';
 import '../../state/providers.dart' show dbProvider;
 import '../../db/database.dart';
 import 'widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// Injectable clock — production reads the wall clock, the golden test
 /// pins it so the relative "last synced" label is deterministic.
@@ -69,8 +70,8 @@ class SyncSheet extends ConsumerWidget {
               children: [
                 Icon(
                   sync.dead > 0
-                      ? Icons.cloud_off_outlined
-                      : Icons.cloud_done_outlined,
+                      ? PhosphorIconsRegular.cloudSlash
+                      : PhosphorIconsRegular.cloudCheck,
                   size: 20,
                   color: sync.dead > 0
                       ? theme.colorScheme.error
@@ -99,7 +100,7 @@ class SyncSheet extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    Icons.info_outline,
+                    PhosphorIconsRegular.info,
                     size: 16,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -132,7 +133,7 @@ class SyncSheet extends ConsumerWidget {
                       height: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.sync, size: 18),
+                  : const Icon(PhosphorIconsRegular.arrowsClockwise, size: 18),
               label: Text(
                 context.t('sync_now'),
                 style: theme.textTheme.bodyLarge
@@ -172,7 +173,7 @@ class SyncSheet extends ConsumerWidget {
                     children: [
                       IconButton(
                         tooltip: context.t('retry'),
-                        icon: const Icon(Icons.refresh, size: 20),
+                        icon: const Icon(PhosphorIconsRegular.arrowClockwise, size: 20),
                         onPressed: () {
                           ref.read(syncProvider.notifier).retryDead(row.id);
                           ref.invalidate(deadOutboxProvider);
@@ -180,7 +181,7 @@ class SyncSheet extends ConsumerWidget {
                       ),
                       IconButton(
                         tooltip: context.t('sync_dead_discard'),
-                        icon: const Icon(Icons.delete_outline, size: 20),
+                        icon: const Icon(PhosphorIconsRegular.trash, size: 20),
                         onPressed: () {
                           ref.read(syncProvider.notifier).discardDead(row.id);
                           ref.invalidate(deadOutboxProvider);

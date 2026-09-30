@@ -50,7 +50,7 @@ class GlobalHeader extends ConsumerWidget {
     final profile = ref.watch(profileProvider);
     final lang = context.lang;
     final bn = context.isBn;
-    final now = DateTime.now();
+    final now = ref.watch(headerNowProvider);
     final bnDate = banglaDate(now);
     // C-W3g: user ±2 + admin /api/config ±2 (clamped ±4) — the admin's
     // moon-sighting correction propagates to every rendered Hijri date.
@@ -83,7 +83,7 @@ class GlobalHeader extends ConsumerWidget {
                 ),
                 child: const Center(
                   child: Icon(
-                    Icons.star,
+                    PhosphorIconsFill.star,
                     color: SLColors.primaryDeep,
                     size: 18,
                   ),

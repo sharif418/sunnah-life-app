@@ -1,6 +1,8 @@
-import { Req, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Req, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Put, Query, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
+import { promises as fsPromises } from "fs";
+import path from "path";
 import {
   IsArray,
   IsBoolean,
@@ -29,6 +31,16 @@ import { Roles } from "../common/roles.decorator";
 import { RolesGuard } from "../common/roles.guard";
 import { LevelsService, requireBengaliReason } from "../levels/levels.service";
 import {
+  contentDir,
+  invalidateLevelRulesCache,
+  loadLevelRulesDoc,
+  validateLevelRulesNode,
+  LevelRulesValidationError,
+  type LevelKey,
+} from "../shared/levels";
+import { invalidatePackCache, PACK_FILES, type PackKey } from "../shared/quran";
+import { SupportReplyDto } from "../support/support.controller";
+import {
   bdToday,
   completion7dForUsers,
   invalidateDefinitionCache,
@@ -45,6 +57,7 @@ import type {
   AssessmentSection,
   AuditEntry,
   Gender,
+  InvigilatorHealthItem,
   Level,
   MonthGrid,
   MonthGridCell,
@@ -56,6 +69,16 @@ import type {
 
 const INACTIVE_DAYS = 3;
 const REVIEW_WINDOW_DAYS = 27; // last 4 Saturday-started weeks
+
+/** W4h — the pack keys the admin CMS may edit (the spec's CMS list). The
+ * Qur'an packs and the reference packs (adhkar/names99/…) are NOT editable. */
+const CMS_PACKS: PackKey[] = ["courses", "quizzes", "duas", "articles", "faq", "mosques"];
+/** W4h — size cap for one pack write (serialized). Deliberately below the
+ * express JSON body limit (100kb) so the write can never be rejected by the
+ * parser before validation runs; every current CMS pack fits with headroom
+ * (largest: duas.json ≈ 42kb). A pack that outgrows this wants a richer
+ * editor + a deliberate body-limit decision, not a silent bump. */
+const CMS_PACK_MAX_BYTES = 90_000;
 
 const ROLES: Role[] = ["user", "daee", "usrah_head", "invigilator", "full_admin"];
 const GENDERS: Gender[] = ["M", "F"];
@@ -1554,6 +1577,395 @@ export class AdminService {
     return after;
   }
 
+  // ── W4h: level-rules editor (DB override over the pack) ─────────────────
+
+  /**
+   * GET /api/admin/level-rules — full_admin: the effective level-rules
+   * document. Per level: the raw merged node, where it comes from
+   * (db override | pack | default) and the parsed rules the engine sees.
+   */
+  async levelRules(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    const { nodes, sources, packNote } = await loadLevelRulesDoc(this.prisma);
+    const levels: Record<string, { node: Record<string, unknown>; source: string }> = {};
+    for (const key of ["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"] as LevelKey[]) {
+      const node = nodes[key];
+      if (node) {
+        levels[key] = { node, source: sources[key] ?? "default" };
+      }
+    }
+    return { levels, packNote };
+  }
+
+  /**
+   * PUT /api/admin/level-rules/:level — full_admin. MERGE semantics: the
+   * validated fields layer over the level's current effective node (pack or
+   * previous override); unmentioned fields keep their values. Persists to
+   * AppConfigRow (key "level_rules"), busts the engine cache and audits the
+   * changed keys (action level_rules_update).
+   */
+  async updateLevelRules(viewer: User | null, level: string, body: unknown) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const key = this.requireLevelKey(level);
+
+    let patch: Record<string, unknown>;
+    try {
+      patch = validateLevelRulesNode(body);
+    } catch (err) {
+      if (err instanceof LevelRulesValidationError) throw new ApiError(400, err.message);
+      throw err;
+    }
+
+    const { nodes } = await loadLevelRulesDoc(this.prisma);
+    const before = nodes[key] ?? {};
+    const after = { ...before, ...patch };
+
+    const row = await this.prisma.appConfigRow.findUnique({ where: { key: "level_rules" } });
+    const doc = (row?.valueJson ?? {}) as { levels?: Record<string, unknown> };
+    const levelsDoc = { ...(doc.levels ?? {}), [key]: after };
+    await this.prisma.appConfigRow.upsert({
+      where: { key: "level_rules" },
+      create: { key: "level_rules", valueJson: { levels: levelsDoc } as never },
+      update: { valueJson: { levels: levelsDoc } as never },
+    });
+    invalidateLevelRulesCache();
+
+    const changed = Object.keys(after).filter(
+      (k) => JSON.stringify(before[k] ?? null) !== JSON.stringify(after[k] ?? null)
+    );
+    await this.guard.audit(user.id, "level_rules_update", "level_rules", key, {
+      level: key,
+      changed,
+    });
+
+    return { level: key, node: after, changed };
+  }
+
+  /**
+   * DELETE /api/admin/level-rules/:level — full_admin. Drops the DB override
+   * for one level so the engine falls back to the pack file (the seed
+   * default). Audited (action level_rules_update, meta.reset = true).
+   */
+  async resetLevelRules(viewer: User | null, level: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const key = this.requireLevelKey(level);
+
+    const row = await this.prisma.appConfigRow.findUnique({ where: { key: "level_rules" } });
+    const doc = (row?.valueJson ?? {}) as { levels?: Record<string, unknown> };
+    if (!doc.levels || !(key in doc.levels)) {
+      // nothing overridden — idempotent no-op
+      return { level: key, reset: false };
+    }
+    const levelsDoc = { ...doc.levels };
+    delete levelsDoc[key];
+    await this.prisma.appConfigRow.upsert({
+      where: { key: "level_rules" },
+      create: { key: "level_rules", valueJson: { levels: levelsDoc } as never },
+      update: { valueJson: { levels: levelsDoc } as never },
+    });
+    invalidateLevelRulesCache();
+    await this.guard.audit(user.id, "level_rules_update", "level_rules", key, {
+      level: key,
+      reset: true,
+    });
+    return { level: key, reset: true };
+  }
+
+  private requireLevelKey(level: string): LevelKey {
+    if (!["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"].includes(level)) {
+      throw new ApiError(404, "স্তর পাওয়া যায়নি");
+    }
+    return level as LevelKey;
+  }
+
+  // ── W4h: invigilator health score ───────────────────────────────────────
+
+  /**
+   * GET /api/admin/invigilator-health — one invigilator, or all of them.
+   *
+   * SCOPE: full_admin sees every invigilator; an invigilator sees ONLY their
+   * own score (self view); usrah_head gets 403. Every invigilator's members =
+   * the members of all usrahs of the invigilator's gender (the supervision
+   * scope the overview + reviews queue already use for the role).
+   *
+   * FORMULA (all components 0..100, bounded windows — nothing unbounded):
+   *   score = round(0.35·reviewPct + 0.35·amalPct + 0.20·activePct + 0.10·onTimePct)
+   *     reviewPct — done weekly reviews ÷ expected (members × 4 weeks) over
+   *                 the last 27 days (the 4 Saturday-started weeks the
+   *                 overview already uses)
+   *     amalPct   — mean of the members' 7-day amal completion (the shared
+   *                 completion7dForUsers rule over active daily definitions)
+   *     activePct — members active in the last 3 days ÷ members (the
+   *                 overview's INACTIVE_DAYS definition of inactive)
+   *     onTimePct — 100·(1 − overdue reviews ÷ members) — each overdue
+   *                 (stale pending) review drags the red-flag component
+   *                 proportionally, floored at 0
+   * Reviews and amal completion are the core supervision work (0.35 each);
+   * inactive members a moderate signal (0.20); overdue flags a red-flag
+   * signal (0.10). An empty scope (no usrahs of that gender) scores null.
+   */
+  async invigilatorHealth(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    if (user.role === "usrah_head") {
+      throw new ApiError(403, "এই রিপোর্ট শুধুমাত্র পরিদর্শক ও প্রধান অ্যাডমিনের জন্য");
+    }
+    if (user.role !== "full_admin" && user.role !== "invigilator") {
+      throw new ApiError(403, "এই রিপোর্ট শুধুমাত্র পরিদর্শক ও প্রধান অ্যাডমিনের জন্য");
+    }
+
+    return this.rls.run(user, async (tx) => {
+      const invigilators =
+        user.role === "full_admin"
+          ? await tx.user.findMany({
+              where: { role: "invigilator" },
+              orderBy: { name: "asc" },
+            })
+          : [await tx.user.findUnique({ where: { id: user.id } })].filter(
+              (x): x is NonNullable<typeof x> => !!x
+            );
+      if (!invigilators.length) return { invigilators: [] };
+
+      const now = Date.now();
+      const reviewCutoff = addDays(bdToday(), -REVIEW_WINDOW_DAYS);
+      const assessmentCutoff = new Date(now - 30 * 86_400_000);
+      const inactiveBefore = new Date(now - INACTIVE_DAYS * 86_400_000);
+
+      const items: InvigilatorHealthItem[] = [];
+      for (const inv of invigilators) {
+        const usrahRows = await tx.usrah.findMany({
+          where: { gender: inv.gender },
+          select: { id: true, name: true, members: { select: { id: true, category: true, lastActiveAt: true } } },
+        });
+        const memberIds = usrahRows.flatMap((u) => u.members.map((m) => m.id));
+        const memberCount = memberIds.length;
+
+        if (!memberCount) {
+          items.push({
+            id: inv.id,
+            name: inv.name,
+            memberCode: inv.memberCode,
+            gender: inv.gender as Gender,
+            usrahNames: usrahRows.map((u) => u.name),
+            memberCount: 0,
+            reviewPct: null,
+            amalPct: null,
+            activePct: null,
+            overdueCount: 0,
+            assessments30d: 0,
+            unsignedAssessments: 0,
+            score: null,
+          });
+          continue;
+        }
+
+        const [doneReviews, overdue, assessments30d] = await Promise.all([
+          tx.weeklyReview.count({
+            where: { userId: { in: memberIds }, status: "done", weekStart: { gte: reviewCutoff } },
+          }),
+          tx.weeklyReview.count({
+            where: { userId: { in: memberIds }, status: "overdue" },
+          }),
+          tx.assessment.count({
+            where: { assesseeId: { in: memberIds }, createdAt: { gte: assessmentCutoff } },
+          }),
+        ]);
+        const unsignedAssessments = await tx.assessment.count({
+          where: {
+            assesseeId: { in: memberIds },
+            createdAt: { gte: assessmentCutoff },
+            OR: [{ assessorSignedAt: null }, { assesseeSignedAt: null }],
+          },
+        });
+
+        const completions = await completion7dForUsers(
+          tx,
+          usrahRows.flatMap((u) => u.members)
+        );
+        const amalPct = Math.round(
+          memberIds.reduce((s, id) => s + (completions.get(id) ?? 0), 0) / memberCount
+        );
+
+        const expected = memberCount * 4;
+        const reviewPct = Math.min(100, Math.round((100 * doneReviews) / expected));
+        const activePct = Math.round(
+          (100 *
+            usrahRows
+              .flatMap((u) => u.members)
+              .filter((m) => m.lastActiveAt >= inactiveBefore).length) /
+            memberCount
+        );
+        const onTimePct = Math.max(0, Math.round(100 * (1 - overdue / memberCount)));
+
+        const score = Math.round(0.35 * reviewPct + 0.35 * amalPct + 0.2 * activePct + 0.1 * onTimePct);
+
+        items.push({
+          id: inv.id,
+          name: inv.name,
+          memberCode: inv.memberCode,
+          gender: inv.gender as Gender,
+          usrahNames: usrahRows.map((u) => u.name),
+          memberCount,
+          reviewPct,
+          amalPct,
+          activePct,
+          overdueCount: overdue,
+          assessments30d,
+          unsignedAssessments,
+          score,
+        });
+      }
+      return { invigilators: items };
+    });
+  }
+
+  // ── W4h: referral tree, server-side cursor-paginated ─────────────────────
+
+  /**
+   * GET /api/admin/referral-tree?userId=&cursor=&limit= — full_admin.
+   *
+   * One PAGE of one parent's children (or of the roots when userId is
+   * omitted), keyset-paginated by id (orderBy id asc, cursor = the last
+   * node's id), so a 1000-node usrah never has to arrive in one response.
+   * Every node carries childCount — the expander badge — from ONE groupBy
+   * over the page's ids. Supervisors keep their depth-bounded own-downline
+   * view (GET /api/dawah); the whole-forest browser is a full_admin tool.
+   */
+  async referralTree(
+    viewer: User | null,
+    opts: { userId?: string; cursor?: string; limit?: string }
+  ) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    const limitRaw = parseInt(opts.limit ?? "50", 10);
+    if (!Number.isInteger(limitRaw) || limitRaw < 1 || limitRaw > 100) {
+      throw new ApiError(400, "প্রতি পাতায় ১ থেকে ১০০টি নোড দেখা যাবে");
+    }
+
+    // existence pre-read in the system context → honest 404 (assertCanAccess
+    // pattern); RLS is bypassed for full_admin anyway.
+    let parentId: string | null = null;
+    if (opts.userId) {
+      const parent = await this.rls.system((tx) =>
+        tx.user.findUnique({ where: { id: opts.userId }, select: { id: true } })
+      );
+      if (!parent) throw new ApiError(404, "ব্যবহারকারী পাওয়া যায়নি");
+      parentId = opts.userId;
+    }
+
+    return this.rls.run(user, async (tx) => {
+      const where: Record<string, unknown> = {
+        ...(parentId ? { referredById: parentId } : { referredById: null }),
+        ...(opts.cursor ? { id: { gt: opts.cursor } } : {}),
+      };
+      // the count uses the SAME where (cursor applied) so "remaining" is
+      // exact — an exact-fit last page yields nextCursor null
+      const [rows, remaining] = await Promise.all([
+        tx.user.findMany({
+          where: where as never,
+          orderBy: { id: "asc" },
+          take: limitRaw,
+        }),
+        tx.user.count({ where: where as never }),
+      ]);
+
+      const ids = rows.map((r) => r.id);
+      const childCounts = new Map<string, number>();
+      if (ids.length) {
+        const grouped = await tx.user.groupBy({
+          by: ["referredById"],
+          where: { referredById: { in: ids } },
+          _count: { _all: true },
+        });
+        for (const g of grouped) {
+          if (g.referredById) childCounts.set(g.referredById, g._count._all);
+        }
+      }
+
+      const nodes = rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        gender: r.gender as Gender,
+        level: r.level as Level,
+        memberCode: r.memberCode,
+        role: r.role as Role,
+        lastActiveAt: r.lastActiveAt.toISOString(),
+        joinedAt: r.createdAt.toISOString(),
+        childCount: childCounts.get(r.id) ?? 0,
+      }));
+      const nextCursor =
+        rows.length === limitRaw && remaining > limitRaw && rows.length > 0
+          ? rows[rows.length - 1].id
+          : null;
+      // remaining = rows still to fetch AFTER this page (the count query has
+      // the cursor applied, minus what this page just returned)
+      return { nodes, nextCursor, remaining: Math.max(0, remaining - rows.length) };
+    });
+  }
+
+  // ── W4h: content pack CMS — narrow full_admin write ──────────────────────
+
+  /**
+   * PUT /api/admin/content/:pack — full_admin. Replaces a CMS pack file
+   * (courses/quizzes/duas/articles/faq/mosques) in the content dir with the
+   * submitted document, ATOMICALLY (tmp file + rename) so a torn write can
+   * never serve a half pack. Validation is deliberately minimal and honest:
+   * the pack file IS the storage (GET /api/content/:pack serves it as-is),
+   * so we only check object shape + at least one non-empty array property +
+   * the size cap — no invented per-item schema. Audited
+   * (content_pack_update with the pack's byte size + item count).
+   *
+   * NOTE (honest limitation, documented): the write goes to the API's content
+   * dir — in a container deployment that is the container's writable layer,
+   * so a redeploy restores the pack baked into the image. The packs in git
+   * remain the seed; a lasting edit wants a redeploy-time sync or a DB-backed
+   * pack table (follow-up mission decision).
+   */
+  async updateContentPack(viewer: User | null, pack: string, body: unknown) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    const key = pack as PackKey;
+    if (!CMS_PACKS.includes(key)) {
+      throw new ApiError(404, "এই কন্টেন্ট প্যাকটি সম্পাদনাযোগ্য নয়");
+    }
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      throw new ApiError(400, "প্যাকটি অবজেক্ট আকারে দিন (যেমন { items: […] })");
+    }
+    const arrays = Object.values(body as Record<string, unknown>).filter(
+      (v): v is unknown[] => Array.isArray(v)
+    );
+    if (!arrays.some((a) => a.length > 0)) {
+      throw new ApiError(400, "প্যাকে অন্তত একটি অ-খালি তালিকা থাকতে হবে");
+    }
+    const serialized = JSON.stringify(body, null, 2);
+    if (serialized.length > CMS_PACK_MAX_BYTES) {
+      throw new ApiError(400, "প্যাকটি খুব বড় — ছোট করে দিন");
+    }
+
+    const file = PACK_FILES[key];
+    const target = path.join(contentDir(), file);
+    // atomic: write beside the target, then rename over it
+    const tmp = `${target}.admin-tmp`;
+    await fsPromises.writeFile(tmp, `${serialized}\n`, "utf8");
+    await fsPromises.rename(tmp, target);
+    invalidatePackCache(key);
+
+    const itemCount = arrays.reduce((s, a) => s + a.length, 0);
+    await this.guard.audit(user.id, "content_pack_update", "content_pack", key, {
+      pack: key,
+      bytes: serialized.length,
+      itemCount,
+    });
+
+    return { pack: key, itemCount, bytes: serialized.length };
+  }
+
   /** GET /api/admin/audit — full_admin: last 100 audit entries with actor names. */
   async audit(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -1578,6 +1990,186 @@ export class AdminService {
         createdAt: a.createdAt.toISOString(),
       }));
       return { entries };
+    });
+  }
+
+  // ── Live support threads (W4d) — full_admin support inbox ──────────────
+
+  /**
+   * GET /api/admin/support — full_admin: every support thread (optionally
+   * ?status=open|answered|closed), OPEN ones first, then answered, then
+   * closed; within a group by last activity (updatedAt) desc.
+   */
+  async supportThreads(viewer: User | null, status: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const filter = status && ["open", "answered", "closed"].includes(status) ? status : undefined;
+
+    return this.rls.run(user, async (tx) => {
+      const rows = (await tx.supportThread.findMany({
+        ...(filter ? { where: { status: filter } } : {}),
+        orderBy: { updatedAt: "desc" },
+        take: 200,
+      })) as unknown as (import("../support/support.controller").SupportThreadItem & {
+        createdAt: Date;
+        updatedAt: Date;
+        closedAt: Date | null;
+      })[];
+      if (!rows.length) return { threads: [] };
+
+      const userIds = [...new Set(rows.map((r) => r.userId))];
+      const users = await tx.user.findMany({
+        where: { id: { in: userIds } },
+        select: { id: true, name: true, memberCode: true, gender: true },
+      });
+      const names = new Map(users.map((u) => [u.id, u]));
+
+      const messages = (await tx.supportMessage.findMany({
+        where: { threadId: { in: rows.map((r) => r.id) } },
+        orderBy: { createdAt: "asc" },
+      })) as unknown as (import("../support/support.controller").SupportMessageItem & {
+        createdAt: Date;
+      })[];
+      const byThread = new Map<string, typeof messages>();
+      for (const m of messages) {
+        const list = byThread.get(m.threadId) ?? [];
+        list.push(m);
+        byThread.set(m.threadId, list);
+      }
+
+      const RANK: Record<string, number> = { open: 0, answered: 1, closed: 2 };
+      const threads = rows
+        .map((r) => {
+          const msgs = byThread.get(r.id) ?? [];
+          const last = msgs.length ? msgs[msgs.length - 1] : null;
+          const member = names.get(r.userId);
+          return {
+            id: r.id,
+            userId: r.userId,
+            userName: member?.name ?? "সদস্য",
+            userMemberCode: member?.memberCode ?? null,
+            userGender: (member?.gender ?? "M") as Gender,
+            subject: r.subject,
+            status: r.status,
+            messageCount: msgs.length,
+            lastMessageAt: last ? last.createdAt.toISOString() : r.createdAt.toISOString(),
+            lastPreview: last ? last.body.slice(0, 120) : null,
+            lastFromAdmin: !!last?.isAdmin,
+            createdAt: r.createdAt.toISOString(),
+            closedAt: r.closedAt ? r.closedAt.toISOString() : null,
+          };
+        })
+        .sort((a, b) =>
+          filter
+            ? 0 // already single-status; keep the updatedAt desc order
+            : (RANK[a.status] ?? 3) - (RANK[b.status] ?? 3) ||
+              new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+        );
+      return { threads };
+    });
+  }
+
+  /**
+   * GET /api/admin/support/:id — full_admin: one thread + its full message
+   * history (authorName resolved — the admin context may read every author).
+   */
+  async supportThreadDetail(viewer: User | null, id: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const thread = await tx.supportThread.findUnique({ where: { id } });
+      if (!thread) throw new ApiError(404, "আলাপনাটি পাওয়া যায়নি");
+
+      const messages = await tx.supportMessage.findMany({
+        where: { threadId: id },
+        orderBy: { createdAt: "asc" },
+        take: 200,
+        include: { author: { select: { name: true } } },
+      });
+      return {
+        thread: {
+          id: thread.id,
+          userId: thread.userId,
+          subject: thread.subject,
+          status: thread.status,
+          createdAt: thread.createdAt.toISOString(),
+          updatedAt: thread.updatedAt.toISOString(),
+          closedAt: thread.closedAt ? thread.closedAt.toISOString() : null,
+        },
+        messages: messages.map((m) => ({
+          id: m.id,
+          threadId: m.threadId,
+          authorId: m.authorId,
+          authorName: m.author?.name ?? null,
+          isAdmin: m.isAdmin,
+          body: m.body,
+          createdAt: m.createdAt.toISOString(),
+        })),
+      };
+    });
+  }
+
+  /**
+   * POST /api/admin/support/:id/messages — full_admin: reply (isAdmin=true,
+   * status → answered, audited as support_reply). Replying to a CLOSED thread
+   * is refused — reopen deliberately (a new thread) instead.
+   */
+  async supportReply(viewer: User | null, id: string, dto: SupportReplyDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const body = (dto.message ?? "").trim();
+    if (body.length < 3) throw new ApiError(400, "বার্তা কমপক্ষে ৩ অক্ষরের হতে হবে");
+
+    return this.rls.run(user, async (tx) => {
+      const thread = await tx.supportThread.findUnique({ where: { id } });
+      if (!thread) throw new ApiError(404, "আলাপনাটি পাওয়া যায়নি");
+      if (thread.status === "closed") throw new ApiError(400, "এই আলাপনা বন্ধ করা হয়েছে");
+
+      const message = await tx.supportMessage.create({
+        data: { threadId: id, authorId: user.id, body, isAdmin: true },
+      });
+      await tx.supportThread.update({ where: { id }, data: { status: "answered" } });
+      await this.guard.audit(user.id, "support_reply", "support_thread", id, { userId: thread.userId });
+      return {
+        message: {
+          id: message.id,
+          threadId: message.threadId,
+          authorId: message.authorId,
+          isAdmin: message.isAdmin,
+          body: message.body,
+          createdAt: message.createdAt.toISOString(),
+        },
+      };
+    });
+  }
+
+  /** POST /api/admin/support/:id/close — full_admin (idempotent, audited). */
+  async supportClose(viewer: User | null, id: string) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+
+    return this.rls.run(user, async (tx) => {
+      const thread = await tx.supportThread.findUnique({ where: { id } });
+      if (!thread) throw new ApiError(404, "আলাপনাটি পাওয়া যায়নি");
+      if (thread.status === "closed") return { thread }; // idempotent re-close
+
+      const updated = await tx.supportThread.update({
+        where: { id },
+        data: { status: "closed", closedAt: new Date(), closedById: user.id },
+      });
+      await this.guard.audit(user.id, "support_close", "support_thread", id, { userId: thread.userId });
+      return {
+        thread: {
+          id: updated.id,
+          userId: updated.userId,
+          subject: updated.subject,
+          status: updated.status,
+          createdAt: updated.createdAt.toISOString(),
+          updatedAt: updated.updatedAt.toISOString(),
+          closedAt: updated.closedAt ? updated.closedAt.toISOString() : null,
+        },
+      };
     });
   }
 }
@@ -1844,5 +2436,97 @@ export class AdminController {
   @Roles("full_admin")
   audit(@Req() req: AuthedRequest) {
     return this.service.audit(currentUser(req));
+  }
+
+  // ── W4h: level-rules editor (DB override over the pack seed) ────────────
+
+  @Get("level-rules")
+  @ApiOperation({ summary: "full_admin: effective level rules (db override | pack) per level" })
+  @Roles("full_admin")
+  levelRules(@Req() req: AuthedRequest) {
+    return this.service.levelRules(currentUser(req));
+  }
+
+  @Put("level-rules/:level")
+  @ApiOperation({ summary: "full_admin: edit one level's rules (merge, validated, audited)" })
+  @Roles("full_admin")
+  updateLevelRules(
+    @Param("level") level: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest
+  ) {
+    return this.service.updateLevelRules(currentUser(req), level, body);
+  }
+
+  @Delete("level-rules/:level")
+  @ApiOperation({ summary: "full_admin: reset one level to the pack default (audited)" })
+  @Roles("full_admin")
+  resetLevelRules(@Param("level") level: string, @Req() req: AuthedRequest) {
+    return this.service.resetLevelRules(currentUser(req), level);
+  }
+
+  // ── W4h: invigilator health score ────────────────────────────────────────
+
+  @Get("invigilator-health")
+  @ApiOperation({ summary: "full_admin: all invigilators; invigilator: own score" })
+  @Roles("invigilator") // floor: invigilator, usrah_head, full_admin (service splits)
+  invigilatorHealth(@Req() req: AuthedRequest) {
+    return this.service.invigilatorHealth(currentUser(req));
+  }
+
+  // ── W4h: referral tree, server-side cursor-paginated ─────────────────────
+
+  @Get("referral-tree")
+  @ApiOperation({ summary: "full_admin: one cursor-paged level of the referral forest (roots or one parent's children)" })
+  @Roles("full_admin")
+  referralTree(
+    @Query("userId") userId: string | undefined,
+    @Query("cursor") cursor: string | undefined,
+    @Query("limit") limit: string | undefined,
+    @Req() req: AuthedRequest
+  ) {
+    return this.service.referralTree(currentUser(req), { userId, cursor, limit });
+  }
+
+  // ── W4h: content pack CMS — narrow full_admin write ──────────────────────
+
+  @Put("content/:pack")
+  @ApiOperation({ summary: "full_admin: replace a CMS pack (courses/quizzes/duas/articles/faq/mosques; audited)" })
+  @Roles("full_admin")
+  updateContentPack(
+    @Param("pack") pack: string,
+    @Body() body: Record<string, unknown>,
+    @Req() req: AuthedRequest
+  ) {
+    return this.service.updateContentPack(currentUser(req), pack, body);
+  }
+
+  @Get("support")
+  @ApiOperation({ summary: "full_admin: support inbox — open threads first (filter ?status=)" })
+  @Roles("full_admin")
+  supportThreads(@Query("status") status: string | undefined, @Req() req: AuthedRequest) {
+    return this.service.supportThreads(currentUser(req), status);
+  }
+
+  @Post("support/:id/messages")
+  @ApiOperation({ summary: "full_admin: reply to a support thread (status → answered, audited)" })
+  @Roles("full_admin")
+  supportReply(@Param("id") id: string, @Body() dto: SupportReplyDto, @Req() req: AuthedRequest) {
+    return this.service.supportReply(currentUser(req), id, dto);
+  }
+
+  @Get("support/:id")
+  @ApiOperation({ summary: "full_admin: one support thread + full message history" })
+  @Roles("full_admin")
+  supportThreadDetail(@Param("id") id: string, @Req() req: AuthedRequest) {
+    return this.service.supportThreadDetail(currentUser(req), id);
+  }
+
+  @Post("support/:id/close")
+  @HttpCode(HttpStatus.OK) // decision action, not a resource creation
+  @ApiOperation({ summary: "full_admin: close a support thread (idempotent, audited)" })
+  @Roles("full_admin")
+  supportClose(@Param("id") id: string, @Req() req: AuthedRequest) {
+    return this.service.supportClose(currentUser(req), id);
   }
 }

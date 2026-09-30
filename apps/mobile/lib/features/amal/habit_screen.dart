@@ -13,6 +13,7 @@ import '../../state/amal_state.dart';
 import '../../state/providers.dart';
 import 'amal_widgets.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class HabitBuilderScreen extends ConsumerStatefulWidget {
   const HabitBuilderScreen({super.key});
@@ -175,7 +176,7 @@ class _HabitBuilderScreenState extends ConsumerState<HabitBuilderScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: FilledButton.icon(
-                        icon: Icon(doneToday ? Icons.check : Icons.add_task),
+                        icon: Icon(doneToday ? PhosphorIconsRegular.check : PhosphorIconsRegular.listChecks),
                         label: Text(
                           doneToday
                               ? context.t('all_set')
@@ -269,7 +270,14 @@ class _DayDot extends StatelessWidget {
             ),
             child: Center(
               child: done
-                  ? const Icon(Icons.check, size: 18, color: Colors.white)
+                  // W4f dark pass — onPrimary (cream in light, near-black in
+                  // dark), never raw Colors.white: the dark primary is a
+                  // LIGHT green and white on it fails contrast.
+                  ? Icon(
+                      PhosphorIconsRegular.check,
+                      size: 18,
+                      color: theme.colorScheme.onPrimary,
+                    )
                   : Text(
                       bengali ? toBn(dayNum) : '$dayNum',
                       style: theme.textTheme.bodySmall,

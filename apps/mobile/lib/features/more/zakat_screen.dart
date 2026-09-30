@@ -12,6 +12,7 @@ import '../../core/external_urls.dart';
 import '../../design/design_tokens.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class ZakatScreen extends ConsumerStatefulWidget {
   const ZakatScreen({super.key});
@@ -104,18 +105,20 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                field(_gold, context.t('zakat_gold'), Icons.wallet_giftcard),
+                field(_gold, context.t('zakat_gold'), PhosphorIconsRegular.wallet),
                 const SizedBox(height: SLSpacing.s8),
-                field(_silver, context.t('zakat_silver'), Icons.workspaces),
+                field(_silver, context.t('zakat_silver'), PhosphorIconsRegular.circlesThree),
                 const SizedBox(height: SLSpacing.s8),
-                field(_cash, context.t('zakat_cash'), Icons.payments_outlined),
+                field(_cash, context.t('zakat_cash'), PhosphorIconsRegular.creditCard),
                 const SizedBox(height: SLSpacing.s8),
                 field(
                   _invest,
                   context.t('zakat_investments'),
-                  Icons.trending_up,
+                  PhosphorIconsRegular.trendUp,
                 ),
                 const SizedBox(height: SLSpacing.s8),
+                // No Phosphor 2.1 equivalent (struck-through coin) — the
+                // one Material glyph left in the zakat form.
                 field(_debts, context.t('zakat_debts'), Icons.money_off),
               ],
             ),
@@ -168,7 +171,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
           const SizedBox(height: SLSpacing.s12),
           if (eligible && canDonate)
             FilledButton.icon(
-              icon: const Icon(Icons.volunteer_activism),
+              icon: const Icon(PhosphorIconsFill.handHeart),
               label: Text(context.t('zakat_donate')),
               onPressed: () async {
                 // C-W3g: in-app browser (Chrome Custom Tabs on Android /
@@ -203,7 +206,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 IconButton(
                   tooltip: context.t('copy'),
                   icon: Icon(
-                    Icons.copy,
+                    PhosphorIconsRegular.copy,
                     size: 16,
                     color: theme.colorScheme.onSurfaceVariant,
                   ),

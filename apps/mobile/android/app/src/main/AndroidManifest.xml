@@ -150,6 +150,21 @@
             </intent-filter>
         </receiver>
 
+        <!-- W4e · branded referral share card: ACTION_SEND needs a content://
+             URI for the rendered PNG (cache/share/ subtree only — see
+             res/xml/file_paths.xml). Exported=false + grantUriPermissions
+             means only intents this app builds can read the file, for the
+             duration of that share; no storage permission required. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

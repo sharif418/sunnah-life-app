@@ -14,6 +14,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 /// The six board categories (API enum) in display order.
 const List<String> _kCategories = [
@@ -137,7 +138,7 @@ class _UsrahQuestionsScreenState extends ConsumerState<UsrahQuestionsScreen> {
             if (questions.isEmpty)
               EmptyState(
                 message: context.t('usrah_q_empty'),
-                icon: Icons.forum_outlined,
+                icon: PhosphorIconsRegular.chats,
               )
             else
               for (final q in questions) ...[
@@ -168,7 +169,7 @@ class _UsrahQuestionsScreenState extends ConsumerState<UsrahQuestionsScreen> {
         actions: [
           IconButton(
             tooltip: context.t('retry'),
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(PhosphorIconsRegular.arrowClockwise),
             onPressed: () => ref.invalidate(usrahQuestionsProvider),
           ),
         ],
@@ -202,7 +203,7 @@ class _Gate extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.forum_outlined,
+              PhosphorIconsRegular.chats,
               size: 56,
               color: theme.colorScheme.primary,
             ),
@@ -225,7 +226,7 @@ class _Gate extends StatelessWidget {
             const SizedBox(height: SLSpacing.s16),
             FilledButton.icon(
               onPressed: onAction,
-              icon: const Icon(Icons.login, size: 18),
+              icon: const Icon(PhosphorIconsRegular.signIn, size: 18),
               label: Text(actionLabel),
             ),
           ],
@@ -296,7 +297,7 @@ class _AskForm extends StatelessWidget {
                       height: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Icon(Icons.send_outlined, size: 18),
+                  : const Icon(PhosphorIconsRegular.paperPlaneTilt, size: 18),
               label: Text(
                 context.t(sending ? 'usrah_q_sending' : 'usrah_q_send'),
               ),
@@ -504,7 +505,7 @@ class _QuestionCard extends StatelessWidget {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const Icon(Icons.send_outlined, size: 16),
+                                : const Icon(PhosphorIconsRegular.paperPlaneTilt, size: 16),
                             label: Text(context.t('usrah_q_answer_submit')),
                           ),
                         ),
@@ -523,7 +524,7 @@ class _QuestionCard extends StatelessWidget {
                 alignment: AlignmentDirectional.centerStart,
                 child: TextButton.icon(
                   onPressed: onToggleAnswer,
-                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   label: Text(context.t('usrah_q_answer_hint')),
                 ),
               )

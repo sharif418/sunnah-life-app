@@ -11,22 +11,16 @@ import { SubShell, SectionLabel } from "@/components/more/bits";
 import { LogoMark } from "@/components/app/logo";
 import { api } from "@/lib/api";
 import { toBn } from "@/lib/calendars";
+import { useDonationUrl } from "@/hooks/use-donation-url";
 import { Loader2, Send, HeartHandshake, CheckCircle2, Star, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { version as appVersion } from "../../../package.json";
 
 export function AboutView() {
-  const [donationUrl, setDonationUrl] = React.useState("https://as-sunnah.org/donation");
+  const donationUrl = useDonationUrl();
   const [feedback, setFeedback] = React.useState("");
   const [sending, setSending] = React.useState(false);
   const [sent, setSent] = React.useState(false);
-
-  React.useEffect(() => {
-    api
-      .config()
-      .then((c) => setDonationUrl(c.donationUrl))
-      .catch(() => null);
-  }, []);
 
   const send = async () => {
     const message = feedback.trim();

@@ -6,14 +6,17 @@
 
 import * as React from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, GraduationCap, HandHeart, LayoutGrid, Radio } from "lucide-react";
+import { BookOpen, GraduationCap, HandHeart, LayoutGrid, Radio, Search, X } from "lucide-react";
+import { translate } from "@/lib/i18n";
 import { useApp } from "@/lib/store";
+import { Input } from "@/components/ui/input";
 import { PillTabs } from "./parts";
 import { LiveSection } from "./live-section";
 import { QuranSection } from "./quran-section";
 import { DuasSection, type DuasMode } from "./duas-section";
 import { CoursesSection } from "./courses-section";
 import { ExtrasSection, type ExtraKey } from "./extras-section";
+import { SearchSection } from "./search-section";
 
 type IlmTab = "live" | "quran" | "duas" | "courses" | "more";
 
@@ -102,7 +105,16 @@ function routeIlm(view: string, params: Record<string, string | number>): IlmRou
 
 export function IlmView() {
   const { view, params, nav } = useApp();
+  const lang = useApp((s) => s.profile.language);
+  const t = (k: string) => translate(lang, k);
   const route = routeIlm(view, params);
+
+  // W4j — the unified search field. A trimmed query of ≥ 2 characters swaps
+  // the tab area for the grouped results (PillTabs hide while searching);
+  // clearing the field restores the tab the user left.
+  const [query, setQuery] = React.useState("");
+  const q = query.trim();
+  const searching = q.length >= 2;
 
   return (
     <div>
@@ -111,34 +123,62 @@ export function IlmView() {
         <p className="mt-0.5 text-sm text-muted-foreground">কুরআন, দোয়া, আযকার ও জীবন্ত ইলমি পরিবেশ</p>
       </header>
 
-      <PillTabs
-        items={TABS}
-        value={route.tab}
-        onChange={(key) => nav("ilm", key)}
-        className="mb-5 border-b border-border pb-2"
-      />
+      <div className="relative mb-4">
+        <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t("search.hint")}
+          aria-label={t("search.title")}
+          className="h-11 rounded-xl ps-9 pe-9"
+        />
+        {query ? (
+          <button
+            onClick={() => setQuery("")}
+            aria-label={t("search.clear")}
+            className="tap-target absolute end-2 top-1/2 -translate-y-1/2 rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <X className="size-4" />
+          </button>
+        ) : null}
+      </div>
 
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={route.tab}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -6 }}
-          transition={{ duration: 0.12, ease: "easeOut" }}
-        >
-          {route.tab === "live" && <LiveSection />}
-          {route.tab === "quran" && <QuranSection surah={route.surah} />}
-          {route.tab === "duas" && <DuasSection mode={route.duasMode} highlightId={route.duaId} />}
-          {route.tab === "courses" && <CoursesSection courseId={route.courseId} lessonId={route.lessonId} />}
-          {route.tab === "more" && (
-            <ExtrasSection
-              active={route.extra}
-              highlightId={view === "article" && params.id != null ? String(params.id) : undefined}
-              startQuizId={route.extra === "quizzes" && route.extraId ? route.extraId : undefined}
-            />
-          )}
-        </motion.div>
-      </AnimatePresence>
+      {searching ? (
+        <SearchSection query={q} onResultTap={() => setQuery("")} />
+      ) : (
+        <>
+          <PillTabs
+            items={TABS}
+            value={route.tab}
+            onChange={(key) => nav("ilm", key)}
+            className="mb-5 border-b border-border pb-2"
+          />
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={route.tab}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
+            >
+              {route.tab === "live" && <LiveSection />}
+              {route.tab === "quran" && <QuranSection surah={route.surah} />}
+              {route.tab === "duas" && <DuasSection mode={route.duasMode} highlightId={route.duaId} />}
+              {route.tab === "courses" && <CoursesSection courseId={route.courseId} lessonId={route.lessonId} />}
+              {route.tab === "more" && (
+                <ExtrasSection
+                  active={route.extra}
+                  highlightId={
+                    params.id != null && (view === "article" || route.extra === "articles") ? String(params.id) : undefined
+                  }
+                  startQuizId={route.extra === "quizzes" && route.extraId ? route.extraId : undefined}
+                />
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </>
+      )}
     </div>
   );
 }

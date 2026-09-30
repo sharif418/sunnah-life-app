@@ -136,3 +136,13 @@ Lint 0/0 · tsc 0 (src/) · dev.log clean.
 **Remaining for next round:** fresh-visitor referral-signup E2E (?join=DS-000004),
 mosques.json + faq.json packs are empty (views degrade gracefully), delivery step 9
 polish (PWA manifest, meta tags), NestJS-worker parity items.
+
+**Wave-4 close-out state (W4j, this file's successor is worklog.md + AUDIT.md):**
+W4-FIX ×5, W4d, W4e, W4f(a+b), W4g, W4h, W4i, W4j all landed on main — see those
+AUDIT sections for per-item proofs. W4j = the meili search endpoint (typo-tolerant
+Bengali, grouped, public) + the mobile Ilm search screen + the WEB Ilm search
+(offline fallback over the same packs on both platforms; SW now serves
+/api/content/:pack SWR so the fallback survives a network loss). Gates at the W4j
+head: api jest 383/383 · mobile 330/330 · web lint 0/tsc/build ✓ · browser E2E (the
+503→fallback path, deep links, 390px). Remaining honest gaps: live-meili verification
+rides the owner's next staging redeploy; Wave 5 (clean-up + reporting) is next.

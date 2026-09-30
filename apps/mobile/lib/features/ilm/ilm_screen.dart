@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../design/design_tokens.dart';
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
+import '../../design/phosphor_icons.dart';
 
 class IlmScreen extends StatefulWidget {
   const IlmScreen({super.key});
@@ -36,58 +37,58 @@ class _IlmScreenState extends State<IlmScreen> {
     final theme = Theme.of(context);
     final entries = <_IlmEntry>[
       _IlmEntry(
-        icon: Icons.school_outlined,
+        icon: PhosphorIconsRegular.graduationCap,
         title: context.t('ilm_courses'),
         route: '/ilm/courses',
       ),
       _IlmEntry(
-        icon: Icons.quiz_outlined,
+        icon: PhosphorIconsRegular.question,
         title: context.t('ilm_quizzes'),
         route: '/ilm/quizzes',
       ),
       _IlmEntry(
-        icon: Icons.wifi_tethering_outlined,
+        icon: PhosphorIconsRegular.broadcast,
         title: context.t('ilm_live_quiz'),
         route: '/ilm/live-quiz',
       ),
       _IlmEntry(
-        icon: Icons.menu_book_outlined,
+        icon: PhosphorIconsRegular.bookOpen,
         title: context.t('ilm_quran'),
         route: '/ilm/quran',
       ),
       _IlmEntry(
-        icon: Icons.spa_outlined,
+        icon: PhosphorIconsRegular.plant,
         title: context.t('ilm_adhkar'),
         route: '/ilm/adhkar',
       ),
       _IlmEntry(
-        icon: Icons.front_hand_outlined,
+        icon: PhosphorIconsRegular.hand,
         title: context.t('ilm_duas'),
         route: '/ilm/duas',
       ),
       _IlmEntry(
-        icon: Icons.brightness_7_outlined,
+        icon: PhosphorIconsRegular.sun,
         title: context.t('ilm_names99'),
         route: '/ilm/names99',
       ),
       _IlmEntry(
-        icon: Icons.child_care_outlined,
+        icon: PhosphorIconsRegular.baby,
         title: context.t('ilm_baby_names'),
         route: '/ilm/islamic-names',
       ),
       _IlmEntry(
-        icon: Icons.favorite_outline,
+        icon: PhosphorIconsRegular.heart,
         title: context.t('ilm_iman_branches'),
         route: '/ilm/iman-branches',
       ),
       _IlmEntry(
-        icon: Icons.wb_twilight_outlined,
+        icon: PhosphorIconsRegular.sunHorizon,
         title: context.t('ilm_sunnahs'),
         route: '/ilm/sunnahs',
         badge: _sunnahsNew,
       ),
       _IlmEntry(
-        icon: Icons.article_outlined,
+        icon: PhosphorIconsRegular.article,
         title: context.t('ilm_articles'),
         route: '/ilm/articles',
       ),
@@ -114,6 +115,39 @@ class _IlmScreenState extends State<IlmScreen> {
               ),
             ),
             const SizedBox(height: SLSpacing.s16),
+            // W4j — the search entry: a field-shaped card (the tab has no
+            // AppBar — the global header owns the top chrome).
+            Padding(
+              padding: const EdgeInsets.only(bottom: SLSpacing.s16),
+              child: AppCard(
+                onTap: () => context.push('/ilm/search'),
+                child: Row(
+                  children: [
+                    Icon(
+                      PhosphorIconsRegular.magnifyingGlass,
+                      size: 22,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: SLSpacing.s12),
+                    Expanded(
+                      child: Text(
+                        context.t('search_hint'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      PhosphorIconsRegular.caretRight,
+                      size: 18,
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ],
+                ),
+              ),
+            ),
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -121,7 +155,9 @@ class _IlmScreenState extends State<IlmScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: SLSpacing.s12,
                 crossAxisSpacing: SLSpacing.s12,
-                childAspectRatio: 1.55,
+                // 1.3 — Hind Siliguri's real Bengali metrics wrap the longest
+                // labels to three lines; the tofu-era 1.55 clipped them.
+                childAspectRatio: 1.3,
               ),
               itemCount: entries.length,
               itemBuilder: (context, i) {
@@ -139,23 +175,30 @@ class _IlmScreenState extends State<IlmScreen> {
                   child: Stack(
                     children: [
                       Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              e.icon,
-                              size: 32,
-                              color: theme.colorScheme.primary,
-                            ),
-                            const SizedBox(height: SLSpacing.s8),
-                            Text(
-                              e.title,
-                              textAlign: TextAlign.center,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                        // W4f overflow sweep — the fixed aspect-ratio cell
+                        // can't grow with 1.3× text (longest labels wrap
+                        // to three lines); the tile shrinks to fit instead
+                        // of spilling (identity at normal sizes).
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                e.icon,
+                                size: 28,
+                                color: theme.colorScheme.primary,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: SLSpacing.s4 + 2),
+                              Text(
+                                e.title,
+                                textAlign: TextAlign.center,
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                       if (e.badge)

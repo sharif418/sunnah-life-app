@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Hind_Siliguri, Inter, Amiri, Amiri_Quran } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/app/providers";
+import { ServiceWorkerRegister } from "@/components/app/sw-register";
+import { LocaleSync } from "@/components/app/locale-sync";
 
 const hindSiliguri = Hind_Siliguri({
   subsets: ["bengali", "latin"],
@@ -39,8 +41,13 @@ export const metadata: Metadata = {
     "নামাজের সময়সূচি, আমলের মুহাসাবা, কুরআন, দোয়া ও যিকর, দাওয়াত প্রোগ্রাম — আস-সুন্নাহ ফাউন্ডেশনের দাওয়াতুস সুন্নাহ বিভাগের ইসলামিক সঙ্গী।",
   applicationName: "সুন্নাহ লাইফ",
   manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "সুন্নাহ লাইফ",
+  },
   icons: {
-    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }, { url: "/icon-192.png", sizes: "192x192", type: "image/png" }],
     apple: [{ url: "/icon-192.png" }],
   },
 };
@@ -62,11 +69,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="bn" suppressHydrationWarning>
+    <html lang="bn" dir="ltr" suppressHydrationWarning>
       <body
         className={`${hindSiliguri.variable} ${inter.variable} ${amiri.variable} ${amiriQuran.variable} antialiased bg-background text-foreground`}
       >
-        <Providers>{children}</Providers>
+        <Providers>
+          <LocaleSync />
+          <ServiceWorkerRegister />
+          {children}
+        </Providers>
       </body>
     </html>
   );
