@@ -480,7 +480,9 @@ class _StatCell extends StatelessWidget {
             children: [
               Text(
                 label,
-                maxLines: 1,
+                // W5: "মোট দাওয়াত দিয়েছি" truncated with an ellipsis at
+                // 412dp — the label wraps to a second line instead.
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.bodySmall,
               ),
