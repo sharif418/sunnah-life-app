@@ -657,5 +657,10 @@
   "journey_reqs_met": "%done%/%total% met",
   "review_latest_title": "Your usrah head's weekly comment",
   "review_next_goals": "Next week's goals",
-  "dawah_joined_count": "%n% joined through your invitation"
+  "dawah_joined_count": "%n% joined through your invitation",
+  "live_watch_now": "Watch live",
+  "live_watch_recording": "Watch recording",
+  "live_none_now": "Nothing is live right now",
+  "live_none_upcoming": "No upcoming programs",
+  "live_none_past": "No recordings yet"
 }

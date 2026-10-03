@@ -2043,4 +2043,19 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get dawah_joined_count => 'আপনার দাওয়াতে যোগ দিয়েছেন %n% জন';
+
+  @override
+  String get live_watch_now => 'লাইভ দেখুন';
+
+  @override
+  String get live_watch_recording => 'রেকর্ডিং দেখুন';
+
+  @override
+  String get live_none_now => 'এখন কোনো লাইভ কার্যক্রম নেই';
+
+  @override
+  String get live_none_upcoming => 'আসন্ন কোনো প্রোগ্রাম নেই';
+
+  @override
+  String get live_none_past => 'এখনো কোনো রেকর্ডিং নেই';
 }

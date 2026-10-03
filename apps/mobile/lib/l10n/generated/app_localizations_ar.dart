@@ -2024,4 +2024,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dawah_joined_count => 'انضم %n% بدعوتك';
+
+  @override
+  String get live_watch_now => 'شاهد البث';
+
+  @override
+  String get live_watch_recording => 'شاهد التسجيل';
+
+  @override
+  String get live_none_now => 'لا يوجد بث مباشر الآن';
+
+  @override
+  String get live_none_upcoming => 'لا توجد برامج قادمة';
+
+  @override
+  String get live_none_past => 'لا توجد تسجيلات بعد';
 }

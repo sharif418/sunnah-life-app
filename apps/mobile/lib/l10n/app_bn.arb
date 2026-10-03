@@ -657,5 +657,10 @@
   "journey_reqs_met": "শর্ত %done%/%total%",
   "review_latest_title": "উসরা প্রধানের সাপ্তাহিক মন্তব্য",
   "review_next_goals": "পরের সপ্তাহের লক্ষ্য",
-  "dawah_joined_count": "আপনার দাওয়াতে যোগ দিয়েছেন %n% জন"
+  "dawah_joined_count": "আপনার দাওয়াতে যোগ দিয়েছেন %n% জন",
+  "live_watch_now": "লাইভ দেখুন",
+  "live_watch_recording": "রেকর্ডিং দেখুন",
+  "live_none_now": "এখন কোনো লাইভ কার্যক্রম নেই",
+  "live_none_upcoming": "আসন্ন কোনো প্রোগ্রাম নেই",
+  "live_none_past": "এখনো কোনো রেকর্ডিং নেই"
 }

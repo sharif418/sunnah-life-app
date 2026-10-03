@@ -1,5 +1,8 @@
-/// লাইভ প্রোগ্রাম — live → upcoming → past sections with a
-/// gender-scoped visibility note and a remind-me action.
+/// লাইভ প্রোগ্রাম — চলমান → আসন্ন → পূর্ববর্তী, always all three (LIVE-01..03):
+/// a live program gets 'লাইভ দেখুন', a past one 'রেকর্ডিং দেখুন' (YouTube app,
+/// falling back to the browser); an empty section says so in words ("এখন
+/// কোনো লাইভ কার্যক্রম নেই"); upcoming ones keep the remind-me action and a
+/// gender-scoped visibility note. Times are Bengali (৩ অক্টোবর · রাত ৮:৩০).
 library;
 
 import 'package:flutter/material.dart';
@@ -7,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/api_client.dart';
 import '../../core/bn_digits.dart';
+import '../../core/calendars.dart' show formatTimeBn;
+import '../../core/external_urls.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../state/providers.dart';
@@ -42,23 +47,29 @@ class LiveScreen extends ConsumerWidget {
           ],
         ),
         data: (programs) {
-          if (programs.isEmpty) {
-            return ListView(
-              children: [
-                const SizedBox(height: SLSpacing.s24),
-                EmptyState(
-                    message: context.t('empty_generic'),
-                    icon: PhosphorIconsRegular.broadcast),
-              ],
-            );
+          String when(String iso) {
+            final t = DateTime.tryParse(iso)?.toLocal();
+            if (t == null) return iso;
+            final day = bn ? toBn(t.day) : '${t.day}';
+            return '$day ${context.t('month_${t.month}')} · '
+                '${formatTimeBn(t.hour * 60.0 + t.minute, bengali: bn)}';
           }
+
           Widget section(String title, Color color, List<LiveProgramItem> list,
-              {bool showTime = true}) {
-            if (list.isEmpty) return const SizedBox.shrink();
+              {bool showTime = true, required String emptyKey}) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SectionHeader(title, icon: PhosphorIconsRegular.broadcast),
+                if (list.isEmpty)
+                  AppCard(
+                    child: Text(
+                      context.t(emptyKey),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
                 for (final p in list)
                   AppCard(
                     child: Column(
@@ -107,11 +118,38 @@ class LiveScreen extends ConsumerWidget {
                               style: theme.textTheme.bodySmall),
                         if (showTime)
                           Text(
-                            '${p.startsAt.substring(0, 16).replaceAll('T', ' ')}${p.endsAt != null ? ' → ${p.endsAt!.substring(11, 16)}' : ''}',
+                            when(p.startsAt),
                             style: theme.textTheme.bodySmall?.copyWith(
                                 color:
                                     theme.colorScheme.onSurfaceVariant),
                           ),
+                        // LIVE-01 / LIVE-03: watch the stream or recording
+                        if (p.status != 'upcoming')
+                          for (final url in [
+                            livePlaybackUrl(
+                              youtubeId: p.youtubeId,
+                              recordingUrl: p.status == 'past' ? p.recordingUrl : null,
+                            ),
+                          ])
+                            if (url != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: SLSpacing.s8),
+                                child: FilledButton.icon(
+                                  key: ValueKey('live_watch_${p.id}'),
+                                  icon: const Icon(PhosphorIconsFill.broadcast, size: 18),
+                                  label: Text(context.t(
+                                    p.status == 'live' ? 'live_watch_now' : 'live_watch_recording',
+                                  )),
+                                  onPressed: () async {
+                                    final opened = await openExternalApp(url);
+                                    if (!opened && context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(context.t('donation_open_failed'))),
+                                      );
+                                    }
+                                  },
+                                ),
+                              ),
                         if (p.status == 'upcoming')
                           Padding(
                             padding: const EdgeInsets.only(top: SLSpacing.s8),
@@ -156,13 +194,15 @@ class LiveScreen extends ConsumerWidget {
               section(
                   context.t('live_now'), theme.colorScheme.error,
                   programs.where((p) => p.status == 'live').toList(),
-                  showTime: false),
+                  showTime: false, emptyKey: 'live_none_now'),
               section(
                   context.t('live_upcoming'), theme.colorScheme.primary,
-                  programs.where((p) => p.status == 'upcoming').toList()),
+                  programs.where((p) => p.status == 'upcoming').toList(),
+                  emptyKey: 'live_none_upcoming'),
               section(
-                  context.t('live_past'), theme.colorScheme.outline,
-                  programs.where((p) => p.status == 'past').toList()),
+                  context.t('live_past'), theme.colorScheme.onSurfaceVariant,
+                  programs.where((p) => p.status == 'past').toList(),
+                  emptyKey: 'live_none_past'),
               Center(
                 child: Text(
                   '${bn ? toBn(programs.length) : programs.length} ${context.t('live_programs_count')}',

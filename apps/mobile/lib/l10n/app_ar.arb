@@ -657,5 +657,10 @@
   "journey_reqs_met": "%done%/%total%",
   "review_latest_title": "تعليق رئيس الأسرة الأسبوعي",
   "review_next_goals": "أهداف الأسبوع القادم",
-  "dawah_joined_count": "انضم %n% بدعوتك"
+  "dawah_joined_count": "انضم %n% بدعوتك",
+  "live_watch_now": "شاهد البث",
+  "live_watch_recording": "شاهد التسجيل",
+  "live_none_now": "لا يوجد بث مباشر الآن",
+  "live_none_upcoming": "لا توجد برامج قادمة",
+  "live_none_past": "لا توجد تسجيلات بعد"
 }

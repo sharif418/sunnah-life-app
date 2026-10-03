@@ -43,3 +43,30 @@ Future<bool> openInAppBrowser(String url) async {
     return false;
   }
 }
+
+/// The URL that plays a live program or its recording: the recording link
+/// when there is one, else the YouTube video/stream id. Null when there is
+/// nothing to play (the card then shows no watch button).
+String? livePlaybackUrl({String? youtubeId, String? recordingUrl}) {
+  final rec = recordingUrl?.trim() ?? '';
+  if (isLaunchableHttpUrl(rec)) return rec;
+  final id = youtubeId?.trim() ?? '';
+  if (id.isEmpty) return null;
+  // a full YouTube link pasted into the id field still plays
+  if (isLaunchableHttpUrl(id)) return id;
+  return 'https://www.youtube.com/watch?v=${Uri.encodeComponent(id)}';
+}
+
+/// Open [url] in the app that owns it (YouTube for a stream — the native
+/// player is lighter on low-end phones than an embedded WebView), falling
+/// back to the in-app browser. Never throws.
+Future<bool> openExternalApp(String url) async {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null) return false;
+  try {
+    if (await launchUrl(uri, mode: LaunchMode.externalApplication)) return true;
+  } catch (_) {
+    // no handler — fall through to a browser surface
+  }
+  return openInAppBrowser(url);
+}

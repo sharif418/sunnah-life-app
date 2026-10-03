@@ -4047,6 +4047,36 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আপনার দাওয়াতে যোগ দিয়েছেন %n% জন'**
   String get dawah_joined_count;
+
+  /// No description provided for @live_watch_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ দেখুন'**
+  String get live_watch_now;
+
+  /// No description provided for @live_watch_recording.
+  ///
+  /// In bn, this message translates to:
+  /// **'রেকর্ডিং দেখুন'**
+  String get live_watch_recording;
+
+  /// No description provided for @live_none_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন কোনো লাইভ কার্যক্রম নেই'**
+  String get live_none_now;
+
+  /// No description provided for @live_none_upcoming.
+  ///
+  /// In bn, this message translates to:
+  /// **'আসন্ন কোনো প্রোগ্রাম নেই'**
+  String get live_none_upcoming;
+
+  /// No description provided for @live_none_past.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো রেকর্ডিং নেই'**
+  String get live_none_past;
 }
 
 class _AppLocalizationsDelegate

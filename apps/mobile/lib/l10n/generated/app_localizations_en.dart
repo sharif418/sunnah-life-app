@@ -2039,4 +2039,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dawah_joined_count => '%n% joined through your invitation';
+
+  @override
+  String get live_watch_now => 'Watch live';
+
+  @override
+  String get live_watch_recording => 'Watch recording';
+
+  @override
+  String get live_none_now => 'Nothing is live right now';
+
+  @override
+  String get live_none_upcoming => 'No upcoming programs';
+
+  @override
+  String get live_none_past => 'No recordings yet';
 }
