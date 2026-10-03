@@ -382,6 +382,13 @@ export interface AdminTemplateItem {
 }
 
 /** B6 — admin payload for live program create/edit. */
+export type ImportAction = "create" | "update" | "skip" | "error";
+export interface MemberImportResponse {
+  dryRun: boolean;
+  results: { row: number; name: string; phone: string; action: ImportAction; message: string }[];
+  totals: Record<ImportAction, number>;
+}
+
 export interface LiveProgramInput {
   titleBn: string;
   descBn?: string | null;
@@ -587,6 +594,8 @@ export const api = {
   // admin
   overview: () => call<AdminOverview>("/api/admin/overview"),
   users: (q: string) => call<{ users: User[] }>(`/api/admin/users?q=${encodeURIComponent(q)}`),
+  importUsers: (rows: Record<string, string>[], dryRun: boolean, offset: number) =>
+    call<MemberImportResponse>("/api/admin/users/import", { method: "POST", json: { rows, dryRun, offset } }),
   patchUser: (dto: {
     userId: string;
     role?: Role;

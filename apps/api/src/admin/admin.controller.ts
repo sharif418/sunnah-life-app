@@ -39,6 +39,7 @@ import {
 } from "../shared/levels";
 import { invalidatePackCache, loadPack, PACK_FILES, packOverrideDir, type PackKey } from "../shared/quran";
 import { SupportReplyDto } from "../support/support.controller";
+import { importMembers, MemberImportDto } from "./member-import";
 import {
   bdToday,
   completion7dForUsers,
@@ -620,6 +621,23 @@ export class AdminService {
       }));
       return { users };
     });
+  }
+
+  /**
+   * POST /api/admin/users/import — full_admin: the member register from a
+   * spreadsheet (dryRun previews). Audited once per commit with the totals.
+   */
+  async importUsers(viewer: User | null, dto: MemberImportDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const dryRun = dto.dryRun !== false;
+    const out = await this.rls.run(user, (tx) =>
+      importMembers(tx, dto.rows ?? [], dryRun, nextMemberCode, dto.offset ?? 0)
+    );
+    if (!dryRun) {
+      await this.guard.audit(user.id, "import_members", "user", "bulk", { totals: out.totals });
+    }
+    return { dryRun, ...out };
   }
 
   /**
@@ -2297,6 +2315,14 @@ export class AdminController {
   @ApiOperation({ summary: "Scoped user search" })
   users(@Query("q") q: string | undefined, @Req() req: AuthedRequest) {
     return this.service.users(currentUser(req), q ?? "");
+  }
+
+  @Post("users/import")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "full_admin: import the member register (CSV rows; dryRun previews)" })
+  @Roles("full_admin")
+  importUsers(@Body() dto: MemberImportDto, @Req() req: AuthedRequest) {
+    return this.service.importUsers(currentUser(req), dto);
   }
 
   @Patch("users")
