@@ -66,8 +66,7 @@ class _LiveBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(SLSpacing.s16),
       children: [
-        if (stale && fetchedAt != null)
-          OfflineBanner(fetchedAt: fetchedAt!),
+        if (stale && fetchedAt != null) OfflineBanner(fetchedAt: fetchedAt!),
         _LevelRow(level: live.level, nextLevel: live.nextLevel),
         const SizedBox(height: SLSpacing.s12),
         AppCard(
@@ -203,52 +202,60 @@ class _LevelRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    Widget cell(String label, String value) => Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(SLSpacing.s12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: SLRadius.brMd,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall,
+    // The cell is a plain Container: the Row below wraps each one in its
+    // own Expanded (a second Expanded inside here was the ParentData error).
+    Widget cell(String label, String value) => Container(
+      padding: const EdgeInsets.all(SLSpacing.s12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surfaceContainerLow,
+        borderRadius: SLRadius.brMd,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall,
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: theme.colorScheme.primary,
             ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: theme.colorScheme.primary,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
 
-    return Row(
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
-            child: cell(context.t('dawah_my_level'), context.t(level.labelKey)),
+    // IntrinsicHeight + stretch: both cells share the taller one's height
+    // when a level name wraps to two lines.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
+              child: cell(
+                context.t('dawah_my_level'),
+                context.t(level.labelKey),
+              ),
+            ),
           ),
-        ),
-        Expanded(
-          child: cell(
-            context.t('dawah_next_level'),
-            context.t(nextLevel.labelKey),
+          Expanded(
+            child: cell(
+              context.t('dawah_next_level'),
+              context.t(nextLevel.labelKey),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -334,7 +341,9 @@ class _CheckRow extends StatelessWidget {
           Padding(
             padding: const EdgeInsetsDirectional.only(top: 2),
             child: Icon(
-              row.met ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.circle,
+              row.met
+                  ? PhosphorIconsFill.checkCircle
+                  : PhosphorIconsRegular.circle,
               size: 20,
               color: row.met
                   ? theme.colorScheme.primary

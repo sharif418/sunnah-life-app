@@ -165,12 +165,7 @@ class EmptyState extends StatelessWidget {
 /// open-ring motif and an alert-tinted icon chip (#C0392B / darkAlert),
 /// never a saturated red flood. Message + retry below.
 class ErrorState extends StatelessWidget {
-  const ErrorState({
-    super.key,
-    required this.message,
-    this.onRetry,
-    this.icon,
-  });
+  const ErrorState({super.key, required this.message, this.onRetry, this.icon});
   final String message;
   final VoidCallback? onRetry;
   final IconData? icon;
@@ -224,7 +219,7 @@ class OfflineBanner extends StatelessWidget {
     final bn = context.isBn;
     final dark = theme.brightness == Brightness.dark;
     final bg = dark ? SLColors.darkGoldSoft : SLColors.goldSoftLight;
-    final fg = dark ? SLColors.darkGoldText : SLColors.goldDeep;
+    final fg = dark ? SLColors.darkGoldText : SLColors.lightGoldText;
     final ago = formatAgoBn(
       (now ?? DateTime.now()).difference(fetchedAt),
       bengali: bn,

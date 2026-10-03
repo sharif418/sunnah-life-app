@@ -23,12 +23,12 @@ import 'search_offline.dart';
 /// Where a result row navigates — the pack's own screen (the existing
 /// routes; no item-level deep links exist in the ilm section yet).
 String searchRouteFor(SearchKind kind) => switch (kind) {
-      SearchKind.dua => '/ilm/duas',
-      SearchKind.dhikr => '/ilm/adhkar',
-      SearchKind.name99 => '/ilm/names99',
-      SearchKind.islamicName => '/ilm/islamic-names',
-      SearchKind.article => '/ilm/articles',
-    };
+  SearchKind.dua => '/ilm/duas',
+  SearchKind.dhikr => '/ilm/adhkar',
+  SearchKind.name99 => '/ilm/names99',
+  SearchKind.islamicName => '/ilm/islamic-names',
+  SearchKind.article => '/ilm/articles',
+};
 
 class IlmSearchScreen extends ConsumerStatefulWidget {
   const IlmSearchScreen({super.key});
@@ -248,7 +248,7 @@ class _IlmSearchScreenState extends ConsumerState<IlmSearchScreen> {
                     size: 16,
                     color: theme.brightness == Brightness.dark
                         ? SLColors.darkGoldText
-                        : SLColors.goldDeep,
+                        : SLColors.lightGoldText,
                   ),
                   const SizedBox(width: SLSpacing.s8),
                   Expanded(
@@ -257,7 +257,7 @@ class _IlmSearchScreenState extends ConsumerState<IlmSearchScreen> {
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: theme.brightness == Brightness.dark
                             ? SLColors.darkGoldText
-                            : SLColors.goldDeep,
+                            : SLColors.lightGoldText,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

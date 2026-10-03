@@ -63,12 +63,14 @@ class _MaduNodeRow extends StatelessWidget {
     // Subtle gender tint (muted, never saturated): green family for the
     // brothers, gold family for the sisters — the token soft surfaces.
     final (avatarBg, avatarFg) = switch (node.gender) {
-      Gender.f => dark
-          ? (SLColors.darkGoldSoft, SLColors.darkGoldText)
-          : (SLColors.goldSoftLight, SLColors.goldDeep),
-      _ => dark
-          ? (SLColors.darkPrimarySoft, SLColors.darkPrimary)
-          : (SLColors.primarySoftLight, SLColors.primary),
+      Gender.f =>
+        dark
+            ? (SLColors.darkGoldSoft, SLColors.darkGoldText)
+            : (SLColors.goldSoftLight, SLColors.lightGoldText),
+      _ =>
+        dark
+            ? (SLColors.darkPrimarySoft, SLColors.darkPrimary)
+            : (SLColors.primarySoftLight, SLColors.primary),
     };
 
     final lastActive = DateTime.tryParse(node.lastActiveAt);
@@ -167,7 +169,7 @@ class _MaduNodeRow extends StatelessWidget {
                                 fontWeight: FontWeight.w600,
                                 color: dark
                                     ? SLColors.darkGoldText
-                                    : SLColors.goldDeep,
+                                    : SLColors.lightGoldText,
                               ),
                             ),
                           ),
@@ -224,10 +226,8 @@ class _ConnectorPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
 
-    Offset rail(int level) => Offset(
-          SLSpacing.s12 + (level - 1) * unit + avatar / 2,
-          0,
-        );
+    Offset rail(int level) =>
+        Offset(SLSpacing.s12 + (level - 1) * unit + avatar / 2, 0);
 
     // Rails under every ancestor level's avatar center.
     for (var level = 1; level < depth; level++) {

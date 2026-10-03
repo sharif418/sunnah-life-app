@@ -115,6 +115,9 @@ const CANARIES = [
   ["quran-meta-bn.json", (d) => d.surahs?.length === 114, "must list exactly 114 surahs"],
   ["assessment-farze-ain-v1.json", (d) => (d.sections ?? []).reduce((a, s) => a + (s.criteria?.length ?? 0), 0) === 23, "must have exactly 23 criteria"],
   ["level-rules.json", (d) => (d.levels?.muhibbus_sunnah?.checklistBn ?? []).length >= 30, "Muhibbus outline must have ≥30 goals"],
+  // A bare U+06DD (end of ayah) encloses no number, so the font draws an
+  // empty dotted circle; every mark must be followed by Arabic-Indic digits.
+  ["adhkar.json", (d) => !/۝(?![٠-٩])/.test(JSON.stringify(d)), "every ۝ ayah mark must carry its number (۝١)"],
 ];
 for (const [pack, test, why] of CANARIES) {
   const d = JSON.parse(readFileSync(path.join(SRC, pack), "utf8"));

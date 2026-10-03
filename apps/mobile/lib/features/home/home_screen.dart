@@ -26,7 +26,11 @@ import '../../state/amal_state.dart';
 import '../../state/prayer_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart'
-    show effectiveHijriAdjustProvider, coursePackProvider, quizPackProvider, liveProvider;
+    show
+        effectiveHijriAdjustProvider,
+        coursePackProvider,
+        quizPackProvider,
+        liveProvider;
 import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
 import '../amal/amal_widgets.dart' show CompletionRing;
@@ -106,9 +110,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         builder: (sheetContext, setSheet) {
           final theme = Theme.of(sheetContext);
           final sheetBn = sheetContext.isBn;
-          String mins(int v) =>
-              sheetBn ? toBn(v) : '$v';
-          Widget row(String labelKey, int value, int min, int max, int divisions, void Function(int) set) => Column(
+          String mins(int v) => sheetBn ? toBn(v) : '$v';
+          Widget row(
+            String labelKey,
+            int value,
+            int min,
+            int max,
+            int divisions,
+            void Function(int) set,
+          ) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: SLSpacing.s4),
@@ -117,8 +127,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   Expanded(
                     child: Text(
                       '${sheetContext.t(labelKey)} — ${mins(value)} ${sheetContext.t('quiz_minutes')}',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w600),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -149,22 +160,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   '${sheetContext.t('bell_minutes_title')} — ${_prayerLabel(key, sheetContext.lang)}',
                   style: theme.textTheme.titleMedium,
                 ),
-                row(
-                  'bell_minutes_before',
-                  bell,
-                  0,
-                  60,
-                  60,
-                  (v) => bell = v,
-                ),
-                row(
-                  'bell_minutes_after',
-                  post,
-                  5,
-                  120,
-                  23,
-                  (v) => post = v,
-                ),
+                row('bell_minutes_before', bell, 0, 60, 60, (v) => bell = v),
+                row('bell_minutes_after', post, 5, 120, 23, (v) => post = v),
                 const SizedBox(height: SLSpacing.s8),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -341,7 +338,8 @@ class _MostUsedSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
     final defs =
-        ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
+        ref.watch(amalDefinitionsProvider).valueOrNull ??
+        const <AmalDefinition>[];
     final amal = ref.watch(amalProvider);
     final lang = context.lang;
     final today = dateKey(ref.watch(headerNowProvider));
@@ -399,32 +397,33 @@ class _QuickAccessGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tiles = <({IconData icon, String title, String subtitle, String route})>[
-      (
-        icon: PhosphorIconsFill.bookOpenText,
-        title: context.t('ilm_quran'),
-        subtitle: context.t('quick_quran_desc'),
-        route: '/ilm/quran',
-      ),
-      (
-        icon: PhosphorIconsFill.handHeart,
-        title: context.t('ilm_duas'),
-        subtitle: context.t('quick_duas_desc'),
-        route: '/ilm/duas',
-      ),
-      (
-        icon: PhosphorIconsFill.clipboardText,
-        title: context.t('tab_amal'),
-        subtitle: context.t('quick_amal_desc'),
-        route: '/amal',
-      ),
-      (
-        icon: PhosphorIconsRegular.broadcast,
-        title: context.t('more_live'),
-        subtitle: context.t('quick_live_desc'),
-        route: '/more/live',
-      ),
-    ];
+    final tiles =
+        <({IconData icon, String title, String subtitle, String route})>[
+          (
+            icon: PhosphorIconsFill.bookOpenText,
+            title: context.t('ilm_quran'),
+            subtitle: context.t('quick_quran_desc'),
+            route: '/ilm/quran',
+          ),
+          (
+            icon: PhosphorIconsFill.handHeart,
+            title: context.t('ilm_duas'),
+            subtitle: context.t('quick_duas_desc'),
+            route: '/ilm/duas',
+          ),
+          (
+            icon: PhosphorIconsFill.clipboardText,
+            title: context.t('tab_amal'),
+            subtitle: context.t('quick_amal_desc'),
+            route: '/amal',
+          ),
+          (
+            icon: PhosphorIconsRegular.broadcast,
+            title: context.t('more_live'),
+            subtitle: context.t('quick_live_desc'),
+            route: '/more/live',
+          ),
+        ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -617,7 +616,8 @@ class _AmalPreviewSection extends ConsumerWidget {
     final bn = context.isBn;
     final profile = ref.watch(profileProvider);
     final defs =
-        ref.watch(amalDefinitionsProvider).valueOrNull ?? const <AmalDefinition>[];
+        ref.watch(amalDefinitionsProvider).valueOrNull ??
+        const <AmalDefinition>[];
     final amal = ref.watch(amalProvider);
     final today = dateKey(ref.watch(headerNowProvider));
     // Same grouping rule as today_screen: effective hijri adjust (user ±2 +
@@ -704,7 +704,9 @@ class _LivePreviewSection extends ConsumerWidget {
     // Live is PUBLIC data; the section stays hidden while loading/offline
     // and when nothing is upcoming (home degrades like the other sections
     // do for guests — the full list lives at /more/live).
-    final upcoming = ref.watch(liveProvider).maybeWhen(
+    final upcoming = ref
+        .watch(liveProvider)
+        .maybeWhen(
           data: (programs) =>
               (programs.where((p) => p.status == 'upcoming').toList()
                     ..sort((a, b) => a.startsAt.compareTo(b.startsAt)))
@@ -760,7 +762,9 @@ class _LivePreviewSection extends ConsumerWidget {
                           child: Text(
                             context.t('live_next'),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: SLColors.goldDeep,
+                              color: theme.brightness == Brightness.dark
+                                  ? SLColors.darkGoldText
+                                  : SLColors.lightGoldText,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -868,7 +872,11 @@ class _PostPrayerPrompt extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Icon(PhosphorIconsRegular.checkCircle, color: theme.colorScheme.tertiary, size: 20),
+              Icon(
+                PhosphorIconsRegular.checkCircle,
+                color: theme.colorScheme.tertiary,
+                size: 20,
+              ),
               const SizedBox(width: SLSpacing.s8),
               Expanded(
                 child: Text(
@@ -958,9 +966,7 @@ class _ForbiddenTimes extends StatelessWidget {
                 Expanded(
                   child: Text(
                     label,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: alertFg,
-                    ),
+                    style: theme.textTheme.bodyMedium?.copyWith(color: alertFg),
                   ),
                 ),
                 // W4f overflow sweep — at 360dp/1.3× the time range no
@@ -1201,5 +1207,4 @@ class _ExactAlarmCard extends StatelessWidget {
   }
 }
 
-String _prayerLabel(PrayerKey key, Lang lang) =>
-    S.tr(lang, 'waqt_${key.name}');
+String _prayerLabel(PrayerKey key, Lang lang) => S.tr(lang, 'waqt_${key.name}');

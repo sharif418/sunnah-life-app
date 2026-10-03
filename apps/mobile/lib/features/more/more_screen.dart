@@ -225,7 +225,10 @@ class MoreScreen extends ConsumerWidget {
             ),
 
             // ── অ্যাপ ──
-            SectionHeader(context.t('more_section_app'), icon: PhosphorIconsRegular.dotsNine),
+            SectionHeader(
+              context.t('more_section_app'),
+              icon: PhosphorIconsRegular.dotsNine,
+            ),
             _MoreGroupCard(
               rows: [
                 _MoreRow(
@@ -311,7 +314,7 @@ Future<void> _shareApp(BuildContext context) async {
 }
 
 /// দান করুন — gold-accent card (the OfflineBanner token pairing: goldSoft
-/// surface + goldDeep text in light, darkGoldSoft + darkGoldText in dark).
+/// surface + lightGoldText ink in light, darkGoldSoft + darkGoldText in dark).
 class _DonateCard extends StatelessWidget {
   const _DonateCard({required this.url});
   final String url;
@@ -321,7 +324,7 @@ class _DonateCard extends StatelessWidget {
     final theme = Theme.of(context);
     final dark = theme.brightness == Brightness.dark;
     final bg = dark ? SLColors.darkGoldSoft : SLColors.goldSoftLight;
-    final fg = dark ? SLColors.darkGoldText : SLColors.goldDeep;
+    final fg = dark ? SLColors.darkGoldText : SLColors.lightGoldText;
     return Padding(
       padding: const EdgeInsets.only(bottom: SLSpacing.s8),
       child: Material(

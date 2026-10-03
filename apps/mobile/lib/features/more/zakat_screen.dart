@@ -73,7 +73,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
     final zakat = eligible ? net * 0.025 : 0.0;
 
     String money(double v) {
-      final s = v.round().toString();
+      final s = groupLakh(v.round());
       return bn ? toBn(s) : s;
     }
 
@@ -105,11 +105,23 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                field(_gold, context.t('zakat_gold'), PhosphorIconsRegular.wallet),
+                field(
+                  _gold,
+                  context.t('zakat_gold'),
+                  PhosphorIconsRegular.wallet,
+                ),
                 const SizedBox(height: SLSpacing.s8),
-                field(_silver, context.t('zakat_silver'), PhosphorIconsRegular.circlesThree),
+                field(
+                  _silver,
+                  context.t('zakat_silver'),
+                  PhosphorIconsRegular.circlesThree,
+                ),
                 const SizedBox(height: SLSpacing.s8),
-                field(_cash, context.t('zakat_cash'), PhosphorIconsRegular.creditCard),
+                field(
+                  _cash,
+                  context.t('zakat_cash'),
+                  PhosphorIconsRegular.creditCard,
+                ),
                 const SizedBox(height: SLSpacing.s8),
                 field(
                   _invest,
@@ -127,17 +139,20 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
           AppCard(
             child: Column(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('${context.t('zakat_nisab')}:'),
-                    Text(
-                      '৳${money(nisab)} (${bn ? toBn(85) : 85}g × ৳${money(goldPrice)})',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                // Label above the figure: at 360dp / 1.3x text the old
+                // single row overflowed by 119px.
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text('${context.t('zakat_nisab')}:'),
+                ),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    '৳${money(nisab)} (${bn ? toBn(85) : 85}g × ৳${money(goldPrice)})',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
+                  ),
                 ),
                 const SizedBox(height: SLSpacing.s4),
                 const Divider(),
@@ -145,14 +160,21 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('${context.t('zakat_payable')}:'),
-                    Text(
-                      eligible ? '৳${money(zakat)}' : '৳${money(0)}',
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: eligible
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurfaceVariant,
+                    Flexible(child: Text('${context.t('zakat_payable')}:')),
+                    const SizedBox(width: SLSpacing.s8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: AlignmentDirectional.centerEnd,
+                        child: Text(
+                          eligible ? '৳${money(zakat)}' : '৳${money(0)}',
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            color: eligible
+                                ? theme.colorScheme.primary
+                                : theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -181,9 +203,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 if (!context.mounted) return;
                 if (!opened) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(context.t('donation_open_failed')),
-                    ),
+                    SnackBar(content: Text(context.t('donation_open_failed'))),
                   );
                 }
               },
@@ -211,9 +231,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
                   onPressed: () async {
-                    await Clipboard.setData(
-                      ClipboardData(text: donationUrl),
-                    );
+                    await Clipboard.setData(ClipboardData(text: donationUrl));
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(context.t('copied'))),

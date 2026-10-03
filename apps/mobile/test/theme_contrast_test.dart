@@ -17,11 +17,14 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:sunnah_life/design/design_tokens.dart';
+import 'package:sunnah_life/features/amal/amal_widgets.dart';
 
 /// sRGB 8-bit channel → linear luminance component.
 double _linearize(int channel8) {
   final c = channel8 / 255.0;
-  return c <= 0.04045 ? c / 12.92 : math.pow((c + 0.055) / 1.055, 2.4).toDouble();
+  return c <= 0.04045
+      ? c / 12.92
+      : math.pow((c + 0.055) / 1.055, 2.4).toDouble();
 }
 
 double luminance(Color c) {
@@ -52,14 +55,8 @@ void main() {
             home: Scaffold(
               body: ListView(
                 children: const [
-                  ListTile(
-                    title: Text('শিরোনাম'),
-                    subtitle: Text('উপশিরোনাম'),
-                  ),
-                  ActionChip(
-                    label: Text('চিপ'),
-                    onPressed: null,
-                  ),
+                  ListTile(title: Text('শিরোনাম'), subtitle: Text('উপশিরোনাম')),
+                  ActionChip(label: Text('চিপ'), onPressed: null),
                 ],
               ),
             ),
@@ -80,7 +77,8 @@ void main() {
         expect(
           contrastRatio(effectiveColor('শিরোনাম'), bg),
           greaterThan(4.5),
-          reason: 'ListTile title must contrast ≥ 4.5:1 against the '
+          reason:
+              'ListTile title must contrast ≥ 4.5:1 against the '
               'scaffold background',
         );
         expect(
@@ -96,10 +94,64 @@ void main() {
         expect(
           contrastRatio(effectiveColor('চিপ'), bg),
           greaterThan(4.5),
-          reason: 'chip label must contrast ≥ 4.5:1 against the scaffold '
+          reason:
+              'chip label must contrast ≥ 4.5:1 against the scaffold '
               'background it floats over',
         );
       },
     );
+  }
+
+  // The একা bug (2026-10-03 audit): a selected একা chip painted onPrimary
+  // cream text on the `secondary` cream fill — 1.1:1, invisible. Every
+  // segment, selected or not, must read ≥ 4.5:1 on its own fill.
+  for (final brightness in [Brightness.light, Brightness.dark]) {
+    for (final selected in [null, 'jamaat', 'alone', 'qaza']) {
+      testWidgets('TriStateChips readable — selected=$selected ($brightness)', (
+        tester,
+      ) async {
+        final theme = brightness == Brightness.light
+            ? buildSunnahLightTheme()
+            : buildSunnahDarkTheme();
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: theme,
+            home: Scaffold(
+              body: TriStateChips(
+                value: selected,
+                onChanged: (_) {},
+                labels: const TriStateLabels(
+                  jamaat: 'জামাতে',
+                  alone: 'একা',
+                  qaza: 'কাযা',
+                ),
+              ),
+            ),
+          ),
+        );
+        for (final label in ['জামাতে', 'একা', 'কাযা']) {
+          final text = tester
+              .renderObject<RenderParagraph>(find.text(label))
+              .text
+              .style!
+              .color!;
+          final fill = tester
+              .widget<Material>(
+                find
+                    .ancestor(
+                      of: find.text(label),
+                      matching: find.byType(Material),
+                    )
+                    .first,
+              )
+              .color!;
+          expect(
+            contrastRatio(text, fill),
+            greaterThan(4.5),
+            reason: '"$label" (selected=$selected) on its chip fill',
+          );
+        }
+      });
+    }
   }
 }
