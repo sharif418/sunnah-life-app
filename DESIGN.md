@@ -21,7 +21,8 @@ worshipful**: a clean prayer mat, not a game or a bank.
    `ar` RTL). Bengali numerals in `bn` (DS codes stay Latin). Times with day
    parts (`ভোর ৫:১১`), dates in three calendars on the header.
 2. **Tokens only.** No raw hex, no ad-hoc font sizes. Colour roles:
-   `primary` green for identity and action, `gold` for honour and marks,
+   `primary` green for identity and action, `gold` for honour and marks
+   (gold-tinted text on light grounds uses the `gold-text` ink),
    `primary-soft` for "selected / now", `alert` on `alert-soft` for calm
    warnings, `muted-foreground` for secondary text.
 3. **Type.** Hind Siliguri, body 16sp at line-height 1.6 minimum; Amiri Quran
@@ -47,9 +48,8 @@ worshipful**: a clean prayer mat, not a game or a bank.
 
 ## Known design debt (fix when touching these)
 
-- Selected **একা** tristate chip paints `primary-foreground` on `secondary`
-  (1.1:1).
-- `gold-text` on light grounds is 3.1–3.3:1 (level pills such as শুরুর
-  পর্যায়); needs a darker gold ink token.
+- Today diary does not follow the paper muhasaba diary's group order
+  (prototype pending Foundation approval).
+- Month grid does not mirror the paper monthly sheet.
 - StreakBadge appends a 🔥 emoji after the count.
 - 0% completion rings nearly vanish in dark (`muted` track on `card`).
