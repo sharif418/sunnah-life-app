@@ -2180,4 +2180,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_phone_changed => 'Mobile number changed';
+
+  @override
+  String get mosque_view_list => 'List';
+
+  @override
+  String get mosque_view_map => 'Map';
+
+  @override
+  String get mosque_directions_btn => 'Directions';
+
+  @override
+  String get mosque_search_more => 'More mosques nearby (Google Maps)';
+
+  @override
+  String get mosque_north => 'N';
+
+  @override
+  String get mosque_you => 'You';
 }

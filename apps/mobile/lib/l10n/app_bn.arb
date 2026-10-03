@@ -702,5 +702,11 @@
   "profile_phone_new": "নতুন মোবাইল নম্বর",
   "profile_phone_send_code": "কোড পাঠান",
   "profile_phone_verify": "নিশ্চিত করুন",
-  "profile_phone_changed": "মোবাইল নম্বর পরিবর্তন হয়েছে"
+  "profile_phone_changed": "মোবাইল নম্বর পরিবর্তন হয়েছে",
+  "mosque_view_list": "তালিকা",
+  "mosque_view_map": "ম্যাপ",
+  "mosque_directions_btn": "পথ দেখুন",
+  "mosque_search_more": "আশেপাশের আরও মসজিদ (Google Maps)",
+  "mosque_north": "উ",
+  "mosque_you": "আপনি"
 }

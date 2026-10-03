@@ -4317,6 +4317,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'মোবাইল নম্বর পরিবর্তন হয়েছে'**
   String get profile_phone_changed;
+
+  /// No description provided for @mosque_view_list.
+  ///
+  /// In bn, this message translates to:
+  /// **'তালিকা'**
+  String get mosque_view_list;
+
+  /// No description provided for @mosque_view_map.
+  ///
+  /// In bn, this message translates to:
+  /// **'ম্যাপ'**
+  String get mosque_view_map;
+
+  /// No description provided for @mosque_directions_btn.
+  ///
+  /// In bn, this message translates to:
+  /// **'পথ দেখুন'**
+  String get mosque_directions_btn;
+
+  /// No description provided for @mosque_search_more.
+  ///
+  /// In bn, this message translates to:
+  /// **'আশেপাশের আরও মসজিদ (Google Maps)'**
+  String get mosque_search_more;
+
+  /// No description provided for @mosque_north.
+  ///
+  /// In bn, this message translates to:
+  /// **'উ'**
+  String get mosque_north;
+
+  /// No description provided for @mosque_you.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনি'**
+  String get mosque_you;
 }
 
 class _AppLocalizationsDelegate

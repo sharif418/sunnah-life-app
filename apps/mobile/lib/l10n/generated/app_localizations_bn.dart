@@ -2184,4 +2184,22 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get profile_phone_changed => 'মোবাইল নম্বর পরিবর্তন হয়েছে';
+
+  @override
+  String get mosque_view_list => 'তালিকা';
+
+  @override
+  String get mosque_view_map => 'ম্যাপ';
+
+  @override
+  String get mosque_directions_btn => 'পথ দেখুন';
+
+  @override
+  String get mosque_search_more => 'আশেপাশের আরও মসজিদ (Google Maps)';
+
+  @override
+  String get mosque_north => 'উ';
+
+  @override
+  String get mosque_you => 'আপনি';
 }

@@ -70,3 +70,13 @@ Future<bool> openExternalApp(String url) async {
   }
   return openInAppBrowser(url);
 }
+
+/// Walking/driving directions to a point in Google Maps (the app when
+/// installed, the browser otherwise). Pure — unit tested.
+String mapsDirectionsUrl(double lat, double lng) =>
+    'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
+
+/// "Mosques near here" in Google Maps — finds the ones the bundled pack
+/// does not list. Pure — unit tested.
+String mapsNearbySearchUrl(String query, double lat, double lng) =>
+    'https://www.google.com/maps/search/${Uri.encodeComponent(query)}/@$lat,$lng,14z';

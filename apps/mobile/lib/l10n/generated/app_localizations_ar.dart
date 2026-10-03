@@ -2161,4 +2161,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get profile_phone_changed => 'تم تغيير رقم الجوال';
+
+  @override
+  String get mosque_view_list => 'قائمة';
+
+  @override
+  String get mosque_view_map => 'خريطة';
+
+  @override
+  String get mosque_directions_btn => 'الاتجاهات';
+
+  @override
+  String get mosque_search_more => 'مساجد أخرى قريبة (خرائط Google)';
+
+  @override
+  String get mosque_north => 'ش';
+
+  @override
+  String get mosque_you => 'أنت';
 }

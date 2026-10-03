@@ -702,5 +702,11 @@
   "profile_phone_new": "New mobile number",
   "profile_phone_send_code": "Send code",
   "profile_phone_verify": "Confirm",
-  "profile_phone_changed": "Mobile number changed"
+  "profile_phone_changed": "Mobile number changed",
+  "mosque_view_list": "List",
+  "mosque_view_map": "Map",
+  "mosque_directions_btn": "Directions",
+  "mosque_search_more": "More mosques nearby (Google Maps)",
+  "mosque_north": "N",
+  "mosque_you": "You"
 }

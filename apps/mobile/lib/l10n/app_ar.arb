@@ -702,5 +702,11 @@
   "profile_phone_new": "رقم الجوال الجديد",
   "profile_phone_send_code": "أرسل الرمز",
   "profile_phone_verify": "تأكيد",
-  "profile_phone_changed": "تم تغيير رقم الجوال"
+  "profile_phone_changed": "تم تغيير رقم الجوال",
+  "mosque_view_list": "قائمة",
+  "mosque_view_map": "خريطة",
+  "mosque_directions_btn": "الاتجاهات",
+  "mosque_search_more": "مساجد أخرى قريبة (خرائط Google)",
+  "mosque_north": "ش",
+  "mosque_you": "أنت"
 }
