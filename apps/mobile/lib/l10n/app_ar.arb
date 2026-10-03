@@ -708,5 +708,21 @@
   "mosque_directions_btn": "الاتجاهات",
   "mosque_search_more": "مساجد أخرى قريبة (خرائط Google)",
   "mosque_north": "ش",
-  "mosque_you": "أنت"
+  "mosque_you": "أنت",
+  "iman_check_title": "شعب الإيمان — تقييم ذاتي",
+  "iman_check_entry_hint": "قِس نفسك على ٦٩ شعبة — تبقى النتيجة على هاتفك",
+  "iman_check_last": "آخر نتيجة: %n%% — راجع مرة أخرى",
+  "iman_check_intro": "ليست حكمًا بل محاسبة. اختر بصدق في كل شعبة.",
+  "iman_check_have": "موجودة، الحمد لله",
+  "iman_check_trying": "أحاول",
+  "iman_check_not_yet": "ليس بعد",
+  "iman_check_left": "بقي %n%",
+  "iman_check_see_result": "عرض النتيجة",
+  "iman_check_result_caption": "تقييمك الذاتي لشعب الإيمان",
+  "iman_check_previous": "المرة السابقة: %n%%",
+  "iman_check_focus": "ركّز على هذه",
+  "iman_check_keep_going": "واصل",
+  "iman_check_private": "تُحفظ هذه الإجابات على هاتفك فقط — لا يراها أحد.",
+  "iman_check_retake": "أعد التقييم",
+  "iman_check_appbar": "تقييم الإيمان"
 }

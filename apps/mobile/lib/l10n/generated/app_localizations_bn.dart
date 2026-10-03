@@ -2202,4 +2202,56 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get mosque_you => 'আপনি';
+
+  @override
+  String get iman_check_title => 'ঈমানের শাখা — আত্মমূল্যায়ন';
+
+  @override
+  String get iman_check_entry_hint =>
+      '৬৯টি শাখায় নিজেকে মিলিয়ে দেখুন — ফলাফল শুধু আপনার ফোনে থাকে';
+
+  @override
+  String get iman_check_last => 'সর্বশেষ ফলাফল: %n%% — আবার মিলিয়ে দেখুন';
+
+  @override
+  String get iman_check_intro =>
+      'এটা বিচার নয়, নিজের মুহাসাবা। প্রতিটি শাখায় সৎভাবে নিজের অবস্থা বাছাই করুন।';
+
+  @override
+  String get iman_check_have => 'আছে, আলহামদুলিল্লাহ';
+
+  @override
+  String get iman_check_trying => 'চেষ্টা করছি';
+
+  @override
+  String get iman_check_not_yet => 'এখনো নয়';
+
+  @override
+  String get iman_check_left => 'আরও %n%টি বাকি';
+
+  @override
+  String get iman_check_see_result => 'ফলাফল দেখুন';
+
+  @override
+  String get iman_check_result_caption =>
+      'ঈমানের শাখাগুলোতে আপনার নিজের মূল্যায়ন';
+
+  @override
+  String get iman_check_previous => 'আগেরবার: %n%%';
+
+  @override
+  String get iman_check_focus => 'এখন যেগুলোতে মনোযোগ দিন';
+
+  @override
+  String get iman_check_keep_going => 'চেষ্টা চালিয়ে যান';
+
+  @override
+  String get iman_check_private =>
+      'এই উত্তরগুলো কেবল আপনার ফোনে সংরক্ষিত — কেউ দেখতে পান না।';
+
+  @override
+  String get iman_check_retake => 'আবার মূল্যায়ন করুন';
+
+  @override
+  String get iman_check_appbar => 'ঈমান আত্মমূল্যায়ন';
 }

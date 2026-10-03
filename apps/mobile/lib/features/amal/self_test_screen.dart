@@ -9,6 +9,7 @@ import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
+import 'iman_check_screen.dart';
 import '../../design/phosphor_icons.dart';
 
 class SelfTestScreen extends ConsumerStatefulWidget {
@@ -47,6 +48,9 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
           return ListView(
             padding: const EdgeInsets.all(SLSpacing.s16),
             children: [
+              // AMOL-11: the 70-branch iman self-assessment leads the screen
+              const _ImanCheckCard(),
+              const SizedBox(height: SLSpacing.s12),
               for (final quiz in quizzes) ...[
                 // AppCard has zero margin — space the cards explicitly.
                 if (quiz != quizzes.first)
@@ -84,6 +88,80 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+/// Entry to the iman self-assessment, with the last result when there is one.
+class _ImanCheckCard extends StatefulWidget {
+  const _ImanCheckCard();
+
+  @override
+  State<_ImanCheckCard> createState() => _ImanCheckCardState();
+}
+
+class _ImanCheckCardState extends State<_ImanCheckCard> {
+  int? _lastPct;
+
+  @override
+  void initState() {
+    super.initState();
+    _refresh();
+  }
+
+  Future<void> _refresh() async {
+    final last = await loadImanCheck();
+    if (!mounted || last == null) return;
+    final branches = await ContentPack.imanBranches();
+    if (!mounted) return;
+    setState(() {
+      _lastPct = imanScorePct(
+        last.answers,
+        branches.where((b) => b.id != 0).map((b) => b.id),
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bn = context.isBn;
+    return AppCard(
+      key: const ValueKey('iman_check_entry'),
+      onTap: () async {
+        await Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ImanCheckScreen()),
+        );
+        _refresh();
+      },
+      child: Row(
+        children: [
+          Icon(PhosphorIconsRegular.heart, size: 28, color: theme.colorScheme.primary),
+          const SizedBox(width: SLSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.t('iman_check_title'),
+                  style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  _lastPct == null
+                      ? context.t('iman_check_entry_hint')
+                      : context
+                            .t('iman_check_last')
+                            .replaceAll('%n%', bn ? toBn(_lastPct!) : '$_lastPct'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const DirectionalIcon(PhosphorIconsRegular.caretRight),
+        ],
       ),
     );
   }

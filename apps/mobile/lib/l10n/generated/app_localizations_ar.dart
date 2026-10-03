@@ -2179,4 +2179,54 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mosque_you => 'أنت';
+
+  @override
+  String get iman_check_title => 'شعب الإيمان — تقييم ذاتي';
+
+  @override
+  String get iman_check_entry_hint =>
+      'قِس نفسك على ٦٩ شعبة — تبقى النتيجة على هاتفك';
+
+  @override
+  String get iman_check_last => 'آخر نتيجة: %n%% — راجع مرة أخرى';
+
+  @override
+  String get iman_check_intro => 'ليست حكمًا بل محاسبة. اختر بصدق في كل شعبة.';
+
+  @override
+  String get iman_check_have => 'موجودة، الحمد لله';
+
+  @override
+  String get iman_check_trying => 'أحاول';
+
+  @override
+  String get iman_check_not_yet => 'ليس بعد';
+
+  @override
+  String get iman_check_left => 'بقي %n%';
+
+  @override
+  String get iman_check_see_result => 'عرض النتيجة';
+
+  @override
+  String get iman_check_result_caption => 'تقييمك الذاتي لشعب الإيمان';
+
+  @override
+  String get iman_check_previous => 'المرة السابقة: %n%%';
+
+  @override
+  String get iman_check_focus => 'ركّز على هذه';
+
+  @override
+  String get iman_check_keep_going => 'واصل';
+
+  @override
+  String get iman_check_private =>
+      'تُحفظ هذه الإجابات على هاتفك فقط — لا يراها أحد.';
+
+  @override
+  String get iman_check_retake => 'أعد التقييم';
+
+  @override
+  String get iman_check_appbar => 'تقييم الإيمان';
 }

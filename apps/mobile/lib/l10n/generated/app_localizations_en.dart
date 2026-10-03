@@ -2198,4 +2198,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mosque_you => 'You';
+
+  @override
+  String get iman_check_title => 'Branches of iman — self-review';
+
+  @override
+  String get iman_check_entry_hint =>
+      'Measure yourself against 69 branches — the result stays on your phone';
+
+  @override
+  String get iman_check_last => 'Last result: %n%% — review again';
+
+  @override
+  String get iman_check_intro =>
+      'Not a verdict — a muhasaba. Choose honestly for each branch.';
+
+  @override
+  String get iman_check_have => 'I have it, alhamdulillah';
+
+  @override
+  String get iman_check_trying => 'Working on it';
+
+  @override
+  String get iman_check_not_yet => 'Not yet';
+
+  @override
+  String get iman_check_left => '%n% left';
+
+  @override
+  String get iman_check_see_result => 'See the result';
+
+  @override
+  String get iman_check_result_caption =>
+      'Your own review across the branches of iman';
+
+  @override
+  String get iman_check_previous => 'Last time: %n%%';
+
+  @override
+  String get iman_check_focus => 'Focus on these next';
+
+  @override
+  String get iman_check_keep_going => 'Keep going';
+
+  @override
+  String get iman_check_private =>
+      'These answers are stored only on your phone — no one else sees them.';
+
+  @override
+  String get iman_check_retake => 'Review again';
+
+  @override
+  String get iman_check_appbar => 'Iman self-review';
 }

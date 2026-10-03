@@ -4353,6 +4353,102 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আপনি'**
   String get mosque_you;
+
+  /// No description provided for @iman_check_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঈমানের শাখা — আত্মমূল্যায়ন'**
+  String get iman_check_title;
+
+  /// No description provided for @iman_check_entry_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'৬৯টি শাখায় নিজেকে মিলিয়ে দেখুন — ফলাফল শুধু আপনার ফোনে থাকে'**
+  String get iman_check_entry_hint;
+
+  /// No description provided for @iman_check_last.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ ফলাফল: %n%% — আবার মিলিয়ে দেখুন'**
+  String get iman_check_last;
+
+  /// No description provided for @iman_check_intro.
+  ///
+  /// In bn, this message translates to:
+  /// **'এটা বিচার নয়, নিজের মুহাসাবা। প্রতিটি শাখায় সৎভাবে নিজের অবস্থা বাছাই করুন।'**
+  String get iman_check_intro;
+
+  /// No description provided for @iman_check_have.
+  ///
+  /// In bn, this message translates to:
+  /// **'আছে, আলহামদুলিল্লাহ'**
+  String get iman_check_have;
+
+  /// No description provided for @iman_check_trying.
+  ///
+  /// In bn, this message translates to:
+  /// **'চেষ্টা করছি'**
+  String get iman_check_trying;
+
+  /// No description provided for @iman_check_not_yet.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো নয়'**
+  String get iman_check_not_yet;
+
+  /// No description provided for @iman_check_left.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও %n%টি বাকি'**
+  String get iman_check_left;
+
+  /// No description provided for @iman_check_see_result.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফলাফল দেখুন'**
+  String get iman_check_see_result;
+
+  /// No description provided for @iman_check_result_caption.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঈমানের শাখাগুলোতে আপনার নিজের মূল্যায়ন'**
+  String get iman_check_result_caption;
+
+  /// No description provided for @iman_check_previous.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগেরবার: %n%%'**
+  String get iman_check_previous;
+
+  /// No description provided for @iman_check_focus.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন যেগুলোতে মনোযোগ দিন'**
+  String get iman_check_focus;
+
+  /// No description provided for @iman_check_keep_going.
+  ///
+  /// In bn, this message translates to:
+  /// **'চেষ্টা চালিয়ে যান'**
+  String get iman_check_keep_going;
+
+  /// No description provided for @iman_check_private.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই উত্তরগুলো কেবল আপনার ফোনে সংরক্ষিত — কেউ দেখতে পান না।'**
+  String get iman_check_private;
+
+  /// No description provided for @iman_check_retake.
+  ///
+  /// In bn, this message translates to:
+  /// **'আবার মূল্যায়ন করুন'**
+  String get iman_check_retake;
+
+  /// No description provided for @iman_check_appbar.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঈমান আত্মমূল্যায়ন'**
+  String get iman_check_appbar;
 }
 
 class _AppLocalizationsDelegate

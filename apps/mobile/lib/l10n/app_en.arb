@@ -708,5 +708,21 @@
   "mosque_directions_btn": "Directions",
   "mosque_search_more": "More mosques nearby (Google Maps)",
   "mosque_north": "N",
-  "mosque_you": "You"
+  "mosque_you": "You",
+  "iman_check_title": "Branches of iman — self-review",
+  "iman_check_entry_hint": "Measure yourself against 69 branches — the result stays on your phone",
+  "iman_check_last": "Last result: %n%% — review again",
+  "iman_check_intro": "Not a verdict — a muhasaba. Choose honestly for each branch.",
+  "iman_check_have": "I have it, alhamdulillah",
+  "iman_check_trying": "Working on it",
+  "iman_check_not_yet": "Not yet",
+  "iman_check_left": "%n% left",
+  "iman_check_see_result": "See the result",
+  "iman_check_result_caption": "Your own review across the branches of iman",
+  "iman_check_previous": "Last time: %n%%",
+  "iman_check_focus": "Focus on these next",
+  "iman_check_keep_going": "Keep going",
+  "iman_check_private": "These answers are stored only on your phone — no one else sees them.",
+  "iman_check_retake": "Review again",
+  "iman_check_appbar": "Iman self-review"
 }
