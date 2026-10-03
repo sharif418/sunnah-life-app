@@ -80,7 +80,7 @@ void main() {
     await tester.runAsync(() async {
       await QuranRepository.surahList();
     });
-    // W5: the real text families (Hind Siliguri ×3 weights, Amiri,
+    // W5: the real text families (Noto Sans Bengali ×4 weights, Amiri,
     // AmiriQuran) + the Phosphor icons, registered through the shared
     // FontLoader helper — deterministic, no google_fonts lazy-load race
     // and no 400ms settle guess (the old approach could still capture
