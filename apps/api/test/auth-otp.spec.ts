@@ -166,7 +166,7 @@ describe("PROF-04 — change phone (OTP to the new number) and e-mail", () => {
   const NEW = "01799990003";
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { phone: { in: [OLD, NEW] } } });
+    await rls.system((tx) => tx.user.deleteMany({ where: { phone: { in: [OLD, NEW] } } }));
     await rls.system((tx) => tx.otpCode.deleteMany({ where: { phone: { in: [OLD, NEW] } } }));
   });
 

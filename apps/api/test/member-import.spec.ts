@@ -9,7 +9,7 @@ import { Test } from "@nestjs/testing";
 import request from "supertest";
 
 import { AppModule } from "src/app.module";
-import { PrismaService } from "src/common/prisma.service";
+import { RlsService } from "src/common/rls.service";
 import {
   normalizeCategory,
   normalizeGender,
@@ -53,7 +53,7 @@ describe("member import — normalisers", () => {
 
 describe("POST /api/admin/users/import", () => {
   let app: INestApplication;
-  let prisma: PrismaService;
+  let rls: RlsService; // User has FORCE RLS — raw Prisma reads see nothing
   let adminToken: string;
   const NEW_M = "01799990011";
   const NEW_F = "01799990012";
@@ -64,14 +64,14 @@ describe("POST /api/admin/users/import", () => {
     app = moduleRef.createNestApplication();
     app.setGlobalPrefix("api", { exclude: ["health", "metrics"] });
     await app.init();
-    prisma = app.get(PrismaService);
+    rls = app.get(RlsService);
     const otp = await http().post("/api/auth/otp/request").send({ phone: "01000000001" }).expect(200);
     const v = await http().post("/api/auth/otp/verify").send({ phone: "01000000001", code: otp.body.devCode }).expect(200);
     adminToken = v.body.accessToken;
   });
 
   afterAll(async () => {
-    await prisma.user.deleteMany({ where: { phone: { in: [NEW_M, NEW_F] } } });
+    await rls.system((tx) => tx.user.deleteMany({ where: { phone: { in: [NEW_M, NEW_F] } } }));
     await app.close();
   });
 
@@ -91,7 +91,7 @@ describe("POST /api/admin/users/import", () => {
     expect(res.body.dryRun).toBe(true);
     expect(res.body.results.map((r: { action: string }) => r.action)).toEqual(["create", "error", "skip", "error"]);
     expect(res.body.results[1].message).toContain("এক-লিঙ্গ");
-    expect(await prisma.user.count({ where: { phone: NEW_M } })).toBe(0);
+    expect(await rls.system((tx) => tx.user.count({ where: { phone: NEW_M } }))).toBe(0);
   });
 
   it("commit creates the valid row (legacy code kept); a re-import only fills empty fields", async () => {
@@ -101,7 +101,7 @@ describe("POST /api/admin/users/import", () => {
       .send({ rows, dryRun: false, offset: 0 })
       .expect(200);
     expect(res.body.totals).toEqual({ create: 1, update: 0, skip: 1, error: 2 });
-    const u = await prisma.user.findUnique({ where: { phone: NEW_M } });
+    const u = await rls.system((tx) => tx.user.findUnique({ where: { phone: NEW_M } }));
     expect(u).toMatchObject({ name: "আমদানি ভাই", gender: "M", role: "daee", memberCode: "DS-009001", district: "ঢাকা" });
 
     // the same phone again: never re-gendered; only the empty workplace fills
@@ -111,7 +111,7 @@ describe("POST /api/admin/users/import", () => {
       .send({ rows: [{ name: "x", phone: NEW_M, gender: "F", workplace: "আস-সুন্নাহ" }], dryRun: false, offset: 10 })
       .expect(200);
     expect(again.body.results[0]).toMatchObject({ row: 12, action: "update" });
-    const after = await prisma.user.findUnique({ where: { phone: NEW_M } });
+    const after = await rls.system((tx) => tx.user.findUnique({ where: { phone: NEW_M } }));
     expect(after).toMatchObject({ gender: "M", name: "আমদানি ভাই", workplace: "আস-সুন্নাহ" });
   });
 
