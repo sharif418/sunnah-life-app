@@ -668,5 +668,12 @@
   "profile_district": "জেলা",
   "profile_not_set": "যোগ করুন",
   "profile_saved": "সংরক্ষিত হয়েছে",
-  "profile_inventory_note": "এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।"
+  "profile_inventory_note": "এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।",
+  "quizres_title": "সদস্যদের কুইজ ফলাফল",
+  "quizres_took": "অংশ নিয়েছেন %done%/%total% জন",
+  "quizres_avg": "গড় %n%%",
+  "quizres_not_yet": "এখনো দেননি",
+  "quizres_tries": "%n% বার",
+  "quizres_no_members": "উসরাহতে এখনো কোনো সদস্য নেই",
+  "quizres_hint": "যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।"
 }

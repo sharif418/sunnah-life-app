@@ -17,6 +17,7 @@ import {
   QuizLiveService,
   UsrahQuestionsController,
   UsrahQuestionsService,
+  UsrahQuizResultsController,
 } from "./ilm.controllers";
 import { QuizGateway } from "./quiz.gateway";
 
@@ -32,6 +33,7 @@ import { QuizGateway } from "./quiz.gateway";
     EnrollmentsController,
     QuizAttemptsController,
     UsrahQuestionsController,
+    UsrahQuizResultsController,
     QuizLiveController,
   ],
   providers: [

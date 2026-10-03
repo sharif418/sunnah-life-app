@@ -835,6 +835,13 @@ class ApiClient {
         .toList();
   }
 
+  /// GET /api/usrah/quiz-results — how my usrah's members did in the quizzes
+  /// (usrah_head+; RLS scopes the rows to same-gender members I supervise).
+  Future<UsrahQuizResults> usrahQuizResults() async {
+    final j = await _req('GET', '/api/usrah/quiz-results');
+    return UsrahQuizResults.fromJson(j);
+  }
+
   /// GET /api/usrah-questions — own usrah's board (RLS, newest first).
   Future<List<UsrahQuestion>> usrahQuestions() async {
     final j = await _req('GET', '/api/usrah-questions');

@@ -2058,4 +2058,25 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get profile_inventory_note =>
       'لسجل أعضاء دعوة السنة — لا يراه إلا مسؤولوك.';
+
+  @override
+  String get quizres_title => 'نتائج اختبارات الأعضاء';
+
+  @override
+  String get quizres_took => 'شارك %done% من %total%';
+
+  @override
+  String get quizres_avg => 'المتوسط %n%%';
+
+  @override
+  String get quizres_not_yet => 'لم يشارك بعد';
+
+  @override
+  String get quizres_tries => '%n% مرات';
+
+  @override
+  String get quizres_no_members => 'لا يوجد أعضاء في الأسرة بعد';
+
+  @override
+  String get quizres_hint => 'شجّع من لم يشارك بعد — الاختبارات في قسم العلم.';
 }

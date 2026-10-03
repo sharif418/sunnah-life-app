@@ -177,6 +177,18 @@ final quizAttemptsProvider = FutureProvider<List<QuizAttemptItem>?>((ref) async 
   }
 });
 
+/// The members' quiz results for a usrah head / invigilator. Null for
+/// everyone else and offline (the section hides).
+final usrahQuizResultsProvider = FutureProvider<UsrahQuizResults?>((ref) async {
+  final user = ref.watch(authProvider).userOrNull;
+  if (user == null || !user.role.isSupervisor) return null;
+  try {
+    return await ref.watch(apiProvider).usrahQuizResults();
+  } on ApiException {
+    return null;
+  }
+});
+
 /// Usrah question board (RLS — own usrah only; empty while a guest).
 final usrahQuestionsProvider = FutureProvider<List<UsrahQuestion>>((ref) async {
   final auth = ref.watch(authProvider);

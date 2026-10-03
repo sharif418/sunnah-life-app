@@ -4113,6 +4113,48 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।'**
   String get profile_inventory_note;
+
+  /// No description provided for @quizres_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'সদস্যদের কুইজ ফলাফল'**
+  String get quizres_title;
+
+  /// No description provided for @quizres_took.
+  ///
+  /// In bn, this message translates to:
+  /// **'অংশ নিয়েছেন %done%/%total% জন'**
+  String get quizres_took;
+
+  /// No description provided for @quizres_avg.
+  ///
+  /// In bn, this message translates to:
+  /// **'গড় %n%%'**
+  String get quizres_avg;
+
+  /// No description provided for @quizres_not_yet.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো দেননি'**
+  String get quizres_not_yet;
+
+  /// No description provided for @quizres_tries.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n% বার'**
+  String get quizres_tries;
+
+  /// No description provided for @quizres_no_members.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরাহতে এখনো কোনো সদস্য নেই'**
+  String get quizres_no_members;
+
+  /// No description provided for @quizres_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।'**
+  String get quizres_hint;
 }
 
 class _AppLocalizationsDelegate

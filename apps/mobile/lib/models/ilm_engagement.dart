@@ -172,6 +172,82 @@ class QuizAttemptItem {
   );
 }
 
+// ── Usrah quiz results (usrah_head+: GET /api/usrah/quiz-results) ─────────────
+
+/// One member's best try at one quiz.
+class MemberQuizResult {
+  const MemberQuizResult({
+    required this.quizId,
+    required this.best,
+    required this.total,
+    required this.attempts,
+    required this.lastAt,
+  });
+  final String quizId;
+  final int best;
+  final int total;
+  final int attempts;
+  final String lastAt;
+
+  int get percent => total <= 0 ? 0 : (best * 100 / total).round();
+
+  factory MemberQuizResult.fromJson(Map<String, dynamic> j) => MemberQuizResult(
+    quizId: j['quizId'] as String? ?? '',
+    best: (j['best'] as num?)?.toInt() ?? 0,
+    total: (j['total'] as num?)?.toInt() ?? 0,
+    attempts: (j['attempts'] as num?)?.toInt() ?? 0,
+    lastAt: j['lastAt'] as String? ?? '',
+  );
+}
+
+class MemberQuizResults {
+  const MemberQuizResults({
+    required this.id,
+    required this.name,
+    this.memberCode,
+    required this.results,
+  });
+  final String id;
+  final String name;
+  final String? memberCode;
+  final List<MemberQuizResult> results;
+
+  MemberQuizResult? resultFor(String quizId) {
+    for (final r in results) {
+      if (r.quizId == quizId) return r;
+    }
+    return null;
+  }
+
+  factory MemberQuizResults.fromJson(Map<String, dynamic> j) => MemberQuizResults(
+    id: j['id'] as String? ?? '',
+    name: j['name'] as String? ?? '',
+    memberCode: j['memberCode'] as String?,
+    results: ((j['results'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((e) => MemberQuizResult.fromJson(e.cast<String, dynamic>()))
+        .toList(),
+  );
+}
+
+/// The head's view: the quiz list + every member's results.
+class UsrahQuizResults {
+  const UsrahQuizResults({required this.quizzes, required this.members});
+  final List<({String id, String titleBn})> quizzes;
+  final List<MemberQuizResults> members;
+
+  factory UsrahQuizResults.fromJson(Map<String, dynamic> j) => UsrahQuizResults(
+    quizzes: [
+      for (final q in ((j['quizzes'] as List?) ?? const []).whereType<Map>())
+        (id: q['id'] as String? ?? '', titleBn: q['titleBn'] as String? ?? ''),
+    ],
+    members: ((j['members'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((e) => MemberQuizResults.fromJson(e.cast<String, dynamic>()))
+        .toList(),
+  );
+}
+
 // ── Usrah question board (RLS: own usrah only) ───────────────────────────────
 
 class UsrahQuestion {

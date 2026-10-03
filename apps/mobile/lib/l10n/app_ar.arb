@@ -668,5 +668,12 @@
   "profile_district": "المديرية",
   "profile_not_set": "أضف",
   "profile_saved": "تم الحفظ",
-  "profile_inventory_note": "لسجل أعضاء دعوة السنة — لا يراه إلا مسؤولوك."
+  "profile_inventory_note": "لسجل أعضاء دعوة السنة — لا يراه إلا مسؤولوك.",
+  "quizres_title": "نتائج اختبارات الأعضاء",
+  "quizres_took": "شارك %done% من %total%",
+  "quizres_avg": "المتوسط %n%%",
+  "quizres_not_yet": "لم يشارك بعد",
+  "quizres_tries": "%n% مرات",
+  "quizres_no_members": "لا يوجد أعضاء في الأسرة بعد",
+  "quizres_hint": "شجّع من لم يشارك بعد — الاختبارات في قسم العلم."
 }

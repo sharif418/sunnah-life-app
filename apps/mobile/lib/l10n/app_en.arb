@@ -668,5 +668,12 @@
   "profile_district": "District",
   "profile_not_set": "Add",
   "profile_saved": "Saved",
-  "profile_inventory_note": "For the Dawatus Sunnah member register — only your own supervisors see it."
+  "profile_inventory_note": "For the Dawatus Sunnah member register — only your own supervisors see it.",
+  "quizres_title": "Members' quiz results",
+  "quizres_took": "%done% of %total% took it",
+  "quizres_avg": "average %n%%",
+  "quizres_not_yet": "Not yet",
+  "quizres_tries": "tried %n%×",
+  "quizres_no_members": "No members in the usrah yet",
+  "quizres_hint": "Encourage those who haven't yet — quizzes are in the Ilm section."
 }

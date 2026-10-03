@@ -21,6 +21,7 @@ import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 import 'assessment_confirm_sheet.dart';
 import 'dawah_journey.dart';
+import 'usrah_quiz_results.dart';
 import 'madu_tree.dart';
 import 'referral_share_sheet.dart';
 import '../../design/phosphor_icons.dart';
@@ -648,6 +649,8 @@ class _UsrahTab extends ConsumerWidget {
                 icon: PhosphorIconsRegular.clipboardText,
               ),
               const _GoalQueueSection(),
+              // the members' quiz results (audit gap: supervisors never saw them)
+              const UsrahQuizResultsSection(),
             ],
             const SizedBox(height: SLSpacing.s24),
           ],

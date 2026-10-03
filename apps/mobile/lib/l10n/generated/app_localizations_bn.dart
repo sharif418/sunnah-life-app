@@ -2077,4 +2077,26 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get profile_inventory_note =>
       'এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।';
+
+  @override
+  String get quizres_title => 'সদস্যদের কুইজ ফলাফল';
+
+  @override
+  String get quizres_took => 'অংশ নিয়েছেন %done%/%total% জন';
+
+  @override
+  String get quizres_avg => 'গড় %n%%';
+
+  @override
+  String get quizres_not_yet => 'এখনো দেননি';
+
+  @override
+  String get quizres_tries => '%n% বার';
+
+  @override
+  String get quizres_no_members => 'উসরাহতে এখনো কোনো সদস্য নেই';
+
+  @override
+  String get quizres_hint =>
+      'যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।';
 }

@@ -2073,4 +2073,26 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get profile_inventory_note =>
       'For the Dawatus Sunnah member register — only your own supervisors see it.';
+
+  @override
+  String get quizres_title => 'Members\' quiz results';
+
+  @override
+  String get quizres_took => '%done% of %total% took it';
+
+  @override
+  String get quizres_avg => 'average %n%%';
+
+  @override
+  String get quizres_not_yet => 'Not yet';
+
+  @override
+  String get quizres_tries => 'tried %n%×';
+
+  @override
+  String get quizres_no_members => 'No members in the usrah yet';
+
+  @override
+  String get quizres_hint =>
+      'Encourage those who haven\'t yet — quizzes are in the Ilm section.';
 }

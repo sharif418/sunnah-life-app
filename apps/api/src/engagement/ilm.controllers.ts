@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Query, Req, UseGuards } from "@nestjs/common";
 import { ApiOperation, ApiProperty, ApiTags } from "@nestjs/swagger";
 import { Injectable } from "@nestjs/common";
 import { IsIn, IsNotEmpty, IsOptional, IsString, MaxLength, MinLength } from "class-validator";
@@ -11,6 +11,8 @@ import { loadPack } from "../shared/quran";
 import { ROLE_RANK } from "../shared/domain";
 import type { User } from "../shared/domain";
 import { QUIZ_TOKEN_TTL_MS, mintQuizToken } from "./quiz-token";
+import { Roles } from "../common/roles.decorator";
+import { RolesGuard } from "../common/roles.guard";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Task B4 — Ilm content API: course catalog + enrollment progress, quiz
@@ -222,6 +224,87 @@ export class EngagementHistoryService {
         createdAt: r.createdAt.toISOString(),
       })),
     };
+  }
+
+  /**
+   * GET /api/usrah/quiz-results — how the members of MY usrah(s) did in the
+   * quizzes: per member × quiz the best score, attempt count and last try.
+   * Scope = usrahs I head or invigilate (+ my own usrah for a usrah_head);
+   * RLS (sl_visible_user, same gender) still decides every row.
+   */
+  async usrahQuizResults(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    if (!this.guard.isSupervisor(user)) throw new ApiError(403, "কুইজ ফলাফল দেখার অনুমতি নেই");
+    const pack = (await loadPack("quizzes")) as { quizzes?: { id: string; titleBn: string }[] } | null;
+    const quizzes = (pack?.quizzes ?? []).map((q) => ({ id: q.id, titleBn: q.titleBn }));
+
+    return this.rls.run(user, async (tx) => {
+      const usrahs = await tx.usrah.findMany({
+        where: {
+          OR: [
+            { headUserId: user.id },
+            { invigilatorUserId: user.id },
+            ...(user.role === "usrah_head" && user.usrahId ? [{ id: user.usrahId }] : []),
+          ],
+        },
+        select: { id: true },
+      });
+      const members = await tx.user.findMany({
+        where: { usrahId: { in: usrahs.map((u) => u.id) }, id: { not: user.id } },
+        select: { id: true, name: true, memberCode: true },
+        orderBy: { name: "asc" },
+      });
+      const attempts = members.length
+        ? await tx.quizAttempt.findMany({
+            where: { userId: { in: members.map((m) => m.id) } },
+            select: { userId: true, quizId: true, score: true, total: true, createdAt: true },
+          })
+        : [];
+
+      const byMember = new Map<string, Map<string, { quizId: string; best: number; total: number; attempts: number; lastAt: string }>>();
+      for (const a of attempts) {
+        if (!a.userId) continue;
+        const results = byMember.get(a.userId) ?? new Map();
+        byMember.set(a.userId, results);
+        const prev = results.get(a.quizId);
+        const pct = a.total > 0 ? a.score / a.total : 0;
+        const at = a.createdAt.toISOString();
+        if (!prev) {
+          results.set(a.quizId, { quizId: a.quizId, best: a.score, total: a.total, attempts: 1, lastAt: at });
+        } else {
+          prev.attempts += 1;
+          if (at > prev.lastAt) prev.lastAt = at;
+          if (pct > (prev.total > 0 ? prev.best / prev.total : 0)) {
+            prev.best = a.score;
+            prev.total = a.total;
+          }
+        }
+      }
+
+      return {
+        quizzes,
+        members: members.map((m) => ({
+          id: m.id,
+          name: m.name,
+          memberCode: m.memberCode,
+          results: [...(byMember.get(m.id)?.values() ?? [])],
+        })),
+      };
+    });
+  }
+}
+
+@ApiTags("usrah")
+@Controller("usrah/quiz-results")
+@UseGuards(RolesGuard)
+export class UsrahQuizResultsController {
+  constructor(private readonly service: EngagementHistoryService) {}
+
+  @Get()
+  @Roles("usrah_head") // usrah_head and above; RLS scopes whose attempts show
+  @ApiOperation({ summary: "Quiz results of my usrah's members (usrah_head+)" })
+  list(@Req() req: AuthedRequest) {
+    return this.service.usrahQuizResults(currentUser(req));
   }
 }
 
