@@ -662,5 +662,11 @@
   "live_watch_recording": "شاهد التسجيل",
   "live_none_now": "لا يوجد بث مباشر الآن",
   "live_none_upcoming": "لا توجد برامج قادمة",
-  "live_none_past": "لا توجد تسجيلات بعد"
+  "live_none_past": "لا توجد تسجيلات بعد",
+  "profile_workplace": "مكان العمل",
+  "profile_department": "القسم / المنصب",
+  "profile_district": "المديرية",
+  "profile_not_set": "أضف",
+  "profile_saved": "تم الحفظ",
+  "profile_inventory_note": "لسجل أعضاء دعوة السنة — لا يراه إلا مسؤولوك."
 }

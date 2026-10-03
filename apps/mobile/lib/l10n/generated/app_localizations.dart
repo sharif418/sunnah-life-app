@@ -4077,6 +4077,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'এখনো কোনো রেকর্ডিং নেই'**
   String get live_none_past;
+
+  /// No description provided for @profile_workplace.
+  ///
+  /// In bn, this message translates to:
+  /// **'কর্মস্থল / প্রতিষ্ঠান'**
+  String get profile_workplace;
+
+  /// No description provided for @profile_department.
+  ///
+  /// In bn, this message translates to:
+  /// **'বিভাগ / পদবি'**
+  String get profile_department;
+
+  /// No description provided for @profile_district.
+  ///
+  /// In bn, this message translates to:
+  /// **'জেলা'**
+  String get profile_district;
+
+  /// No description provided for @profile_not_set.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোগ করুন'**
+  String get profile_not_set;
+
+  /// No description provided for @profile_saved.
+  ///
+  /// In bn, this message translates to:
+  /// **'সংরক্ষিত হয়েছে'**
+  String get profile_saved;
+
+  /// No description provided for @profile_inventory_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।'**
+  String get profile_inventory_note;
 }
 
 class _AppLocalizationsDelegate

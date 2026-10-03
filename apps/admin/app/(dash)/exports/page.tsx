@@ -9,7 +9,7 @@ import { CalendarDays, Download, FileSpreadsheet, FileText, RefreshCw } from "lu
 import { api, downloadReportPdf, type MonthlyReportItem } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { dateTimeBn, monthLabel, toBn } from "@/lib/bn";
-import { GENDER_LABELS_BN, LEVEL_LABELS_BN, ROLE_LABELS_BN, auditActionLabel, isFullAdmin, isSupervisor } from "@/lib/labels";
+import { CATEGORY_LABELS_BN, GENDER_LABELS_BN, LEVEL_LABELS_BN, ROLE_LABELS_BN, auditActionLabel, isFullAdmin, isSupervisor } from "@/lib/labels";
 import { downloadCsvSafe } from "@/lib/csv";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -125,10 +125,19 @@ export default function ExportsPage() {
       ROLE_LABELS_BN[u.role],
       u.memberCode,
       LEVEL_LABELS_BN[u.level],
+      CATEGORY_LABELS_BN[u.category],
       u.district,
+      u.workplace,
+      u.department,
       u.lastActiveAt,
     ]);
-    downloadCsvSafe("sunnahlife-users.csv", ["নাম", "ফোন", "লিঙ্গ", "ভূমিকা", "সদস্য কোড", "স্তর", "জেলা", "সর্বশেষ সক্রিয়"], rows);
+    // the Dawatus Sunnah member register: workplace + department + category
+    // too (members fill them in the app's profile)
+    downloadCsvSafe(
+      "sunnahlife-users.csv",
+      ["নাম", "ফোন", "লিঙ্গ", "ভূমিকা", "সদস্য কোড", "স্তর", "ক্যাটাগরি", "জেলা", "কর্মস্থল", "বিভাগ / পদবি", "সর্বশেষ সক্রিয়"],
+      rows
+    );
   };
 
   const exportUsrahHealth = () => {

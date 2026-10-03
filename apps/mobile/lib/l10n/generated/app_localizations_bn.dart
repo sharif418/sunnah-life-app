@@ -2058,4 +2058,23 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get live_none_past => 'এখনো কোনো রেকর্ডিং নেই';
+
+  @override
+  String get profile_workplace => 'কর্মস্থল / প্রতিষ্ঠান';
+
+  @override
+  String get profile_department => 'বিভাগ / পদবি';
+
+  @override
+  String get profile_district => 'জেলা';
+
+  @override
+  String get profile_not_set => 'যোগ করুন';
+
+  @override
+  String get profile_saved => 'সংরক্ষিত হয়েছে';
+
+  @override
+  String get profile_inventory_note =>
+      'এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।';
 }

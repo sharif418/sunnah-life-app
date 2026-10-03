@@ -662,5 +662,11 @@
   "live_watch_recording": "রেকর্ডিং দেখুন",
   "live_none_now": "এখন কোনো লাইভ কার্যক্রম নেই",
   "live_none_upcoming": "আসন্ন কোনো প্রোগ্রাম নেই",
-  "live_none_past": "এখনো কোনো রেকর্ডিং নেই"
+  "live_none_past": "এখনো কোনো রেকর্ডিং নেই",
+  "profile_workplace": "কর্মস্থল / প্রতিষ্ঠান",
+  "profile_department": "বিভাগ / পদবি",
+  "profile_district": "জেলা",
+  "profile_not_set": "যোগ করুন",
+  "profile_saved": "সংরক্ষিত হয়েছে",
+  "profile_inventory_note": "এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।"
 }

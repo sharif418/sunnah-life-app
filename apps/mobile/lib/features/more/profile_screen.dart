@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
+import '../../api/api_client.dart' show ApiException;
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../models/domain.dart';
@@ -114,10 +115,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   leading: const Icon(PhosphorIconsRegular.user),
                   title: Text(context.t('onb_name')),
                   subtitle: Text(user?.name ?? profile.name),
-                  trailing: user == null
-                      ? const Icon(PhosphorIconsRegular.pencilSimple, size: 18)
-                      : null,
-                  onTap: user == null ? () => _editName(context) : null,
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+                  onTap: user == null
+                      ? () => _editName(context)
+                      : () => _editAccountField(
+                            context,
+                            field: 'name',
+                            titleKey: 'onb_name',
+                            current: user.name,
+                          ),
                 ),
                 ListTile(
                   leading: const Icon(
@@ -140,9 +146,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
                   onTap: () => _pickCategory(context),
                 ),
+                // The Dawatus Sunnah member register (the old prototypes'
+                // inventory): workplace, department, district — kept on the
+                // account, visible to the member's own supervisors only.
+                if (user != null)
+                  for (final (field, icon, titleKey, value) in [
+                    ('workplace', PhosphorIconsRegular.buildings, 'profile_workplace', user.workplace),
+                    ('department', PhosphorIconsRegular.identificationBadge, 'profile_department', user.department),
+                    ('district', PhosphorIconsRegular.mapPin, 'profile_district', user.district),
+                  ])
+                    ListTile(
+                      key: ValueKey('profile_field_$field'),
+                      leading: Icon(icon),
+                      title: Text(context.t(titleKey)),
+                      subtitle: Text(
+                        (value ?? '').trim().isEmpty ? context.t('profile_not_set') : value!,
+                      ),
+                      trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+                      onTap: () => _editAccountField(
+                        context,
+                        field: field,
+                        titleKey: titleKey,
+                        current: value ?? '',
+                      ),
+                    ),
               ],
             ),
           ),
+          if (user != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(SLSpacing.s4, SLSpacing.s8, SLSpacing.s4, 0),
+              child: Text(
+                context.t('profile_inventory_note'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
           const SizedBox(height: SLSpacing.s16),
 
           // Prayer settings
@@ -335,6 +375,54 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
     if (name != null && name.isNotEmpty) {
       await ref.read(profileProvider.notifier).update(name: name);
+    }
+  }
+
+  /// Edit one account field through PATCH /api/me and refresh the signed-in
+  /// user (name, workplace, department, district).
+  Future<void> _editAccountField(
+    BuildContext context, {
+    required String field,
+    required String titleKey,
+    required String current,
+  }) async {
+    final controller = TextEditingController(text: current);
+    final value = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(dialogContext.t(titleKey)),
+        content: TextField(
+          key: ValueKey('profile_edit_$field'),
+          controller: controller,
+          autofocus: true,
+          maxLength: field == 'name' ? 80 : 160,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(dialogContext.t('cancel')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, controller.text.trim()),
+            child: Text(dialogContext.t('save')),
+          ),
+        ],
+      ),
+    );
+    if (value == null || value == current.trim()) return;
+    if (field == 'name' && value.isEmpty) return;
+    try {
+      final updated = await ref.read(apiProvider).updateMe({field: value});
+      ref.read(authProvider.notifier).updateUser(updated);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.t('profile_saved'))),
+        );
+      }
+    } on ApiException catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
+      }
     }
   }
 

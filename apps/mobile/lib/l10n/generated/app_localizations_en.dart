@@ -2054,4 +2054,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get live_none_past => 'No recordings yet';
+
+  @override
+  String get profile_workplace => 'Workplace';
+
+  @override
+  String get profile_department => 'Department / role';
+
+  @override
+  String get profile_district => 'District';
+
+  @override
+  String get profile_not_set => 'Add';
+
+  @override
+  String get profile_saved => 'Saved';
+
+  @override
+  String get profile_inventory_note =>
+      'For the Dawatus Sunnah member register — only your own supervisors see it.';
 }

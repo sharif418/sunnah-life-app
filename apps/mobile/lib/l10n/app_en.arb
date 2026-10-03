@@ -662,5 +662,11 @@
   "live_watch_recording": "Watch recording",
   "live_none_now": "Nothing is live right now",
   "live_none_upcoming": "No upcoming programs",
-  "live_none_past": "No recordings yet"
+  "live_none_past": "No recordings yet",
+  "profile_workplace": "Workplace",
+  "profile_department": "Department / role",
+  "profile_district": "District",
+  "profile_not_set": "Add",
+  "profile_saved": "Saved",
+  "profile_inventory_note": "For the Dawatus Sunnah member register — only your own supervisors see it."
 }

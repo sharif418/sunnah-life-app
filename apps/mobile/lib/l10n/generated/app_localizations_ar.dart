@@ -2039,4 +2039,23 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get live_none_past => 'لا توجد تسجيلات بعد';
+
+  @override
+  String get profile_workplace => 'مكان العمل';
+
+  @override
+  String get profile_department => 'القسم / المنصب';
+
+  @override
+  String get profile_district => 'المديرية';
+
+  @override
+  String get profile_not_set => 'أضف';
+
+  @override
+  String get profile_saved => 'تم الحفظ';
+
+  @override
+  String get profile_inventory_note =>
+      'لسجل أعضاء دعوة السنة — لا يراه إلا مسؤولوك.';
 }
