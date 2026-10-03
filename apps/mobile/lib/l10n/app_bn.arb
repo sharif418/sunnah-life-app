@@ -675,5 +675,12 @@
   "quizres_not_yet": "এখনো দেননি",
   "quizres_tries": "%n% বার",
   "quizres_no_members": "উসরাহতে এখনো কোনো সদস্য নেই",
-  "quizres_hint": "যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।"
+  "quizres_hint": "যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।",
+  "quiz_upcoming": "আসন্ন কুইজ",
+  "quiz_today": "আজ",
+  "quiz_tomorrow": "আগামীকাল",
+  "quiz_in_days": "%n% দিন পর",
+  "quiz_live_now": "এখন চলছে",
+  "quiz_join_live": "লাইভ কুইজে যোগ দিন",
+  "quiz_practice": "আগে অনুশীলন করুন"
 }

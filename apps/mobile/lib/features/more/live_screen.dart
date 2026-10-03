@@ -7,6 +7,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../api/api_client.dart';
 import '../../core/bn_digits.dart';
@@ -150,6 +151,17 @@ class LiveScreen extends ConsumerWidget {
                                   },
                                 ),
                               ),
+                        // AMOL-17: a scheduled quiz that is live → the usrah room
+                        if (p.status == 'live' && (p.quizId ?? '').isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: SLSpacing.s8),
+                            child: FilledButton.icon(
+                              key: ValueKey('live_quiz_join_${p.id}'),
+                              icon: const Icon(PhosphorIconsRegular.question, size: 18),
+                              label: Text(context.t('quiz_join_live')),
+                              onPressed: () => context.push('/ilm/live-quiz'),
+                            ),
+                          ),
                         if (p.status == 'upcoming')
                           Padding(
                             padding: const EdgeInsets.only(top: SLSpacing.s8),

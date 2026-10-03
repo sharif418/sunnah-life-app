@@ -12,6 +12,7 @@ import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/widgets.dart';
+import 'upcoming_quizzes.dart';
 import '../../design/phosphor_icons.dart';
 
 /// Digit formatter following the app language (bn → Bengali numerals).
@@ -61,14 +62,17 @@ class QuizzesScreen extends ConsumerWidget {
             );
           }
           final attempts = attemptsAsync.valueOrNull;
+          // AMOL-17: scheduled live quizzes first, then the practice list
           return ListView.builder(
             padding: const EdgeInsets.all(SLSpacing.s16),
-            itemCount: quizzes.length,
-            itemBuilder: (context, i) => _quizCard(
-              context,
-              quizzes[i],
-              attempts?.where((a) => a.quizId == quizzes[i].id).toList(),
-            ),
+            itemCount: quizzes.length + 1,
+            itemBuilder: (context, i) => i == 0
+                ? const UpcomingQuizzesSection()
+                : _quizCard(
+                    context,
+                    quizzes[i - 1],
+                    attempts?.where((a) => a.quizId == quizzes[i - 1].id).toList(),
+                  ),
           );
         },
       ),

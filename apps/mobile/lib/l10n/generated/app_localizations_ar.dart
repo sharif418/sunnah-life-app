@@ -2079,4 +2079,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quizres_hint => 'شجّع من لم يشارك بعد — الاختبارات في قسم العلم.';
+
+  @override
+  String get quiz_upcoming => 'الاختبارات القادمة';
+
+  @override
+  String get quiz_today => 'اليوم';
+
+  @override
+  String get quiz_tomorrow => 'غدًا';
+
+  @override
+  String get quiz_in_days => 'بعد %n% أيام';
+
+  @override
+  String get quiz_live_now => 'مباشر الآن';
+
+  @override
+  String get quiz_join_live => 'انضم إلى الاختبار المباشر';
+
+  @override
+  String get quiz_practice => 'تدرّب أولًا';
 }

@@ -74,6 +74,7 @@ function ProgramCard({ p, editable }: { p: LiveProgramItem; editable?: boolean }
           {femaleOnly ? (
             <Badge variant="gold">শুধুমাত্র নারীদের সেশন — প্রকাশ্য লিংক নেই</Badge>
           ) : null}
+          {p.quizId ? <Badge variant="outline">লাইভ কুইজ</Badge> : null}
           {p.youtubeId && !femaleOnly && p.status !== "upcoming" ? (
             <Badge variant="outline">YouTube (unlisted)</Badge>
           ) : null}
@@ -158,6 +159,13 @@ function LiveProgramDialog({
   const [youtubeId, setYoutubeId] = React.useState("");
   const [gender, setGender] = React.useState<Gender>("M");
   const [recordingUrl, setRecordingUrl] = React.useState("");
+  const [quizId, setQuizId] = React.useState("");
+  // AMOL-17: the quiz pack, for "this program is a live quiz"
+  const quizzes = useQuery({
+    queryKey: ["content", "quizzes"],
+    queryFn: () => api.contentPack("quizzes"),
+    select: (r) => ((r.data as { quizzes?: { id: string; titleBn: string }[] })?.quizzes ?? []),
+  });
 
   // sync form on target change — render-phase adjustment
   const [syncedFor, setSyncedFor] = React.useState<string | null>(initial?.id ?? null);
@@ -171,6 +179,7 @@ function LiveProgramDialog({
     setYoutubeId(initial?.youtubeId ?? "");
     setGender(initial?.gender ?? "M");
     setRecordingUrl(initial?.recordingUrl ?? "");
+    setQuizId(initial?.quizId ?? "");
   }
 
   const save = useMutation({
@@ -184,6 +193,7 @@ function LiveProgramDialog({
         youtubeId: youtubeId.trim() || null,
         gender,
         recordingUrl: recordingUrl.trim() || null,
+        quizId: quizId || null,
       };
       if (initial) return api.patchLiveProgram(initial.id, payload);
       return api.createLiveProgram(payload);
@@ -263,6 +273,20 @@ function LiveProgramDialog({
           <Select id="live-gender" value={gender} onChange={(e) => setGender(e.target.value as Gender)}>
             <option value="M">সাধারণ (সবাই)</option>
             <option value="F">শুধুমাত্র নারী</option>
+          </Select>
+        </Field>
+        <Field
+          label="লাইভ কুইজ (ঐচ্ছিক)"
+          htmlFor="live-quiz"
+          hint="কুইজ বাছলে অ্যাপে ‘আসন্ন কুইজ’ তালিকায় দেখাবে, লাইভ চলাকালে সদস্যরা সরাসরি অংশ নিতে পারবেন"
+        >
+          <Select id="live-quiz" value={quizId} onChange={(e) => setQuizId(e.target.value)}>
+            <option value="">কুইজ নয় — সাধারণ প্রোগ্রাম</option>
+            {(quizzes.data ?? []).map((q) => (
+              <option key={q.id} value={q.id}>
+                {q.titleBn}
+              </option>
+            ))}
           </Select>
         </Field>
         <Field label="বিবরণ (ঐচ্ছিক)" htmlFor="live-desc">

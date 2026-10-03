@@ -2099,4 +2099,25 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get quizres_hint =>
       'যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।';
+
+  @override
+  String get quiz_upcoming => 'আসন্ন কুইজ';
+
+  @override
+  String get quiz_today => 'আজ';
+
+  @override
+  String get quiz_tomorrow => 'আগামীকাল';
+
+  @override
+  String get quiz_in_days => '%n% দিন পর';
+
+  @override
+  String get quiz_live_now => 'এখন চলছে';
+
+  @override
+  String get quiz_join_live => 'লাইভ কুইজে যোগ দিন';
+
+  @override
+  String get quiz_practice => 'আগে অনুশীলন করুন';
 }

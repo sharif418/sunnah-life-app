@@ -675,5 +675,12 @@
   "quizres_not_yet": "Not yet",
   "quizres_tries": "tried %n%×",
   "quizres_no_members": "No members in the usrah yet",
-  "quizres_hint": "Encourage those who haven't yet — quizzes are in the Ilm section."
+  "quizres_hint": "Encourage those who haven't yet — quizzes are in the Ilm section.",
+  "quiz_upcoming": "Upcoming quizzes",
+  "quiz_today": "Today",
+  "quiz_tomorrow": "Tomorrow",
+  "quiz_in_days": "in %n% days",
+  "quiz_live_now": "Live now",
+  "quiz_join_live": "Join the live quiz",
+  "quiz_practice": "Practise first"
 }

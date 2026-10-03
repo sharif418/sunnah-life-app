@@ -20,6 +20,7 @@ type ProgramRow = {
   gender: string;
   status: string;
   recordingUrl: string | null;
+  quizId: string | null;
 };
 
 function programStatus(p: ProgramRow, now: Date): LiveProgramItem["status"] {
@@ -63,6 +64,7 @@ export class LiveService {
         gender: p.gender as Gender,
         status: programStatus(p, now),
         recordingUrl: p.recordingUrl,
+        quizId: p.quizId,
       }))
       .sort((a, b) => {
         const r = rank[a.status] - rank[b.status];

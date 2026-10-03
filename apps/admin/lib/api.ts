@@ -329,6 +329,8 @@ export interface LiveProgramItem {
   gender: Gender;
   status: "upcoming" | "live" | "past";
   recordingUrl: string | null;
+  /** AMOL-17: set when the program is a scheduled live quiz. */
+  quizId?: string | null;
 }
 
 export interface ReminderItem {
@@ -379,6 +381,7 @@ export interface LiveProgramInput {
   youtubeId?: string | null;
   gender?: Gender;
   recordingUrl?: string | null;
+  quizId?: string | null;
 }
 
 export interface GoalItem {

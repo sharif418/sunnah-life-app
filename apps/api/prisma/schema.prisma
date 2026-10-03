@@ -409,6 +409,7 @@ model LiveProgram {
   gender       String    @default("M") // audience gender scope
   status       String    @default("upcoming") // upcoming | live | past
   recordingUrl String?
+  quizId       String? // AMOL-17: a scheduled live quiz (packages/content quizzes.json id)
   createdAt    DateTime  @default(now())
 }
 

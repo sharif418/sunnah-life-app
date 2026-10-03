@@ -358,3 +358,34 @@ describe("B4 — live-quiz room token", () => {
     expect(verifyQuizToken("garbage")).toBeNull();
   });
 });
+
+describe("AMOL-17 — a live program can be a scheduled quiz", () => {
+  it("admin schedules a quiz program; /api/live carries quizId; an unknown quiz is a 400", async () => {
+    const startsAt = new Date(Date.now() + 5 * 86400_000).toISOString();
+    const created = await http()
+      .post("/api/admin/live")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ titleBn: "পরীক্ষামূলক লাইভ কুইজ", startsAt, quizId: "quiz-aqeedah" })
+      .expect(201);
+    expect(created.body.program.quizId).toBe("quiz-aqeedah");
+
+    const list = await http().get("/api/live").expect(200);
+    const mine = (list.body.programs as { id: string; quizId: string | null }[]).find((p) => p.id === created.body.program.id);
+    expect(mine?.quizId).toBe("quiz-aqeedah");
+
+    await http()
+      .post("/api/admin/live")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ titleBn: "ভুল কুইজ", startsAt, quizId: "quiz-nope" })
+      .expect(400);
+
+    // un-scheduling the quiz keeps the program
+    const patched = await http()
+      .patch(`/api/admin/live/${created.body.program.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ quizId: null })
+      .expect(200);
+    expect(patched.body.program.quizId).toBeNull();
+    await http().delete(`/api/admin/live/${created.body.program.id}`).set("Authorization", `Bearer ${adminToken}`).expect(200);
+  });
+});

@@ -47,6 +47,7 @@ class LiveProgramItem {
     required this.gender,
     required this.status,
     this.recordingUrl,
+    this.quizId,
   });
   final String id;
   final String titleBn;
@@ -59,6 +60,9 @@ class LiveProgramItem {
   final String status; // upcoming | live | past
   final String? recordingUrl;
 
+  /// AMOL-17: set when the program is a scheduled live quiz.
+  final String? quizId;
+
   factory LiveProgramItem.fromJson(Map<String, dynamic> j) => LiveProgramItem(
     id: j['id'] as String,
     titleBn: j['titleBn'] as String? ?? '',
@@ -70,5 +74,6 @@ class LiveProgramItem {
     gender: GenderJson.fromJson(j['gender'] as String? ?? 'M'),
     status: j['status'] as String? ?? 'upcoming',
     recordingUrl: j['recordingUrl'] as String?,
+    quizId: j['quizId'] as String?,
   );
 }

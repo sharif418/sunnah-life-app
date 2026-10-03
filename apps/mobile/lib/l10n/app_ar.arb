@@ -675,5 +675,12 @@
   "quizres_not_yet": "لم يشارك بعد",
   "quizres_tries": "%n% مرات",
   "quizres_no_members": "لا يوجد أعضاء في الأسرة بعد",
-  "quizres_hint": "شجّع من لم يشارك بعد — الاختبارات في قسم العلم."
+  "quizres_hint": "شجّع من لم يشارك بعد — الاختبارات في قسم العلم.",
+  "quiz_upcoming": "الاختبارات القادمة",
+  "quiz_today": "اليوم",
+  "quiz_tomorrow": "غدًا",
+  "quiz_in_days": "بعد %n% أيام",
+  "quiz_live_now": "مباشر الآن",
+  "quiz_join_live": "انضم إلى الاختبار المباشر",
+  "quiz_practice": "تدرّب أولًا"
 }

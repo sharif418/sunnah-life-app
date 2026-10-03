@@ -2095,4 +2095,25 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get quizres_hint =>
       'Encourage those who haven\'t yet — quizzes are in the Ilm section.';
+
+  @override
+  String get quiz_upcoming => 'Upcoming quizzes';
+
+  @override
+  String get quiz_today => 'Today';
+
+  @override
+  String get quiz_tomorrow => 'Tomorrow';
+
+  @override
+  String get quiz_in_days => 'in %n% days';
+
+  @override
+  String get quiz_live_now => 'Live now';
+
+  @override
+  String get quiz_join_live => 'Join the live quiz';
+
+  @override
+  String get quiz_practice => 'Practise first';
 }

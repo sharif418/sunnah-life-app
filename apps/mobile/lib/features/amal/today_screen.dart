@@ -29,6 +29,7 @@ import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
 import '../dawah/dawah_journey.dart' show LatestReviewCard, latestReviewFor;
+import '../ilm/upcoming_quizzes.dart' show UpcomingQuizzesSection;
 import 'amal_widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -220,6 +221,9 @@ class _TodayView extends ConsumerWidget {
 
         // ── what is due right now ─────────────────────────────────────────
         _PendingCard(today: today, defs: todayDefs, bn: bn),
+
+        // AMOL-17: the next scheduled quiz (nothing when none is planned)
+        const UpcomingQuizzesSection(limit: 1),
 
         // ── the paper diary, group by group ───────────────────────────────
         for (final group in paper) ...[

@@ -4155,6 +4155,48 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।'**
   String get quizres_hint;
+
+  /// No description provided for @quiz_upcoming.
+  ///
+  /// In bn, this message translates to:
+  /// **'আসন্ন কুইজ'**
+  String get quiz_upcoming;
+
+  /// No description provided for @quiz_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ'**
+  String get quiz_today;
+
+  /// No description provided for @quiz_tomorrow.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগামীকাল'**
+  String get quiz_tomorrow;
+
+  /// No description provided for @quiz_in_days.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n% দিন পর'**
+  String get quiz_in_days;
+
+  /// No description provided for @quiz_live_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন চলছে'**
+  String get quiz_live_now;
+
+  /// No description provided for @quiz_join_live.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ কুইজে যোগ দিন'**
+  String get quiz_join_live;
+
+  /// No description provided for @quiz_practice.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগে অনুশীলন করুন'**
+  String get quiz_practice;
 }
 
 class _AppLocalizationsDelegate
