@@ -458,7 +458,17 @@ export default function UsersPage() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle>ব্যবহারকারী ব্যবস্থাপনা</CardTitle>
+          <CardTitle className="flex flex-wrap items-center justify-between gap-2">
+            ব্যবহারকারী ব্যবস্থাপনা
+            {fullAdmin ? (
+              <Link
+                href="/users/import"
+                className="focus-ring inline-flex min-h-9 items-center rounded-md border border-border px-3 text-sm font-semibold hover:bg-primary-soft"
+              >
+                CSV থেকে সদস্য ইমপোর্ট
+              </Link>
+            ) : null}
+          </CardTitle>
           <CardDescription>
             নাম · ফোন · সদস্য কোড দিয়ে অনুসন্ধান — সারিতে ক্লিক করে সম্পাদনা করুন (ভূমিকা/লিঙ্গ পরিবর্তন
             অডিট-লগড)

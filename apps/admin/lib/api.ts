@@ -295,12 +295,22 @@ export interface AssessmentSection {
   titleBn: string;
   criteria: AssessmentCriterion[];
 }
+/** The paper form's verbatim metadata (instructions, categories, …). */
+export interface AssessmentTemplateMeta {
+  instructionsBn?: string | null;
+  categories?: { id: number; titleBn: string; descriptionBn?: string }[] | null;
+  categoriesFooterBn?: string | null;
+  scaleNoteBn?: string | null;
+  summarySpec?: { noteBn?: string; columnsBn?: string[] } | null;
+  overallCommentLabelBn?: string | null;
+}
 export interface AssessmentTemplate {
   key: string;
   version: number;
   titleBn: string;
   titleEn: string;
   sections: AssessmentSection[];
+  meta?: AssessmentTemplateMeta;
 }
 export interface AssessmentDetail {
   id: string;
@@ -329,6 +339,8 @@ export interface LiveProgramItem {
   gender: Gender;
   status: "upcoming" | "live" | "past";
   recordingUrl: string | null;
+  /** AMOL-17: set when the program is a scheduled live quiz. */
+  quizId?: string | null;
 }
 
 export interface ReminderItem {
@@ -370,6 +382,13 @@ export interface AdminTemplateItem {
 }
 
 /** B6 — admin payload for live program create/edit. */
+export type ImportAction = "create" | "update" | "skip" | "error";
+export interface MemberImportResponse {
+  dryRun: boolean;
+  results: { row: number; name: string; phone: string; action: ImportAction; message: string }[];
+  totals: Record<ImportAction, number>;
+}
+
 export interface LiveProgramInput {
   titleBn: string;
   descBn?: string | null;
@@ -379,6 +398,7 @@ export interface LiveProgramInput {
   youtubeId?: string | null;
   gender?: Gender;
   recordingUrl?: string | null;
+  quizId?: string | null;
 }
 
 export interface GoalItem {
@@ -574,6 +594,8 @@ export const api = {
   // admin
   overview: () => call<AdminOverview>("/api/admin/overview"),
   users: (q: string) => call<{ users: User[] }>(`/api/admin/users?q=${encodeURIComponent(q)}`),
+  importUsers: (rows: Record<string, string>[], dryRun: boolean, offset: number) =>
+    call<MemberImportResponse>("/api/admin/users/import", { method: "POST", json: { rows, dryRun, offset } }),
   patchUser: (dto: {
     userId: string;
     role?: Role;

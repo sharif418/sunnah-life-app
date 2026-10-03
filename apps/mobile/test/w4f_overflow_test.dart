@@ -364,7 +364,7 @@ void main() {
     smallPhone(tester);
     final container = await boot(tester, const AmalHubScreen());
 
-    expect(find.text('আজকের আমল'), findsOneWidget);
+    expect(find.text('আজকের মুহাসাবা'), findsOneWidget);
     expect(tester.takeException(), isNull);
     for (var i = 0; i < 8; i++) {
       await tester.drag(_verticalScrollable(), const Offset(0, -400));
@@ -389,6 +389,8 @@ void main() {
     );
 
     // The overview: member code card, requirements, share CTA…
+    // the invite card sits below the journey + requirements now
+    await scrollTo(tester, find.text('DS-000004'));
     expect(find.text('DS-000004'), findsWidgets);
     expect(tester.takeException(), isNull);
     // …down to the deep tree node (depth 3 forces every indent level).
@@ -520,6 +522,7 @@ void main() {
       ],
     );
 
+    await scrollTo(tester, find.byKey(const Key('dawahShareCardButton')));
     await tester.tap(find.byKey(const Key('dawahShareCardButton')));
     await tester.pumpAndSettle();
     expect(find.byType(ReferralCard), findsOneWidget);

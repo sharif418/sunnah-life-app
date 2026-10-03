@@ -14,12 +14,14 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sunnah_life/api/fallback_catalog.dart' show fallbackDefinitions;
+import 'package:sunnah_life/core/diary_layout.dart';
 import 'package:sunnah_life/core/amal_engine.dart' show isAmalDay;
 import 'package:sunnah_life/core/bn_digits.dart';
 import 'package:sunnah_life/core/date_keys.dart';
 import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/design/design_tokens.dart';
-import 'package:sunnah_life/features/amal/amal_widgets.dart' show CompletionRing;
+import 'package:sunnah_life/features/amal/amal_widgets.dart'
+    show CompletionRing;
 import 'package:sunnah_life/features/home/home_screen.dart';
 import 'package:sunnah_life/l10n/app_strings.dart';
 import 'package:sunnah_life/models/domain.dart';
@@ -38,10 +40,10 @@ void main() {
   /// Deterministic remote packs: empty courses/quizzes/live (individual
   /// tests override live with a program).
   List<Override> quietRemote() => [
-        coursePackProvider.overrideWith((ref) async => <CourseSummary>[]),
-        quizPackProvider.overrideWith((ref) async => <Quiz>[]),
-        liveProvider.overrideWith((ref) async => <LiveProgramItem>[]),
-      ];
+    coursePackProvider.overrideWith((ref) async => <CourseSummary>[]),
+    quizPackProvider.overrideWith((ref) async => <Quiz>[]),
+    liveProvider.overrideWith((ref) async => <LiveProgramItem>[]),
+  ];
 
   Future<ProviderContainer> bootHome(
     WidgetTester tester,
@@ -75,53 +77,55 @@ void main() {
   }
 
   testWidgets(
-      'countdown ring hero renders and the waqt state flows every second',
-      (tester) async {
-    final db = makeDb();
-    final container = await bootHome(tester, db, extra: quietRemote());
+    'countdown ring hero renders and the waqt state flows every second',
+    (tester) async {
+      final db = makeDb();
+      final container = await bootHome(tester, db, extra: quietRemote());
 
-    // The hero card + its painted ring + the countdown text + the
-    // in-page-schedule affordance all exist.
-    final hero = find.byKey(const ValueKey('home_ring_hero'));
-    expect(hero, findsOneWidget);
-    // The RING is the hero's only painter-driven CustomPaint (the W4f
-    // khatam texture paints through foregroundPainter, not painter).
-    expect(
-      find.descendant(
-        of: hero,
-        matching: find.byWidgetPredicate(
-          (w) => w is CustomPaint && w.painter != null,
+      // The hero card + its painted ring + the countdown text + the
+      // in-page-schedule affordance all exist.
+      final hero = find.byKey(const ValueKey('home_ring_hero'));
+      expect(hero, findsOneWidget);
+      // The RING is the hero's only painter-driven CustomPaint (the W4f
+      // khatam texture paints through foregroundPainter, not painter).
+      expect(
+        find.descendant(
+          of: hero,
+          matching: find.byWidgetPredicate(
+            (w) => w is CustomPaint && w.painter != null,
+          ),
         ),
-      ),
-      findsOneWidget,
-    );
-    final countdown = find.byKey(const ValueKey('home_countdown_text'));
-    expect(countdown, findsOneWidget);
-    expect(find.byKey(const ValueKey('home_to_schedule')), findsOneWidget);
-    expect(find.text(S.tr(Lang.bn, 'prayer_schedule')), findsOneWidget);
+        findsOneWidget,
+      );
+      final countdown = find.byKey(const ValueKey('home_countdown_text'));
+      expect(countdown, findsOneWidget);
+      expect(find.byKey(const ValueKey('home_to_schedule')), findsOneWidget);
+      expect(find.text(S.tr(Lang.bn, 'prayer_schedule')), findsOneWidget);
 
-    // The tick: pumping two seconds fires the 1s ticker twice and the
-    // provider re-emits NEW state each fire (a fresh PrayerNow carrying
-    // the advanced nowMinutes — the ring fraction + HH:MM:SS both derive
-    // from it). NB: DateTime.now() is NOT faked by the test binding (only
-    // timers are), so the rendered string is compared against the latest
-    // state's own countdownText instead of differing across a fake second.
-    final s0 = container.read(prayerProvider)!;
-    await tester.pump(const Duration(seconds: 2));
-    final s1 = container.read(prayerProvider)!;
-    expect(identical(s0, s1), isFalse); // per-second re-emission
-    expect(s1.nowMinutes, greaterThanOrEqualTo(s0.nowMinutes));
-    expect(
-      (tester.widget(countdown) as Text).data,
-      s1.countdownText(bengali: true),
-    );
+      // The tick: pumping two seconds fires the 1s ticker twice and the
+      // provider re-emits NEW state each fire (a fresh PrayerNow carrying
+      // the advanced nowMinutes — the ring fraction + HH:MM:SS both derive
+      // from it). NB: DateTime.now() is NOT faked by the test binding (only
+      // timers are), so the rendered string is compared against the latest
+      // state's own countdownText instead of differing across a fake second.
+      final s0 = container.read(prayerProvider)!;
+      await tester.pump(const Duration(seconds: 2));
+      final s1 = container.read(prayerProvider)!;
+      expect(identical(s0, s1), isFalse); // per-second re-emission
+      expect(s1.nowMinutes, greaterThanOrEqualTo(s0.nowMinutes));
+      expect(
+        (tester.widget(countdown) as Text).data,
+        s1.countdownText(bengali: true),
+      );
 
-    container.dispose();
-    await db.close();
-  });
+      container.dispose();
+      await db.close();
+    },
+  );
 
-  testWidgets('most-used section: fresh guest sees the empty state',
-      (tester) async {
+  testWidgets('most-used section: fresh guest sees the empty state', (
+    tester,
+  ) async {
     final db = makeDb();
     final container = await bootHome(tester, db, extra: quietRemote());
 
@@ -133,8 +137,7 @@ void main() {
     await db.close();
   });
 
-  testWidgets(
-      'most-used section: seeded history renders the card + days chip, '
+  testWidgets('most-used section: seeded history renders the card + days chip, '
       'and আজ লিখুন quick-logs with source quick:home', (tester) async {
     final db = makeDb();
     final today = dateKey(DateTime.now());
@@ -180,8 +183,9 @@ void main() {
     await db.close();
   });
 
-  testWidgets('quick-access grid navigates to its destinations',
-      (tester) async {
+  testWidgets('quick-access grid navigates to its destinations', (
+    tester,
+  ) async {
     final db = makeDb();
     final container = ProviderContainer(
       overrides: [dbProvider.overrideWithValue(db), ...quietRemote()],
@@ -193,27 +197,23 @@ void main() {
         GoRoute(path: '/', builder: (_, _) => const HomeScreen()),
         GoRoute(
           path: '/ilm/quran',
-          builder: (_, _) => const Scaffold(
-            body: Center(child: Text('QURAN_ROUTE_MARKER')),
-          ),
+          builder: (_, _) =>
+              const Scaffold(body: Center(child: Text('QURAN_ROUTE_MARKER'))),
         ),
         GoRoute(
           path: '/ilm/duas',
-          builder: (_, _) => const Scaffold(
-            body: Center(child: Text('DUAS_ROUTE_MARKER')),
-          ),
+          builder: (_, _) =>
+              const Scaffold(body: Center(child: Text('DUAS_ROUTE_MARKER'))),
         ),
         GoRoute(
           path: '/amal',
-          builder: (_, _) => const Scaffold(
-            body: Center(child: Text('AMAL_ROUTE_MARKER')),
-          ),
+          builder: (_, _) =>
+              const Scaffold(body: Center(child: Text('AMAL_ROUTE_MARKER'))),
         ),
         GoRoute(
           path: '/more/live',
-          builder: (_, _) => const Scaffold(
-            body: Center(child: Text('LIVE_ROUTE_MARKER')),
-          ),
+          builder: (_, _) =>
+              const Scaffold(body: Center(child: Text('LIVE_ROUTE_MARKER'))),
         ),
       ],
     );
@@ -229,16 +229,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // All four tiles render (scrolled into view first — lazy list).
+    // The HOME-05 set renders (scrolled into view first — lazy list):
+    // সালাত পরবর্তী দোয়া, সকাল-সন্ধ্যার যিকির, কুরআন, মুহাসাবা চেকলিস্ট,
+    // আমল ট্র্যাকার, লাইভ.
     await scrollTo(tester, find.text(S.tr(Lang.bn, 'quick_access')));
     for (final title in [
+      S.tr(Lang.bn, 'quick_post_salah'),
+      S.tr(Lang.bn, 'quick_adhkar'),
       S.tr(Lang.bn, 'ilm_quran'),
-      S.tr(Lang.bn, 'ilm_duas'),
-      S.tr(Lang.bn, 'tab_amal'),
+      S.tr(Lang.bn, 'quick_muhasaba'),
+      S.tr(Lang.bn, 'quick_tracker'),
       S.tr(Lang.bn, 'more_live'),
     ]) {
+      await scrollTo(tester, find.text(title));
       expect(find.text(title), findsOneWidget);
     }
+    await scrollTo(tester, find.text(S.tr(Lang.bn, 'ilm_quran')));
 
     // Tap the Qur'an tile → the route mounts its destination.
     await tester.tap(find.text(S.tr(Lang.bn, 'ilm_quran')));
@@ -249,8 +255,9 @@ void main() {
     await db.close();
   });
 
-  testWidgets('amal preview ring shows today\'s completed/total from seed',
-      (tester) async {
+  testWidgets('amal preview ring shows today\'s completed/total from seed', (
+    tester,
+  ) async {
     final db = makeDb();
     final today = dateKey(DateTime.now());
     await db.writeEntry(
@@ -263,11 +270,13 @@ void main() {
 
     final container = await bootHome(tester, db, extra: quietRemote());
 
-    // The same grouping rule the screen uses (guest = fallback catalog,
-    // effective hijri adjust 0 in tests).
-    final total = fallbackDefinitions()
-        .where((d) => isAmalDay(d, today, hijriAdjust: 0))
-        .length;
+    // The same rule the screen uses: today's PAPER diary rows (guest =
+    // fallback catalog, effective hijri adjust 0 in tests).
+    final total = layoutDiary(
+      fallbackDefinitions()
+          .where((d) => isAmalDay(d, today, hijriAdjust: 0))
+          .toList(),
+    ).paper.fold<int>(0, (n, g) => n + g.rows.length);
 
     await scrollTo(tester, find.byKey(const ValueKey('home_amal_preview')));
     expect(find.byType(CompletionRing), findsOneWidget);
@@ -316,15 +325,58 @@ void main() {
     expect(find.text('পুরনো পর্ব'), findsNothing);
     expect(find.byKey(const ValueKey('home_live_chip')), findsOneWidget);
     expect(find.text(S.tr(Lang.bn, 'live_next')), findsOneWidget);
-    expect(find.text('2026-10-01 20:00'), findsOneWidget);
+    // local time, Bengali (the old raw '2026-10-01 20:00' was the UTC clock)
+    expect(find.textContaining('অক্টোবর ·'), findsOneWidget);
     expect(find.text(S.tr(Lang.bn, 'live_join_hint')), findsOneWidget);
 
     container.dispose();
     await db.close();
   });
 
-  testWidgets('live preview section hides when nothing is upcoming',
-      (tester) async {
+  testWidgets('HOME-10: a program live NOW wins, with এখন লাইভ + watch', (
+    tester,
+  ) async {
+    final db = makeDb();
+    final container = await bootHome(
+      tester,
+      db,
+      extra: [
+        ...quietRemote(),
+        liveProvider.overrideWith(
+          (ref) async => [
+            const LiveProgramItem(
+              id: 'up-1',
+              titleBn: 'আগামী পর্ব',
+              startsAt: '2026-10-01T20:00:00.000Z',
+              gender: Gender.m,
+              status: 'upcoming',
+            ),
+            const LiveProgramItem(
+              id: 'live-now',
+              titleBn: 'জুমার আলোচনা',
+              startsAt: '2026-09-30T08:00:00.000Z',
+              gender: Gender.m,
+              status: 'live',
+              youtubeId: 'abc123',
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await scrollTo(tester, find.byKey(const ValueKey('home_live_preview')));
+    expect(find.text('জুমার আলোচনা'), findsOneWidget);
+    expect(find.text('আগামী পর্ব'), findsNothing);
+    expect(find.text(S.tr(Lang.bn, 'live_now')), findsOneWidget);
+    expect(find.byKey(const ValueKey('home_live_watch')), findsOneWidget);
+
+    container.dispose();
+    await db.close();
+  });
+
+  testWidgets('live preview section hides when nothing is upcoming', (
+    tester,
+  ) async {
     final db = makeDb();
     final container = await bootHome(
       tester,
@@ -351,10 +403,7 @@ void main() {
       tester,
       find.textContaining(S.tr(Lang.bn, 'prayer_offline_chip')),
     );
-    expect(
-      find.byKey(const ValueKey('home_live_preview')),
-      findsNothing,
-    );
+    expect(find.byKey(const ValueKey('home_live_preview')), findsNothing);
     expect(find.text(S.tr(Lang.bn, 'live_next')), findsNothing);
 
     container.dispose();

@@ -1,7 +1,9 @@
 /// আমল — Today view: the paper-diary Muhasaba screen. Definitions from the
-/// API (signed in) with the bundled fallback for guests; grouped by
-/// category; cadence-aware rows; optimistic writes + sync badge; streak +
-/// completion rings; links to Month grid / Habit builder / Self-tests.
+/// API (signed in) with the bundled fallback for guests, laid out in the
+/// PAPER diary's groups, order and wording (core/diary_layout.dart) with the
+/// app's extra amals in a collapsible card; "এখন যা বাকি" on top; a fard
+/// prayer's row opens when its waqt begins; optimistic writes + sync badge;
+/// streak + progress ring; links to Month grid / Habit builder / Self-tests.
 library;
 
 import 'package:flutter/material.dart';
@@ -13,16 +15,21 @@ import '../../core/amal_engine.dart';
 import '../../core/bn_digits.dart';
 import '../../core/calendars.dart';
 import '../../core/date_keys.dart';
+import '../../core/prayer_engine.dart' show PrayerKey;
+import '../../core/diary_layout.dart';
 import '../../design/design_tokens.dart';
 import '../shared/contact_fab.dart' show kContactFabClearance;
 import '../../db/database.dart' show CustomChecklistItem;
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
 import '../../state/checklist_state.dart';
+import '../../state/prayer_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
+import '../dawah/dawah_journey.dart' show LatestReviewCard, latestReviewFor;
+import '../ilm/upcoming_quizzes.dart' show UpcomingQuizzesSection;
 import 'amal_widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -68,12 +75,16 @@ class _TodayView extends ConsumerWidget {
     final amal = ref.watch(amalProvider);
     final today = dateKey(ref.watch(headerNowProvider));
     final bn = context.isBn;
+    final theme = Theme.of(context);
 
     if (defs.isEmpty) {
       return ListView(
         children: [
           const SizedBox(height: SLSpacing.s32),
-          EmptyState(message: context.t('amal_no_defs'), icon: PhosphorIconsRegular.bookOpen),
+          EmptyState(
+            message: context.t('amal_no_defs'),
+            icon: PhosphorIconsRegular.bookOpen,
+          ),
         ],
       );
     }
@@ -94,29 +105,25 @@ class _TodayView extends ConsumerWidget {
         for (final e in (amal.entries[day] ?? {}).values) e,
     ];
     final streak = currentStreak(entries, defs, profile.category, today);
-    final completion = completionPct(
-      entries.where((e) => e.date == today).toList(),
-      todayDefs,
-      profile.category,
-      [today],
-    );
-    final byCat = completionByCategory(
-      entries.where((e) => e.date == today).toList(),
-      todayDefs,
-      profile.category,
-      today,
-    );
 
-    // Group for display preserving catalog order — W4c: the salah amals
-    // split into ফরয / সালাতের সুন্নত / নফল presentation groups
-    // (amalGroupKey); every other category keeps its own SectionHeader.
-    final groups = <String, List<AmalDefinition>>{};
-    for (final d in todayDefs) {
-      groups.putIfAbsent(amalGroupKey(d), () => []).add(d);
-    }
+    // The paper diary is the backbone: its groups, order and wording
+    // (lib/core/diary_layout.dart); everything else the app tracks lives in
+    // the collapsible অতিরিক্ত আমল card — nothing is dropped.
+    final (:paper, :extras) = layoutDiary(todayDefs);
+    bool isDone(AmalDefinition d) =>
+        amalPoints(amal.entry(today, d.key)?.value, d, profile.category) >= 1;
+    final paperRows = [for (final g in paper) ...g.rows];
+    final doneCount = paperRows.where((r) => isDone(r.def)).length;
+    final extrasDone = extras.where(isDone).length;
+
     // W4c: the tilawat beginner ramp counts days of tilawat-minutes history
     // LOCALLY from the diary entries — no backend involvement.
     final tilawatDays = tilawatMinutesDaysDone(entries);
+    bool inRamp(AmalDefinition d) =>
+        d.key == kTilawatMinutesKey &&
+        tilawatDays < TilawatBeginnerCard.rampDays;
+
+    String num(int n) => bn ? toBn(n) : '$n';
 
     return ListView(
       // W5: scroll clear of the floating contact button (80dp) — it used
@@ -128,7 +135,7 @@ class _TodayView extends ConsumerWidget {
         kContactFabClearance,
       ),
       children: [
-        // Header: date + streak + sync
+        // ── title + today's progress ring ─────────────────────────────────
         Row(
           children: [
             Expanded(
@@ -136,193 +143,620 @@ class _TodayView extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    context.t('amal_today'),
-                    style: Theme.of(context).textTheme.headlineMedium
-                        ?.copyWith(fontWeight: FontWeight.w700),
+                    context.t('diary_title'),
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    formatDayHeaderBn(ref.watch(headerNowProvider), bengali: bn),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    formatDayHeaderBn(
+                      ref.watch(headerNowProvider),
+                      bengali: bn,
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
               ),
             ),
-            StreakBadge(days: streak, bengali: bn),
+            _DiaryRing(
+              done: doneCount,
+              total: paperRows.length,
+              label: context
+                  .t('diary_done_of')
+                  .replaceAll('%done%', num(doneCount))
+                  .replaceAll('%total%', num(paperRows.length)),
+              text: '${num(doneCount)}/${num(paperRows.length)}',
+            ),
           ],
         ),
-
-        // W4c: gender-scoped percentile band — compact card under the streak
-        // header; hidden entirely while the flag is off / guest / 404.
-        const LeaderboardBandCard(),
         const SizedBox(height: SLSpacing.s8),
-
-        // Quick links
-        Wrap(
-          spacing: SLSpacing.s8,
-          runSpacing: SLSpacing.s8,
+        Row(
           children: [
-            ActionChip(
-              avatar: const Icon(PhosphorIconsRegular.squaresFour, size: 18),
-              label: Text(context.t('amal_month')),
-              onPressed: () => context.push('/amal/month'),
-            ),
-            ActionChip(
-              avatar: const Icon(
-                PhosphorIconsFill.fire,
-                size: 18,
-              ),
-              label: Text(context.t('amal_habit_builder')),
-              onPressed: () => context.push('/amal/habit'),
-            ),
-            ActionChip(
-              avatar: const Icon(PhosphorIconsRegular.question, size: 18),
-              label: Text(context.t('amal_self_test')),
-              onPressed: () => context.push('/amal/self-test'),
-            ),
-            // W4c: আমার লক্ষ্য — propose → head approval → status chips.
-            ActionChip(
-              avatar: const Icon(PhosphorIconsRegular.flagBanner, size: 18),
-              label: Text(context.t('goals_title')),
-              onPressed: () => context.push('/amal/goals'),
+            StreakBadge(days: streak, bengali: bn),
+            const Spacer(),
+            TextButton.icon(
+              key: const ValueKey('diary_instructions_button'),
+              onPressed: () => showDiaryInstructions(context),
+              icon: const Icon(PhosphorIconsRegular.info, size: 18),
+              label: Text(context.t('diary_instructions')),
             ),
           ],
         ),
         const SizedBox(height: SLSpacing.s8),
 
-        // Completion + rings
-        AppCard(
-          child: Column(
+        // ── shortcuts: one swipeable row, never four stacked lines ────────
+        SizedBox(
+          height: 48,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            children: [
+              for (final (icon, label, path) in [
+                (PhosphorIconsRegular.squaresFour, 'amal_month', '/amal/month'),
+                (PhosphorIconsFill.fire, 'amal_habit_builder', '/amal/habit'),
+                (
+                  PhosphorIconsRegular.question,
+                  'amal_self_test',
+                  '/amal/self-test',
+                ),
+                (PhosphorIconsRegular.flagBanner, 'goals_title', '/amal/goals'),
+                // AMOL-15: the usrah's question board, for usrah members
+                if (ref.watch(authProvider).userOrNull?.usrahId != null)
+                  (PhosphorIconsRegular.chats, 'usrah_q_title', '/amal/questions'),
+              ])
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
+                  child: ActionChip(
+                    avatar: Icon(icon, size: 18),
+                    label: Text(context.t(label)),
+                    onPressed: () => context.push(path),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: SLSpacing.s12),
+
+        // ── what is due right now ─────────────────────────────────────────
+        _PendingCard(today: today, defs: todayDefs, bn: bn),
+
+        // AMOL-17: the next scheduled quiz (nothing when none is planned)
+        const UpcomingQuizzesSection(limit: 1),
+
+        // ── the paper diary, group by group ───────────────────────────────
+        for (final group in paper) ...[
+          _DiaryGroupHeader(
+            title: group.titleBn,
+            done: group.rows.where((r) => isDone(r.def)).length,
+            total: group.rows.length,
+            bn: bn,
+          ),
+          for (final row in group.rows.where((r) => inRamp(r.def)))
+            _TilawatBeginnerRow(
+              def: row.def,
+              today: today,
+              bn: bn,
+              daysDone: tilawatDays,
+            ),
+          if (group.rows.any((r) => !inRamp(r.def)))
+            _AmalGroupCard(
+              rows: [
+                for (final r in group.rows)
+                  if (!inRamp(r.def)) r,
+              ],
+              today: today,
+              bn: bn,
+            ),
+          const SizedBox(height: SLSpacing.s16),
+        ],
+
+        // the usrah head's latest weekly comment — feedback where the diary
+        // is kept (plain members never saw these: the review tab is under
+        // দাওয়াত, which they don't have)
+        ...switch (latestReviewFor(ref)) {
+          final review? => [
+            LatestReviewCard(review: review),
+            const SizedBox(height: SLSpacing.s16),
+          ],
+          _ => const <Widget>[],
+        },
+
+        // ── everything beyond the paper ───────────────────────────────────
+        if (extras.isNotEmpty) ...[
+          _ExtrasCard(
+            rows: [for (final d in extras) DiaryRow(d, null)],
+            subtitle: context
+                .t('diary_extras_sub')
+                .replaceAll('%done%', num(extrasDone))
+                .replaceAll('%total%', num(extras.length)),
+            today: today,
+            bn: bn,
+          ),
+          const SizedBox(height: SLSpacing.s16),
+        ],
+
+        // W4c: নিজের তালিকা — per-day custom checklist (local-only,
+        // offline-first; no API surface by design).
+        SectionHeader(
+          context.t('checklist_title'),
+          icon: PhosphorIconsRegular.listChecks,
+        ),
+        _CustomChecklistSection(today: today, bn: bn),
+
+        // W4c: gender-scoped percentile band — hidden entirely while the
+        // flag is off / guest / 404.
+        const LeaderboardBandCard(),
+        const SizedBox(height: SLSpacing.s16),
+
+        // privacy, stated where the data is entered
+        Container(
+          padding: const EdgeInsets.all(SLSpacing.s12),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.primaryContainer,
+            borderRadius: SLRadius.brMd,
+          ),
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          context.t('amal_completion'),
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        Text(
-                          bn ? '${toBn(completion)}%' : '$completion%',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                color: Theme.of(context).colorScheme.primary,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // V2: flexible + ellipsis — the long ধারাবাহিকতা label no
-                  // longer overflows on narrow phones.
-                  Flexible(
-                    child: Text(
-                      '${context.t('amal_streak')}: ${bn ? toBn(streak) : streak} ${context.t('amal_days')}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  ),
-                ],
+              Icon(
+                PhosphorIconsRegular.shieldCheck,
+                size: 20,
+                color: theme.colorScheme.primary,
               ),
-              const SizedBox(height: SLSpacing.s8),
-              SizedBox(
-                height: 86,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    for (final cat in byCat.keys)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          end: SLSpacing.s12,
-                        ),
-                        child: CompletionRing(
-                          pct: byCat[cat] ?? 0,
-                          label: context.t(cat.labelKey),
-                          bengali: bn,
-                        ),
-                      ),
-                  ],
+              const SizedBox(width: SLSpacing.s8),
+              Expanded(
+                child: Text(
+                  '${context.t('diary_privacy')} ${context.t('amal_locked_msg')}',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.primary,
+                  ),
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: SLSpacing.s4),
-
-        // Category sections (W4c group headers: ফরয / সালাতের সুন্নত / নফল / …)
-        // V2 density: every non-tristate amal is a compact ONE-LINE row and
-        // each category renders ONE card with dividers between rows — the
-        // diary reads in one thumb-scroll. The salat tristate rows keep
-        // their taller chips layout (they're good); the tilawat beginner
-        // ramp keeps its own prominent card while active.
-        for (final groupKey in groups.keys) ...[
-          SectionHeader(context.t(groupKey), icon: _groupIcon(groupKey)),
-          if (groups[groupKey]!.any(
-            (d) =>
-                d.key == kTilawatMinutesKey &&
-                tilawatDays < TilawatBeginnerCard.rampDays,
-          ))
-            _TilawatBeginnerRow(
-              def: groups[groupKey]!.firstWhere(
-                (d) => d.key == kTilawatMinutesKey,
-              ),
-              today: today,
-              bn: bn,
-              daysDone: tilawatDays,
-            ),
-          if (groups[groupKey]!.any(
-            (d) =>
-                !(d.key == kTilawatMinutesKey &&
-                    tilawatDays < TilawatBeginnerCard.rampDays),
-          ))
-            _AmalGroupCard(
-              defs: groups[groupKey]!
-                  .where(
-                    (d) =>
-                        !(d.key == kTilawatMinutesKey &&
-                            tilawatDays < TilawatBeginnerCard.rampDays),
-                  )
-                  .toList(),
-              today: today,
-              bn: bn,
-            ),
-          const SizedBox(height: SLSpacing.s4),
-        ],
-
-        // W4c: নিজের তালিকা — per-day custom checklist (local-only,
-        // offline-first; no API surface by design).
-        SectionHeader(context.t('checklist_title'), icon: PhosphorIconsRegular.listChecks),
-        _CustomChecklistSection(today: today, bn: bn),
-
-        const SizedBox(height: SLSpacing.s8),
-        Text(
-          context.t('amal_locked_msg'),
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodySmall
-              ?.copyWith(color: Theme.of(context).colorScheme.onSurfaceVariant),
-        ),
       ],
     );
   }
+}
 
-  static IconData _groupIcon(String key) => switch (key) {
-    'group_fard' => PhosphorIconsRegular.mosque,
-    'group_salah_sunnah' => PhosphorIconsRegular.star,
-    'group_nafl' => PhosphorIconsRegular.sunHorizon,
-    'cat_quran' => PhosphorIconsRegular.bookOpen,
-    'cat_dhikr' => PhosphorIconsRegular.plant,
-    'cat_akhlaq' => PhosphorIconsRegular.handHeart,
-    'cat_dawat' => PhosphorIconsRegular.megaphone,
-    'cat_lifestyle' => PhosphorIconsRegular.moon,
-    'cat_sunnah' => PhosphorIconsRegular.star,
-    _ => PhosphorIconsRegular.flagBanner,
-  };
+/// Today's progress over the paper rows — a small ring with "৯/২০".
+class _DiaryRing extends StatelessWidget {
+  const _DiaryRing({
+    required this.done,
+    required this.total,
+    required this.label,
+    required this.text,
+  });
+  final int done;
+  final int total;
+  final String label;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Semantics(
+      label: label,
+      child: ExcludeSemantics(
+        child: SizedBox(
+          width: 64,
+          height: 64,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox.expand(
+                child: CircularProgressIndicator(
+                  value: total == 0 ? 0 : done / total,
+                  strokeWidth: 6,
+                  strokeCap: StrokeCap.round,
+                  // the track is the BORDER token: visible in both themes
+                  // (the old muted track vanished on the dark card)
+                  backgroundColor: theme.colorScheme.outline,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              FittedBox(
+                child: Padding(
+                  padding: const EdgeInsets.all(SLSpacing.s8),
+                  child: Text(
+                    text,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// A paper group's header: its name in the paper's wording + "৩/৫".
+class _DiaryGroupHeader extends StatelessWidget {
+  const _DiaryGroupHeader({
+    required this.title,
+    required this.done,
+    required this.total,
+    required this.bn,
+  });
+  final String title;
+  final int done;
+  final int total;
+  final bool bn;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final complete = done == total;
+    return Padding(
+      padding: const EdgeInsets.only(
+        bottom: SLSpacing.s8,
+        left: SLSpacing.s4,
+        right: SLSpacing.s4,
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Semantics(
+              header: true,
+              child: Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+            ),
+          ),
+          if (complete)
+            Icon(
+              PhosphorIconsFill.checkCircle,
+              size: 18,
+              color: theme.colorScheme.primary,
+            )
+          else
+            Text(
+              bn ? '${toBn(done)}/${toBn(total)}' : '$done/$total',
+              style: theme.textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "এখন যা বাকি": the fard prayers whose waqt has begun but are unrecorded,
+/// and the morning/evening adhkar while their time is on — recordable right
+/// here, so the most common daily action is one tap from the top. Hidden
+/// when nothing is due (no nagging).
+class _PendingCard extends ConsumerWidget {
+  const _PendingCard({
+    required this.today,
+    required this.defs,
+    required this.bn,
+  });
+  final String today;
+  final List<AmalDefinition> defs;
+  final bool bn;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // select(): rebuild once a minute, not on every 1-second prayer tick
+    final clock = ref.watch(
+      prayerProvider.select(
+        (p) => p == null
+            ? null
+            : (
+                day: p.dateKey,
+                minute: p.nowMinutes.floor(),
+                fajr: p.times.fajr,
+                dhuhr: p.times.dhuhr,
+                asr: p.times.asr,
+                maghrib: p.times.maghrib,
+                isha: p.times.isha,
+              ),
+      ),
+    );
+    if (clock == null || clock.day != today) {
+      return const SizedBox.shrink();
+    }
+    final amal = ref.watch(amalProvider);
+    final now = clock.minute.toDouble();
+    final t = clock;
+    final byKey = {for (final d in defs) d.key: d};
+
+    final due = <AmalDefinition>[];
+    for (final (key, start) in [
+      ('salat_fajr', t.fajr),
+      ('salat_dhuhr', t.dhuhr),
+      ('salat_asr', t.asr),
+      ('salat_maghrib', t.maghrib),
+      ('salat_isha', t.isha),
+    ]) {
+      final d = byKey[key];
+      // an empty string is the "cleared" tristate value — still unrecorded
+      final v = amal.entry(today, key)?.value;
+      if (d != null && now >= start && (v == null || v == '')) {
+        due.add(d);
+      }
+    }
+    final adhkar = <AmalDefinition>[
+      if (byKey['adhkar_morning'] != null && now >= t.fajr && now < t.dhuhr)
+        byKey['adhkar_morning']!,
+      if (byKey['adhkar_evening'] != null && now >= t.asr)
+        byKey['adhkar_evening']!,
+    ].where((d) => amal.entry(today, d.key)?.value != true).toList();
+    if (due.isEmpty && adhkar.isEmpty) return const SizedBox.shrink();
+
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SLSpacing.s16),
+      child: Container(
+        key: const ValueKey('diary_pending_card'),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLowest,
+          borderRadius: SLRadius.brLg,
+          border: Border.all(color: theme.colorScheme.tertiary, width: 1.5),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                SLSpacing.s16,
+                SLSpacing.s12,
+                SLSpacing.s16,
+                0,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    PhosphorIconsRegular.hourglass,
+                    size: 20,
+                    color: theme.colorScheme.onSurface,
+                  ),
+                  const SizedBox(width: SLSpacing.s8),
+                  Expanded(
+                    child: Text(
+                      context.t('diary_pending'),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            for (final d in due)
+              _AmalGroupRow(
+                row: DiaryRow(d, _paperLabel(d.key)),
+                today: today,
+                bn: bn,
+                keyPrefix: 'pending',
+              ),
+            for (final d in adhkar)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  SLSpacing.s16,
+                  SLSpacing.s4,
+                  SLSpacing.s12,
+                  SLSpacing.s8,
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        bn || d.titleBn.isNotEmpty ? d.titleBn : d.titleEn,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => context.push('/ilm/adhkar'),
+                      child: Text(context.t('diary_read_now')),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: SLSpacing.s4),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The paper's own wording for a single-amal paper row (ফজর, যোহর …).
+String? _paperLabel(String key) {
+  for (final g in kPaperDiaryLayout) {
+    for (final r in g.rows) {
+      if (r.amalKeys.length == 1 && r.amalKeys.first == key) return r.labelBn;
+    }
+  }
+  return null;
+}
+
+/// Everything the app tracks beyond the paper — one collapsible card so the
+/// paper diary stays the clear first read, and nothing is lost.
+class _ExtrasCard extends StatefulWidget {
+  const _ExtrasCard({
+    required this.rows,
+    required this.subtitle,
+    required this.today,
+    required this.bn,
+  });
+  final List<DiaryRow> rows;
+  final String subtitle;
+  final String today;
+  final bool bn;
+
+  @override
+  State<_ExtrasCard> createState() => _ExtrasCardState();
+}
+
+class _ExtrasCardState extends State<_ExtrasCard> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Semantics(
+            button: true,
+            expanded: _open,
+            child: InkWell(
+              key: const ValueKey('diary_extras_toggle'),
+              onTap: () => setState(() => _open = !_open),
+              borderRadius: SLRadius.brLg,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 60),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SLSpacing.s16,
+                    vertical: SLSpacing.s8,
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              context.t('diary_extras'),
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            Text(
+                              widget.subtitle,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AnimatedRotation(
+                        turns: _open ? 0.5 : 0,
+                        duration: SLMotion.base,
+                        child: const Icon(PhosphorIconsBold.caretDown),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (_open) ...[
+            Divider(
+              height: 1,
+              color: theme.dividerColor.withValues(alpha: 0.6),
+            ),
+            for (var i = 0; i < widget.rows.length; i++) ...[
+              if (i > 0)
+                Divider(
+                  height: 1,
+                  indent: SLSpacing.s16,
+                  endIndent: SLSpacing.s16,
+                  color: theme.dividerColor.withValues(alpha: 0.6),
+                ),
+              _AmalGroupRow(
+                row: widget.rows[i],
+                today: widget.today,
+                bn: widget.bn,
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// The paper diary's নির্দেশনাবলী, verbatim, with the cover hadith.
+Future<void> showDiaryInstructions(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      final theme = Theme.of(sheetContext);
+      return SafeArea(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(sheetContext).height * 0.85,
+          ),
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(
+              SLSpacing.s16,
+              0,
+              SLSpacing.s16,
+              SLSpacing.s24,
+            ),
+            children: [
+              Text(
+                sheetContext.t('diary_instructions_title'),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: SLSpacing.s12),
+              Text(
+                kDiaryCoverQuoteAr,
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.center,
+                style: SLType.dua(color: theme.colorScheme.onSurface),
+              ),
+              Text(
+                kDiaryCoverQuoteBn,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: SLSpacing.s16),
+              for (var i = 0; i < kDiaryInstructionsBn.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: SLSpacing.s12),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${toBn(i + 1)}.',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: SLSpacing.s8),
+                      Expanded(
+                        child: Text(
+                          kDiaryInstructionsBn[i],
+                          style: theme.textTheme.bodyLarge,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 /// W4c: the tilawat_minutes row while the user is inside the 7-day beginner
@@ -367,11 +801,11 @@ class _TilawatBeginnerRow extends ConsumerWidget {
 /// under the title when the row gets too narrow (360 dp phones).
 class _AmalGroupCard extends ConsumerWidget {
   const _AmalGroupCard({
-    required this.defs,
+    required this.rows,
     required this.today,
     required this.bn,
   });
-  final List<AmalDefinition> defs;
+  final List<DiaryRow> rows;
   final String today;
   final bool bn;
 
@@ -381,17 +815,15 @@ class _AmalGroupCard extends ConsumerWidget {
       padding: EdgeInsets.zero,
       child: Column(
         children: [
-          for (var i = 0; i < defs.length; i++) ...[
+          for (var i = 0; i < rows.length; i++) ...[
             if (i > 0)
               Divider(
                 height: 1,
                 indent: SLSpacing.s16,
                 endIndent: SLSpacing.s16,
-                color: Theme.of(
-                  context,
-                ).dividerColor.withValues(alpha: 0.6),
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.6),
               ),
-            _AmalGroupRow(def: defs[i], today: today, bn: bn),
+            _AmalGroupRow(row: rows[i], today: today, bn: bn),
           ],
         ],
       ),
@@ -402,13 +834,19 @@ class _AmalGroupCard extends ConsumerWidget {
 /// One row of the group card — dispatches by input type.
 class _AmalGroupRow extends ConsumerWidget {
   const _AmalGroupRow({
-    required this.def,
+    required this.row,
     required this.today,
     required this.bn,
+    this.keyPrefix = 'amal_row',
   });
-  final AmalDefinition def;
+  final DiaryRow row;
   final String today;
   final bool bn;
+
+  /// Distinguishes the same amal rendered twice (the "এখন যা বাকি" card).
+  final String keyPrefix;
+
+  AmalDefinition get def => row.def;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -419,23 +857,55 @@ class _AmalGroupRow extends ConsumerWidget {
     final notifier = ref.read(amalProvider.notifier);
     final theme = Theme.of(context);
 
-    final (title, hint) = _titleAndHint(context, def, profile.category);
+    var (title, hint) = _titleAndHint(context, def, profile.category);
 
     switch (def.inputType) {
       case AmalInputType.tristate:
-        // The salat rows keep their layout: title line, chips below.
+        // A fard prayer's row shows its waqt time and opens when the waqt
+        // begins (today only) — no recording Isha at noon.
+        final clock = ref.watch(
+          prayerProvider.select(
+            (p) => p == null
+                ? null
+                : (
+                    day: p.dateKey,
+                    minute: p.nowMinutes.floor(),
+                    waqt: _waqtStart(def, p),
+                  ),
+          ),
+        );
+        final waqt = clock?.waqt;
+        final locked =
+            waqt != null && clock!.day == today && clock.minute < waqt;
+        if (waqt != null && hint.isEmpty) {
+          final time = formatTimeBn(waqt, bengali: bn);
+          hint = locked
+              ? context.t('diary_opens_at').replaceAll('%time%', time)
+              : time;
+        }
+        final chips = TriStateChips(
+          value: value is String ? value : null,
+          enabled: !locked,
+          labels: TriStateLabels(
+            jamaat: context.t('amal_jamaat'),
+            alone: context.t('amal_alone'),
+            qaza: context.t('amal_qaza'),
+          ),
+          onChanged: (v) => notifier.write(def.key, today, v ?? '', 'manual'),
+        );
         return Padding(
-          key: ValueKey('amal_row_${def.key}'),
+          key: ValueKey('${keyPrefix}_${def.key}'),
           padding: const EdgeInsets.fromLTRB(
             SLSpacing.s16,
+            SLSpacing.s8,
             SLSpacing.s12,
-            SLSpacing.s16,
-            SLSpacing.s12,
+            SLSpacing.s8,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+          // One line — name + time | the three chips — when the row is
+          // wide enough (412dp phones); stacked on 360dp / large text.
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final heading = Row(
                 children: [
                   Expanded(
                     child: Column(
@@ -470,19 +940,25 @@ class _AmalGroupRow extends ConsumerWidget {
                       ),
                     ),
                 ],
-              ),
-              const SizedBox(height: SLSpacing.s8),
-              TriStateChips(
-                value: value is String ? value : null,
-                labels: TriStateLabels(
-                  jamaat: context.t('amal_jamaat'),
-                  alone: context.t('amal_alone'),
-                  qaza: context.t('amal_qaza'),
-                ),
-                onChanged: (v) =>
-                    notifier.write(def.key, today, v ?? '', 'manual'),
-              ),
-            ],
+              );
+              if (constraints.maxWidth >= 340) {
+                return Row(
+                  children: [
+                    Expanded(child: heading),
+                    const SizedBox(width: SLSpacing.s8),
+                    SizedBox(width: 216, child: chips),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  heading,
+                  const SizedBox(height: SLSpacing.s8),
+                  chips,
+                ],
+              );
+            },
           ),
         );
 
@@ -493,7 +969,7 @@ class _AmalGroupRow extends ConsumerWidget {
           button: true,
           label: title,
           child: InkWell(
-            key: ValueKey('amal_row_${def.key}'),
+            key: ValueKey('${keyPrefix}_${def.key}'),
             onTap: () {
               HapticFeedback.selectionClick();
               notifier.write(def.key, today, value != true, 'manual');
@@ -516,7 +992,7 @@ class _AmalGroupRow extends ConsumerWidget {
                           children: [
                             Text(
                               title,
-                              maxLines: 1,
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: theme.textTheme.bodyLarge?.copyWith(
                                 fontWeight: FontWeight.w600,
@@ -640,7 +1116,7 @@ class _AmalGroupRow extends ConsumerWidget {
     );
 
     return Padding(
-      key: ValueKey('amal_row_${def.key}'),
+      key: ValueKey('${keyPrefix}_${def.key}'),
       padding: const EdgeInsets.symmetric(
         horizontal: SLSpacing.s16,
         vertical: SLSpacing.s8,
@@ -682,7 +1158,10 @@ class _AmalGroupRow extends ConsumerWidget {
     AmalDefinition def,
     UserCategory category,
   ) {
-    final title = bn || def.titleBn.isNotEmpty ? def.titleBn : def.titleEn;
+    // the paper's wording when the paper row maps to exactly this amal
+    final title = row.labelBn != null && bn
+        ? row.labelBn!
+        : (bn || def.titleBn.isNotEmpty ? def.titleBn : def.titleEn);
     var subtitle = '';
     if (def.cadence != 'daily' && def.cadence != 'weekly:any') {
       subtitle = _cadenceLabel(def.cadence, context);
@@ -693,6 +1172,15 @@ class _AmalGroupRow extends ConsumerWidget {
           '${context.t('target_label')}: ${bn ? toBn(target.toInt()) : target.toInt()} ${displayUnitFor(def, category)}';
     }
     return (title, subtitle);
+  }
+
+  /// Start of a fard prayer's waqt (minutes from midnight), from its
+  /// `auto:prayer:<key>` source; null for anything else.
+  static double? _waqtStart(AmalDefinition def, PrayerNow? prayer) {
+    final source = def.autoSource ?? '';
+    if (prayer == null || !source.startsWith('auto:prayer:')) return null;
+    final key = PrayerKey.values.where((k) => k.name == source.substring(12));
+    return key.isEmpty ? null : prayer.times.byKey(key.first);
   }
 
   static int _quickCount(AmalDefinition def) {
@@ -722,7 +1210,8 @@ class _CustomChecklistSection extends ConsumerStatefulWidget {
       _CustomChecklistSectionState();
 }
 
-class _CustomChecklistSectionState extends ConsumerState<_CustomChecklistSection> {
+class _CustomChecklistSectionState
+    extends ConsumerState<_CustomChecklistSection> {
   final _controller = TextEditingController();
 
   @override

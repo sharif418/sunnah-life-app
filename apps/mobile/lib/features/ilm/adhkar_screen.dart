@@ -1,6 +1,9 @@
-/// আযকার — morning/evening adhkar with per-item repetition counters
-/// (haptics on every tap) and the auto-tick into the amal diary when a set
-/// completes (source auto:adhkar:morning / auto:adhkar:evening).
+/// আযকার — morning, evening and after-salah adhkar with per-item repetition
+/// counters (haptics on every tap) and the auto-tick into the amal diary when
+/// a set completes (adhkar_morning / adhkar_evening / post_salat_tasbih).
+/// The after-salah set used to be bundled but never shown; `focus`
+/// ('post_salat', from /ilm/adhkar?set=post_salat — Home's সালাত পরবর্তী দোয়া
+/// tile) opens straight onto it.
 library;
 
 import 'package:flutter/material.dart';
@@ -16,7 +19,10 @@ import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
 class AdhkarScreen extends ConsumerStatefulWidget {
-  const AdhkarScreen({super.key});
+  const AdhkarScreen({super.key, this.focus});
+
+  /// A set period to show alone (e.g. 'post_salat'); null shows all three.
+  final String? focus;
 
   @override
   ConsumerState<AdhkarScreen> createState() => _AdhkarScreenState();
@@ -46,28 +52,31 @@ class _AdhkarScreenState extends ConsumerState<AdhkarScreen> {
               icon: PhosphorIconsRegular.plant,
             );
           }
-          final morning = sets.where((s) => s.period == 'morning').toList();
-          final evening = sets.where((s) => s.period == 'evening').toList();
+          final sections = [
+            ('morning', context.t('adhkar_morning'), 'adhkar_morning'),
+            ('evening', context.t('adhkar_evening'), 'adhkar_evening'),
+            ('post_salat', context.t('adhkar_post_salat'), 'post_salat_tasbih'),
+          ].where((s) => widget.focus == null || s.$1 == widget.focus);
           return ListView(
             padding: const EdgeInsets.all(SLSpacing.s16),
             children: [
-              for (final (title, list, amalKey) in [
-                (context.t('adhkar_morning'), morning, 'adhkar_morning'),
-                (context.t('adhkar_evening'), evening, 'adhkar_evening'),
-              ]) ...[
-                if (list.isNotEmpty) ...[
-                  SectionHeader(title, icon: PhosphorIconsRegular.sunHorizon),
-                  for (final set in list)
-                    _DhikrSetCard(
-                      set: set,
-                      counts: _counts,
-                      bengali: bn,
-                      onChanged: () => setState(() {}),
-                      onComplete: () => _tickAmal(amalKey, set, title),
-                    ),
-                  const SizedBox(height: SLSpacing.s12),
+              for (final (period, title, amalKey) in sections)
+                for (final list in [
+                  sets.where((s) => s.period == period).toList(),
+                ]) ...[
+                  if (list.isNotEmpty) ...[
+                    SectionHeader(title, icon: PhosphorIconsRegular.sunHorizon),
+                    for (final set in list)
+                      _DhikrSetCard(
+                        set: set,
+                        counts: _counts,
+                        bengali: bn,
+                        onChanged: () => setState(() {}),
+                        onComplete: () => _tickAmal(amalKey, set, title),
+                      ),
+                    const SizedBox(height: SLSpacing.s12),
+                  ],
                 ],
-              ],
             ],
           );
         },
@@ -83,9 +92,7 @@ class _AdhkarScreenState extends ConsumerState<AdhkarScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          err ?? '$title — ${context.t('adhkar_complete')}',
-        ),
+        content: Text(err ?? '$title — ${context.t('adhkar_complete')}'),
       ),
     );
   }
@@ -225,7 +232,9 @@ class _DhikrItemRow extends StatelessWidget {
                 ),
                 const SizedBox(width: SLSpacing.s4),
                 Icon(
-                  done ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.handTap,
+                  done
+                      ? PhosphorIconsFill.checkCircle
+                      : PhosphorIconsRegular.handTap,
                   size: 18,
                   color: done
                       ? theme.colorScheme.primary

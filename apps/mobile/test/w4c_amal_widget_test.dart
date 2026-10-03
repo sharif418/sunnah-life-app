@@ -34,14 +34,15 @@ import 'package:sunnah_life/features/amal/goals_screen.dart'
     show GoalStatusChip, GoalsScreen;
 import 'package:sunnah_life/features/amal/today_screen.dart';
 import 'package:sunnah_life/features/dawah/dawah_screen.dart';
-import 'package:sunnah_life/features/shared/widgets.dart'
-    show SectionHeader;
 import 'package:sunnah_life/l10n/app_strings.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/amal_state.dart';
 import 'package:sunnah_life/state/goals_state.dart';
 import 'package:sunnah_life/state/providers.dart';
 import 'package:sunnah_life/state/remote_state.dart';
+import 'package:sunnah_life/state/prayer_state.dart';
+
+import 'golden_fixtures.dart';
 
 // ── Top-level test fixtures (hoisted out of main) ────────────────────────────
 
@@ -103,8 +104,7 @@ class FakeGoalsApi extends ApiClient {
   String? proposedStartDate;
 
   @override
-  Future<List<AmalDefinition>> amalDefinitions() async =>
-      fallbackDefinitions();
+  Future<List<AmalDefinition>> amalDefinitions() async => fallbackDefinitions();
 
   @override
   Future<List<PersonalGoal>> fetchGoals() async => goals;
@@ -163,16 +163,20 @@ class FakeGoalsApi extends ApiClient {
   }
 
   @override
-  Future<ApiCached<(Usrah?, List<Announcement>)>> usrah({String? scope}) async =>
+  Future<ApiCached<(Usrah?, List<Announcement>)>> usrah({
+    String? scope,
+  }) async =>
       ApiCached((null, const <Announcement>[]), fetchedAt: DateTime(2026));
 }
 
 /// Flag-on config (the leaderboard gating tests build their own variants).
 class OkApi extends FakeGoalsApi {
   @override
-  Future<LeaderboardMe> leaderboardMe() async => LeaderboardMe.fromJson(
-    const {'band': 'top10', 'myPoints': 25, 'windowDays': 30},
-  );
+  Future<LeaderboardMe> leaderboardMe() async => LeaderboardMe.fromJson(const {
+    'band': 'top10',
+    'myPoints': 25,
+    'windowDays': 30,
+  });
 }
 
 class ThrowingApi extends FakeGoalsApi {
@@ -206,6 +210,7 @@ GoalQueueItem queueItem(String id, {String title = 'তাহাজ্জুদ 
 List<Override> quietRemote(AppDatabase db, {List<Override> extra = const []}) =>
     [
       dbProvider.overrideWithValue(db),
+      prayerProvider.overrideWith(GoldenPinnedPrayer.new),
       coursePackProvider.overrideWith((ref) async => <CourseSummary>[]),
       quizPackProvider.overrideWith((ref) async => <Quiz>[]),
       liveProvider.overrideWith((ref) async => <LiveProgramItem>[]),
@@ -234,16 +239,14 @@ Future<void> scrollTo(WidgetTester tester, Finder target) async {
 
 /// The ramp chip's label — the `tilawat_ramp_chip` key sits on the pill
 /// CONTAINER, the Text is its descendant (the committed card's shape).
-String rampChipText(WidgetTester tester) =>
-    (tester.widget(
-      find
-          .descendant(
-            of: find.byKey(const ValueKey('tilawat_ramp_chip')),
-            matching: find.byType(Text),
-          )
-          .first,
-    ) as Text)
-        .data!;
+String rampChipText(WidgetTester tester) => (tester.widget(
+  find
+      .descendant(
+        of: find.byKey(const ValueKey('tilawat_ramp_chip')),
+        matching: find.byType(Text),
+      )
+      .first,
+) as Text).data!;
 
 /// The committed catalog file (assets/content/amal-catalog.json) parsed
 /// into definitions — the catalog-driven rendering proof.
@@ -295,8 +298,7 @@ void main() {
       expect(GoalStatusJson.fromJson('weird'), GoalStatus.proposed);
     });
 
-    test('LeaderboardMe.fromJson — the /api/leaderboard/me shape verbatim',
-        () {
+    test('LeaderboardMe.fromJson — the /api/leaderboard/me shape verbatim', () {
       final me = LeaderboardMe.fromJson({
         'band': 'top25',
         'myPoints': 25,
@@ -365,20 +367,39 @@ void main() {
         cadence: 'daily',
       );
 
-      expect(amalGroupKey(d('salat_fajr', AmalInputType.tristate)), 'group_fard');
-      expect(amalGroupKey(d('salat_isha', AmalInputType.tristate)), 'group_fard');
-      expect(amalGroupKey(d('salat_witr', AmalInputType.boolean)),
-          'group_salah_sunnah');
-      expect(amalGroupKey(d('sunnah_muakkadah_12', AmalInputType.boolean)),
-          'group_salah_sunnah');
       expect(
-          amalGroupKey(d('tahajjud', AmalInputType.boolean)), 'group_nafl');
-      expect(amalGroupKey(d('ishraq_salat', AmalInputType.boolean)),
-          'group_nafl');
-      expect(amalGroupKey(d('tilawat', AmalInputType.quantity,
-          cat: AmalCategory.quran)), 'cat_quran');
-      expect(amalGroupKey(d('akhlaq_truthful', AmalInputType.boolean,
-          cat: AmalCategory.akhlaq)), 'cat_akhlaq');
+        amalGroupKey(d('salat_fajr', AmalInputType.tristate)),
+        'group_fard',
+      );
+      expect(
+        amalGroupKey(d('salat_isha', AmalInputType.tristate)),
+        'group_fard',
+      );
+      expect(
+        amalGroupKey(d('salat_witr', AmalInputType.boolean)),
+        'group_salah_sunnah',
+      );
+      expect(
+        amalGroupKey(d('sunnah_muakkadah_12', AmalInputType.boolean)),
+        'group_salah_sunnah',
+      );
+      expect(amalGroupKey(d('tahajjud', AmalInputType.boolean)), 'group_nafl');
+      expect(
+        amalGroupKey(d('ishraq_salat', AmalInputType.boolean)),
+        'group_nafl',
+      );
+      expect(
+        amalGroupKey(
+          d('tilawat', AmalInputType.quantity, cat: AmalCategory.quran),
+        ),
+        'cat_quran',
+      );
+      expect(
+        amalGroupKey(
+          d('akhlaq_truthful', AmalInputType.boolean, cat: AmalCategory.akhlaq),
+        ),
+        'cat_akhlaq',
+      );
     });
   });
 
@@ -475,32 +496,34 @@ void main() {
       expect(me.myPoints, 25);
     });
 
-    test('flag on + server 404 (flag off server-side) → null, no throw',
-        () async {
-      final db = makeDb();
-      final container = ProviderContainer(
-        overrides: [
-          dbProvider.overrideWithValue(db),
-          apiProvider.overrideWithValue(ThrowingApi()),
-          authProvider.overrideWith(() => SignedInAuth(member)),
-          configProvider.overrideWith(
-            (ref) async => const AppConfig(
-              donationUrl: '',
-              domain: 'sunnahlife.app',
-              hijriAdjust: 0,
-              goldPerGramBdt: 0,
-              silverPerGramBdt: 0,
-              leaderboardEnabled: true,
+    test(
+      'flag on + server 404 (flag off server-side) → null, no throw',
+      () async {
+        final db = makeDb();
+        final container = ProviderContainer(
+          overrides: [
+            dbProvider.overrideWithValue(db),
+            apiProvider.overrideWithValue(ThrowingApi()),
+            authProvider.overrideWith(() => SignedInAuth(member)),
+            configProvider.overrideWith(
+              (ref) async => const AppConfig(
+                donationUrl: '',
+                domain: 'sunnahlife.app',
+                hijriAdjust: 0,
+                goldPerGramBdt: 0,
+                silverPerGramBdt: 0,
+                leaderboardEnabled: true,
+              ),
             ),
-          ),
-        ],
-      );
-      addTearDown(container.dispose);
-      addTearDown(db.close);
-      final sub = listenTo(container);
-      addTearDown(sub.close);
-      expect(await container.read(leaderboardMeProvider.future), isNull);
-    });
+          ],
+        );
+        addTearDown(container.dispose);
+        addTearDown(db.close);
+        final sub = listenTo(container);
+        addTearDown(sub.close);
+        expect(await container.read(leaderboardMeProvider.future), isNull);
+      },
+    );
   });
 
   // ── Goals screen: propose → status chips ────────────────────────────────────
@@ -508,26 +531,19 @@ void main() {
   group('GoalsScreen', () {
     testWidgets('guest sees the sign-in gate, never a crash', (tester) async {
       final db = makeDb();
-      final container = ProviderContainer(
-        overrides: quietRemote(db),
-      );
+      final container = ProviderContainer(overrides: quietRemote(db));
       addTearDown(container.dispose);
       addTearDown(db.close);
 
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(
-            home: GoalsScreen(),
-          ),
+          child: const MaterialApp(home: GoalsScreen()),
         ),
       );
       await tester.pumpAndSettle();
 
-      expect(
-        find.text(S.tr(Lang.bn, 'goals_signin_needed')),
-        findsOneWidget,
-      );
+      expect(find.text(S.tr(Lang.bn, 'goals_signin_needed')), findsOneWidget);
     });
 
     testWidgets('propose a goal → proposed chip + toast; pre-seeded statuses '
@@ -623,10 +639,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.byType(GoalStatusChip), findsNWidgets(3));
-      expect(
-        find.text(S.tr(Lang.bn, 'goals_proposed_toast')),
-        findsOneWidget,
-      );
+      expect(find.text(S.tr(Lang.bn, 'goals_proposed_toast')), findsOneWidget);
     });
   });
 
@@ -667,9 +680,7 @@ void main() {
       expect(find.text(S.tr(Lang.bn, 'goals_queue_title')), findsOneWidget);
       expect(find.text('তাহাজ্জুদ নিয়মিত করা'), findsOneWidget);
       expect(
-        find.textContaining(
-          '${S.tr(Lang.bn, 'goals_member_label')}: করিম',
-        ),
+        find.textContaining('${S.tr(Lang.bn, 'goals_member_label')}: করিম'),
         findsOneWidget,
       );
 
@@ -750,8 +761,9 @@ void main() {
   // ── Custom checklist (local, per-day) ───────────────────────────────────────
 
   group('custom checklist', () {
-    testWidgets('add → tick → persists in Drift; delete on long-press',
-        (tester) async {
+    testWidgets('add → tick → persists in Drift; delete on long-press', (
+      tester,
+    ) async {
       final db = makeDb();
       final container = ProviderContainer(overrides: quietRemote(db));
       addTearDown(container.dispose);
@@ -822,8 +834,9 @@ void main() {
   // ── Tilawat beginner ramp + group headers over the REAL catalog ─────────────
 
   group('tilawat beginner ramp + group headers (real catalog)', () {
-    testWidgets('fresh user: শুরু card day ১/৭, +৫ মিনিট writes the diary',
-        (tester) async {
+    testWidgets('fresh user: শুরু card day ১/৭, +৫ মিনিট writes the diary', (
+      tester,
+    ) async {
       final db = makeDb();
       final container = ProviderContainer(
         overrides: [
@@ -845,23 +858,13 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Group headers: ফরয / সালাতের সুন্নত / নফল split out of salah. The
-      // ListView is lazy — the lower groups need a scroll first.
-      expect(find.text(S.tr(Lang.bn, 'group_fard')), findsOneWidget);
-      // No salah SECTION header survives the split — but the top summary
-      // strip still shows the cat_salah ("নামাজ") completion chip, so
-      // scope the check to SectionHeaders only.
-      expect(
-        find.descendant(
-          of: find.byType(SectionHeader),
-          matching: find.text(S.tr(Lang.bn, 'cat_salah')),
-        ),
-        findsNothing,
-      );
-      await scrollTo(tester, find.text(S.tr(Lang.bn, 'group_salah_sunnah')));
-      expect(find.text(S.tr(Lang.bn, 'group_salah_sunnah')), findsOneWidget);
-      await scrollTo(tester, find.text(S.tr(Lang.bn, 'group_nafl')));
-      expect(find.text(S.tr(Lang.bn, 'group_nafl')), findsOneWidget);
+      // Group headers follow the PAPER diary, in its order. The ListView is
+      // lazy — the lower groups need a scroll first.
+      expect(find.text('সালাত ট্র্যাকার'), findsOneWidget);
+      await scrollTo(tester, find.text('সুন্নাহ ও নফল সালাত'));
+      expect(find.text('সুন্নাহ ও নফল সালাত'), findsOneWidget);
+      await scrollTo(tester, find.text('ইলম বা জ্ঞানার্জন'));
+      expect(find.text('ইলম বা জ্ঞানার্জন'), findsOneWidget);
 
       // The beginner card: শুরু chip + ramp দিন ১/৭ + copy.
       await scrollTo(tester, find.byKey(const ValueKey('tilawat_ramp_chip')));
@@ -878,15 +881,21 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('tilawat_begin_add5')));
       await tester.pumpAndSettle();
       final today = dateKey(DateTime.now());
-      final entry = container.read(amalProvider).entry(today, kTilawatMinutesKey);
+      final entry = container
+          .read(amalProvider)
+          .entry(today, kTilawatMinutesKey);
       expect(entry, isNotNull);
       expect(entry!.value, 5);
       expect(entry.source, 'manual');
       final persisted = await db.entry(kTilawatMinutesKey, today);
       expect(persisted!.value, 5);
 
-      // exercise_minutes renders as a quantity amal (catalog-driven) —
-      // below the ramp card, so scroll after the card checks.
+      // exercise_minutes is not on the paper: it lives in the collapsed
+      // অতিরিক্ত আমল card and renders as a quantity amal once opened.
+      await scrollTo(tester, find.byKey(const ValueKey('diary_extras_toggle')));
+      expect(find.text('শরীরচর্চা / হাঁটা (মিনিট)'), findsNothing);
+      await tester.tap(find.byKey(const ValueKey('diary_extras_toggle')));
+      await tester.pumpAndSettle();
       await scrollTo(tester, find.text('শরীরচর্চা / হাঁটা (মিনিট)'));
       expect(find.text('শরীরচর্চা / হাঁটা (মিনিট)'), findsOneWidget);
     });
@@ -932,8 +941,9 @@ void main() {
       );
     });
 
-    testWidgets('7 days of history → plain quantity row, no beginner card',
-        (tester) async {
+    testWidgets('7 days of history → plain quantity row, no beginner card', (
+      tester,
+    ) async {
       final db = makeDb();
       final today = dateKey(DateTime.now());
       for (var i = 1; i <= 7; i++) {
@@ -990,11 +1000,8 @@ void main() {
           overrides: [
             ...quietRemote(db),
             leaderboardMeProvider.overrideWith(
-              (ref) async => LeaderboardMe(
-                band: band,
-                myPoints: 25,
-                windowDays: 30,
-              ),
+              (ref) async =>
+                  LeaderboardMe(band: band, myPoints: 25, windowDays: 30),
             ),
           ],
         );
@@ -1011,9 +1018,15 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
+        await scrollTo(
+          tester,
+          find.byKey(const ValueKey('leaderboard_band_card')),
+        );
 
-        expect(find.byKey(const ValueKey('leaderboard_band_card')),
-            findsOneWidget);
+        expect(
+          find.byKey(const ValueKey('leaderboard_band_card')),
+          findsOneWidget,
+        );
         expect(
           find.byKey(ValueKey('leaderboard_band_chip_${band.json}')),
           findsOneWidget,
@@ -1030,8 +1043,9 @@ void main() {
       }
     });
 
-    testWidgets('null (flag off / guest / 404) → card hidden entirely',
-        (tester) async {
+    testWidgets('null (flag off / guest / 404) → card hidden entirely', (
+      tester,
+    ) async {
       final db = makeDb();
       final container = ProviderContainer(
         overrides: [
@@ -1052,6 +1066,11 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
+      // scroll past where the card would sit (the privacy note follows it)
+      await scrollTo(
+        tester,
+        find.textContaining(S.tr(Lang.bn, 'diary_privacy')),
+      );
 
       expect(find.byKey(const ValueKey('leaderboard_band_card')), findsNothing);
       expect(find.text(S.tr(Lang.bn, 'leaderboard_title')), findsNothing);

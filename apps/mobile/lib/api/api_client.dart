@@ -383,6 +383,23 @@ class ApiClient {
     return User.fromJson(j['user'] as Map<String, dynamic>);
   }
 
+  /// POST /api/me/phone/request — PROF-04: an OTP to the NEW number. In dev
+  /// the server returns `devCode` (mock SMS); null in production.
+  Future<String?> requestPhoneChange(String phone) async {
+    final j = await _req('POST', '/api/me/phone/request', body: {'phone': phone});
+    return j['devCode'] as String?;
+  }
+
+  /// POST /api/me/phone/verify — consume the OTP and switch the phone.
+  Future<User> verifyPhoneChange(String phone, String code) async {
+    final j = await _req(
+      'POST',
+      '/api/me/phone/verify',
+      body: {'phone': phone, 'code': code},
+    );
+    return User.fromJson(j['user'] as Map<String, dynamic>);
+  }
+
   // ── Config ─────────────────────────────────────────────────────────────────
 
   Future<AppConfig> config() async =>
@@ -833,6 +850,13 @@ class ApiClient {
         .whereType<Map>()
         .map((e) => QuizAttemptItem.fromJson(e.cast<String, dynamic>()))
         .toList();
+  }
+
+  /// GET /api/usrah/quiz-results — how my usrah's members did in the quizzes
+  /// (usrah_head+; RLS scopes the rows to same-gender members I supervise).
+  Future<UsrahQuizResults> usrahQuizResults() async {
+    final j = await _req('GET', '/api/usrah/quiz-results');
+    return UsrahQuizResults.fromJson(j);
   }
 
   /// GET /api/usrah-questions — own usrah's board (RLS, newest first).

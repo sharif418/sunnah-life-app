@@ -442,6 +442,17 @@ export async function seedDemo(db: PrismaClient): Promise<DemoSeedResult> {
         status: "upcoming",
       },
       {
+        // AMOL-17: a scheduled live quiz — the app lists it under আসন্ন কুইজ
+        titleBn: "সাপ্তাহিক লাইভ কুইজ — সালাতের মাসায়েল",
+        descBn: "উসরার সবাই একসাথে — দশটি প্রশ্ন, ছয় মিনিট।",
+        hostName: "মাওলানা ইউসুফ",
+        startsAt: new Date(NOW.getTime() + 3 * 86400_000),
+        endsAt: new Date(NOW.getTime() + 3 * 86400_000 + 1800_000),
+        gender: "M",
+        status: "upcoming",
+        quizId: "quiz-salah",
+      },
+      {
         titleBn: "বোনদের তারবিয়াহ সেশন — পর্দা ও চরিত্র",
         descBn: "কেবল বোনদের জন্য। লিঙ্ক শুধু অ্যাপে পাওয়া যাবে।",
         hostName: "উম্মে হাবিবা",
@@ -463,7 +474,7 @@ export async function seedDemo(db: PrismaClient): Promise<DemoSeedResult> {
       },
     ],
   });
-  console.log("  LivePrograms: 4 (1 live, 2 upcoming, 1 past)");
+  console.log("  LivePrograms: 5 (1 live, 3 upcoming incl. 1 quiz, 1 past)");
 
   // ── 11) Announcements (usrah-scoped) ───────────────────────────────────────
   await db.announcement.createMany({

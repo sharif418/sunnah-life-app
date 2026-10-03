@@ -11,19 +11,26 @@ import 'package:sunnah_life/design/design_tokens.dart';
 import 'package:sunnah_life/features/amal/today_screen.dart';
 import 'package:sunnah_life/features/shared/widgets.dart';
 import 'package:sunnah_life/state/amal_state.dart';
+import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
+
+import 'golden_fixtures.dart';
 
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
   });
 
-  testWidgets('tapping জামাতে optimistically writes the fajr diary entry',
-      (tester) async {
+  testWidgets('tapping জামাতে optimistically writes the fajr diary entry', (
+    tester,
+  ) async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final container = ProviderContainer(overrides: [
-      dbProvider.overrideWithValue(db),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        dbProvider.overrideWithValue(db),
+        prayerProvider.overrideWith(GoldenPinnedPrayer.new),
+      ],
+    );
     addTearDown(container.dispose);
     addTearDown(db.close);
 
@@ -38,8 +45,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Fallback catalog is loaded (guest, no network): the salat rows render.
-    expect(find.text('ফজর নামাজ'), findsOneWidget);
+    // Fallback catalog is loaded (guest, no network): the salat rows render
+    // under the paper diary's wording (ফজর, not ফজর নামাজ).
+    expect(find.text('সালাত ট্র্যাকার'), findsOneWidget);
+    expect(find.text('ফজর'), findsOneWidget);
     expect(find.text('জামাতে'), findsWidgets);
 
     // Nothing written yet.
@@ -51,8 +60,7 @@ void main() {
     await tester.pump();
 
     // Optimistic state — immediate, before the Drift write lands.
-    final entry =
-        container.read(amalProvider).entry(today, 'salat_fajr');
+    final entry = container.read(amalProvider).entry(today, 'salat_fajr');
     expect(entry, isNotNull);
     expect(entry!.value, 'jamaat');
     expect(entry.source, 'manual');
@@ -71,12 +79,16 @@ void main() {
     await tester.pumpAndSettle();
   });
 
-  testWidgets('streak + completion header renders with Bengali numerals',
-      (tester) async {
+  testWidgets('title, progress ring, instructions + shortcuts render', (
+    tester,
+  ) async {
     final db = AppDatabase.forTesting(NativeDatabase.memory());
-    final container = ProviderContainer(overrides: [
-      dbProvider.overrideWithValue(db),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        dbProvider.overrideWithValue(db),
+        prayerProvider.overrideWith(GoldenPinnedPrayer.new),
+      ],
+    );
     addTearDown(container.dispose);
     addTearDown(db.close);
 
@@ -91,8 +103,18 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('আজকের আমল'), findsOneWidget);
+    expect(find.text('আজকের মুহাসাবা'), findsOneWidget);
     expect(find.byType(SyncBadge), findsOneWidget);
+    // the progress ring counts the paper rows due today: ০/N
+    expect(find.textContaining('০/'), findsWidgets);
+
+    // the paper's নির্দেশনাবলী open from the header
+    await tester.tap(find.byKey(const ValueKey('diary_instructions_button')));
+    await tester.pumpAndSettle();
+    expect(find.text('মুহাসাবা ডায়েরির নির্দেশনাবলী'), findsOneWidget);
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pumpAndSettle();
+
     // The quick-action chips exist.
     expect(find.text('মাসের গ্রিড'), findsOneWidget);
     expect(find.text('অভ্যাস গড়ার চ্যালেঞ্জ'), findsOneWidget);

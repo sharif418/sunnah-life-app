@@ -55,6 +55,10 @@ abstract final class Nid {
   /// every toggle/time change.
   static const int detoxReminder = 6000;
 
+  /// The weekly guest sign-up reminder (Friday 10:00, repeating) —
+  /// cancelled the moment the user signs in.
+  static const int guestNudge = 6100;
+
   static const int _dayStride = 16;
 
   /// Bell notification id for [key] on the day [dayOffset] days from today.

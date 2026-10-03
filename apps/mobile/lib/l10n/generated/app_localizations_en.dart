@@ -1948,4 +1948,306 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get search_offline_note =>
       'Offline — results from the app\'s saved content';
+
+  @override
+  String get diary_title => 'Today\'s muhasaba';
+
+  @override
+  String get diary_done_of => '%done% of %total% done today';
+
+  @override
+  String get diary_pending => 'Due now';
+
+  @override
+  String get diary_read_now => 'Read';
+
+  @override
+  String get diary_opens_at => 'from %time%';
+
+  @override
+  String get diary_extras => 'More amal';
+
+  @override
+  String get diary_extras_sub => 'Beyond the paper diary · %done%/%total% done';
+
+  @override
+  String get diary_instructions => 'Instructions';
+
+  @override
+  String get diary_instructions_title => 'Muhasaba diary instructions';
+
+  @override
+  String get diary_privacy =>
+      'Only you and your usrah head can see your diary.';
+
+  @override
+  String get diary_standing => 'Your standing';
+
+  @override
+  String get hero_prayer_pending => 'due';
+
+  @override
+  String get app_name => 'Sunnah Life';
+
+  @override
+  String get quick_post_salah => 'After-salah duas';
+
+  @override
+  String get quick_post_salah_desc => 'After each fard salah';
+
+  @override
+  String get quick_adhkar => 'Morning & evening adhkar';
+
+  @override
+  String get quick_adhkar_desc => 'Masnun adhkar';
+
+  @override
+  String get quick_muhasaba => 'Muhasaba checklist';
+
+  @override
+  String get quick_muhasaba_desc => 'Today\'s diary';
+
+  @override
+  String get quick_tracker => 'Amal tracker';
+
+  @override
+  String get quick_tracker_desc => 'This month';
+
+  @override
+  String get forbidden_short => 'No salah at these times';
+
+  @override
+  String get adhkar_post_salat => 'After-salah adhkar';
+
+  @override
+  String get journey_joined => 'Joined';
+
+  @override
+  String get journey_farze_ain => 'Farze Ain';
+
+  @override
+  String get journey_months => '%n% months at this level';
+
+  @override
+  String get journey_reqs_met => '%done%/%total% met';
+
+  @override
+  String get review_latest_title => 'Your usrah head\'s weekly comment';
+
+  @override
+  String get review_next_goals => 'Next week\'s goals';
+
+  @override
+  String get dawah_joined_count => '%n% joined through your invitation';
+
+  @override
+  String get live_watch_now => 'Watch live';
+
+  @override
+  String get live_watch_recording => 'Watch recording';
+
+  @override
+  String get live_none_now => 'Nothing is live right now';
+
+  @override
+  String get live_none_upcoming => 'No upcoming programs';
+
+  @override
+  String get live_none_past => 'No recordings yet';
+
+  @override
+  String get profile_workplace => 'Workplace';
+
+  @override
+  String get profile_department => 'Department / role';
+
+  @override
+  String get profile_district => 'District';
+
+  @override
+  String get profile_not_set => 'Add';
+
+  @override
+  String get profile_saved => 'Saved';
+
+  @override
+  String get profile_inventory_note =>
+      'For the Dawatus Sunnah member register — only your own supervisors see it.';
+
+  @override
+  String get quizres_title => 'Members\' quiz results';
+
+  @override
+  String get quizres_took => '%done% of %total% took it';
+
+  @override
+  String get quizres_avg => 'average %n%%';
+
+  @override
+  String get quizres_not_yet => 'Not yet';
+
+  @override
+  String get quizres_tries => 'tried %n%×';
+
+  @override
+  String get quizres_no_members => 'No members in the usrah yet';
+
+  @override
+  String get quizres_hint =>
+      'Encourage those who haven\'t yet — quizzes are in the Ilm section.';
+
+  @override
+  String get quiz_upcoming => 'Upcoming quizzes';
+
+  @override
+  String get quiz_today => 'Today';
+
+  @override
+  String get quiz_tomorrow => 'Tomorrow';
+
+  @override
+  String get quiz_in_days => 'in %n% days';
+
+  @override
+  String get quiz_live_now => 'Live now';
+
+  @override
+  String get quiz_join_live => 'Join the live quiz';
+
+  @override
+  String get quiz_practice => 'Practise first';
+
+  @override
+  String get guest_nudge_title => 'Keep your diary safe';
+
+  @override
+  String get guest_nudge_backup =>
+      'Your diary is backed up — even if you change phones';
+
+  @override
+  String get guest_nudge_usrah =>
+      'Join an usrah and get your mentor\'s guidance';
+
+  @override
+  String get guest_nudge_journey =>
+      'See your progress from Muhibbus Sunnah to Farze Ain';
+
+  @override
+  String get guest_nudge_cta => 'Create an account';
+
+  @override
+  String get guest_nudge_later => 'Later';
+
+  @override
+  String get notifications_for_you => 'For you';
+
+  @override
+  String get notif_now => 'Now';
+
+  @override
+  String get notif_next => 'Next';
+
+  @override
+  String get notif_left => 'left';
+
+  @override
+  String get notif_hours => 'h';
+
+  @override
+  String get notif_minutes => 'min';
+
+  @override
+  String get profile_phone => 'Mobile number';
+
+  @override
+  String get profile_email => 'E-mail';
+
+  @override
+  String get profile_phone_change_title => 'Add / change mobile number';
+
+  @override
+  String get profile_phone_change_hint =>
+      'A code goes to the new number — once confirmed you sign in with it.';
+
+  @override
+  String get profile_phone_new => 'New mobile number';
+
+  @override
+  String get profile_phone_send_code => 'Send code';
+
+  @override
+  String get profile_phone_verify => 'Confirm';
+
+  @override
+  String get profile_phone_changed => 'Mobile number changed';
+
+  @override
+  String get mosque_view_list => 'List';
+
+  @override
+  String get mosque_view_map => 'Map';
+
+  @override
+  String get mosque_directions_btn => 'Directions';
+
+  @override
+  String get mosque_search_more => 'More mosques nearby (Google Maps)';
+
+  @override
+  String get mosque_north => 'N';
+
+  @override
+  String get mosque_you => 'You';
+
+  @override
+  String get iman_check_title => 'Branches of iman — self-review';
+
+  @override
+  String get iman_check_entry_hint =>
+      'Measure yourself against 69 branches — the result stays on your phone';
+
+  @override
+  String get iman_check_last => 'Last result: %n%% — review again';
+
+  @override
+  String get iman_check_intro =>
+      'Not a verdict — a muhasaba. Choose honestly for each branch.';
+
+  @override
+  String get iman_check_have => 'I have it, alhamdulillah';
+
+  @override
+  String get iman_check_trying => 'Working on it';
+
+  @override
+  String get iman_check_not_yet => 'Not yet';
+
+  @override
+  String get iman_check_left => '%n% left';
+
+  @override
+  String get iman_check_see_result => 'See the result';
+
+  @override
+  String get iman_check_result_caption =>
+      'Your own review across the branches of iman';
+
+  @override
+  String get iman_check_previous => 'Last time: %n%%';
+
+  @override
+  String get iman_check_focus => 'Focus on these next';
+
+  @override
+  String get iman_check_keep_going => 'Keep going';
+
+  @override
+  String get iman_check_private =>
+      'These answers are stored only on your phone — no one else sees them.';
+
+  @override
+  String get iman_check_retake => 'Review again';
+
+  @override
+  String get iman_check_appbar => 'Iman self-review';
 }

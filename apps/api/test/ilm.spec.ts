@@ -167,6 +167,44 @@ describe("B4 — quiz attempt history", () => {
   });
 });
 
+describe("usrah quiz results — the head sees members' scores (RLS read-only)", () => {
+  it("a plain member is refused", async () => {
+    const token = await signIn(M_MEMBER);
+    await http().get("/api/usrah/quiz-results").set("Authorization", `Bearer ${token}`).expect(403);
+  });
+
+  it("the male head sees his member's best score; the female head never does", async () => {
+    const memberToken = await signIn(M_MEMBER);
+    await http().post("/api/quiz-attempt").set("Authorization", `Bearer ${memberToken}`).send({ quizId: "quiz-aqeedah", score: 4, total: 10 }).expect(201);
+    await http().post("/api/quiz-attempt").set("Authorization", `Bearer ${memberToken}`).send({ quizId: "quiz-aqeedah", score: 9, total: 10 }).expect(201);
+
+    const headToken = await signIn(M_HEAD);
+    const res = await http().get("/api/usrah/quiz-results").set("Authorization", `Bearer ${headToken}`).expect(200);
+    expect((res.body.quizzes as { id: string }[]).map((q) => q.id)).toContain("quiz-aqeedah");
+    const member = (res.body.members as { id: string; results: { quizId: string; best: number; attempts: number }[] }[]).find(
+      (m) => m.id === maleMemberId
+    );
+    expect(member).toBeTruthy();
+    const aqeedah = member!.results.find((r) => r.quizId === "quiz-aqeedah")!;
+    expect(aqeedah.best).toBe(9);
+    expect(aqeedah.attempts).toBeGreaterThanOrEqual(2);
+
+    const femaleHead = await signIn(F_HEAD);
+    const fres = await http().get("/api/usrah/quiz-results").set("Authorization", `Bearer ${femaleHead}`).expect(200);
+    expect((fres.body.members as { id: string }[]).some((m) => m.id === maleMemberId)).toBe(false);
+
+    // the database itself refuses: the female head's context reads zero rows
+    // of the male member's attempts, and a head cannot write one for him
+    const fUser = await signInUser(F_HEAD);
+    const leaked = await rls.run(fUser, (tx) => tx.quizAttempt.count({ where: { userId: maleMemberId } }));
+    expect(leaked).toBe(0);
+    const mHead = await signInUser(M_HEAD);
+    await expect(
+      rls.run(mHead, (tx) => tx.quizAttempt.create({ data: { userId: maleMemberId, quizId: "quiz-salah", score: 10, total: 10 } }))
+    ).rejects.toThrow();
+  });
+});
+
 describe("B4 — usrah question board (RLS)", () => {
   let maleQuestionId: string;
   let femaleQuestionId: string;
@@ -318,5 +356,36 @@ describe("B4 — live-quiz room token", () => {
     expect(res.body.role).toBe("host");
     expect(verifyQuizToken(`${res.body.token}x`)).toBeNull();
     expect(verifyQuizToken("garbage")).toBeNull();
+  });
+});
+
+describe("AMOL-17 — a live program can be a scheduled quiz", () => {
+  it("admin schedules a quiz program; /api/live carries quizId; an unknown quiz is a 400", async () => {
+    const startsAt = new Date(Date.now() + 5 * 86400_000).toISOString();
+    const created = await http()
+      .post("/api/admin/live")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ titleBn: "পরীক্ষামূলক লাইভ কুইজ", startsAt, quizId: "quiz-aqeedah" })
+      .expect(201);
+    expect(created.body.program.quizId).toBe("quiz-aqeedah");
+
+    const list = await http().get("/api/live").expect(200);
+    const mine = (list.body.programs as { id: string; quizId: string | null }[]).find((p) => p.id === created.body.program.id);
+    expect(mine?.quizId).toBe("quiz-aqeedah");
+
+    await http()
+      .post("/api/admin/live")
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ titleBn: "ভুল কুইজ", startsAt, quizId: "quiz-nope" })
+      .expect(400);
+
+    // un-scheduling the quiz keeps the program
+    const patched = await http()
+      .patch(`/api/admin/live/${created.body.program.id}`)
+      .set("Authorization", `Bearer ${adminToken}`)
+      .send({ titleBn: "পরীক্ষামূলক লাইভ কুইজ", startsAt, quizId: null }) // the admin form sends the whole program
+      .expect(200);
+    expect(patched.body.program.quizId).toBeNull();
+    await http().delete(`/api/admin/live/${created.body.program.id}`).set("Authorization", `Bearer ${adminToken}`).expect(200);
   });
 });

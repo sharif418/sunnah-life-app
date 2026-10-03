@@ -105,30 +105,34 @@ class TriStateChips extends StatelessWidget {
       );
     }
 
-    return Row(
-      children: [
-        chip(
-          'jamaat',
-          labels.jamaat,
-          PhosphorIconsRegular.usersThree,
-          theme.colorScheme.primary,
-          theme.colorScheme.onPrimary,
-        ),
-        chip(
-          'alone',
-          labels.alone,
-          PhosphorIconsRegular.user,
-          theme.colorScheme.tertiary,
-          theme.colorScheme.onTertiary,
-        ),
-        chip(
-          'qaza',
-          labels.qaza,
-          PhosphorIconsRegular.clock,
-          theme.colorScheme.error,
-          theme.colorScheme.onError,
-        ),
-      ],
+    // A locked row (its waqt hasn't begun) reads as locked, not just inert.
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Row(
+        children: [
+          chip(
+            'jamaat',
+            labels.jamaat,
+            PhosphorIconsRegular.usersThree,
+            theme.colorScheme.primary,
+            theme.colorScheme.onPrimary,
+          ),
+          chip(
+            'alone',
+            labels.alone,
+            PhosphorIconsRegular.user,
+            theme.colorScheme.tertiary,
+            theme.colorScheme.onTertiary,
+          ),
+          chip(
+            'qaza',
+            labels.qaza,
+            PhosphorIconsRegular.clock,
+            theme.colorScheme.error,
+            theme.colorScheme.onError,
+          ),
+        ],
+      ),
     );
   }
 }
@@ -700,7 +704,7 @@ class HeatmapCell extends StatelessWidget {
   }
 }
 
-/// Streak badge — "৭ দিন 🔥".
+/// Streak badge — 🔥 icon + "৭ দিন".
 class StreakBadge extends StatelessWidget {
   const StreakBadge({super.key, required this.days, this.bengali = true});
   final int days;
@@ -729,7 +733,9 @@ class StreakBadge extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            '${bengali ? toBn(days) : '$days'} 🔥',
+            // the fire icon carries the meaning; an emoji 🔥 doubled it and
+            // falls back to a system font (tofu on some phones)
+            '${bengali ? toBn(days) : '$days'} ${bengali ? 'দিন' : (days == 1 ? 'day' : 'days')}',
             style: theme.textTheme.bodySmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
@@ -769,7 +775,11 @@ class CompletionRing extends StatelessWidget {
               painter: _RingPainter(
                 pct: pct,
                 color: theme.colorScheme.primary,
-                track: theme.colorScheme.surfaceContainerHighest,
+                // dark: the derived container tone sank into the dark card
+                // (a 0% ring looked empty) — the border token reads in both
+                track: theme.brightness == Brightness.dark
+                    ? theme.colorScheme.outline
+                    : theme.colorScheme.surfaceContainerHighest,
               ),
               child: Center(
                 child: Text(

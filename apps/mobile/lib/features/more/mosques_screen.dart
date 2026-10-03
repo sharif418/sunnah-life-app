@@ -1,8 +1,9 @@
 /// আমার মসজিদ — bundled mosque list, distance-sorted either from the
 /// profile city center (default) or from the real GPS fix when the user
-/// allows location. List-first by design: no map/tile engine ships for a
-/// 24-mosque bundled pack (deviation from PLAN C-W3c noted in the worklog —
-/// revisit when the server grows a mosques endpoint).
+/// allows location. Two views (FEAT-12): তালিকা and ম্যাপ — the map is a
+/// tile-free radar (mosque_radar.dart: offline, no new dependency); every
+/// mosque offers "পথ দেখুন" (Google Maps directions), and "আশেপাশের আরও
+/// মসজিদ" searches Maps for the ones the bundled pack does not list.
 library;
 
 import 'dart:math' as math;
@@ -11,12 +12,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/bn_digits.dart';
+import '../../core/external_urls.dart';
 import '../../core/location_service.dart';
 import '../../core/qibla.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import 'mosque_radar.dart';
 import '../../design/phosphor_icons.dart';
 
 /// Pure: mosques sorted by great-circle distance from (lat, lng).
@@ -55,6 +58,17 @@ class MosquesScreen extends ConsumerStatefulWidget {
 class _MosquesScreenState extends ConsumerState<MosquesScreen> {
   CitySnap? _fix;
   bool _locating = false;
+  bool _mapView = false;
+  String? _selectedId;
+
+  Future<void> _open(String url) async {
+    final ok = await openExternalApp(url);
+    if (!ok && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.t('donation_open_failed'))),
+      );
+    }
+  }
 
   @override
   void initState() {
@@ -121,6 +135,62 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
             origin.lat,
             origin.lng,
           );
+          if (_mapView) {
+            final near = sorted.take(15).toList();
+            final selected = near.firstWhere(
+              (m) => m.id == _selectedId,
+              orElse: () => near.first,
+            );
+            final km = distanceKm(origin.lat, origin.lng, selected.lat, selected.lng);
+            final kmText = km.toStringAsFixed(1);
+            return ListView(
+              padding: const EdgeInsets.all(SLSpacing.s16),
+              children: [
+                _modeHeader(context, theme, bn, profile),
+                AppCard(
+                  child: MosqueRadar(
+                    mosques: near,
+                    lat: origin.lat,
+                    lng: origin.lng,
+                    selectedId: selected.id,
+                    onSelect: (m) => setState(() => _selectedId = m.id),
+                  ),
+                ),
+                const SizedBox(height: SLSpacing.s8),
+                AppCard(
+                  key: const ValueKey('mosque_selected'),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        selected.nameBn,
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                      Text(selected.addressBn, style: theme.textTheme.bodySmall),
+                      const SizedBox(height: SLSpacing.s4),
+                      Text(
+                        '${bn ? toBn(kmText) : kmText} ${context.t('unit_km')}',
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: SLSpacing.s8),
+                      FilledButton.icon(
+                        key: const ValueKey('mosque_directions'),
+                        icon: const Icon(PhosphorIconsRegular.navigationArrow, size: 18),
+                        label: Text(context.t('mosque_directions_btn')),
+                        onPressed: () => _open(mapsDirectionsUrl(selected.lat, selected.lng)),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: SLSpacing.s8),
+                OutlinedButton.icon(
+                  icon: const Icon(PhosphorIconsRegular.magnifyingGlass, size: 18),
+                  label: Text(context.t('mosque_search_more')),
+                  onPressed: () => _open(mapsNearbySearchUrl('mosque', origin.lat, origin.lng)),
+                ),
+              ],
+            );
+          }
           return ListView.builder(
             padding: const EdgeInsets.all(SLSpacing.s16),
             itemCount: sorted.length + 1, // +1 for the mode header
@@ -130,6 +200,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
               final km = distanceKm(origin.lat, origin.lng, m.lat, m.lng);
               final bearing = bearingDeg(origin.lat, origin.lng, m.lat, m.lng);
               return AppCard(
+                onTap: () => _open(mapsDirectionsUrl(m.lat, m.lng)),
                 padding: const EdgeInsets.symmetric(
                     horizontal: SLSpacing.s12, vertical: SLSpacing.s8),
                 child: Row(
@@ -195,6 +266,38 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
     final label = fromGps
         ? '${context.t('mosques_from_location')} (±${bn ? toBn(_fix!.accuracyM.round()) : _fix!.accuracyM.round()} ${context.t('unit_m')})'
         : '${context.t('mosques_from_city')}: ${profile.city}';
+    final toggle = Padding(
+      padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+      child: SegmentedButton<bool>(
+        key: const ValueKey('mosque_view_toggle'),
+        segments: [
+          ButtonSegment(
+            value: false,
+            icon: const Icon(PhosphorIconsRegular.listChecks, size: 18),
+            label: Text(context.t('mosque_view_list')),
+          ),
+          ButtonSegment(
+            value: true,
+            icon: const Icon(PhosphorIconsRegular.compass, size: 18),
+            label: Text(context.t('mosque_view_map')),
+          ),
+        ],
+        selected: {_mapView},
+        onSelectionChanged: (s) => setState(() => _mapView = s.first),
+      ),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [toggle, _originCard(context, theme, fromGps, label)],
+    );
+  }
+
+  Widget _originCard(
+    BuildContext context,
+    ThemeData theme,
+    bool fromGps,
+    String label,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: SLSpacing.s12),
       child: Card(

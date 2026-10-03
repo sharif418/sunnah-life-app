@@ -37,8 +37,9 @@ import {
   LevelRulesValidationError,
   type LevelKey,
 } from "../shared/levels";
-import { invalidatePackCache, PACK_FILES, packOverrideDir, type PackKey } from "../shared/quran";
+import { invalidatePackCache, loadPack, PACK_FILES, packOverrideDir, type PackKey } from "../shared/quran";
 import { SupportReplyDto } from "../support/support.controller";
+import { importMembers, MemberImportDto } from "./member-import";
 import {
   bdToday,
   completion7dForUsers,
@@ -470,6 +471,22 @@ export class LiveProgramDto {
   @IsString()
   @MaxLength(500)
   recordingUrl?: string | null;
+
+  /** AMOL-17: schedule this program as a live quiz (quizzes.json id). */
+  @ApiProperty({ required: false, example: "quiz-salah" })
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  quizId?: string | null;
+}
+
+/** A quizzes.json id, or null; anything else is a 400. */
+async function resolveQuizId(raw: string | null | undefined): Promise<string | null> {
+  const id = raw?.trim();
+  if (!id) return null;
+  const pack = (await loadPack("quizzes")) as { quizzes?: { id: string }[] } | null;
+  if (!(pack?.quizzes ?? []).some((q) => q.id === id)) throw new ApiError(400, "কুইজটি পাওয়া যায়নি");
+  return id;
 }
 
 @Injectable()
@@ -604,6 +621,23 @@ export class AdminService {
       }));
       return { users };
     });
+  }
+
+  /**
+   * POST /api/admin/users/import — full_admin: the member register from a
+   * spreadsheet (dryRun previews). Audited once per commit with the totals.
+   */
+  async importUsers(viewer: User | null, dto: MemberImportDto) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const dryRun = dto.dryRun !== false;
+    const out = await this.rls.run(user, (tx) =>
+      importMembers(tx, dto.rows ?? [], dryRun, nextMemberCode, dto.offset ?? 0)
+    );
+    if (!dryRun) {
+      await this.guard.audit(user.id, "import_members", "user", "bulk", { totals: out.totals });
+    }
+    return { dryRun, ...out };
   }
 
   /**
@@ -1452,6 +1486,7 @@ export class AdminService {
           gender: dto.gender ?? "M",
           status: startsAt.getTime() > Date.now() ? "upcoming" : "live",
           recordingUrl: dto.recordingUrl?.trim() || null,
+          quizId: await resolveQuizId(dto.quizId),
         },
       });
       await this.guard.audit(user.id, "create_live_program", "live_program", row.id, {
@@ -1496,6 +1531,7 @@ export class AdminService {
         data.gender = dto.gender;
       }
       if (dto.recordingUrl !== undefined) data.recordingUrl = dto.recordingUrl?.trim() || null;
+      if (dto.quizId !== undefined) data.quizId = await resolveQuizId(dto.quizId);
 
       if (!Object.keys(data).length) throw new ApiError(400, "কোনো পরিবর্তন দেওয়া হয়নি");
 
@@ -2243,6 +2279,7 @@ function mapLiveProgram(row: {
   gender: string;
   status: string;
   recordingUrl: string | null;
+  quizId: string | null;
 }) {
   return {
     id: row.id,
@@ -2255,6 +2292,7 @@ function mapLiveProgram(row: {
     gender: row.gender as Gender,
     status: row.status as "upcoming" | "live" | "past",
     recordingUrl: row.recordingUrl,
+    quizId: row.quizId,
   };
 }
 
@@ -2277,6 +2315,14 @@ export class AdminController {
   @ApiOperation({ summary: "Scoped user search" })
   users(@Query("q") q: string | undefined, @Req() req: AuthedRequest) {
     return this.service.users(currentUser(req), q ?? "");
+  }
+
+  @Post("users/import")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "full_admin: import the member register (CSV rows; dryRun previews)" })
+  @Roles("full_admin")
+  importUsers(@Body() dto: MemberImportDto, @Req() req: AuthedRequest) {
+    return this.service.importUsers(currentUser(req), dto);
   }
 
   @Patch("users")

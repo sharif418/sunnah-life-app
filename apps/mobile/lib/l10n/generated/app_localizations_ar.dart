@@ -1934,4 +1934,299 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get search_offline_note =>
       'غير متصل — نتائج من المحتوى المحفوظ في التطبيق';
+
+  @override
+  String get diary_title => 'محاسبة اليوم';
+
+  @override
+  String get diary_done_of => '%done% من %total% اليوم';
+
+  @override
+  String get diary_pending => 'المطلوب الآن';
+
+  @override
+  String get diary_read_now => 'اقرأ';
+
+  @override
+  String get diary_opens_at => 'من %time%';
+
+  @override
+  String get diary_extras => 'أعمال إضافية';
+
+  @override
+  String get diary_extras_sub => 'خارج الدفتر الورقي · %done%/%total%';
+
+  @override
+  String get diary_instructions => 'التعليمات';
+
+  @override
+  String get diary_instructions_title => 'تعليمات دفتر المحاسبة';
+
+  @override
+  String get diary_privacy => 'لا يرى دفترك إلا أنت ورئيس أسرتك.';
+
+  @override
+  String get diary_standing => 'مستواك';
+
+  @override
+  String get hero_prayer_pending => 'مستحقة';
+
+  @override
+  String get app_name => 'سنة لايف';
+
+  @override
+  String get quick_post_salah => 'أذكار بعد الصلاة';
+
+  @override
+  String get quick_post_salah_desc => 'بعد كل فريضة';
+
+  @override
+  String get quick_adhkar => 'أذكار الصباح والمساء';
+
+  @override
+  String get quick_adhkar_desc => 'الأذكار المسنونة';
+
+  @override
+  String get quick_muhasaba => 'قائمة المحاسبة';
+
+  @override
+  String get quick_muhasaba_desc => 'دفتر اليوم';
+
+  @override
+  String get quick_tracker => 'متابعة الأعمال';
+
+  @override
+  String get quick_tracker_desc => 'هذا الشهر';
+
+  @override
+  String get forbidden_short => 'أوقات النهي عن الصلاة';
+
+  @override
+  String get adhkar_post_salat => 'أذكار بعد الصلاة';
+
+  @override
+  String get journey_joined => 'الانضمام';
+
+  @override
+  String get journey_farze_ain => 'فرض العين';
+
+  @override
+  String get journey_months => '%n% أشهر في هذا المستوى';
+
+  @override
+  String get journey_reqs_met => '%done%/%total%';
+
+  @override
+  String get review_latest_title => 'تعليق رئيس الأسرة الأسبوعي';
+
+  @override
+  String get review_next_goals => 'أهداف الأسبوع القادم';
+
+  @override
+  String get dawah_joined_count => 'انضم %n% بدعوتك';
+
+  @override
+  String get live_watch_now => 'شاهد البث';
+
+  @override
+  String get live_watch_recording => 'شاهد التسجيل';
+
+  @override
+  String get live_none_now => 'لا يوجد بث مباشر الآن';
+
+  @override
+  String get live_none_upcoming => 'لا توجد برامج قادمة';
+
+  @override
+  String get live_none_past => 'لا توجد تسجيلات بعد';
+
+  @override
+  String get profile_workplace => 'مكان العمل';
+
+  @override
+  String get profile_department => 'القسم / المنصب';
+
+  @override
+  String get profile_district => 'المديرية';
+
+  @override
+  String get profile_not_set => 'أضف';
+
+  @override
+  String get profile_saved => 'تم الحفظ';
+
+  @override
+  String get profile_inventory_note =>
+      'لسجل أعضاء دعوة السنة — لا يراه إلا مسؤولوك.';
+
+  @override
+  String get quizres_title => 'نتائج اختبارات الأعضاء';
+
+  @override
+  String get quizres_took => 'شارك %done% من %total%';
+
+  @override
+  String get quizres_avg => 'المتوسط %n%%';
+
+  @override
+  String get quizres_not_yet => 'لم يشارك بعد';
+
+  @override
+  String get quizres_tries => '%n% مرات';
+
+  @override
+  String get quizres_no_members => 'لا يوجد أعضاء في الأسرة بعد';
+
+  @override
+  String get quizres_hint => 'شجّع من لم يشارك بعد — الاختبارات في قسم العلم.';
+
+  @override
+  String get quiz_upcoming => 'الاختبارات القادمة';
+
+  @override
+  String get quiz_today => 'اليوم';
+
+  @override
+  String get quiz_tomorrow => 'غدًا';
+
+  @override
+  String get quiz_in_days => 'بعد %n% أيام';
+
+  @override
+  String get quiz_live_now => 'مباشر الآن';
+
+  @override
+  String get quiz_join_live => 'انضم إلى الاختبار المباشر';
+
+  @override
+  String get quiz_practice => 'تدرّب أولًا';
+
+  @override
+  String get guest_nudge_title => 'احفظ سجل أعمالك';
+
+  @override
+  String get guest_nudge_backup => 'تُحفظ مذكرتك — حتى لو غيّرت هاتفك';
+
+  @override
+  String get guest_nudge_usrah => 'انضم إلى أسرة واحصل على توجيه مسؤولك';
+
+  @override
+  String get guest_nudge_journey => 'تابع تقدّمك من محب السنة إلى فرض العين';
+
+  @override
+  String get guest_nudge_cta => 'أنشئ حسابًا';
+
+  @override
+  String get guest_nudge_later => 'لاحقًا';
+
+  @override
+  String get notifications_for_you => 'لك';
+
+  @override
+  String get notif_now => 'الآن';
+
+  @override
+  String get notif_next => 'التالي';
+
+  @override
+  String get notif_left => 'متبقٍ';
+
+  @override
+  String get notif_hours => 'س';
+
+  @override
+  String get notif_minutes => 'د';
+
+  @override
+  String get profile_phone => 'رقم الجوال';
+
+  @override
+  String get profile_email => 'البريد الإلكتروني';
+
+  @override
+  String get profile_phone_change_title => 'إضافة / تغيير رقم الجوال';
+
+  @override
+  String get profile_phone_change_hint =>
+      'سيصل رمز إلى الرقم الجديد — بعد التأكيد تسجّل الدخول به.';
+
+  @override
+  String get profile_phone_new => 'رقم الجوال الجديد';
+
+  @override
+  String get profile_phone_send_code => 'أرسل الرمز';
+
+  @override
+  String get profile_phone_verify => 'تأكيد';
+
+  @override
+  String get profile_phone_changed => 'تم تغيير رقم الجوال';
+
+  @override
+  String get mosque_view_list => 'قائمة';
+
+  @override
+  String get mosque_view_map => 'خريطة';
+
+  @override
+  String get mosque_directions_btn => 'الاتجاهات';
+
+  @override
+  String get mosque_search_more => 'مساجد أخرى قريبة (خرائط Google)';
+
+  @override
+  String get mosque_north => 'ش';
+
+  @override
+  String get mosque_you => 'أنت';
+
+  @override
+  String get iman_check_title => 'شعب الإيمان — تقييم ذاتي';
+
+  @override
+  String get iman_check_entry_hint =>
+      'قِس نفسك على ٦٩ شعبة — تبقى النتيجة على هاتفك';
+
+  @override
+  String get iman_check_last => 'آخر نتيجة: %n%% — راجع مرة أخرى';
+
+  @override
+  String get iman_check_intro => 'ليست حكمًا بل محاسبة. اختر بصدق في كل شعبة.';
+
+  @override
+  String get iman_check_have => 'موجودة، الحمد لله';
+
+  @override
+  String get iman_check_trying => 'أحاول';
+
+  @override
+  String get iman_check_not_yet => 'ليس بعد';
+
+  @override
+  String get iman_check_left => 'بقي %n%';
+
+  @override
+  String get iman_check_see_result => 'عرض النتيجة';
+
+  @override
+  String get iman_check_result_caption => 'تقييمك الذاتي لشعب الإيمان';
+
+  @override
+  String get iman_check_previous => 'المرة السابقة: %n%%';
+
+  @override
+  String get iman_check_focus => 'ركّز على هذه';
+
+  @override
+  String get iman_check_keep_going => 'واصل';
+
+  @override
+  String get iman_check_private =>
+      'تُحفظ هذه الإجابات على هاتفك فقط — لا يراها أحد.';
+
+  @override
+  String get iman_check_retake => 'أعد التقييم';
+
+  @override
+  String get iman_check_appbar => 'تقييم الإيمان';
 }

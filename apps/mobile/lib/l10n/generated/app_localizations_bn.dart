@@ -1951,4 +1951,307 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get search_offline_note =>
       'অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল';
+
+  @override
+  String get diary_title => 'আজকের মুহাসাবা';
+
+  @override
+  String get diary_done_of => 'আজ %total%টির মধ্যে %done%টি সম্পন্ন';
+
+  @override
+  String get diary_pending => 'এখন যা বাকি';
+
+  @override
+  String get diary_read_now => 'পড়ুন';
+
+  @override
+  String get diary_opens_at => '%time% থেকে';
+
+  @override
+  String get diary_extras => 'অতিরিক্ত আমল';
+
+  @override
+  String get diary_extras_sub =>
+      'কাগজের ডায়েরির বাইরে · %done%/%total% সম্পন্ন';
+
+  @override
+  String get diary_instructions => 'নির্দেশনা';
+
+  @override
+  String get diary_instructions_title => 'মুহাসাবা ডায়েরির নির্দেশনাবলী';
+
+  @override
+  String get diary_privacy =>
+      'আপনার ডায়েরি দেখতে পান শুধু আপনি আর আপনার উসরা প্রধান।';
+
+  @override
+  String get diary_standing => 'আপনার অবস্থান';
+
+  @override
+  String get hero_prayer_pending => 'বাকি';
+
+  @override
+  String get app_name => 'সুন্নাহ লাইফ';
+
+  @override
+  String get quick_post_salah => 'সালাত পরবর্তী দোয়া';
+
+  @override
+  String get quick_post_salah_desc => 'ফরজ নামাজের পরের আমল';
+
+  @override
+  String get quick_adhkar => 'সকাল-সন্ধ্যার যিকির';
+
+  @override
+  String get quick_adhkar_desc => 'মাসনূন আযকার';
+
+  @override
+  String get quick_muhasaba => 'মুহাসাবা চেকলিস্ট';
+
+  @override
+  String get quick_muhasaba_desc => 'আজকের ডায়েরি';
+
+  @override
+  String get quick_tracker => 'আমল ট্র্যাকার';
+
+  @override
+  String get quick_tracker_desc => 'মাসের হিসাব';
+
+  @override
+  String get forbidden_short => 'নামাজ পড়া নিষেধ';
+
+  @override
+  String get adhkar_post_salat => 'নামাজের পরের আযকার';
+
+  @override
+  String get journey_joined => 'যোগদান';
+
+  @override
+  String get journey_farze_ain => 'ফরযে আইন';
+
+  @override
+  String get journey_months => 'এই স্তরে %n% মাস';
+
+  @override
+  String get journey_reqs_met => 'শর্ত %done%/%total%';
+
+  @override
+  String get review_latest_title => 'উসরা প্রধানের সাপ্তাহিক মন্তব্য';
+
+  @override
+  String get review_next_goals => 'পরের সপ্তাহের লক্ষ্য';
+
+  @override
+  String get dawah_joined_count => 'আপনার দাওয়াতে যোগ দিয়েছেন %n% জন';
+
+  @override
+  String get live_watch_now => 'লাইভ দেখুন';
+
+  @override
+  String get live_watch_recording => 'রেকর্ডিং দেখুন';
+
+  @override
+  String get live_none_now => 'এখন কোনো লাইভ কার্যক্রম নেই';
+
+  @override
+  String get live_none_upcoming => 'আসন্ন কোনো প্রোগ্রাম নেই';
+
+  @override
+  String get live_none_past => 'এখনো কোনো রেকর্ডিং নেই';
+
+  @override
+  String get profile_workplace => 'কর্মস্থল / প্রতিষ্ঠান';
+
+  @override
+  String get profile_department => 'বিভাগ / পদবি';
+
+  @override
+  String get profile_district => 'জেলা';
+
+  @override
+  String get profile_not_set => 'যোগ করুন';
+
+  @override
+  String get profile_saved => 'সংরক্ষিত হয়েছে';
+
+  @override
+  String get profile_inventory_note =>
+      'এই তথ্য দাওয়াতুস সুন্নাহর সদস্য-তালিকার জন্য — শুধু আপনার দায়িত্বশীলরা দেখতে পান।';
+
+  @override
+  String get quizres_title => 'সদস্যদের কুইজ ফলাফল';
+
+  @override
+  String get quizres_took => 'অংশ নিয়েছেন %done%/%total% জন';
+
+  @override
+  String get quizres_avg => 'গড় %n%%';
+
+  @override
+  String get quizres_not_yet => 'এখনো দেননি';
+
+  @override
+  String get quizres_tries => '%n% বার';
+
+  @override
+  String get quizres_no_members => 'উসরাহতে এখনো কোনো সদস্য নেই';
+
+  @override
+  String get quizres_hint =>
+      'যাঁরা এখনো দেননি, তাঁদের উৎসাহ দিন — কুইজ ইলম বিভাগে আছে।';
+
+  @override
+  String get quiz_upcoming => 'আসন্ন কুইজ';
+
+  @override
+  String get quiz_today => 'আজ';
+
+  @override
+  String get quiz_tomorrow => 'আগামীকাল';
+
+  @override
+  String get quiz_in_days => '%n% দিন পর';
+
+  @override
+  String get quiz_live_now => 'এখন চলছে';
+
+  @override
+  String get quiz_join_live => 'লাইভ কুইজে যোগ দিন';
+
+  @override
+  String get quiz_practice => 'আগে অনুশীলন করুন';
+
+  @override
+  String get guest_nudge_title => 'আপনার আমলের হিসাব নিরাপদ রাখুন';
+
+  @override
+  String get guest_nudge_backup =>
+      'ডায়েরি সংরক্ষিত থাকবে — ফোন বদলালেও হারাবে না';
+
+  @override
+  String get guest_nudge_usrah =>
+      'উসরায় যুক্ত হয়ে দায়িত্বশীলের পরামর্শ পাবেন';
+
+  @override
+  String get guest_nudge_journey =>
+      'মুহিব্বুস সুন্নাহ থেকে ফরযে আইন — নিজের অগ্রগতি দেখবেন';
+
+  @override
+  String get guest_nudge_cta => 'অ্যাকাউন্ট খুলুন';
+
+  @override
+  String get guest_nudge_later => 'পরে';
+
+  @override
+  String get notifications_for_you => 'আপনার জন্য';
+
+  @override
+  String get notif_now => 'এখন';
+
+  @override
+  String get notif_next => 'পরবর্তী';
+
+  @override
+  String get notif_left => 'বাকি';
+
+  @override
+  String get notif_hours => 'ঘণ্টা';
+
+  @override
+  String get notif_minutes => 'মিনিট';
+
+  @override
+  String get profile_phone => 'মোবাইল নম্বর';
+
+  @override
+  String get profile_email => 'ইমেইল';
+
+  @override
+  String get profile_phone_change_title => 'মোবাইল নম্বর যোগ / পরিবর্তন';
+
+  @override
+  String get profile_phone_change_hint =>
+      'নতুন নম্বরে একটি কোড যাবে — কোড মিলিয়ে দিলে এই নম্বরেই আপনি লগইন করবেন।';
+
+  @override
+  String get profile_phone_new => 'নতুন মোবাইল নম্বর';
+
+  @override
+  String get profile_phone_send_code => 'কোড পাঠান';
+
+  @override
+  String get profile_phone_verify => 'নিশ্চিত করুন';
+
+  @override
+  String get profile_phone_changed => 'মোবাইল নম্বর পরিবর্তন হয়েছে';
+
+  @override
+  String get mosque_view_list => 'তালিকা';
+
+  @override
+  String get mosque_view_map => 'ম্যাপ';
+
+  @override
+  String get mosque_directions_btn => 'পথ দেখুন';
+
+  @override
+  String get mosque_search_more => 'আশেপাশের আরও মসজিদ (Google Maps)';
+
+  @override
+  String get mosque_north => 'উ';
+
+  @override
+  String get mosque_you => 'আপনি';
+
+  @override
+  String get iman_check_title => 'ঈমানের শাখা — আত্মমূল্যায়ন';
+
+  @override
+  String get iman_check_entry_hint =>
+      '৬৯টি শাখায় নিজেকে মিলিয়ে দেখুন — ফলাফল শুধু আপনার ফোনে থাকে';
+
+  @override
+  String get iman_check_last => 'সর্বশেষ ফলাফল: %n%% — আবার মিলিয়ে দেখুন';
+
+  @override
+  String get iman_check_intro =>
+      'এটা বিচার নয়, নিজের মুহাসাবা। প্রতিটি শাখায় সৎভাবে নিজের অবস্থা বাছাই করুন।';
+
+  @override
+  String get iman_check_have => 'আছে, আলহামদুলিল্লাহ';
+
+  @override
+  String get iman_check_trying => 'চেষ্টা করছি';
+
+  @override
+  String get iman_check_not_yet => 'এখনো নয়';
+
+  @override
+  String get iman_check_left => 'আরও %n%টি বাকি';
+
+  @override
+  String get iman_check_see_result => 'ফলাফল দেখুন';
+
+  @override
+  String get iman_check_result_caption =>
+      'ঈমানের শাখাগুলোতে আপনার নিজের মূল্যায়ন';
+
+  @override
+  String get iman_check_previous => 'আগেরবার: %n%%';
+
+  @override
+  String get iman_check_focus => 'এখন যেগুলোতে মনোযোগ দিন';
+
+  @override
+  String get iman_check_keep_going => 'চেষ্টা চালিয়ে যান';
+
+  @override
+  String get iman_check_private =>
+      'এই উত্তরগুলো কেবল আপনার ফোনে সংরক্ষিত — কেউ দেখতে পান না।';
+
+  @override
+  String get iman_check_retake => 'আবার মূল্যায়ন করুন';
+
+  @override
+  String get iman_check_appbar => 'ঈমান আত্মমূল্যায়ন';
 }

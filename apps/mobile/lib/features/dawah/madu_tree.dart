@@ -118,7 +118,7 @@ class _MaduNodeRow extends StatelessWidget {
                   child: node.name.isEmpty
                       ? null
                       : Text(
-                          node.name.characters.first,
+                          maduInitial(node.name),
                           maxLines: 1,
                           style: theme.textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w700,
@@ -250,4 +250,25 @@ class _ConnectorPainter extends CustomPainter {
       oldDelegate.unit != unit ||
       oldDelegate.avatar != avatar ||
       oldDelegate.color != color;
+}
+
+/// The avatar letter for a name: honorific prefixes (মোঃ, মো., মুহাম্মদ,
+/// Md., Mohammad …) are skipped, so "মোঃ সাইফুল ইসলাম" shows সা, not মো.
+/// The first grapheme cluster keeps a conjunct or vowel sign intact.
+String maduInitial(String name) {
+  const honorifics = {
+    'মোঃ', 'মো:', 'মো.', 'মোহাম্মদ', 'মুহাম্মদ', 'মোহাম্মাদ', 'মুহাম্মাদ',
+    'md', 'md.', 'mohammad', 'muhammad', 'mohammed',
+  };
+  final words = name
+      .trim()
+      .split(RegExp(r'\s+'))
+      .where((w) => w.isNotEmpty)
+      .toList();
+  if (words.isEmpty) return '?';
+  final word = words.firstWhere(
+    (w) => !honorifics.contains(w.toLowerCase()),
+    orElse: () => words.first,
+  );
+  return word.characters.first;
 }
