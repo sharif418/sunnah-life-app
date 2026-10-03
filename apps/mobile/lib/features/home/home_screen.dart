@@ -6,6 +6,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart' show ScrollCacheExtent;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -244,7 +245,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           // lazily-built list would leave it unbuilt and the hero's
           // "সময়সূচি দেখুন" (ensureVisible on its key) a dead tap — keep the
           // first screens of the page built
-          cacheExtent: 2400,
+          scrollCacheExtent: const ScrollCacheExtent.pixels(2400),
           // W5: the list must scroll CLEAR of the floating contact button
           // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
           padding: const EdgeInsets.fromLTRB(

@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Hind_Siliguri, Inter } from "next/font/google";
+import { Noto_Sans_Bengali, Inter } from "next/font/google";
 import "./globals.css";
 import { AppProviders } from "@/components/providers";
 
-const hindSiliguri = Hind_Siliguri({
+// Noto Sans Bengali — the Bengali face Android itself uses (the most
+// familiar to Bangladeshi readers; standard digits). Same family as mobile.
+const notoBengali = Noto_Sans_Bengali({
   subsets: ["bengali", "latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-hind-siliguri",
+  variable: "--font-noto-bengali",
   display: "swap",
 });
 
@@ -38,7 +40,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" suppressHydrationWarning>
-      <body className={`${hindSiliguri.variable} ${inter.variable} antialiased`}>
+      <body className={`${notoBengali.variable} ${inter.variable} antialiased`}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

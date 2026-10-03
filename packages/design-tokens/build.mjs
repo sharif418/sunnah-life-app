@@ -184,7 +184,7 @@ class SLType {
     height: ${tokens.typography.scale.caption.lineHeight},
   );
 
-  /// Bengali-first text theme — EVERY role carries the bundled Hind Siliguri
+  /// Bengali-first text theme — EVERY role carries the bundled Noto Sans Bengali
   /// family so no Material component (tab bars, chips, buttons, snackbars,
   /// dialogs, list tiles, inputs, menus…) ever falls back to the platform
   /// font (mixed typefaces on a real phone, tofu in bundle-only renders).

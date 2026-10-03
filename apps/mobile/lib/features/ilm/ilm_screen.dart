@@ -158,7 +158,7 @@ class _IlmScreenState extends State<IlmScreen> {
                 crossAxisCount: 2,
                 mainAxisSpacing: SLSpacing.s12,
                 crossAxisSpacing: SLSpacing.s12,
-                // 1.3 — Hind Siliguri's real Bengali metrics wrap the longest
+                // 1.3 — Noto Sans Bengali's real Bengali metrics wrap the longest
                 // labels to three lines; the tofu-era 1.55 clipped them.
                 childAspectRatio: 1.3,
               ),

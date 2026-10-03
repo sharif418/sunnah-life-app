@@ -15,7 +15,7 @@
 //
 // Loading rule (both live here now):
 //  * ICON families: PhosphorRegular / PhosphorFill / PhosphorBold (vendored).
-//  * TEXT families: HindSiliguri (Regular w400 + SemiBold w600 + Bold w700 —
+//  * TEXT families: NotoSansBengali (Regular w400 + Medium w500 + SemiBold w600 + Bold w700 —
 //    FontLoader style-matches by each TTF's intrinsic OS/2 weight), Amiri
 //    and AmiriQuran (du'a / Uthmani Qur'an).
 //
@@ -34,10 +34,11 @@ const List<(String, String)> _phosphorFonts = [
 const List<(String, List<String>)> _textFonts = [
   // One FontLoader per FAMILY; every weight's TTF is added to it (the engine
   // picks w400/w600/w700 from the intrinsic OS/2 weight of each file).
-  ('HindSiliguri', [
-    'assets/google_fonts/HindSiliguri-Regular.ttf',
-    'assets/google_fonts/HindSiliguri-SemiBold.ttf',
-    'assets/google_fonts/HindSiliguri-Bold.ttf',
+  ('NotoSansBengali', [
+    'assets/google_fonts/NotoSansBengali-Regular.ttf',
+    'assets/google_fonts/NotoSansBengali-Medium.ttf',
+    'assets/google_fonts/NotoSansBengali-SemiBold.ttf',
+    'assets/google_fonts/NotoSansBengali-Bold.ttf',
   ]),
   ('Amiri', ['assets/google_fonts/Amiri-Regular.ttf']),
   ('AmiriQuran', ['assets/google_fonts/AmiriQuran-Regular.ttf']),

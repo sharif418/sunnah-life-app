@@ -1,5 +1,5 @@
 /// W4e — the branded referral share card: a fixed 1080×1350 design (deep
-/// green + cream + gold, bundled Hind Siliguri only) that the Da'wah
+/// green + cream + gold, bundled Noto Sans Bengali only) that the Da'wah
 /// overview renders to a PNG via `RepaintBoundary.toImage` and shares
 /// through SystemChannel.shareFile (ACTION_SEND image/* + FileProvider).
 ///
@@ -132,7 +132,7 @@ class _LogoMark extends StatelessWidget {
   }
 }
 
-/// Every text on the card renders through the bundled Hind Siliguri family
+/// Every text on the card renders through the bundled Noto Sans Bengali family
 /// (tofu rule) with explicit token colors — no theme, no fallback family.
 class _CardText extends StatelessWidget {
   const _CardText({

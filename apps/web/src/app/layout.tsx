@@ -1,14 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Hind_Siliguri, Inter, Amiri, Amiri_Quran } from "next/font/google";
+import { Noto_Sans_Bengali, Inter, Amiri, Amiri_Quran } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/app/providers";
 import { ServiceWorkerRegister } from "@/components/app/sw-register";
 import { LocaleSync } from "@/components/app/locale-sync";
 
-const hindSiliguri = Hind_Siliguri({
+// Noto Sans Bengali — the Bengali face Android itself uses (the most
+// familiar to Bangladeshi readers; standard digits). Same family as mobile.
+const notoBengali = Noto_Sans_Bengali({
   subsets: ["bengali", "latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-hind-siliguri",
+  variable: "--font-noto-bengali",
   display: "swap",
 });
 
@@ -71,7 +73,7 @@ export default function RootLayout({
   return (
     <html lang="bn" dir="ltr" suppressHydrationWarning>
       <body
-        className={`${hindSiliguri.variable} ${inter.variable} ${amiri.variable} ${amiriQuran.variable} antialiased bg-background text-foreground`}
+        className={`${notoBengali.variable} ${inter.variable} ${amiri.variable} ${amiriQuran.variable} antialiased bg-background text-foreground`}
       >
         <Providers>
           <LocaleSync />

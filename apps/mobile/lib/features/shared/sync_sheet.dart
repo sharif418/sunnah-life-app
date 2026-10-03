@@ -119,7 +119,7 @@ class SyncSheet extends ConsumerWidget {
 
             const SizedBox(height: SLSpacing.s16),
             // NOTE: the label/header styles are derived from bodyLarge/bodyMedium
-            // — the theme overrides THOSE with Hind Siliguri. labelLarge/
+            // — the theme overrides THOSE with Noto Sans Bengali. labelLarge/
             // titleSmall are not in the app text theme, so a default-styled
             // button label would render Bengali through the platform fallback
             // (tofu boxes in the golden environment).
