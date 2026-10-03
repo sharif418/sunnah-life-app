@@ -16,6 +16,7 @@ import '../../core/calendars.dart' show formatTimeBn;
 import '../../core/cities.dart';
 import '../../core/amal_engine.dart' show isAmalDay;
 import '../../core/date_keys.dart';
+import '../../core/diary_layout.dart';
 import '../../core/most_used.dart';
 import '../../core/prayer_engine.dart';
 import '../../design/design_tokens.dart';
@@ -260,6 +261,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               lang: lang,
               bn: bn,
               onShowSchedule: _showSchedule,
+              todayPrayers: [
+                for (final key in const [
+                  PrayerKey.fajr,
+                  PrayerKey.dhuhr,
+                  PrayerKey.asr,
+                  PrayerKey.maghrib,
+                  PrayerKey.isha,
+                ])
+                  HeroPrayerStatus(
+                    label: context.t('waqt_${key.name}'),
+                    value: switch (ref
+                        .watch(amalProvider)
+                        .entry(prayer.dateKey, 'salat_${key.name}')
+                        ?.value) {
+                      final String v when v.isNotEmpty => v,
+                      _ => null,
+                    },
+                    started: prayer.nowMinutes >= prayer.times.byKey(key),
+                  ),
+              ],
+              onTapPrayers: () => context.go('/amal'),
             ),
             const SizedBox(height: SLSpacing.s16),
 
@@ -354,6 +376,7 @@ class _MostUsedSection extends ConsumerWidget {
       defs,
       category: profile.category,
       today: today,
+      limit: 3, // HOME-04: the user's three most-used
     );
 
     return Column(
@@ -361,9 +384,25 @@ class _MostUsedSection extends ConsumerWidget {
       children: [
         SectionHeader(context.t('most_used'), icon: PhosphorIconsFill.fire),
         if (ranked.isEmpty)
-          EmptyState(
-            message: context.t('most_used_empty'),
-            icon: PhosphorIconsRegular.listChecks,
+          // A quiet one-line hint, not a full-screen illustration: on day one
+          // this section has nothing to rank yet.
+          AppCard(
+            onTap: () => context.go('/amal'),
+            child: Row(
+              children: [
+                Icon(
+                  PhosphorIconsRegular.listChecks,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: SLSpacing.s12),
+                Expanded(
+                  child: Text(
+                    context.t('most_used_empty'),
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
           )
         else
           SizedBox(
@@ -399,6 +438,20 @@ class _QuickAccessGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final tiles =
         <({IconData icon, String title, String subtitle, String route})>[
+          // HOME-05: সালাত পরবর্তী দোয়া, সকাল-সন্ধ্যার যিকির, কুরআন,
+          // মুহাসাবা চেকলিস্ট, আমল ট্র্যাকার — plus লাইভ.
+          (
+            icon: PhosphorIconsFill.handHeart,
+            title: context.t('quick_post_salah'),
+            subtitle: context.t('quick_post_salah_desc'),
+            route: '/ilm/adhkar?set=post_salat',
+          ),
+          (
+            icon: PhosphorIconsRegular.sunHorizon,
+            title: context.t('quick_adhkar'),
+            subtitle: context.t('quick_adhkar_desc'),
+            route: '/ilm/adhkar',
+          ),
           (
             icon: PhosphorIconsFill.bookOpenText,
             title: context.t('ilm_quran'),
@@ -406,16 +459,16 @@ class _QuickAccessGrid extends StatelessWidget {
             route: '/ilm/quran',
           ),
           (
-            icon: PhosphorIconsFill.handHeart,
-            title: context.t('ilm_duas'),
-            subtitle: context.t('quick_duas_desc'),
-            route: '/ilm/duas',
+            icon: PhosphorIconsFill.clipboardText,
+            title: context.t('quick_muhasaba'),
+            subtitle: context.t('quick_muhasaba_desc'),
+            route: '/amal',
           ),
           (
-            icon: PhosphorIconsFill.clipboardText,
-            title: context.t('tab_amal'),
-            subtitle: context.t('quick_amal_desc'),
-            route: '/amal',
+            icon: PhosphorIconsFill.chartPieSlice,
+            title: context.t('quick_tracker'),
+            subtitle: context.t('quick_tracker_desc'),
+            route: '/amal/month',
           ),
           (
             icon: PhosphorIconsRegular.broadcast,
@@ -431,26 +484,30 @@ class _QuickAccessGrid extends StatelessWidget {
           context.t('quick_access'),
           icon: PhosphorIconsRegular.squaresFour,
         ),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            mainAxisSpacing: SLSpacing.s8,
-            crossAxisSpacing: SLSpacing.s8,
-            childAspectRatio: 1.0,
+        // Pairs of tiles in equal-height rows (IntrinsicHeight): heights
+        // follow the text scale instead of a fixed grid aspect ratio.
+        for (var i = 0; i < tiles.length; i += 2)
+          Padding(
+            padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+            child: IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final tile in tiles.skip(i).take(2)) ...[
+                    if (tile != tiles[i]) const SizedBox(width: SLSpacing.s8),
+                    Expanded(
+                      child: QuickAccessTile(
+                        icon: tile.icon,
+                        title: tile.title,
+                        subtitle: tile.subtitle,
+                        onTap: () => context.push(tile.route),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
-          itemCount: tiles.length,
-          itemBuilder: (context, i) {
-            final tile = tiles[i];
-            return QuickAccessTile(
-              icon: tile.icon,
-              title: tile.title,
-              subtitle: tile.subtitle,
-              onTap: () => context.push(tile.route),
-            );
-          },
-        ),
       ],
     );
   }
@@ -635,9 +692,15 @@ class _AmalPreviewSection extends ConsumerWidget {
       for (final day in amal.entries.keys)
         for (final e in (amal.entries[day] ?? const {}).values) e,
     ];
+    // HOME-09 counts the PAPER diary's rows — the same ০/১৭ the আমল tab's
+    // ring shows (counting every catalog amal said ০/৩১ here).
+    final paperDefs = [
+      for (final g in layoutDiary(todayDefs).paper)
+        for (final r in g.rows) r.def,
+    ];
     final preview = todayAmalPreview(
       entries,
-      todayDefs,
+      paperDefs,
       profile.category,
       today,
     );
@@ -942,52 +1005,57 @@ class _ForbiddenTimes extends StatelessWidget {
     final dark = theme.brightness == Brightness.dark;
     final alertBg = dark ? SLColors.darkAlertSoft : SLColors.alertSoftLight;
     final alertFg = dark ? SLColors.darkAlert : SLColors.lightDestructive;
-    return Column(
-      children: [
-        for (final (label, from, to) in windows)
-          Container(
-            margin: const EdgeInsets.only(bottom: SLSpacing.s8),
-            padding: const EdgeInsets.symmetric(
-              horizontal: SLSpacing.s12,
-              vertical: SLSpacing.s8,
-            ),
-            decoration: BoxDecoration(
-              color: alertBg,
-              borderRadius: SLRadius.brMd,
-              border: Border.all(
-                color: alertFg.withValues(alpha: 0.25),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
-                const SizedBox(width: SLSpacing.s8),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: theme.textTheme.bodyMedium?.copyWith(color: alertFg),
-                  ),
-                ),
-                // W4f overflow sweep — at 360dp/1.3× the time range no
-                // longer fits next to the label; it shrinks to fit instead
-                // of spilling (the times are the point — never clipped).
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
+    return Container(
+      key: const ValueKey('home_forbidden_card'),
+      padding: const EdgeInsets.fromLTRB(
+        SLSpacing.s12,
+        SLSpacing.s8,
+        SLSpacing.s12,
+        SLSpacing.s8,
+      ),
+      decoration: BoxDecoration(
+        color: alertBg,
+        borderRadius: SLRadius.brMd,
+        border: Border.all(color: alertFg.withValues(alpha: 0.25), width: 1),
+      ),
+      child: Column(
+        children: [
+          for (final (label, from, to) in windows)
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 36),
+              child: Row(
+                children: [
+                  Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
+                  const SizedBox(width: SLSpacing.s8),
+                  Expanded(
                     child: Text(
-                      '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
-                      style: theme.textTheme.bodySmall?.copyWith(
+                      label,
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         color: alertFg,
-                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),
-                ),
-              ],
+                  // W4f overflow sweep — at 360dp/1.3× the time range no
+                  // longer fits next to the label; it shrinks to fit
+                  // instead of spilling (the times are the point).
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: alertFg,
+                          fontWeight: FontWeight.w600,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

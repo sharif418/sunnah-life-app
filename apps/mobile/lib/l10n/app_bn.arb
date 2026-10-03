@@ -638,5 +638,17 @@
   "diary_instructions": "নির্দেশনা",
   "diary_instructions_title": "মুহাসাবা ডায়েরির নির্দেশনাবলী",
   "diary_privacy": "আপনার ডায়েরি দেখতে পান শুধু আপনি আর আপনার উসরা প্রধান।",
-  "diary_standing": "আপনার অবস্থান"
+  "diary_standing": "আপনার অবস্থান",
+  "hero_prayer_pending": "বাকি",
+  "app_name": "সুন্নাহ লাইফ",
+  "quick_post_salah": "সালাত পরবর্তী দোয়া",
+  "quick_post_salah_desc": "ফরজ নামাজের পরের আমল",
+  "quick_adhkar": "সকাল-সন্ধ্যার যিকির",
+  "quick_adhkar_desc": "মাসনূন আযকার",
+  "quick_muhasaba": "মুহাসাবা চেকলিস্ট",
+  "quick_muhasaba_desc": "আজকের ডায়েরি",
+  "quick_tracker": "আমল ট্র্যাকার",
+  "quick_tracker_desc": "মাসের হিসাব",
+  "forbidden_short": "নামাজ পড়া নিষেধ",
+  "adhkar_post_salat": "নামাজের পরের আযকার"
 }

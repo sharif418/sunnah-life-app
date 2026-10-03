@@ -319,8 +319,9 @@ final routerProvider = Provider<GoRouter>((ref) {
                   ),
                   GoRoute(
                     path: 'adhkar',
-                    pageBuilder: (c, s) =>
-                        slFadePage(child: const AdhkarScreen()),
+                    pageBuilder: (c, s) => slFadePage(
+                      child: AdhkarScreen(focus: s.uri.queryParameters['set']),
+                    ),
                   ),
                   // W4j: the unified content search — the Ilm tab's entry
                   // (public + its own offline fallback over the bundled packs).
@@ -440,8 +441,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (!kReleaseMode)
         GoRoute(
           path: '/__gallery',
-          pageBuilder: (c, s) =>
-              slFadePage(child: const KitGalleryScreen()),
+          pageBuilder: (c, s) => slFadePage(child: const KitGalleryScreen()),
         ),
     ],
   );

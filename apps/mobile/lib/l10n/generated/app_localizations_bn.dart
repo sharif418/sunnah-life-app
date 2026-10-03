@@ -1986,4 +1986,40 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get diary_standing => 'আপনার অবস্থান';
+
+  @override
+  String get hero_prayer_pending => 'বাকি';
+
+  @override
+  String get app_name => 'সুন্নাহ লাইফ';
+
+  @override
+  String get quick_post_salah => 'সালাত পরবর্তী দোয়া';
+
+  @override
+  String get quick_post_salah_desc => 'ফরজ নামাজের পরের আমল';
+
+  @override
+  String get quick_adhkar => 'সকাল-সন্ধ্যার যিকির';
+
+  @override
+  String get quick_adhkar_desc => 'মাসনূন আযকার';
+
+  @override
+  String get quick_muhasaba => 'মুহাসাবা চেকলিস্ট';
+
+  @override
+  String get quick_muhasaba_desc => 'আজকের ডায়েরি';
+
+  @override
+  String get quick_tracker => 'আমল ট্র্যাকার';
+
+  @override
+  String get quick_tracker_desc => 'মাসের হিসাব';
+
+  @override
+  String get forbidden_short => 'নামাজ পড়া নিষেধ';
+
+  @override
+  String get adhkar_post_salat => 'নামাজের পরের আযকার';
 }

@@ -3933,6 +3933,78 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আপনার অবস্থান'**
   String get diary_standing;
+
+  /// No description provided for @hero_prayer_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাকি'**
+  String get hero_prayer_pending;
+
+  /// No description provided for @app_name.
+  ///
+  /// In bn, this message translates to:
+  /// **'সুন্নাহ লাইফ'**
+  String get app_name;
+
+  /// No description provided for @quick_post_salah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সালাত পরবর্তী দোয়া'**
+  String get quick_post_salah;
+
+  /// No description provided for @quick_post_salah_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফরজ নামাজের পরের আমল'**
+  String get quick_post_salah_desc;
+
+  /// No description provided for @quick_adhkar.
+  ///
+  /// In bn, this message translates to:
+  /// **'সকাল-সন্ধ্যার যিকির'**
+  String get quick_adhkar;
+
+  /// No description provided for @quick_adhkar_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'মাসনূন আযকার'**
+  String get quick_adhkar_desc;
+
+  /// No description provided for @quick_muhasaba.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুহাসাবা চেকলিস্ট'**
+  String get quick_muhasaba;
+
+  /// No description provided for @quick_muhasaba_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের ডায়েরি'**
+  String get quick_muhasaba_desc;
+
+  /// No description provided for @quick_tracker.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল ট্র্যাকার'**
+  String get quick_tracker;
+
+  /// No description provided for @quick_tracker_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'মাসের হিসাব'**
+  String get quick_tracker_desc;
+
+  /// No description provided for @forbidden_short.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজ পড়া নিষেধ'**
+  String get forbidden_short;
+
+  /// No description provided for @adhkar_post_salat.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজের পরের আযকার'**
+  String get adhkar_post_salat;
 }
 
 class _AppLocalizationsDelegate

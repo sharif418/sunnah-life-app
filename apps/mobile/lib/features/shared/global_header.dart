@@ -1,8 +1,9 @@
-/// Global chrome (C-W4a): the shared header for the five MAIN tab screens —
-/// logo mark, tappable location row (city picker), the triple calendar date
-/// bar (Gregorian + Bangla + Hijri with the effective ±4 adjustment from
-/// C-W3g), and the trailing action cluster: notification bell, reminder
-/// clock, profile, sync badge.
+/// Global chrome (C-W4a): the shared header for the five MAIN tab screens.
+/// Row 1 (NAV-01): the Sunnah Life brand mark + name, then the action
+/// cluster — notification bell, reminder clock, profile, sync badge.
+/// Row 2 (NAV-02): the tappable city (city picker) and the triple calendar
+/// date bar (Gregorian + Bangla + Hijri with the effective ±4 adjustment
+/// from C-W3g); it wraps to two lines on narrow phones.
 ///
 /// The date-bar logic moved here VERBATIM from home_screen.dart (it was
 /// home-only before) — the home screen now consumes this header instead of
@@ -18,6 +19,7 @@ import '../../core/bn_digits.dart';
 import '../../core/calendars.dart';
 import '../../core/cities.dart';
 import '../../design/phosphor_icons.dart';
+import '../../design/brand_mark.dart';
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../state/providers.dart';
@@ -36,7 +38,9 @@ class GlobalHeader extends ConsumerWidget {
   Future<void> _pickCity(BuildContext context, WidgetRef ref) async {
     final picked = await showCityPicker(context);
     if (picked == null) return;
-    await ref.read(profileProvider.notifier).update(
+    await ref
+        .read(profileProvider.notifier)
+        .update(
           city: picked.nameBn,
           lat: picked.lat,
           lng: picked.lng,
@@ -72,57 +76,17 @@ class GlobalHeader extends ConsumerWidget {
         children: [
           Row(
             children: [
-              // Logo mark — the splash monogram (gold circle + star), no new
-              // asset generation.
-              Container(
-                width: 32,
-                height: 32,
-                decoration: const BoxDecoration(
-                  color: SLColors.gold,
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Icon(
-                    PhosphorIconsFill.star,
-                    color: SLColors.primaryDeep,
-                    size: 18,
-                  ),
-                ),
-              ),
+              const SLBrandMark(size: 32),
               const SizedBox(width: SLSpacing.s8),
               Expanded(
-                child: InkWell(
-                  borderRadius: SLRadius.brSm,
-                  onTap: () => _pickCity(context, ref),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          PhosphorIconsFill.mapPin,
-                          size: 18,
-                          color: theme.colorScheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            city?.nameBn ?? profile.city,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        Icon(
-                          PhosphorIconsBold.caretDown,
-                          size: 14,
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ],
-                    ),
+                child: Text(
+                  context.t('app_name'),
+                  maxLines: 1,
+                  overflow: TextOverflow.fade,
+                  softWrap: false,
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: theme.colorScheme.primary,
                   ),
                 ),
               ),
@@ -146,13 +110,51 @@ class GlobalHeader extends ConsumerWidget {
               const SyncBadge(),
             ],
           ),
-          const SizedBox(height: 2),
-          Text(
-            '${bn ? toBn(now.day) : now.day} ${S.tr(lang, 'month_${now.month}')} '
-            '${bn ? toBn(now.year) : now.year} · ${bnDate.formatted} · ${hijri.formatted}',
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: SLSpacing.s8,
+            children: [
+              InkWell(
+                key: const ValueKey('header_city'),
+                borderRadius: SLRadius.brSm,
+                onTap: () => _pickCity(context, ref),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: SLSpacing.minTapTarget,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        PhosphorIconsFill.mapPin,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        city?.nameBn ?? profile.city,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      Icon(
+                        PhosphorIconsBold.caretDown,
+                        size: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Text(
+                '${bn ? toBn(now.day) : now.day} ${S.tr(lang, 'month_${now.month}')} '
+                '${bn ? toBn(now.year) : now.year} · ${bnDate.formatted} · ${hijri.formatted}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
         ],
       ),

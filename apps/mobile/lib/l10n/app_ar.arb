@@ -638,5 +638,17 @@
   "diary_instructions": "التعليمات",
   "diary_instructions_title": "تعليمات دفتر المحاسبة",
   "diary_privacy": "لا يرى دفترك إلا أنت ورئيس أسرتك.",
-  "diary_standing": "مستواك"
+  "diary_standing": "مستواك",
+  "hero_prayer_pending": "مستحقة",
+  "app_name": "سنة لايف",
+  "quick_post_salah": "أذكار بعد الصلاة",
+  "quick_post_salah_desc": "بعد كل فريضة",
+  "quick_adhkar": "أذكار الصباح والمساء",
+  "quick_adhkar_desc": "الأذكار المسنونة",
+  "quick_muhasaba": "قائمة المحاسبة",
+  "quick_muhasaba_desc": "دفتر اليوم",
+  "quick_tracker": "متابعة الأعمال",
+  "quick_tracker_desc": "هذا الشهر",
+  "forbidden_short": "أوقات النهي عن الصلاة",
+  "adhkar_post_salat": "أذكار بعد الصلاة"
 }

@@ -638,5 +638,17 @@
   "diary_instructions": "Instructions",
   "diary_instructions_title": "Muhasaba diary instructions",
   "diary_privacy": "Only you and your usrah head can see your diary.",
-  "diary_standing": "Your standing"
+  "diary_standing": "Your standing",
+  "hero_prayer_pending": "due",
+  "app_name": "Sunnah Life",
+  "quick_post_salah": "After-salah duas",
+  "quick_post_salah_desc": "After each fard salah",
+  "quick_adhkar": "Morning & evening adhkar",
+  "quick_adhkar_desc": "Masnun adhkar",
+  "quick_muhasaba": "Muhasaba checklist",
+  "quick_muhasaba_desc": "Today's diary",
+  "quick_tracker": "Amal tracker",
+  "quick_tracker_desc": "This month",
+  "forbidden_short": "No salah at these times",
+  "adhkar_post_salat": "After-salah adhkar"
 }

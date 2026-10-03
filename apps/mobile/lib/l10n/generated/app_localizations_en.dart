@@ -1982,4 +1982,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get diary_standing => 'Your standing';
+
+  @override
+  String get hero_prayer_pending => 'due';
+
+  @override
+  String get app_name => 'Sunnah Life';
+
+  @override
+  String get quick_post_salah => 'After-salah duas';
+
+  @override
+  String get quick_post_salah_desc => 'After each fard salah';
+
+  @override
+  String get quick_adhkar => 'Morning & evening adhkar';
+
+  @override
+  String get quick_adhkar_desc => 'Masnun adhkar';
+
+  @override
+  String get quick_muhasaba => 'Muhasaba checklist';
+
+  @override
+  String get quick_muhasaba_desc => 'Today\'s diary';
+
+  @override
+  String get quick_tracker => 'Amal tracker';
+
+  @override
+  String get quick_tracker_desc => 'This month';
+
+  @override
+  String get forbidden_short => 'No salah at these times';
+
+  @override
+  String get adhkar_post_salat => 'After-salah adhkar';
 }

@@ -1967,4 +1967,40 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get diary_standing => 'مستواك';
+
+  @override
+  String get hero_prayer_pending => 'مستحقة';
+
+  @override
+  String get app_name => 'سنة لايف';
+
+  @override
+  String get quick_post_salah => 'أذكار بعد الصلاة';
+
+  @override
+  String get quick_post_salah_desc => 'بعد كل فريضة';
+
+  @override
+  String get quick_adhkar => 'أذكار الصباح والمساء';
+
+  @override
+  String get quick_adhkar_desc => 'الأذكار المسنونة';
+
+  @override
+  String get quick_muhasaba => 'قائمة المحاسبة';
+
+  @override
+  String get quick_muhasaba_desc => 'دفتر اليوم';
+
+  @override
+  String get quick_tracker => 'متابعة الأعمال';
+
+  @override
+  String get quick_tracker_desc => 'هذا الشهر';
+
+  @override
+  String get forbidden_short => 'أوقات النهي عن الصلاة';
+
+  @override
+  String get adhkar_post_salat => 'أذكار بعد الصلاة';
 }
