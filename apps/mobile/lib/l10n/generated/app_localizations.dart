@@ -4197,6 +4197,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আগে অনুশীলন করুন'**
   String get quiz_practice;
+
+  /// No description provided for @guest_nudge_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার আমলের হিসাব নিরাপদ রাখুন'**
+  String get guest_nudge_title;
+
+  /// No description provided for @guest_nudge_backup.
+  ///
+  /// In bn, this message translates to:
+  /// **'ডায়েরি সংরক্ষিত থাকবে — ফোন বদলালেও হারাবে না'**
+  String get guest_nudge_backup;
+
+  /// No description provided for @guest_nudge_usrah.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরায় যুক্ত হয়ে দায়িত্বশীলের পরামর্শ পাবেন'**
+  String get guest_nudge_usrah;
+
+  /// No description provided for @guest_nudge_journey.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুহিব্বুস সুন্নাহ থেকে ফরযে আইন — নিজের অগ্রগতি দেখবেন'**
+  String get guest_nudge_journey;
+
+  /// No description provided for @guest_nudge_cta.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাকাউন্ট খুলুন'**
+  String get guest_nudge_cta;
+
+  /// No description provided for @guest_nudge_later.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরে'**
+  String get guest_nudge_later;
 }
 
 class _AppLocalizationsDelegate

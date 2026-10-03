@@ -682,5 +682,11 @@
   "quiz_in_days": "بعد %n% أيام",
   "quiz_live_now": "مباشر الآن",
   "quiz_join_live": "انضم إلى الاختبار المباشر",
-  "quiz_practice": "تدرّب أولًا"
+  "quiz_practice": "تدرّب أولًا",
+  "guest_nudge_title": "احفظ سجل أعمالك",
+  "guest_nudge_backup": "تُحفظ مذكرتك — حتى لو غيّرت هاتفك",
+  "guest_nudge_usrah": "انضم إلى أسرة واحصل على توجيه مسؤولك",
+  "guest_nudge_journey": "تابع تقدّمك من محب السنة إلى فرض العين",
+  "guest_nudge_cta": "أنشئ حسابًا",
+  "guest_nudge_later": "لاحقًا"
 }

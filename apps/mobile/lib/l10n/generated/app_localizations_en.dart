@@ -2116,4 +2116,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quiz_practice => 'Practise first';
+
+  @override
+  String get guest_nudge_title => 'Keep your diary safe';
+
+  @override
+  String get guest_nudge_backup =>
+      'Your diary is backed up — even if you change phones';
+
+  @override
+  String get guest_nudge_usrah =>
+      'Join an usrah and get your mentor\'s guidance';
+
+  @override
+  String get guest_nudge_journey =>
+      'See your progress from Muhibbus Sunnah to Farze Ain';
+
+  @override
+  String get guest_nudge_cta => 'Create an account';
+
+  @override
+  String get guest_nudge_later => 'Later';
 }

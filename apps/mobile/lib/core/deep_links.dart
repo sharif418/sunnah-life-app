@@ -91,6 +91,7 @@ String? _sanitizePath(String raw) {
   final path = raw;
   if (path.isEmpty || !path.startsWith('/')) return null;
   const allowed = <String>[
+    '/auth', // the weekly guest sign-up reminder
     '/amal',
     '/dawah',
     '/ilm',

@@ -2100,4 +2100,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quiz_practice => 'تدرّب أولًا';
+
+  @override
+  String get guest_nudge_title => 'احفظ سجل أعمالك';
+
+  @override
+  String get guest_nudge_backup => 'تُحفظ مذكرتك — حتى لو غيّرت هاتفك';
+
+  @override
+  String get guest_nudge_usrah => 'انضم إلى أسرة واحصل على توجيه مسؤولك';
+
+  @override
+  String get guest_nudge_journey => 'تابع تقدّمك من محب السنة إلى فرض العين';
+
+  @override
+  String get guest_nudge_cta => 'أنشئ حسابًا';
+
+  @override
+  String get guest_nudge_later => 'لاحقًا';
 }

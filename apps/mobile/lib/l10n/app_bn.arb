@@ -682,5 +682,11 @@
   "quiz_in_days": "%n% দিন পর",
   "quiz_live_now": "এখন চলছে",
   "quiz_join_live": "লাইভ কুইজে যোগ দিন",
-  "quiz_practice": "আগে অনুশীলন করুন"
+  "quiz_practice": "আগে অনুশীলন করুন",
+  "guest_nudge_title": "আপনার আমলের হিসাব নিরাপদ রাখুন",
+  "guest_nudge_backup": "ডায়েরি সংরক্ষিত থাকবে — ফোন বদলালেও হারাবে না",
+  "guest_nudge_usrah": "উসরায় যুক্ত হয়ে দায়িত্বশীলের পরামর্শ পাবেন",
+  "guest_nudge_journey": "মুহিব্বুস সুন্নাহ থেকে ফরযে আইন — নিজের অগ্রগতি দেখবেন",
+  "guest_nudge_cta": "অ্যাকাউন্ট খুলুন",
+  "guest_nudge_later": "পরে"
 }

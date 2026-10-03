@@ -2120,4 +2120,25 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quiz_practice => 'আগে অনুশীলন করুন';
+
+  @override
+  String get guest_nudge_title => 'আপনার আমলের হিসাব নিরাপদ রাখুন';
+
+  @override
+  String get guest_nudge_backup =>
+      'ডায়েরি সংরক্ষিত থাকবে — ফোন বদলালেও হারাবে না';
+
+  @override
+  String get guest_nudge_usrah =>
+      'উসরায় যুক্ত হয়ে দায়িত্বশীলের পরামর্শ পাবেন';
+
+  @override
+  String get guest_nudge_journey =>
+      'মুহিব্বুস সুন্নাহ থেকে ফরযে আইন — নিজের অগ্রগতি দেখবেন';
+
+  @override
+  String get guest_nudge_cta => 'অ্যাকাউন্ট খুলুন';
+
+  @override
+  String get guest_nudge_later => 'পরে';
 }

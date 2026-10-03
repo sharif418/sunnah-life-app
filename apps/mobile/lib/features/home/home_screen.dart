@@ -37,6 +37,7 @@ import '../../l10n/app_strings.dart';
 import '../amal/amal_widgets.dart' show CompletionRing;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
+import 'guest_nudge.dart';
 import 'home_sections.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -298,6 +299,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               onBell: _toggleBell,
               onBellLongPress: _openBellTiming,
             ),
+
+            // ── the weekly guest sign-up nudge (hidden for members) ──
+            const GuestNudgeCard(),
 
             // ── Forbidden times ──
             SectionHeader(

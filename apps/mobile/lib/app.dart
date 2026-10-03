@@ -26,6 +26,7 @@ import 'features/amal/month_screen.dart';
 import 'features/amal/self_test_screen.dart';
 import 'features/amal/today_screen.dart';
 import 'features/auth/auth_screen.dart';
+import 'features/home/guest_nudge.dart' show syncGuestNudgeReminder;
 import 'features/dawah/dawah_requirements_screen.dart';
 import 'features/dawah/dawah_screen.dart';
 import 'features/dawah/usrah_questions_screen.dart';
@@ -103,6 +104,7 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
     onNavigate: (route) => ref.read(routerProvider).go(route),
   );
   ref.watch(pushRegistrationProvider);
+  ref.watch(guestNudgeReminderProvider);
   // C-W3h: /join deep links (cold start + warm stream) → the pending
   // referral store; the auth screen surfaces the chip and rides the code
   // along on sign-in. Idempotent writes; failures swallowed inside.
@@ -129,6 +131,16 @@ final pushRegistrationProvider = Provider<void>((ref) {
         signedIn: signedIn,
       ),
     );
+  }, fireImmediately: true);
+});
+
+/// The weekly guest sign-up reminder follows the session: scheduled while a
+/// guest, cancelled on sign-in.
+final guestNudgeReminderProvider = Provider<void>((ref) {
+  ref.listen<AuthState>(authProvider, (prev, next) {
+    if (next.status == AuthStatus.loading) return;
+    if (prev != null && prev.status == next.status) return;
+    unawaited(syncGuestNudgeReminder(guest: next.status == AuthStatus.guest));
   }, fireImmediately: true);
 });
 

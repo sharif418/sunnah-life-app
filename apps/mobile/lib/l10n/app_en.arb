@@ -682,5 +682,11 @@
   "quiz_in_days": "in %n% days",
   "quiz_live_now": "Live now",
   "quiz_join_live": "Join the live quiz",
-  "quiz_practice": "Practise first"
+  "quiz_practice": "Practise first",
+  "guest_nudge_title": "Keep your diary safe",
+  "guest_nudge_backup": "Your diary is backed up — even if you change phones",
+  "guest_nudge_usrah": "Join an usrah and get your mentor's guidance",
+  "guest_nudge_journey": "See your progress from Muhibbus Sunnah to Farze Ain",
+  "guest_nudge_cta": "Create an account",
+  "guest_nudge_later": "Later"
 }
