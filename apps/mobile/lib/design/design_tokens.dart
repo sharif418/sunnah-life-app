@@ -58,7 +58,7 @@ class SLColors {
   static const Color lightGoldSoft = Color(0xFFF6ECD8);
   static const Color lightAlert = Color(0xFFB93527);
   static const Color lightAlertSoft = Color(0xFFFCE4E4);
-  static const Color lightGoldText = Color(0xFFB7791F);
+  static const Color lightGoldText = Color(0xFF7A5414);
 
   // Dark theme semantics
   static const Color darkBackground = Color(0xFF0E1613);

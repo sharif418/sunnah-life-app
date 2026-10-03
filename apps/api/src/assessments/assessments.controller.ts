@@ -166,22 +166,25 @@ export function mapAssessment(
   };
 }
 
+/** Score of the top scale step, "সম্পূর্ণ" (হয়নি 0 · আংশিক 1 · সম্পূর্ণ 2). */
+export const FULL_SCORE = 2;
+
 /**
- * Majority-per-section rule (unit-tested): passed iff EVERY section has a
- * strict majority (count×2 > total) of its criteria scored ≥ 1.
+ * The paper form's rule (farze_ain_v1.1 instructionsBn): "একটি ক্যাটাগরির
+ * অধিকাংশ ক্রাইটেরিয়া 'সম্পূর্ণ' পর্যায়ে পৌঁছালে … লক্ষ্য অর্জন করেছেন".
+ * Passed iff a strict majority (count×2 > total) of ALL the form's criteria
+ * are scored সম্পূর্ণ. আংশিক does not count, and sections are not gated one
+ * by one — the old rule (every section a majority of ≥ আংশিক) passed a form
+ * the paper would fail.
  */
 export function assessmentPassed(
   template: AssessmentTemplate,
   scores: Record<string, { score?: number }>
 ): boolean {
-  return (
-    template.sections.length > 0 &&
-    template.sections.every((section) => {
-      const total = section.criteria.length;
-      const good = section.criteria.filter((c) => (scores[c.key]?.score ?? 0) >= 1).length;
-      return total === 0 ? true : good * 2 > total;
-    })
-  );
+  const criteria = template.sections.flatMap((section) => section.criteria);
+  if (criteria.length === 0) return false;
+  const full = criteria.filter((c) => (scores[c.key]?.score ?? 0) >= FULL_SCORE).length;
+  return full * 2 > criteria.length;
 }
 
 @Injectable()

@@ -7,15 +7,19 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import * as fontkit from "fontkit";
 import {
+  bdDateKey,
   cellFor,
+  cellForDay,
   dayRangeLabelBn,
   districtLabelBn,
   entriesByAmal,
   monthDays,
   monthLabelBn,
   monthWeeks,
+  resolvePaperLayout,
   tallyFor,
   weekStartForKey,
+  type PaperGroup,
   type ReportAmalDef,
   type MonthlyReportData,
 } from "src/reports/report-data";
@@ -246,5 +250,98 @@ describe("renderMonthlyReport", () => {
     const byAmal = entriesByAmal(data.entries);
     expect(byAmal.get("salat_fajr")?.get("2026-09-02")).toBe("alone");
     expect(byAmal.get("tilawat")?.size).toBe(2);
+  });
+});
+
+// ── the paper layout (2026-10-03: page 1 = the paper monthly sheet) ─────────
+
+const PAPER_LAYOUT = (
+  JSON.parse(
+    readFileSync(join(__dirname, "..", "..", "..", "packages", "content", "diary-instructions.json"), "utf8")
+  ) as { paperLayout: PaperGroup[] }
+).paperLayout;
+
+describe("cellForDay — the paper's ✗ for অসম্পন্ন", () => {
+  const daily = def("adhkar_morning", "boolean", "dhikr");
+  const friday: ReportAmalDef = { ...def("kahf_friday", "boolean", "sunnah"), cadence: "weekly:fri" };
+  const monThu: ReportAmalDef = { ...def("fast_mon_thu", "boolean", "sunnah"), cadence: "weekly:mon_thu" };
+  const TODAY = "2026-09-15";
+
+  it("a past, due, unrecorded day is ✗; a recorded day keeps its mark", () => {
+    expect(cellForDay(daily, undefined, "2026-09-14", TODAY)).toEqual({ kind: "mark", mark: "missed" });
+    expect(cellForDay(daily, false, "2026-09-14", TODAY)).toEqual({ kind: "mark", mark: "missed" });
+    expect(cellForDay(daily, true, "2026-09-14", TODAY)).toEqual({ kind: "mark", mark: "done" });
+  });
+
+  it("today and future days stay blank (still fillable / not yet due)", () => {
+    expect(cellForDay(daily, undefined, TODAY, TODAY)).toEqual({ kind: "empty" });
+    expect(cellForDay(daily, undefined, "2026-09-20", TODAY)).toEqual({ kind: "empty" });
+  });
+
+  it("no ✗ before the member joined", () => {
+    expect(cellForDay(daily, undefined, "2026-09-03", TODAY, "2026-09-10")).toEqual({ kind: "empty" });
+    expect(cellForDay(daily, undefined, "2026-09-12", TODAY, "2026-09-10")).toEqual({ kind: "mark", mark: "missed" });
+  });
+
+  it("a Friday amal is ✗ only on a missed Friday; flexible-day amals never ✗", () => {
+    expect(cellForDay(friday, undefined, "2026-09-11", TODAY)).toEqual({ kind: "mark", mark: "missed" }); // Fri
+    expect(cellForDay(friday, undefined, "2026-09-10", TODAY)).toEqual({ kind: "empty" }); // Thu
+    expect(cellForDay(monThu, undefined, "2026-09-14", TODAY)).toEqual({ kind: "empty" }); // Mon
+  });
+
+  it("bdDateKey shifts to Bangladesh time (UTC+6)", () => {
+    expect(bdDateKey(new Date("2026-09-30T19:00:00Z"))).toBe("2026-10-01");
+    expect(bdDateKey(new Date("2026-09-30T17:00:00Z"))).toBe("2026-09-30");
+  });
+});
+
+describe("resolvePaperLayout", () => {
+  it("covers the paper sheet: 8 groups, 20 rows, in the paper's order", () => {
+    expect(PAPER_LAYOUT.map((g) => g.groupBn)).toEqual([
+      "সালাত ট্র্যাকার",
+      "বিতর",
+      "সুন্নাহ ও নফল সালাত",
+      "জিকর ও তিলাওয়াত",
+      "ইলম বা জ্ঞানার্জন",
+      "করণীয়-বর্জনীয় কাজ (হারাম বর্জন)",
+      "সাপ্তাহিক আমল",
+      "মাসিক আমল",
+    ]);
+    expect(PAPER_LAYOUT.reduce((n, g) => n + g.rows.length, 0)).toBe(20);
+  });
+
+  it("binds rows to active definitions, drops inactive rows/groups, returns the rest as extras", () => {
+    const defs = [
+      def("salat_fajr", "tristate"),
+      def("salat_witr", "boolean"),
+      def("tilawat", "quantity", "quran"),
+      def("durood_100", "count", "dhikr"),
+    ];
+    const { groups, extras } = resolvePaperLayout(PAPER_LAYOUT, defs);
+    expect(groups.map((g) => g.groupBn)).toEqual(["সালাত ট্র্যাকার", "বিতর", "ইলম বা জ্ঞানার্জন"]);
+    expect(groups[0].rows.map((r) => r.labelBn)).toEqual(["ফজর"]);
+    // the ইলম row reads tilawat (tilawat_minutes is inactive here)
+    expect(groups[2].rows[0].defs.map((d) => d.key)).toEqual(["tilawat"]);
+    expect(extras.map((d) => d.key)).toEqual(["durood_100"]);
+  });
+});
+
+describe("renderMonthlyReport — paper layout", () => {
+  it("page 1 paper sheet + extras page + tallies + reviews = 4 pages", async () => {
+    const data: MonthlyReportData = {
+      reportId: "test-report-paper",
+      member: { name: "রাফিউল ইসলাম", memberCode: "DS-000004", district: "dhaka", usrahName: null, joinedOn: "2026-01-01" },
+      month: "2026-09",
+      days: monthDays("2026-09"),
+      definitions: [def("salat_fajr", "tristate"), def("durood_100", "count", "dhikr")],
+      entries: [{ amalKey: "salat_fajr", date: "2026-09-01", value: "jamaat" }],
+      reviews: [],
+      generatedAt: new Date("2026-10-01T00:05:00Z"),
+      paperLayout: PAPER_LAYOUT,
+    };
+    const pdf = await renderMonthlyReport(data);
+    expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+    const pages = (pdf.toString("latin1").match(/\/Type[\s]*\/Page[^s]/g) ?? []).length;
+    expect(pages).toBe(4);
   });
 });

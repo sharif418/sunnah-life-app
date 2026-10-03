@@ -11,6 +11,7 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sqlite3/sqlite3.dart' as sqlite3;
 
 import '../core/sync_merge.dart';
 import '../models/domain.dart' as domain;
@@ -548,6 +549,19 @@ LazyDatabase _openConnection() {
   return LazyDatabase(() async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File(p.join(dir.path, 'sunnah_life.sqlite'));
-    return NativeDatabase.createInBackground(file);
+    return NativeDatabase.createInBackground(file, setup: configureConnection);
   });
+}
+
+/// Runs on every new sqlite connection (top-level: it is sent to the
+/// background isolate). Several isolates open this same file — the app,
+/// the WorkManager bell refresh and the notification-action handler — and
+/// on a first launch the daily task can start while the app bootstraps.
+/// Without a busy timeout the second writer failed immediately with
+/// "database is locked (code 5)" and the app showed the boot error screen.
+///  • busy_timeout: wait up to 10 s for the other writer instead of failing
+///  • WAL: readers never block the writer and vice versa
+void configureConnection(sqlite3.Database db) {
+  db.execute('PRAGMA busy_timeout = 10000;');
+  db.execute('PRAGMA journal_mode = WAL;');
 }

@@ -245,9 +245,17 @@ export function invalidateLevelRulesCache(): void {
 }
 
 /** Whole months spent in the current level (30.44-day months). */
-export function monthsInLevelOf(user: Pick<User, "levelStartedAt">): number {
-  if (!user.levelStartedAt) return 0;
-  const ms = Date.now() - new Date(user.levelStartedAt).getTime();
+/**
+ * Whole months the user has spent at their current level. A user who never
+ * transitioned (signed up at `none`, or seeded/imported at a level) has no
+ * levelStartedAt — they have been at that level since the account was made,
+ * so createdAt is the start. (Returning 0 there made the 4-month Muhibbus
+ * gate unreachable for every member who joined before their first promotion.)
+ */
+export function monthsInLevelOf(user: Pick<User, "levelStartedAt" | "createdAt">): number {
+  const start = user.levelStartedAt ?? user.createdAt;
+  if (!start) return 0;
+  const ms = Date.now() - new Date(start).getTime();
   if (ms <= 0) return 0;
   return Math.floor(ms / (30.44 * 86_400_000));
 }
@@ -296,7 +304,7 @@ export function buildLevelChecklist(rules: LevelRules, facts: LevelFacts): Level
     rows.push({
       key: "assessment_passed",
       labelBn: rules.assessmentKey
-        ? `${rules.assessmentKey} মূল্যায়নে উত্তীর্ণ হওয়া (প্রতি সেকশনে অধিকাংশ 'সম্পূর্ণ')`
+        ? `${rules.assessmentKey} মূল্যায়নে উত্তীর্ণ হওয়া (অধিকাংশ ক্রাইটেরিয়া 'সম্পূর্ণ')`
         : "ফরযে আইন মূল্যায়নে উত্তীর্ণ হওয়া",
       current: facts.assessmentPassed ? 1 : 0,
       target: 1,
@@ -349,10 +357,16 @@ export function buildLevelChecklist(rules: LevelRules, facts: LevelFacts): Level
   return { rows, allMet, autoEligible: allMet && rules.autoPromote };
 }
 
-/** Query the three facts for a user inside an RLS transaction. */
+/**
+ * Query the three facts for a user inside an RLS transaction.
+ * `assessmentCategory` (the target level's rules) restricts the assessment
+ * fact to that category: ক্যাটাগরি ১ and ২ are alternative tracks on the
+ * paper form, so a category-1 pass must not satisfy farze_ain_2.
+ */
 export async function gatherLevelFacts(
   tx: Prisma.TransactionClient,
-  user: User
+  user: User,
+  assessmentCategory?: number
 ): Promise<LevelFacts> {
   const months = monthsInLevelOf(user);
 
@@ -360,7 +374,12 @@ export async function gatherLevelFacts(
   // assessment satisfies the rule — a pending_confirmation or declined
   // result is not final and must never gate/promote a level transition.
   const passed = await tx.assessment.findFirst({
-    where: { assesseeId: user.id, result: "passed", status: "confirmed" },
+    where: {
+      assesseeId: user.id,
+      result: "passed",
+      status: "confirmed",
+      ...(assessmentCategory ? { participantCategory: assessmentCategory } : {}),
+    },
     select: { id: true },
   });
 
@@ -369,8 +388,12 @@ export async function gatherLevelFacts(
     select: { descendantId: true },
   });
   const downlineIds = closures.map((c) => c.descendantId);
+  // "আরো ৫ জনকে মুহিব্বুস সুন্নাহ স্তরে নিয়ে আসা" — a madu who has since
+  // moved on to Farze Ain was still brought to Muhibbus: count at-or-above.
   const referralsAtLevel = downlineIds.length
-    ? await tx.user.count({ where: { id: { in: downlineIds }, level: "muhibbus_sunnah" } })
+    ? await tx.user.count({
+        where: { id: { in: downlineIds }, level: { in: ["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"] } },
+      })
     : 0;
 
   return { months, assessmentPassed: !!passed, referralsAtLevel };
@@ -507,12 +530,10 @@ export async function computeRequirements(
   user: User
 ): Promise<LevelRequirement[]> {
   // Rules apply to the user's NEXT level (Phase C/D ladder: none → muhibbus
-  // via outline review; muhibbus → farze_ain via the assessment).
-  const target = nextLevelOf(user.level);
-  const [rules, facts] = await Promise.all([
-    loadLevelRules(target === "none" ? "muhibbus_sunnah" : target, tx),
-    gatherLevelFacts(tx, user),
-  ]);
+  // via outline review; muhibbus → farze_ain_1 OR _2 via the assessment).
+  const target = await nextLevelFor(tx, user);
+  const rules = await loadLevelRules(target === "none" ? "muhibbus_sunnah" : target, tx);
+  const facts = await gatherLevelFacts(tx, user, rules.assessmentCategory);
   const { rows } = buildLevelChecklist(rules, facts);
   return rows.map((r) => ({
     key: r.key,
@@ -522,7 +543,26 @@ export async function computeRequirements(
   }));
 }
 
-/** Next rung of the tarbiyah ladder (used by /api/dawah). */
+/**
+ * The user's next level, track-aware. From Muhibbus the paper form offers two
+ * ALTERNATIVE Farze Ain tracks (ক্যাটাগরি ১: প্রাথমিক · ক্যাটাগরি ২:
+ * অগ্রগামী); the track is the participantCategory of the member's latest
+ * non-declined assessment, defaulting to ক্যাটাগরি ১ before any assessment.
+ */
+export async function nextLevelFor(
+  tx: Prisma.TransactionClient,
+  user: Pick<User, "id" | "level">
+): Promise<User["level"]> {
+  if (user.level !== "muhibbus_sunnah") return nextLevelOf(user.level);
+  const latest = await tx.assessment.findFirst({
+    where: { assesseeId: user.id, status: { not: "declined" } },
+    orderBy: { createdAt: "desc" },
+    select: { participantCategory: true },
+  });
+  return latest?.participantCategory === 2 ? "farze_ain_2" : "farze_ain_1";
+}
+
+/** Next rung of the tarbiyah ladder, ignoring the Farze Ain track choice. */
 export function nextLevelOf(level: User["level"]): User["level"] {
   switch (level) {
     case "none":

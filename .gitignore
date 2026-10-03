@@ -43,7 +43,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 local-*
-.claude
+.claude/*
+# …except the shared project skills (design workflow etc.)
+!.claude/skills/
 .z-ai-config
 *.log
 dev.log
@@ -103,3 +105,6 @@ apps/mobile/artifacts/
 
 # agent scratch records (worklog.md is the shared log)
 agent-ctx/
+
+# flutter golden diff output
+apps/mobile/test/failures/

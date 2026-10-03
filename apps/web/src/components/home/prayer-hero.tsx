@@ -8,7 +8,7 @@ import { LocationSheet, cityLabelBn } from "@/components/home/city-sheet";
 import { useNow, usePrayerDay, formatCountdownBn, SCHEDULE_ROWS } from "@/components/home/prayer-hooks";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/store";
-import { banglaDate, gregorianBn, hijriDate, timePeriodBn, toBn, formatTimeBn, dateKey } from "@/lib/calendars";
+import { banglaDate, gregorianBn, hijriDate, timePeriodBnFromMinutes, toBn, formatTimeBn, dateKey } from "@/lib/calendars";
 import { PRAYER_LABELS_BN } from "@/types/domain";
 import type { PrayerKey } from "@/types/domain";
 import { MapPin, ChevronDown, Sun, MoonStar } from "lucide-react";
@@ -41,7 +41,7 @@ export function PrayerHero() {
     const h24 = now.getHours();
     const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
     const p2 = (n: number) => String(n).padStart(2, "0");
-    return `${timePeriodBn(h24)} ${toBn(h12)}:${toBn(p2(now.getMinutes()))}:${toBn(p2(now.getSeconds()))}`;
+    return `${timePeriodBnFromMinutes(h24 * 60 + now.getMinutes())} ${toBn(h12)}:${toBn(p2(now.getMinutes()))}:${toBn(p2(now.getSeconds()))}`;
   }, [now]);
 
   return (

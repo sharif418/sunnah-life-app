@@ -2,8 +2,8 @@
 
 // নতুন মূল্যায়ন ডায়ালগ — উসরা প্রধান+ কোনো সদস্যের ফরযে আইন মূল্যায়ন (v১)
 // গঠন করেন: প্রতিটি মানদণ্ডে ০/১/২ স্কোর + সার্বিক মন্তব্য →
-// api.createAssessment। ফলাফল সার্ভার নির্ধারণ করে (প্রতি সেকশনে
-// সংখ্যাগরিষ্ঠ মানদণ্ডে ≥১ হলে "উত্তীর্ণ")।
+// api.createAssessment। ফলাফল সার্ভার নির্ধারণ করে (কাগজের নিয়ম: মোট
+// মানদণ্ডের অধিকাংশ "সম্পূর্ণ" (২) হলে "উত্তীর্ণ")।
 
 import * as React from "react";
 import { toast } from "sonner";
@@ -125,8 +125,8 @@ export function AssessmentDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">১ — সাধারণ</SelectItem>
-                    <SelectItem value="2">২ — হাফেজ</SelectItem>
+                    <SelectItem value="1">১ — প্রাথমিক দ্বীন শিক্ষা ও দাওয়াত</SelectItem>
+                    <SelectItem value="2">২ — অগ্রগামী ইলম ও পূর্ণাঙ্গ দাঈ</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

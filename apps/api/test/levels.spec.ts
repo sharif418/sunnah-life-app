@@ -145,14 +145,20 @@ describe("buildLevelChecklist — met/not-met matrix", () => {
 });
 
 describe("monthsInLevelOf — whole 30.44-day months", () => {
-  it("null levelStartedAt → 0 months", () => {
-    expect(monthsInLevelOf({ levelStartedAt: null })).toBe(0);
+  const daysAgo = (d: number) => new Date(Date.now() - d * 86400000).toISOString();
+  it("never transitioned (null levelStartedAt) → months since the account was created", () => {
+    // The old `null → 0` made the 4-month Muhibbus gate unreachable for
+    // everyone still at their sign-up level.
+    expect(monthsInLevelOf({ levelStartedAt: null, createdAt: daysAgo(130) })).toBe(4);
+  });
+  it("levelStartedAt wins over createdAt", () => {
+    expect(monthsInLevelOf({ levelStartedAt: daysAgo(10), createdAt: daysAgo(400) })).toBe(0);
   });
   it("130 days → 4 whole months", () => {
-    expect(monthsInLevelOf({ levelStartedAt: new Date(Date.now() - 130 * 86400000).toISOString() })).toBe(4);
+    expect(monthsInLevelOf({ levelStartedAt: daysAgo(130), createdAt: daysAgo(130) })).toBe(4);
   });
   it("91 days → 2 whole months (not 3)", () => {
-    expect(monthsInLevelOf({ levelStartedAt: new Date(Date.now() - 91 * 86400000).toISOString() })).toBe(2);
+    expect(monthsInLevelOf({ levelStartedAt: daysAgo(91), createdAt: daysAgo(91) })).toBe(2);
   });
 });
 

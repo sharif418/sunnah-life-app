@@ -47,7 +47,10 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
           return ListView(
             padding: const EdgeInsets.all(SLSpacing.s16),
             children: [
-              for (final quiz in quizzes)
+              for (final quiz in quizzes) ...[
+                // AppCard has zero margin — space the cards explicitly.
+                if (quiz != quizzes.first)
+                  const SizedBox(height: SLSpacing.s12),
                 AppCard(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => _QuizRunner(quiz: quiz)),
@@ -77,6 +80,7 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
                     ],
                   ),
                 ),
+              ],
             ],
           );
         },
@@ -135,7 +139,9 @@ class _QuizRunnerState extends State<_QuizRunner> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  pct >= 70 ? PhosphorIconsFill.trophy : PhosphorIconsRegular.graduationCap,
+                  pct >= 70
+                      ? PhosphorIconsFill.trophy
+                      : PhosphorIconsRegular.graduationCap,
                   size: 64,
                   color: pct >= 70
                       ? theme.colorScheme.tertiary
@@ -274,9 +280,15 @@ class _OptionTile extends StatelessWidget {
             children: [
               Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
               if (state == _OptionState.correct)
-                Icon(PhosphorIconsFill.checkCircle, color: theme.colorScheme.onPrimary)
+                Icon(
+                  PhosphorIconsFill.checkCircle,
+                  color: theme.colorScheme.onPrimary,
+                )
               else if (state == _OptionState.wrong)
-                Icon(PhosphorIconsRegular.xCircle, color: theme.colorScheme.onError),
+                Icon(
+                  PhosphorIconsRegular.xCircle,
+                  color: theme.colorScheme.onError,
+                ),
             ],
           ),
         ),

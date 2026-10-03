@@ -87,18 +87,32 @@ export const PACK_KEYS = Object.keys(PACK_FILES) as PackKey[];
 const packCache = new Map<string, { at: number; data: unknown }>();
 const PACK_TTL = 5 * 60 * 1000;
 
+/**
+ * Where the admin CMS keeps its edited packs: on the API's persistent
+ * storage volume (STORAGE_DIR, `apistorage:/app/storage` in the Coolify
+ * stack), NOT in CONTENT_DIR. CONTENT_DIR lives in the image, so edits
+ * written there vanished on every redeploy. An override, once written,
+ * wins over the pack baked into the image until it is deleted.
+ */
+export function packOverrideDir(): string {
+  return path.resolve(process.env.STORAGE_DIR || "./storage", "content-overrides");
+}
+
 export async function loadPack(key: string): Promise<unknown | null> {
   const file = PACK_FILES[key as PackKey];
   if (!file) return null;
   const hit = packCache.get(key);
   if (hit && Date.now() - hit.at < PACK_TTL) return hit.data;
-  try {
-    const data = JSON.parse(await fs.readFile(path.join(contentDir(), file), "utf8"));
-    packCache.set(key, { at: Date.now(), data });
-    return data;
-  } catch {
-    return null;
+  for (const dir of [packOverrideDir(), contentDir()]) {
+    try {
+      const data = JSON.parse(await fs.readFile(path.join(dir, file), "utf8"));
+      packCache.set(key, { at: Date.now(), data });
+      return data;
+    } catch {
+      // no override (or unreadable) → fall through to the baked-in pack
+    }
   }
+  return null;
 }
 
 /** W4h — drop the pack cache after the admin CMS writes a pack (no key =

@@ -1,22 +1,43 @@
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "crypto";
+import { promises as fs } from "fs";
+import path from "path";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
 import { StorageService } from "../storage/storage.service";
 import { loadActiveDefinitions, bdToday, type AmalDefRow } from "../shared/amal";
 import { toBn } from "../shared/calendars";
+import { contentDir } from "../shared/levels";
 import { renderMonthlyReport } from "./report-renderer";
 import {
   dayRangeLabelBn,
   monthDays,
   monthLabelBn,
   monthWeeks,
+  bdDateKey,
   type MonthlyReportData,
+  type PaperGroup,
   type ReportAmalDef,
   type ReportWeekComment,
 } from "./report-data";
 import type { User } from "../shared/domain";
+
+/**
+ * The paper monthly sheet's layout (packages/content/diary-instructions.json
+ * → paperLayout). Missing or unreadable → null: the renderer falls back to
+ * the catalog-grouped grid instead of failing the report.
+ */
+async function loadPaperLayout(): Promise<PaperGroup[] | null> {
+  try {
+    const raw = JSON.parse(await fs.readFile(path.join(contentDir(), "diary-instructions.json"), "utf8")) as {
+      paperLayout?: PaperGroup[];
+    };
+    return Array.isArray(raw.paperLayout) && raw.paperLayout.length ? raw.paperLayout : null;
+  } catch {
+    return null;
+  }
+}
 
 /** Rendered-row shape returned by the endpoints (storage key + status). */
 export interface ReportRow {
@@ -107,6 +128,8 @@ export class ReportsService {
     const reportId = existing?.id ?? randomUUID();
     const storageKey = `reports/${target.id}/${month}.pdf`;
 
+    const paperLayout = await loadPaperLayout();
+
     // ── load everything THROUGH RLS AS THE MEMBER ─────────────────────────────
     const data = await this.rls.run(target, async (tx) => {
       const days = monthDays(month);
@@ -160,6 +183,7 @@ export class ReportsService {
           memberCode: target.memberCode,
           district: target.district,
           usrahName: usrah?.name ?? null,
+          joinedOn: bdDateKey(new Date(target.createdAt)),
         },
         month,
         days,
@@ -167,6 +191,7 @@ export class ReportsService {
         entries: entries.map((e) => ({ amalKey: e.amalKey, date: e.date, value: e.valueJson })),
         reviews: comments,
         generatedAt: new Date(),
+        paperLayout: paperLayout ?? undefined,
       };
       return payload;
     });

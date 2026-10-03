@@ -272,24 +272,29 @@ class _DawahOverviewTab extends ConsumerWidget {
             ),
             const SizedBox(height: SLSpacing.s12),
 
-            // Stats row
-            Row(
-              children: [
-                _StatCell(
-                  label: context.t('dawah_invited'),
-                  value:
-                      '${bn ? toBn(overview.invitedCount) : overview.invitedCount}',
-                ),
-                _StatCell(
-                  label: context.t('dawah_my_level'),
-                  value: context.t(overview.level.labelKey),
-                ),
-                _StatCell(
-                  label: context.t('dawah_months_in_level'),
-                  value:
-                      '${bn ? toBn(overview.monthsInLevel) : overview.monthsInLevel}',
-                ),
-              ],
+            // Stats row — equal-height cells (IntrinsicHeight + stretch) so a
+            // two-line level name doesn't leave its neighbours short.
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                spacing: SLSpacing.s8,
+                children: [
+                  _StatCell(
+                    label: context.t('dawah_invited'),
+                    value:
+                        '${bn ? toBn(overview.invitedCount) : overview.invitedCount}',
+                  ),
+                  _StatCell(
+                    label: context.t('dawah_my_level'),
+                    value: context.t(overview.level.labelKey),
+                  ),
+                  _StatCell(
+                    label: context.t('dawah_months_in_level'),
+                    value:
+                        '${bn ? toBn(overview.monthsInLevel) : overview.monthsInLevel}',
+                  ),
+                ],
+              ),
             ),
             const SizedBox(height: SLSpacing.s12),
 
@@ -467,36 +472,33 @@ class _StatCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Expanded(
-      child: Padding(
-        padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
-        child: Container(
-          padding: const EdgeInsets.all(SLSpacing.s12),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerLow,
-            borderRadius: SLRadius.brMd,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                // W5: "মোট দাওয়াত দিয়েছি" truncated with an ellipsis at
-                // 412dp — the label wraps to a second line instead.
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodySmall,
+      child: Container(
+        padding: const EdgeInsets.all(SLSpacing.s12),
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surfaceContainerLow,
+          borderRadius: SLRadius.brMd,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              label,
+              // W5: "মোট দাওয়াত দিয়েছি" truncated with an ellipsis at
+              // 412dp — the label wraps instead (3 lines at 360dp/1.3x).
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodySmall,
+            ),
+            const SizedBox(height: 2),
+            Text(
+              value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(height: 2),
-              Text(
-                value,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

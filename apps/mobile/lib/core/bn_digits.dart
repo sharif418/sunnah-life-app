@@ -20,6 +20,21 @@ String toBn(Object value) {
   );
 }
 
+/// Group an integer the South-Asian way (last three digits, then pairs):
+/// 1402500 → "14,02,500". Taka amounts are read this way in Bangladesh.
+String groupLakh(int value) {
+  final negative = value < 0;
+  final digits = value.abs().toString();
+  if (digits.length <= 3) return negative ? '-$digits' : digits;
+  final head = digits.substring(0, digits.length - 3);
+  final tail = digits.substring(digits.length - 3);
+  final pairs = <String>[];
+  for (var end = head.length; end > 0; end -= 2) {
+    pairs.insert(0, head.substring(end - 2 < 0 ? 0 : end - 2, end));
+  }
+  return '${negative ? '-' : ''}${pairs.join(',')},$tail';
+}
+
 /// Digit formatter that follows the app language.
 String fmtNum(Object value, {bool bengali = true}) =>
     bengali ? toBn(value) : value.toString();

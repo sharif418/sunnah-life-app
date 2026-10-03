@@ -31,14 +31,13 @@ import { Roles } from "../common/roles.decorator";
 import { RolesGuard } from "../common/roles.guard";
 import { LevelsService, requireBengaliReason } from "../levels/levels.service";
 import {
-  contentDir,
   invalidateLevelRulesCache,
   loadLevelRulesDoc,
   validateLevelRulesNode,
   LevelRulesValidationError,
   type LevelKey,
 } from "../shared/levels";
-import { invalidatePackCache, PACK_FILES, type PackKey } from "../shared/quran";
+import { invalidatePackCache, PACK_FILES, packOverrideDir, type PackKey } from "../shared/quran";
 import { SupportReplyDto } from "../support/support.controller";
 import {
   bdToday,
@@ -1919,11 +1918,10 @@ export class AdminService {
    * the size cap — no invented per-item schema. Audited
    * (content_pack_update with the pack's byte size + item count).
    *
-   * NOTE (honest limitation, documented): the write goes to the API's content
-   * dir — in a container deployment that is the container's writable layer,
-   * so a redeploy restores the pack baked into the image. The packs in git
-   * remain the seed; a lasting edit wants a redeploy-time sync or a DB-backed
-   * pack table (follow-up mission decision).
+   * The write goes to packOverrideDir() on the persistent storage volume, so
+   * it survives redeploys (the old write into CONTENT_DIR landed in the
+   * container's writable layer and a redeploy silently restored the image's
+   * pack). The pack in git stays the seed; the override wins once written.
    */
   async updateContentPack(viewer: User | null, pack: string, body: unknown) {
     const user = this.guard.requireUser(viewer);
@@ -1949,7 +1947,9 @@ export class AdminService {
     }
 
     const file = PACK_FILES[key];
-    const target = path.join(contentDir(), file);
+    const dir = packOverrideDir();
+    await fsPromises.mkdir(dir, { recursive: true });
+    const target = path.join(dir, file);
     // atomic: write beside the target, then rename over it
     const tmp = `${target}.admin-tmp`;
     await fsPromises.writeFile(tmp, `${serialized}\n`, "utf8");

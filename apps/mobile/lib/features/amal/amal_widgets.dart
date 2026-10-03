@@ -34,7 +34,16 @@ class TriStateChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    Widget chip(String key, String label, IconData icon, Color active) {
+    // Selected fills form a ladder: জামাতে green, একা gold, কাযা red — each
+    // with its own readable on-color (the old একা fill was `secondary` cream
+    // under `onPrimary` cream text, 1.1:1).
+    Widget chip(
+      String key,
+      String label,
+      IconData icon,
+      Color active,
+      Color onActive,
+    ) {
       final selected = value == key;
       return Expanded(
         child: Padding(
@@ -70,7 +79,7 @@ class TriStateChips extends StatelessWidget {
                             icon,
                             size: 16,
                             color: selected
-                                ? theme.colorScheme.onPrimary
+                                ? onActive
                                 : theme.colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
@@ -80,7 +89,7 @@ class TriStateChips extends StatelessWidget {
                             style: theme.textTheme.bodySmall?.copyWith(
                               fontWeight: FontWeight.w600,
                               color: selected
-                                  ? theme.colorScheme.onPrimary
+                                  ? onActive
                                   : theme.colorScheme.onSurfaceVariant,
                             ),
                           ),
@@ -103,14 +112,22 @@ class TriStateChips extends StatelessWidget {
           labels.jamaat,
           PhosphorIconsRegular.usersThree,
           theme.colorScheme.primary,
+          theme.colorScheme.onPrimary,
         ),
         chip(
           'alone',
           labels.alone,
           PhosphorIconsRegular.user,
-          theme.colorScheme.secondary,
+          theme.colorScheme.tertiary,
+          theme.colorScheme.onTertiary,
         ),
-        chip('qaza', labels.qaza, PhosphorIconsRegular.clock, theme.colorScheme.error),
+        chip(
+          'qaza',
+          labels.qaza,
+          PhosphorIconsRegular.clock,
+          theme.colorScheme.error,
+          theme.colorScheme.onError,
+        ),
       ],
     );
   }
@@ -264,9 +281,7 @@ class CountStepper extends StatelessWidget {
     final increase = icon == PhosphorIconsRegular.plus;
     return Semantics(
       button: true,
-      label: increase
-          ? context.t('increase')
-          : context.t('decrease'),
+      label: increase ? context.t('increase') : context.t('decrease'),
       child: InkWell(
         onTap: enabled ? onTap : null,
         customBorder: const CircleBorder(),
@@ -428,7 +443,11 @@ class _QuantityInputState extends State<QuantityInput> {
           ),
         ),
         const SizedBox(width: SLSpacing.s8),
-        _btn(context, PhosphorIconsRegular.plus, () => widget.onChanged(widget.value + 0.5)),
+        _btn(
+          context,
+          PhosphorIconsRegular.plus,
+          () => widget.onChanged(widget.value + 0.5),
+        ),
       ],
     );
   }
@@ -438,9 +457,7 @@ class _QuantityInputState extends State<QuantityInput> {
     final increase = icon == PhosphorIconsRegular.plus;
     return Semantics(
       button: true,
-      label: increase
-          ? context.t('increase')
-          : context.t('decrease'),
+      label: increase ? context.t('increase') : context.t('decrease'),
       child: InkWell(
         onTap: widget.enabled ? onTap : null,
         customBorder: const CircleBorder(),
@@ -546,7 +563,9 @@ class TilawatBeginnerCard extends StatelessWidget {
                 child: Text(
                   context.t('tilawat_begin_chip'),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: SLColors.goldDeep,
+                    color: theme.brightness == Brightness.dark
+                        ? SLColors.darkGoldText
+                        : SLColors.lightGoldText,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -585,9 +604,7 @@ class TilawatBeginnerCard extends StatelessWidget {
                       }
                     : null,
                 icon: const Icon(PhosphorIconsRegular.plus, size: 18),
-                label: Text(
-                  '+${_n(5)} ${context.t('tilawat_begin_minutes')}',
-                ),
+                label: Text('+${_n(5)} ${context.t('tilawat_begin_minutes')}'),
               ),
               const SizedBox(width: SLSpacing.s8),
               Expanded(
@@ -621,7 +638,6 @@ class TilawatBeginnerCard extends StatelessWidget {
     );
   }
 }
-
 
 /// One heatmap cell in the month grid (paper-diary layout).
 class HeatmapCell extends StatelessWidget {
@@ -829,70 +845,79 @@ class LeaderboardBandCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final bn = context.isBn;
-    return ref.watch(leaderboardMeProvider).when(
-      data: (me) {
-        if (me == null) return const SizedBox.shrink();
-        final color = switch (me.band) {
-          LeaderboardBand.top10 => SLColors.goldDeep,
-          LeaderboardBand.top25 => theme.colorScheme.primary,
-          LeaderboardBand.top50 => theme.colorScheme.tertiary,
-          LeaderboardBand.top75 => theme.colorScheme.secondary,
-          LeaderboardBand.bottom => theme.colorScheme.onSurfaceVariant,
-        };
-        return Padding(
-          padding: const EdgeInsets.only(top: SLSpacing.s8),
-          child: AppCard(
-            key: const ValueKey('leaderboard_band_card'),
-            child: Row(
-              children: [
-                Icon(
-                  PhosphorIconsRegular.chartBar,
-                  color: theme.colorScheme.primary,
-                ),
-                const SizedBox(width: SLSpacing.s12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        context.t('leaderboard_title'),
-                        style: theme.textTheme.bodySmall,
+    return ref
+        .watch(leaderboardMeProvider)
+        .when(
+          data: (me) {
+            if (me == null) return const SizedBox.shrink();
+            // Band label colors double as TEXT colors on a 15% tint of
+            // themselves, so each must be an ink (≥ 4.5:1 on the card) —
+            // the old tertiary gold / secondary cream bands were 2.6:1 and
+            // ~1.1:1.
+            final dark = theme.brightness == Brightness.dark;
+            final color = switch (me.band) {
+              LeaderboardBand.top10 =>
+                dark ? SLColors.darkGoldText : SLColors.lightGoldText,
+              LeaderboardBand.top25 => theme.colorScheme.primary,
+              LeaderboardBand.top50 =>
+                dark ? SLColors.darkSuccess : SLColors.lightSuccess,
+              LeaderboardBand.top75 => theme.colorScheme.onSurfaceVariant,
+              LeaderboardBand.bottom => theme.colorScheme.onSurfaceVariant,
+            };
+            return Padding(
+              padding: const EdgeInsets.only(top: SLSpacing.s8),
+              child: AppCard(
+                key: const ValueKey('leaderboard_band_card'),
+                child: Row(
+                  children: [
+                    Icon(
+                      PhosphorIconsRegular.chartBar,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: SLSpacing.s12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            context.t('leaderboard_title'),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                          Text(
+                            '${context.t('leaderboard_points')}: ${bn ? toBn(me.myPointsDisplay) : me.myPointsDisplay} · '
+                            '${bn ? toBn(me.windowDays) : me.windowDays} ${context.t('leaderboard_window_days')}',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(
-                        '${context.t('leaderboard_points')}: ${bn ? toBn(me.myPointsDisplay) : me.myPointsDisplay} · '
-                        '${bn ? toBn(me.windowDays) : me.windowDays} ${context.t('leaderboard_window_days')}',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
+                    ),
+                    Container(
+                      key: ValueKey('leaderboard_band_chip_${me.band.json}'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.15),
+                        borderRadius: SLRadius.brPill,
+                      ),
+                      child: Text(
+                        context.t(me.band.labelKey),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: color,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                Container(
-                  key: ValueKey('leaderboard_band_chip_${me.band.json}'),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: SLRadius.brPill,
-                  ),
-                  child: Text(
-                    context.t(me.band.labelKey),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w700,
                     ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
+          loading: () => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         );
-      },
-      loading: () => const SizedBox.shrink(),
-      error: (_, _) => const SizedBox.shrink(),
-    );
   }
 }

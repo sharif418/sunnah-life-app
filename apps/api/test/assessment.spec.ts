@@ -1,4 +1,4 @@
-// Unit tests for the assessment rule engine: majority-per-section pass rule
+// Unit tests for the assessment rule engine: the paper's majority-সম্পূর্ণ pass rule
 // and the score percentage (src/assessments/assessments.controller.ts).
 // W4i adds the e2e lifecycle (below): submit → pending_confirmation + Fajr
 // reminder → the ASSESSEE's own OTP confirm/decline → the level engine only
@@ -10,6 +10,7 @@ import request from "supertest";
 import { AppModule } from "src/app.module";
 import { RlsService } from "src/common/rls.service";
 import { assessmentPassed, scorePctOf } from "src/assessments/assessments.controller";
+import { gatherLevelFacts, nextLevelFor } from "src/shared/levels";
 import type { AssessmentTemplate } from "src/shared/domain";
 
 const template: AssessmentTemplate = {
@@ -38,31 +39,38 @@ const template: AssessmentTemplate = {
   ],
 };
 
-describe("assessmentPassed — strict majority (count×2 > total) of criteria ≥1 per section", () => {
+describe("assessmentPassed — the paper rule: a strict majority of ALL criteria scored সম্পূর্ণ (2)", () => {
   it("all 2s → passed", () => {
     const scores = { i1: { score: 2 }, i2: { score: 2 }, i3: { score: 2 }, a1: { score: 2 }, a2: { score: 2 } };
     expect(assessmentPassed(template, scores)).toBe(true);
   });
 
-  it("a 2-criteria section needs BOTH ≥1 (strict majority: 2×2 > 2)", () => {
-    // akhlaq has 2 criteria; one 0 → section fails even though iman passes.
-    const scores = { i1: { score: 1 }, i2: { score: 1 }, i3: { score: 0 }, a1: { score: 1 }, a2: { score: 0 } };
+  it("আংশিক (1) never counts — all 1s fail (the old ≥1 rule passed this)", () => {
+    const scores = { i1: { score: 1 }, i2: { score: 1 }, i3: { score: 1 }, a1: { score: 1 }, a2: { score: 1 } };
     expect(assessmentPassed(template, scores)).toBe(false);
   });
 
-  it("iman majority but akhlaq half-failed → not_yet (mirrors the seeded 01000000009 case)", () => {
-    const scores = { i1: { score: 1 }, i2: { score: 1 }, i3: { score: 1 }, a1: { score: 1 }, a2: { score: 0 } };
-    expect(assessmentPassed(template, scores)).toBe(false);
+  it("3 of 5 সম্পূর্ণ → passed even with one section at 0 (no per-section gate)", () => {
+    const scores = { i1: { score: 2 }, i2: { score: 2 }, i3: { score: 2 }, a1: { score: 0 }, a2: { score: 0 } };
+    expect(assessmentPassed(template, scores)).toBe(true);
+  });
+
+  it("exactly half is not a majority", () => {
+    const four: AssessmentTemplate = {
+      ...template,
+      sections: [{ key: "x", titleBn: "x", criteria: [{ key: "x1", titleBn: "1" }, { key: "x2", titleBn: "2" }, { key: "x3", titleBn: "3" }, { key: "x4", titleBn: "4" }] }],
+    };
+    expect(assessmentPassed(four, { x1: { score: 2 }, x2: { score: 2 }, x3: { score: 1 }, x4: { score: 1 } })).toBe(false);
   });
 
   it("missing scores count as 0", () => {
-    const scores = { i1: { score: 2 }, i2: { score: 2 } }; // i3, a1, a2 missing
+    const scores = { i1: { score: 2 }, i2: { score: 2 } }; // 2 of 5
     expect(assessmentPassed(template, scores)).toBe(false);
   });
 
-  it("zero-criteria sections never block", () => {
+  it("a form with no criteria never passes", () => {
     const empty: AssessmentTemplate = { ...template, sections: [{ key: "x", titleBn: "x", criteria: [] }] };
-    expect(assessmentPassed(empty, {})).toBe(true);
+    expect(assessmentPassed(empty, {})).toBe(false);
   });
 });
 
@@ -271,6 +279,20 @@ describe("assessment acknowledgment lifecycle (W4i e2e)", () => {
       (r) => r.key === "assessment_passed"
     );
     expect(row!.met).toBe(true);
+  });
+
+  it("Farze Ain categories are alternative tracks: a category-1 pass does not satisfy category 2", async () => {
+    const member = await rls.system((tx) => tx.user.findUniqueOrThrow({ where: { id: memberId } }));
+    const domainMember = { ...member, levelStartedAt: member.levelStartedAt?.toISOString() ?? null, createdAt: member.createdAt.toISOString() } as never;
+    const [cat1, cat2, next] = await rls.system(async (tx) => [
+      await gatherLevelFacts(tx, domainMember, 1),
+      await gatherLevelFacts(tx, domainMember, 2),
+      await nextLevelFor(tx, member as never),
+    ]);
+    expect((cat1 as { assessmentPassed: boolean }).assessmentPassed).toBe(true);
+    expect((cat2 as { assessmentPassed: boolean }).assessmentPassed).toBe(false);
+    // the track follows the member's latest assessment (category 1 here)
+    expect(next).toBe("farze_ain_1");
   });
 
   it("decline → status declined + reason + Fajr reminder to the invigilator + audit", async () => {

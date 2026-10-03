@@ -522,14 +522,47 @@ class BootstrapGate extends ConsumerWidget {
           child: const _SplashLogo(),
         ),
       ),
-      error: (e, _) => Directionality(
-        textDirection: TextDirection.ltr,
-        child: MaterialApp(
+      error: (e, _) {
+        debugPrint('bootstrap failed: $e');
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
           home: Scaffold(
-            body: Center(child: Text('${S.tr(Lang.bn, 'boot_failed')}: $e')),
+            backgroundColor: SLColors.primary,
+            body: SafeArea(
+              child: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(SLSpacing.s24),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const _SplashLogo(),
+                      const SizedBox(height: SLSpacing.s24),
+                      Text(
+                        S.tr(Lang.bn, 'boot_failed'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: kAppFontFamily,
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(height: SLSpacing.s16),
+                      FilledButton(
+                        onPressed: () => ref.invalidate(bootstrapProvider),
+                        child: const Text(
+                          'আবার চেষ্টা করুন',
+                          style: TextStyle(fontFamily: kAppFontFamily),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
       data: (_) => const SunnahLifeApp(),
     );
   }

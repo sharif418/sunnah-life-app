@@ -18,9 +18,12 @@
 // diary uses:
 //   ✔  জামাত    ⁄  একা    □  কাযা    (blank) বাদ/এন্ট্রি নেই
 //
-// All text is drawn with manual positioning (pdfkit y = text baseline) and
-// `lineBreak: false` — no wrapper, no pdfkit alignment; widths/centring are
-// computed with widthOfString (which itself runs the shaped layout).
+// All text is drawn with manual positioning at an explicit BASELINE
+// (`baseline: "alphabetic"` — pdfkit's default y is the TOP of the line box,
+// which drew every label ~one line low, under the next row's fill, until
+// 2026-10-03) and `lineBreak: false` — no wrapper, no pdfkit alignment;
+// widths/centring are computed with widthOfString (which itself runs the
+// shaped layout).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import PDFDocument from "pdfkit";
@@ -29,17 +32,21 @@ import { AMAL_CATEGORY_LABELS_BN } from "../shared/domain";
 import { BD_TZ_HOURS } from "../shared/amal";
 import { formatTimeBn, gregorianBn, toBn } from "../shared/calendars";
 import {
+  bdDateKey,
   cellFor,
+  cellForDay,
   dayRangeLabelBn,
   districtLabelBn,
   entriesByAmal,
   monthLabelBn,
   monthLabelEn,
   monthWeeks,
+  resolvePaperLayout,
   tallyFor,
   type CellMark,
   type MonthlyReportData,
   type ReportAmalDef,
+  type ResolvedPaperGroup,
 } from "./report-data";
 
 // Fonts resolve identically from src/ (bun run / jest) and dist/ (node):
@@ -61,6 +68,7 @@ const GOLD = "#C99A3B";
 const LINE = "#B9C6BE";
 const INK = "#20302A";
 const MUTED = "#5B6B63";
+const MISS = "#B93527";
 
 const NAME_COL_W = 138;
 
@@ -83,11 +91,24 @@ export function renderMonthlyReport(data: MonthlyReportData): Promise<Buffer> {
   doc.registerFont("bn", FONT_REGULAR);
   doc.registerFont("bn-bold", FONT_BOLD);
 
-  drawHeader(doc, data);
-  drawLegend(doc);
-  drawGrid(doc, data);
+  if (data.paperLayout?.length) {
+    // Page 1 mirrors the paper monthly sheet (its groups, rows and order);
+    // whatever the app tracks beyond the paper follows on its own page.
+    const { groups, extras } = resolvePaperLayout(data.paperLayout, data.definitions);
+    drawPaperSheet(doc, data, groups);
+    if (extras.length) {
+      doc.addPage();
+      doc.fillColor(GREEN).font("bn-bold").fontSize(12);
+      drawAt(doc, "অ্যাপের অতিরিক্ত আমল (কাগজের ডায়েরির বাইরে)", MARGIN, MARGIN + 12);
+      drawGrid(doc, data, extras, MARGIN + 24);
+    }
+  } else {
+    drawHeader(doc, data);
+    drawLegend(doc);
+    drawGrid(doc, data, data.definitions, MARGIN + 80);
+  }
 
-  // Page 2: the weekly/monthly tally table.
+  // Next page: the weekly/monthly tally table.
   doc.addPage();
   drawTallies(doc, data);
 
@@ -134,7 +155,9 @@ function drawLegend(doc: PDFKit.PDFDocument): void {
   x = drawAt(doc, "একা", x, cy) + 8;
   x = drawMark(doc, "qaza", x, cy) + 3;
   x = drawAt(doc, "কাযা", x, cy) + 8;
-  drawAt(doc, "· খালি ঘর = বাদ", x, cy);
+  x = drawMark(doc, "missed", x, cy) + 3;
+  x = drawAt(doc, "অসম্পন্ন", x, cy) + 8;
+  drawAt(doc, "· খালি ঘর = এখনো সময় হয়নি / প্রযোজ্য নয়", x, cy);
 
   // Right: numeric-cell hint.
   doc.font("bn").fontSize(7).fillColor(MUTED);
@@ -142,12 +165,12 @@ function drawLegend(doc: PDFKit.PDFDocument): void {
   drawAt(doc, hint, PAGE_W - MARGIN - doc.widthOfString(hint) - 2, cy);
 }
 
-function drawGrid(doc: PDFKit.PDFDocument, data: MonthlyReportData): void {
+function drawGrid(doc: PDFKit.PDFDocument, data: MonthlyReportData, defs: ReportAmalDef[], gridTop: number): void {
   const days = data.days;
-  const gridTop = MARGIN + 80;
   const dayColW = (USABLE_W - NAME_COL_W) / days.length;
+  const todayKey = bdDateKey(data.generatedAt);
 
-  const groups = groupByCategory(data.definitions);
+  const groups = groupByCategory(defs);
   const byAmal = entriesByAmal(data.entries);
 
   // ── day header row (Friday columns gold — the weekly-cadence anchor) ────────
@@ -186,7 +209,7 @@ function drawGrid(doc: PDFKit.PDFDocument, data: MonthlyReportData): void {
       days.forEach((day, i) => {
         const x = MARGIN + NAME_COL_W + i * dayColW;
         drawCellBox(doc, x, y, dayColW, ROW_H, "#FFFFFF");
-        drawCellContent(doc, cellFor(def, daysMap.get(day)), x, y, dayColW, ROW_H);
+        drawCellContent(doc, cellForDay(def, daysMap.get(day), day, todayKey, data.member.joinedOn), x, y, dayColW, ROW_H);
       });
       y += ROW_H;
     }
@@ -194,6 +217,124 @@ function drawGrid(doc: PDFKit.PDFDocument, data: MonthlyReportData): void {
 
   // closing edge of the grid
   doc.moveTo(MARGIN, y).lineTo(PAGE_W - MARGIN, y).lineWidth(0.7).strokeColor(LINE).stroke();
+}
+
+// ── page 1 (paper layout): the paper monthly sheet, row for row ─────────────
+
+const PAPER_GROUP_W = 76;
+const PAPER_LABEL_W = 160;
+
+/**
+ * "…… মাসের মুহাসাবা রিপোর্ট" exactly as the paper sheet: বিভাগ (spanning
+ * its rows) · আমলের বিষয় · one column per day, then the
+ * দায়িত্বশীলের স্বাক্ষর ও তারিখ / মন্তব্য line. Row height adapts so every
+ * paper row fits on ONE page (the old 35-row grid ran past the page edge).
+ */
+function drawPaperSheet(doc: PDFKit.PDFDocument, data: MonthlyReportData, groups: ResolvedPaperGroup[]): void {
+  const cx = PAGE_W / 2;
+  doc.fillColor(GREEN).font("bn-bold").fontSize(14);
+  drawCentered(doc, `${monthLabelBn(data.month)} মাসের মুহাসাবা রিপোর্ট`, cx, MARGIN + 12);
+
+  const bits = [
+    `নাম: ${data.member.name}`,
+    data.member.memberCode ? `সদস্য আইডি: ${data.member.memberCode}` : null,
+    data.member.district ? `জেলা: ${districtLabelBn(data.member.district)}` : null,
+    data.member.usrahName ? `উসরা: ${data.member.usrahName}` : null,
+  ].filter((s): s is string => !!s);
+  doc.fillColor(INK).font("bn").fontSize(9);
+  drawCentered(doc, bits.join("  ·  "), cx, MARGIN + 29);
+
+  // mark legend
+  let lx = MARGIN + 2;
+  const ly = MARGIN + 44;
+  doc.font("bn").fontSize(7.5).fillColor(MUTED);
+  lx = drawMark(doc, "jamaat", lx, ly) + 3;
+  lx = drawAt(doc, "জামাতে / সম্পন্ন", lx, ly + 2.5) + 9;
+  lx = drawMark(doc, "alone", lx, ly) + 3;
+  lx = drawAt(doc, "একাকী", lx, ly + 2.5) + 9;
+  lx = drawMark(doc, "qaza", lx, ly) + 3;
+  lx = drawAt(doc, "কাযা", lx, ly + 2.5) + 9;
+  lx = drawMark(doc, "missed", lx, ly) + 3;
+  lx = drawAt(doc, "অসম্পন্ন", lx, ly + 2.5) + 9;
+  drawAt(doc, "· সংখ্যা = পরিমাণ (মিনিট/পৃষ্ঠা) · খালি = এখনো সময় হয়নি বা প্রযোজ্য নয়", lx, ly + 2.5);
+
+  const days = data.days;
+  const todayKey = bdDateKey(data.generatedAt);
+  const byAmal = entriesByAmal(data.entries);
+  const dayX0 = MARGIN + PAPER_GROUP_W + PAPER_LABEL_W;
+  const dayW = (USABLE_W - PAPER_GROUP_W - PAPER_LABEL_W) / days.length;
+
+  let y = MARGIN + 54;
+  const HEAD_H = 16;
+  drawCellBox(doc, MARGIN, y, PAPER_GROUP_W, HEAD_H, GREEN);
+  drawCellBox(doc, MARGIN + PAPER_GROUP_W, y, PAPER_LABEL_W, HEAD_H, GREEN);
+  doc.font("bn-bold").fontSize(8).fillColor("#FFFFFF");
+  drawCentered(doc, "বিভাগ", MARGIN + PAPER_GROUP_W / 2, y + 10.5);
+  drawCentered(doc, "আমলের বিষয়", MARGIN + PAPER_GROUP_W + PAPER_LABEL_W / 2, y + 10.5);
+  days.forEach((day, i) => {
+    const x = dayX0 + i * dayW;
+    const dow = new Date(`${day}T00:00:00Z`).getUTCDay();
+    drawCellBox(doc, x, y, dayW, HEAD_H, dow === 5 ? GOLD : GREEN);
+    doc.font("bn-bold").fontSize(7.5).fillColor("#FFFFFF");
+    drawCentered(doc, toBn(i + 1), x + dayW / 2, y + 10.5);
+  });
+  y += HEAD_H;
+
+  // rows share what is left above the sign-off line and the footer
+  const rowCount = groups.reduce((n, g) => n + g.rows.length, 0);
+  const bottom = PAGE_H - MARGIN - 16 - 30;
+  const ROW_H = Math.min(21, (bottom - y) / Math.max(rowCount, 1));
+
+  for (const group of groups) {
+    const groupH = ROW_H * group.rows.length;
+    drawCellBox(doc, MARGIN, y, PAPER_GROUP_W, groupH, GREEN_LIGHT);
+    doc.font("bn-bold").fontSize(7.6);
+    const title = wrapBn(doc, group.groupBn, PAPER_GROUP_W - 8, 3);
+    // (the group's noteBn is not printed: it uses ✔/□, which Hind Siliguri
+    // lacks — the vector-drawn legend above the grid explains the marks)
+    let ty = y + (groupH - title.length * 9.5) / 2 + 7.5;
+    doc.fillColor(GREEN);
+    for (const line of title) {
+      drawCentered(doc, line, MARGIN + PAPER_GROUP_W / 2, ty);
+      ty += 9.5;
+    }
+
+    for (const row of group.rows) {
+      drawCellBox(doc, MARGIN + PAPER_GROUP_W, y, PAPER_LABEL_W, ROW_H, "#FFFFFF");
+      doc.font("bn").fontSize(7.2).fillColor(INK);
+      const lines = wrapBn(doc, row.labelBn, PAPER_LABEL_W - 8, ROW_H >= 18 ? 2 : 1);
+      const lineH = 8.6;
+      let by = y + (ROW_H - lines.length * lineH) / 2 + 6.6;
+      for (const line of lines) {
+        drawAt(doc, line, MARGIN + PAPER_GROUP_W + 4, by);
+        by += lineH;
+      }
+
+      const primary = row.defs[0];
+      days.forEach((day, i) => {
+        const x = dayX0 + i * dayW;
+        drawCellBox(doc, x, y, dayW, ROW_H, "#FFFFFF");
+        // the first of the row's amal keys with a value fills the cell
+        let cell: CellMark = { kind: "empty" };
+        for (const def of row.defs) {
+          cell = cellFor(def, byAmal.get(def.key)?.get(day));
+          if (cell.kind !== "empty") break;
+        }
+        if (cell.kind === "empty") cell = cellForDay(primary, undefined, day, todayKey, data.member.joinedOn);
+        drawCellContent(doc, cell, x, y, dayW, ROW_H);
+      });
+      y += ROW_H;
+    }
+  }
+
+  // the paper sheet's own sign-off line
+  const sy = y + 22;
+  doc.font("bn-bold").fontSize(8.5).fillColor(INK);
+  let sx = drawAt(doc, "দায়িত্বশীলের স্বাক্ষর ও তারিখ :", MARGIN, sy) + 6;
+  doc.moveTo(sx, sy + 2).lineTo(sx + 170, sy + 2).lineWidth(0.6).strokeColor(LINE).stroke();
+  sx = MARGIN + USABLE_W / 2;
+  sx = drawAt(doc, "মন্তব্য:", sx, sy) + 6;
+  doc.moveTo(sx, sy + 2).lineTo(PAGE_W - MARGIN, sy + 2).lineWidth(0.6).strokeColor(LINE).stroke();
 }
 
 function drawCellContent(doc: PDFKit.PDFDocument, cell: CellMark, x: number, y: number, w: number, h: number): void {
@@ -207,7 +348,12 @@ function drawCellContent(doc: PDFKit.PDFDocument, cell: CellMark, x: number, y: 
 }
 
 /** Vector-drawn paper-form marks. Returns the x after the mark. */
-function drawMark(doc: PDFKit.PDFDocument, mark: "jamaat" | "alone" | "qaza" | "done", cx: number, cy: number): number {
+function drawMark(
+  doc: PDFKit.PDFDocument,
+  mark: "jamaat" | "alone" | "qaza" | "done" | "missed",
+  cx: number,
+  cy: number
+): number {
   doc.save();
   doc.lineWidth(1.1).lineCap("round");
   switch (mark) {
@@ -223,6 +369,11 @@ function drawMark(doc: PDFKit.PDFDocument, mark: "jamaat" | "alone" | "qaza" | "
     case "qaza": // □ empty square — কাযা
       doc.strokeColor("#8A6D1F");
       doc.rect(cx - 2.3, cy - 2.3, 4.6, 4.6).stroke();
+      return cx + 4.5;
+    case "missed": // ✗ cross — অসম্পন্ন (paper instruction ১)
+      doc.strokeColor(MISS);
+      doc.moveTo(cx - 2.1, cy - 2.1).lineTo(cx + 2.1, cy + 2.1).stroke();
+      doc.moveTo(cx - 2.1, cy + 2.1).lineTo(cx + 2.1, cy - 2.1).stroke();
       return cx + 4.5;
   }
 }
@@ -396,13 +547,13 @@ function drawCellBox(
 
 /** Draw a single line at an explicit baseline (no wrapping, no alignment). */
 function drawAt(doc: PDFKit.PDFDocument, s: string, x: number, baseline: number): number {
-  doc.text(s, x, baseline, { lineBreak: false });
+  doc.text(s, x, baseline, { lineBreak: false, baseline: "alphabetic" });
   return x + doc.widthOfString(s);
 }
 
 /** Draw centered around cx (manual centring via the shaped width). */
 function drawCentered(doc: PDFKit.PDFDocument, s: string, cx: number, baseline: number): void {
-  doc.text(s, cx - doc.widthOfString(s) / 2, baseline, { lineBreak: false });
+  doc.text(s, cx - doc.widthOfString(s) / 2, baseline, { lineBreak: false, baseline: "alphabetic" });
 }
 
 /** Start a new page when `endY` can't fit; returns the effective y to use. */
