@@ -44,6 +44,21 @@ abstract class ApiCacheStore {
   );
 }
 
+/// The guest diary rows worth merging at sign-in: a real value (a cleared
+/// tristate leaves '' / null behind) and a well-formed day. A bad row must
+/// never ride along — older servers rejected the WHOLE sign-in for one.
+List<Map<String, dynamic>> sendableGuestEntries(Iterable<AmalEntry> entries) => [
+  for (final e in entries)
+    if (RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(e.date) &&
+        switch (e.value) {
+          final bool _ => true,
+          final num n => n.isFinite,
+          final String v => v.isNotEmpty && v.length <= 100,
+          _ => false,
+        })
+      e.toJson(),
+];
+
 class OtpResponse {
   const OtpResponse({required this.ok, this.devCode});
   final bool ok;
@@ -318,11 +333,11 @@ class ApiClient {
         'phone': phone,
         'code': code,
         if (name != null && name.isNotEmpty) 'name': name,
-        if (gender != null) 'gender': gender.json,
+        if (gender != null && !gender.needsCompletion) 'gender': gender.json,
         if (referredByCode != null && referredByCode.isNotEmpty)
           'referredByCode': referredByCode,
         if (guestEntries != null && guestEntries.isNotEmpty)
-          'guestEntries': guestEntries.map((e) => e.toJson()).toList(),
+          'guestEntries': sendableGuestEntries(guestEntries),
       },
     );
     return VerifyResponse(
@@ -358,7 +373,7 @@ class ApiClient {
         if (referredByCode != null && referredByCode.isNotEmpty)
           'referredByCode': referredByCode,
         if (guestEntries != null && guestEntries.isNotEmpty)
-          'guestEntries': guestEntries.map((e) => e.toJson()).toList(),
+          'guestEntries': sendableGuestEntries(guestEntries),
       },
     );
     return VerifyResponse(

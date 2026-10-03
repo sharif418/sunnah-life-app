@@ -4521,6 +4521,54 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আপনার তথ্য সুরক্ষিত — বোনদের তথ্য শুধু বোন দায়িত্বশীলরাই দেখতে পান।'**
   String get auth_privacy;
+
+  /// No description provided for @home_muhasaba_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের মুহাসাবা'**
+  String get home_muhasaba_title;
+
+  /// No description provided for @home_muhasaba_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাকি'**
+  String get home_muhasaba_pending;
+
+  /// No description provided for @home_muhasaba_on_track.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন পর্যন্ত যা সময় হয়েছে, সব লেখা হয়েছে — আলহামদুলিল্লাহ'**
+  String get home_muhasaba_on_track;
+
+  /// No description provided for @home_muhasaba_all_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের ডায়েরি সম্পূর্ণ — আলহামদুলিল্লাহ'**
+  String get home_muhasaba_all_done;
+
+  /// No description provided for @home_muhasaba_start.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের ডায়েরি শুরু করুন'**
+  String get home_muhasaba_start;
+
+  /// No description provided for @home_muhasaba_continue.
+  ///
+  /// In bn, this message translates to:
+  /// **'ডায়েরি পূরণ করুন'**
+  String get home_muhasaba_continue;
+
+  /// No description provided for @home_pending_morning_adhkar.
+  ///
+  /// In bn, this message translates to:
+  /// **'সকালের আযকার'**
+  String get home_pending_morning_adhkar;
+
+  /// No description provided for @home_pending_evening_adhkar.
+  ///
+  /// In bn, this message translates to:
+  /// **'সন্ধ্যার আযকার'**
+  String get home_pending_evening_adhkar;
 }
 
 class _AppLocalizationsDelegate

@@ -2292,4 +2292,30 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get auth_privacy =>
       'আপনার তথ্য সুরক্ষিত — বোনদের তথ্য শুধু বোন দায়িত্বশীলরাই দেখতে পান।';
+
+  @override
+  String get home_muhasaba_title => 'আজকের মুহাসাবা';
+
+  @override
+  String get home_muhasaba_pending => 'বাকি';
+
+  @override
+  String get home_muhasaba_on_track =>
+      'এখন পর্যন্ত যা সময় হয়েছে, সব লেখা হয়েছে — আলহামদুলিল্লাহ';
+
+  @override
+  String get home_muhasaba_all_done =>
+      'আজকের ডায়েরি সম্পূর্ণ — আলহামদুলিল্লাহ';
+
+  @override
+  String get home_muhasaba_start => 'আজকের ডায়েরি শুরু করুন';
+
+  @override
+  String get home_muhasaba_continue => 'ডায়েরি পূরণ করুন';
+
+  @override
+  String get home_pending_morning_adhkar => 'সকালের আযকার';
+
+  @override
+  String get home_pending_evening_adhkar => 'সন্ধ্যার আযকার';
 }

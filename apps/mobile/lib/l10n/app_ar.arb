@@ -736,5 +736,13 @@
   "auth_dev_fill": "املأ",
   "auth_resend_in": "إعادة الإرسال بعد %n% ث",
   "auth_resend": "أعد إرسال الرمز",
-  "auth_privacy": "بياناتك محمية — بيانات الأخوات لا تراها إلا المسؤولات من الأخوات."
+  "auth_privacy": "بياناتك محمية — بيانات الأخوات لا تراها إلا المسؤولات من الأخوات.",
+  "home_muhasaba_title": "محاسبة اليوم",
+  "home_muhasaba_pending": "المتبقي",
+  "home_muhasaba_on_track": "كل ما حان وقته مكتوب — الحمد لله",
+  "home_muhasaba_all_done": "اكتملت مذكرة اليوم — الحمد لله",
+  "home_muhasaba_start": "ابدأ مذكرة اليوم",
+  "home_muhasaba_continue": "أكمل المذكرة",
+  "home_pending_morning_adhkar": "أذكار الصباح",
+  "home_pending_evening_adhkar": "أذكار المساء"
 }

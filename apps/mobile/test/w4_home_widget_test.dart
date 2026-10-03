@@ -20,8 +20,6 @@ import 'package:sunnah_life/core/bn_digits.dart';
 import 'package:sunnah_life/core/date_keys.dart';
 import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/design/design_tokens.dart';
-import 'package:sunnah_life/features/amal/amal_widgets.dart'
-    show CompletionRing;
 import 'package:sunnah_life/features/home/home_screen.dart';
 import 'package:sunnah_life/l10n/app_strings.dart';
 import 'package:sunnah_life/models/domain.dart';
@@ -100,7 +98,12 @@ void main() {
       final countdown = find.byKey(const ValueKey('home_countdown_text'));
       expect(countdown, findsOneWidget);
       expect(find.byKey(const ValueKey('home_to_schedule')), findsOneWidget);
-      expect(find.text(S.tr(Lang.bn, 'prayer_schedule')), findsOneWidget);
+      // the schedule sits below the fold now (built — the page caches it so
+      // the hero's in-page link always has a target)
+      expect(
+        find.text(S.tr(Lang.bn, 'prayer_schedule'), skipOffstage: false),
+        findsOneWidget,
+      );
 
       // The tick: pumping two seconds fires the 1s ticker twice and the
       // provider re-emits NEW state each fire (a fresh PrayerNow carrying
@@ -123,15 +126,17 @@ void main() {
     },
   );
 
-  testWidgets('most-used section: fresh guest sees the empty state', (
+  testWidgets('most-used section: hidden for a fresh guest', (
     tester,
   ) async {
     final db = makeDb();
     final container = await bootHome(tester, db, extra: quietRemote());
 
-    await scrollTo(tester, find.text(S.tr(Lang.bn, 'most_used')));
-    expect(find.text(S.tr(Lang.bn, 'most_used')), findsOneWidget);
-    expect(find.text(S.tr(Lang.bn, 'most_used_empty')), findsOneWidget);
+    // nothing to rank on day one: the section stays out of the way (the
+    // muhasaba card already invites the first entry)
+    await scrollTo(tester, find.byKey(const ValueKey('home_amal_preview')));
+    expect(find.text(S.tr(Lang.bn, 'most_used')), findsNothing);
+    expect(find.text(S.tr(Lang.bn, 'most_used_empty')), findsNothing);
 
     container.dispose();
     await db.close();
@@ -279,11 +284,9 @@ void main() {
     ).paper.fold<int>(0, (n, g) => n + g.rows.length);
 
     await scrollTo(tester, find.byKey(const ValueKey('home_amal_preview')));
-    expect(find.byType(CompletionRing), findsOneWidget);
-    expect(
-      find.text('${toBn(1)}/${toBn(total)} ${S.tr(Lang.bn, 'done')}'),
-      findsOneWidget,
-    );
+    expect(find.text(S.tr(Lang.bn, 'home_muhasaba_title')), findsOneWidget);
+    expect(find.text('${toBn(1)}/${toBn(total)}'), findsOneWidget);
+    expect(find.byKey(const ValueKey('home_muhasaba_open')), findsOneWidget);
 
     container.dispose();
     await db.close();

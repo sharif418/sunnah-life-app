@@ -2266,4 +2266,28 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get auth_privacy =>
       'بياناتك محمية — بيانات الأخوات لا تراها إلا المسؤولات من الأخوات.';
+
+  @override
+  String get home_muhasaba_title => 'محاسبة اليوم';
+
+  @override
+  String get home_muhasaba_pending => 'المتبقي';
+
+  @override
+  String get home_muhasaba_on_track => 'كل ما حان وقته مكتوب — الحمد لله';
+
+  @override
+  String get home_muhasaba_all_done => 'اكتملت مذكرة اليوم — الحمد لله';
+
+  @override
+  String get home_muhasaba_start => 'ابدأ مذكرة اليوم';
+
+  @override
+  String get home_muhasaba_continue => 'أكمل المذكرة';
+
+  @override
+  String get home_pending_morning_adhkar => 'أذكار الصباح';
+
+  @override
+  String get home_pending_evening_adhkar => 'أذكار المساء';
 }

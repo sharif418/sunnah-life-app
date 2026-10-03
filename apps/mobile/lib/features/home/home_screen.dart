@@ -14,7 +14,7 @@ import '../../core/bn_digits.dart';
 import '../../core/bell_schedule.dart';
 import '../../core/calendars.dart' show formatTimeBn;
 import '../../core/cities.dart';
-import '../../core/amal_engine.dart' show isAmalDay;
+import '../../core/amal_engine.dart' show currentStreak, isAmalDay;
 import '../../core/date_keys.dart';
 import '../../core/diary_layout.dart';
 import '../../core/most_used.dart';
@@ -34,7 +34,7 @@ import '../../state/remote_state.dart'
         liveProvider;
 import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
-import '../amal/amal_widgets.dart' show CompletionRing;
+import '../amal/amal_widgets.dart' show StreakBadge;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
 import '../../core/external_urls.dart' show livePlaybackUrl, openExternalApp;
@@ -240,6 +240,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         bottom: false,
         child: ListView(
+          // the schedule now sits below the muhasaba card + quick access; a
+          // lazily-built list would leave it unbuilt and the hero's
+          // "সময়সূচি দেখুন" (ensureVisible on its key) a dead tap — keep the
+          // first screens of the page built
+          cacheExtent: 2400,
           // W5: the list must scroll CLEAR of the floating contact button
           // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
           padding: const EdgeInsets.fromLTRB(
@@ -288,6 +293,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: SLSpacing.s16),
 
+            // ── আজকের মুহাসাবা (the prototype's order: the diary first) ──
+            const _AmalPreviewSection(),
+
+            // ── দ্রুত প্রবেশ ──
+            const _QuickAccessGrid(),
+
+
             // ── Schedule (the hero's in-page destination) ──
             SectionHeader(
               key: _scheduleKey,
@@ -327,14 +339,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             // guests see their own history, quick-log writes locally.
             const _MostUsedSection(),
 
-            // ── দ্রুত প্রবেশ (C-W4b) ──
-            const _QuickAccessGrid(),
-
             // ── Ilm (C-W4b) ──
             const _IlmSection(),
-
-            // ── Today's amal preview (C-W4b) ──
-            const _AmalPreviewSection(),
 
             // ── Live preview (C-W4b) — public data; hidden when nothing
             // upcoming or while it loads/offline-fails.
@@ -384,6 +390,9 @@ class _MostUsedSection extends ConsumerWidget {
       today: today,
       limit: 3, // HOME-04: the user's three most-used
     );
+    // nothing to rank yet (day one): the section stays out of the way — the
+    // muhasaba card above already invites the first entry
+    if (ranked.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -676,7 +685,9 @@ class _AmalPreviewSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final bn = context.isBn;
+    String n(int v) => bn ? toBn(v) : '$v';
     final profile = ref.watch(profileProvider);
     final defs =
         ref.watch(amalDefinitionsProvider).valueOrNull ??
@@ -698,8 +709,8 @@ class _AmalPreviewSection extends ConsumerWidget {
       for (final day in amal.entries.keys)
         for (final e in (amal.entries[day] ?? const {}).values) e,
     ];
-    // HOME-09 counts the PAPER diary's rows — the same ০/১৭ the আমল tab's
-    // ring shows (counting every catalog amal said ০/৩১ here).
+    // HOME-09 counts the PAPER diary's rows — the same total the আমল tab's
+    // ring shows.
     final paperDefs = [
       for (final g in layoutDiary(todayDefs).paper)
         for (final r in g.rows) r.def,
@@ -710,54 +721,124 @@ class _AmalPreviewSection extends ConsumerWidget {
       profile.category,
       today,
     );
+    final streak = currentStreak(entries, defs, profile.category, today);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SectionHeader(
-          context.t('tab_amal'),
-          icon: PhosphorIconsRegular.listChecks,
-          action: _SeeAllButton('/amal'),
-        ),
-        AppCard(
-          key: const ValueKey('home_amal_preview'),
-          onTap: () => context.push('/amal'),
-          child: Row(
-            children: [
-              CompletionRing(
-                pct: preview.pct,
-                label: context.t('amal_today'),
-                size: 64,
-                bengali: bn,
+    // what is due right now: started, unrecorded waqts + the adhkar window
+    // (minute granularity — not every 1-second prayer tick)
+    final clock = ref.watch(
+      prayerProvider.select(
+        (p) => p == null
+            ? null
+            : (
+                minute: p.nowMinutes.floor(),
+                times: [
+                  ('fajr', p.times.fajr),
+                  ('dhuhr', p.times.dhuhr),
+                  ('asr', p.times.asr),
+                  ('maghrib', p.times.maghrib),
+                  ('isha', p.times.isha),
+                ],
+                dhuhr: p.times.dhuhr,
+                fajr: p.times.fajr,
+                asr: p.times.asr,
               ),
-              const SizedBox(width: SLSpacing.s16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${bn ? toBn(preview.completed) : preview.completed}/'
-                      '${bn ? toBn(preview.total) : preview.total} '
-                      '${context.t('done')}',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+      ),
+    );
+    final pending = <String>[];
+    if (clock != null) {
+      for (final (w, start) in clock.times) {
+        final v = amal.entry(today, 'salat_$w')?.value;
+        if (clock.minute >= start && (v == null || v == '')) {
+          pending.add(context.t('waqt_$w'));
+        }
+      }
+      final morning = clock.minute >= clock.fajr && clock.minute < clock.dhuhr;
+      final evening = clock.minute >= clock.asr;
+      if (morning && amal.entry(today, 'adhkar_morning')?.value != true) {
+        pending.add(context.t('home_pending_morning_adhkar'));
+      }
+      if (evening && amal.entry(today, 'adhkar_evening')?.value != true) {
+        pending.add(context.t('home_pending_evening_adhkar'));
+      }
+    }
+    final allDone = preview.total > 0 && preview.completed >= preview.total;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: SLSpacing.s16),
+      child: AppCard(
+        key: const ValueKey('home_amal_preview'),
+        onTap: () => context.go('/amal'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    context.t('home_muhasaba_title'),
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
-                    const SizedBox(height: SLSpacing.s4),
-                    Text(
-                      context.t('today_progress'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
+                  ),
+                ),
+                StreakBadge(days: streak, bengali: bn),
+              ],
+            ),
+            const SizedBox(height: SLSpacing.s12),
+            Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: SLRadius.brPill,
+                    child: LinearProgressIndicator(
+                      value: preview.total == 0
+                          ? 0
+                          : preview.completed / preview.total,
+                      minHeight: 8,
+                      backgroundColor: cs.outline,
+                      color: cs.primary,
                     ),
-                  ],
+                  ),
+                ),
+                const SizedBox(width: SLSpacing.s12),
+                Text(
+                  '${n(preview.completed)}/${n(preview.total)}',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: SLSpacing.s8),
+            Text(
+              allDone
+                  ? context.t('home_muhasaba_all_done')
+                  : pending.isEmpty
+                  ? context.t('home_muhasaba_on_track')
+                  : '${context.t('home_muhasaba_pending')}: ${pending.join(', ')}',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: cs.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: SLSpacing.s12),
+            FilledButton.icon(
+              key: const ValueKey('home_muhasaba_open'),
+              onPressed: () => context.go('/amal'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size.fromHeight(48),
+              ),
+              icon: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+              label: Text(
+                context.t(
+                  preview.completed == 0
+                      ? 'home_muhasaba_start'
+                      : 'home_muhasaba_continue',
                 ),
               ),
-              const DirectionalIcon(PhosphorIconsRegular.caretRight),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

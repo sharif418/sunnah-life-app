@@ -2288,4 +2288,30 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get auth_privacy =>
       'Your data is protected — sisters\' data is seen only by sister supervisors.';
+
+  @override
+  String get home_muhasaba_title => 'Today\'s muhasaba';
+
+  @override
+  String get home_muhasaba_pending => 'Left';
+
+  @override
+  String get home_muhasaba_on_track =>
+      'Everything due so far is written — alhamdulillah';
+
+  @override
+  String get home_muhasaba_all_done =>
+      'Today\'s diary is complete — alhamdulillah';
+
+  @override
+  String get home_muhasaba_start => 'Start today\'s diary';
+
+  @override
+  String get home_muhasaba_continue => 'Continue the diary';
+
+  @override
+  String get home_pending_morning_adhkar => 'morning adhkar';
+
+  @override
+  String get home_pending_evening_adhkar => 'evening adhkar';
 }
