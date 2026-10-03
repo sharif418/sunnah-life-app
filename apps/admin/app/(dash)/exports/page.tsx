@@ -129,13 +129,14 @@ export default function ExportsPage() {
       u.district,
       u.workplace,
       u.department,
+      u.email ?? "",
       u.lastActiveAt,
     ]);
     // the Dawatus Sunnah member register: workplace + department + category
     // too (members fill them in the app's profile)
     downloadCsvSafe(
       "sunnahlife-users.csv",
-      ["নাম", "ফোন", "লিঙ্গ", "ভূমিকা", "সদস্য কোড", "স্তর", "ক্যাটাগরি", "জেলা", "কর্মস্থল", "বিভাগ / পদবি", "সর্বশেষ সক্রিয়"],
+      ["নাম", "ফোন", "লিঙ্গ", "ভূমিকা", "সদস্য কোড", "স্তর", "ক্যাটাগরি", "জেলা", "কর্মস্থল", "বিভাগ / পদবি", "ইমেইল", "সর্বশেষ সক্রিয়"],
       rows
     );
   };
