@@ -43,7 +43,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 local-*
-.claude
+.claude/*
+# …except the shared project skills (design workflow etc.)
+!.claude/skills/
 .z-ai-config
 *.log
 dev.log
