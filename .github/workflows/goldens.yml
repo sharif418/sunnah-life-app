@@ -1,0 +1,40 @@
+# Regenerate the Flutter golden PNGs on Linux — the platform CI compares on.
+#
+# Goldens rendered on Windows/macOS differ in anti-aliasing, so an
+# intentional UI change must refresh them here: run this workflow on the
+# branch, download the "goldens" artifact, commit its files into
+# apps/mobile/test/goldens/, push. It never commits by itself.
+name: Update goldens
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  goldens:
+    name: Flutter — regenerate goldens (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.5
+          cache: true
+
+      - name: Pub get
+        working-directory: apps/mobile
+        run: flutter pub get
+
+      - name: Update goldens
+        working-directory: apps/mobile
+        run: flutter test --update-goldens
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goldens
+          path: apps/mobile/test/goldens/
+          retention-days: 7
