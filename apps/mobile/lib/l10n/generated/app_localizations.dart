@@ -4269,6 +4269,54 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'মিনিট'**
   String get notif_minutes;
+
+  /// No description provided for @profile_phone.
+  ///
+  /// In bn, this message translates to:
+  /// **'মোবাইল নম্বর'**
+  String get profile_phone;
+
+  /// No description provided for @profile_email.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইমেইল'**
+  String get profile_email;
+
+  /// No description provided for @profile_phone_change_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'মোবাইল নম্বর যোগ / পরিবর্তন'**
+  String get profile_phone_change_title;
+
+  /// No description provided for @profile_phone_change_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'নতুন নম্বরে একটি কোড যাবে — কোড মিলিয়ে দিলে এই নম্বরেই আপনি লগইন করবেন।'**
+  String get profile_phone_change_hint;
+
+  /// No description provided for @profile_phone_new.
+  ///
+  /// In bn, this message translates to:
+  /// **'নতুন মোবাইল নম্বর'**
+  String get profile_phone_new;
+
+  /// No description provided for @profile_phone_send_code.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোড পাঠান'**
+  String get profile_phone_send_code;
+
+  /// No description provided for @profile_phone_verify.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিশ্চিত করুন'**
+  String get profile_phone_verify;
+
+  /// No description provided for @profile_phone_changed.
+  ///
+  /// In bn, this message translates to:
+  /// **'মোবাইল নম্বর পরিবর্তন হয়েছে'**
+  String get profile_phone_changed;
 }
 
 class _AppLocalizationsDelegate

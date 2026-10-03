@@ -2159,4 +2159,29 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get notif_minutes => 'মিনিট';
+
+  @override
+  String get profile_phone => 'মোবাইল নম্বর';
+
+  @override
+  String get profile_email => 'ইমেইল';
+
+  @override
+  String get profile_phone_change_title => 'মোবাইল নম্বর যোগ / পরিবর্তন';
+
+  @override
+  String get profile_phone_change_hint =>
+      'নতুন নম্বরে একটি কোড যাবে — কোড মিলিয়ে দিলে এই নম্বরেই আপনি লগইন করবেন।';
+
+  @override
+  String get profile_phone_new => 'নতুন মোবাইল নম্বর';
+
+  @override
+  String get profile_phone_send_code => 'কোড পাঠান';
+
+  @override
+  String get profile_phone_verify => 'নিশ্চিত করুন';
+
+  @override
+  String get profile_phone_changed => 'মোবাইল নম্বর পরিবর্তন হয়েছে';
 }

@@ -2155,4 +2155,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notif_minutes => 'min';
+
+  @override
+  String get profile_phone => 'Mobile number';
+
+  @override
+  String get profile_email => 'E-mail';
+
+  @override
+  String get profile_phone_change_title => 'Add / change mobile number';
+
+  @override
+  String get profile_phone_change_hint =>
+      'A code goes to the new number — once confirmed you sign in with it.';
+
+  @override
+  String get profile_phone_new => 'New mobile number';
+
+  @override
+  String get profile_phone_send_code => 'Send code';
+
+  @override
+  String get profile_phone_verify => 'Confirm';
+
+  @override
+  String get profile_phone_changed => 'Mobile number changed';
 }

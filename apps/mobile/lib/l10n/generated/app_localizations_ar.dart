@@ -2136,4 +2136,29 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notif_minutes => 'د';
+
+  @override
+  String get profile_phone => 'رقم الجوال';
+
+  @override
+  String get profile_email => 'البريد الإلكتروني';
+
+  @override
+  String get profile_phone_change_title => 'إضافة / تغيير رقم الجوال';
+
+  @override
+  String get profile_phone_change_hint =>
+      'سيصل رمز إلى الرقم الجديد — بعد التأكيد تسجّل الدخول به.';
+
+  @override
+  String get profile_phone_new => 'رقم الجوال الجديد';
+
+  @override
+  String get profile_phone_send_code => 'أرسل الرمز';
+
+  @override
+  String get profile_phone_verify => 'تأكيد';
+
+  @override
+  String get profile_phone_changed => 'تم تغيير رقم الجوال';
 }

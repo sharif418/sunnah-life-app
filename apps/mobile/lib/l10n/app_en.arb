@@ -694,5 +694,13 @@
   "notif_next": "Next",
   "notif_left": "left",
   "notif_hours": "h",
-  "notif_minutes": "min"
+  "notif_minutes": "min",
+  "profile_phone": "Mobile number",
+  "profile_email": "E-mail",
+  "profile_phone_change_title": "Add / change mobile number",
+  "profile_phone_change_hint": "A code goes to the new number — once confirmed you sign in with it.",
+  "profile_phone_new": "New mobile number",
+  "profile_phone_send_code": "Send code",
+  "profile_phone_verify": "Confirm",
+  "profile_phone_changed": "Mobile number changed"
 }

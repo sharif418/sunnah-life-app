@@ -39,6 +39,19 @@ class _Guest extends AuthNotifier {
 
 class _FakeApi extends ApiClient {
   Map<String, dynamic>? lastPatch;
+  String? codeSentTo;
+
+  @override
+  Future<String?> requestPhoneChange(String phone) async {
+    codeSentTo = phone;
+    return '123456'; // the dev mock code
+  }
+
+  @override
+  Future<User> verifyPhoneChange(String phone, String code) async {
+    if (code != '123456') throw ApiException(400, 'ভুল কোড');
+    return User.fromJson({..._member.toJson(), 'phone': phone});
+  }
 
   @override
   Future<User> updateMe(Map<String, dynamic> patch) async {
@@ -48,6 +61,11 @@ class _FakeApi extends ApiClient {
 }
 
 Future<_FakeApi> _pump(WidgetTester tester, AuthNotifier Function() auth) async {
+  // a tall surface: the profile is one long list
+  tester.view.physicalSize = const Size(800, 2400);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.resetPhysicalSize);
+  addTearDown(tester.view.resetDevicePixelRatio);
   final api = _FakeApi();
   final db = AppDatabase.forTesting(NativeDatabase.memory());
   addTearDown(db.close);
@@ -84,9 +102,16 @@ void main() {
     expect(workplace, findsOneWidget);
     expect(find.byKey(const ValueKey('profile_field_department')), findsOneWidget);
     expect(find.byKey(const ValueKey('profile_field_district')), findsOneWidget);
-    expect(find.text('ঢাকা'), findsOneWidget);
-    expect(find.text('যোগ করুন'), findsNWidgets(2)); // workplace + department
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('profile_field_district')),
+        matching: find.text('ঢাকা'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('যোগ করুন'), findsNWidgets(4)); // phone, email, workplace, department
 
+    await tester.ensureVisible(workplace);
     await tester.tap(workplace);
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -99,6 +124,33 @@ void main() {
     expect(api.lastPatch, {'workplace': 'আস-সুন্নাহ ফাউন্ডেশন'});
     expect(find.text('আস-সুন্নাহ ফাউন্ডেশন'), findsOneWidget);
     expect(find.text('সংরক্ষিত হয়েছে'), findsOneWidget);
+  });
+
+  testWidgets('phone: number → code → the account moves to it', (tester) async {
+    final api = await _pump(tester, _SignedIn.new);
+    await tester.ensureVisible(find.byKey(const ValueKey('profile_field_phone')));
+    await tester.tap(find.byKey(const ValueKey('profile_field_phone')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('phone_change_number')), '01799990003');
+    await tester.tap(find.byKey(const ValueKey('phone_change_submit')));
+    await tester.pumpAndSettle();
+    expect(api.codeSentTo, '01799990003');
+    // the dev code is pre-filled; confirm
+    await tester.tap(find.byKey(const ValueKey('phone_change_submit')));
+    await tester.pumpAndSettle();
+    expect(find.text('মোবাইল নম্বর পরিবর্তন হয়েছে'), findsOneWidget);
+    expect(find.text('০১৭৯৯৯৯০০০৩'), findsOneWidget);
+  });
+
+  testWidgets('e-mail edits through PATCH /api/me', (tester) async {
+    final api = await _pump(tester, _SignedIn.new);
+    await tester.ensureVisible(find.byKey(const ValueKey('profile_field_email')));
+    await tester.tap(find.byKey(const ValueKey('profile_field_email')));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byKey(const ValueKey('profile_edit_email')), 'a@b.org');
+    await tester.tap(find.byType(FilledButton));
+    await tester.pumpAndSettle();
+    expect(api.lastPatch, {'email': 'a@b.org'});
   });
 
   testWidgets('guest: no register rows', (tester) async {

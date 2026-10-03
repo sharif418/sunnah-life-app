@@ -694,5 +694,13 @@
   "notif_next": "التالي",
   "notif_left": "متبقٍ",
   "notif_hours": "س",
-  "notif_minutes": "د"
+  "notif_minutes": "د",
+  "profile_phone": "رقم الجوال",
+  "profile_email": "البريد الإلكتروني",
+  "profile_phone_change_title": "إضافة / تغيير رقم الجوال",
+  "profile_phone_change_hint": "سيصل رمز إلى الرقم الجديد — بعد التأكيد تسجّل الدخول به.",
+  "profile_phone_new": "رقم الجوال الجديد",
+  "profile_phone_send_code": "أرسل الرمز",
+  "profile_phone_verify": "تأكيد",
+  "profile_phone_changed": "تم تغيير رقم الجوال"
 }

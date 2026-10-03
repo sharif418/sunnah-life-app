@@ -160,3 +160,42 @@ describe("POST /api/auth/otp/verify — atomic counter + single-use consume", ()
     expect(replay.body.error).toContain("কোডের সময় শেষ");
   });
 });
+
+describe("PROF-04 — change phone (OTP to the new number) and e-mail", () => {
+  const OLD = "01799990002";
+  const NEW = "01799990003";
+
+  afterAll(async () => {
+    await prisma.user.deleteMany({ where: { phone: { in: [OLD, NEW] } } });
+    await rls.system((tx) => tx.otpCode.deleteMany({ where: { phone: { in: [OLD, NEW] } } }));
+  });
+
+  it("a member proves the new number, then the account moves to it", async () => {
+    const otp = await http().post("/api/auth/otp/request").send({ phone: OLD }).expect(200);
+    const signIn = await http()
+      .post("/api/auth/otp/verify")
+      .send({ phone: OLD, code: otp.body.devCode, name: "ফোন বদল", gender: "M" })
+      .expect(200);
+    const token = signIn.body.accessToken as string;
+    const auth = { Authorization: `Bearer ${token}` };
+
+    // a number another account holds is refused (the demo full admin's)
+    await http().post("/api/me/phone/request").set(auth).send({ phone: "01000000001" }).expect(409);
+
+    const sent = await http().post("/api/me/phone/request").set(auth).send({ phone: NEW }).expect(200);
+    await http().post("/api/me/phone/verify").set(auth).send({ phone: NEW, code: "000000" }).expect(400);
+    const done = await http()
+      .post("/api/me/phone/verify")
+      .set(auth)
+      .send({ phone: NEW, code: sent.body.devCode })
+      .expect(200);
+    expect(done.body.user.phone).toBe(NEW);
+
+    // e-mail: normalised, invalid refused, empty clears
+    const mail = await http().patch("/api/me").set(auth).send({ email: "Name@Example.COM" }).expect(200);
+    expect(mail.body.user.email).toBe("name@example.com");
+    await http().patch("/api/me").set(auth).send({ email: "not-an-email" }).expect(400);
+    const cleared = await http().patch("/api/me").set(auth).send({ email: "" }).expect(200);
+    expect(cleared.body.user.email).toBeNull();
+  });
+});

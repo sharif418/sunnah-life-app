@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../api/api_client.dart' show ApiException;
+import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../models/domain.dart';
@@ -149,6 +150,43 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 // The Dawatus Sunnah member register (the old prototypes'
                 // inventory): workplace, department, district — kept on the
                 // account, visible to the member's own supervisors only.
+                // PROF-04: contact e-mail (PATCH /api/me) and the sign-in
+                // phone (changed only after an OTP to the new number)
+                if (user != null) ...[
+                  ListTile(
+                    key: const ValueKey('profile_field_phone'),
+                    leading: const Icon(PhosphorIconsRegular.phone),
+                    title: Text(context.t('profile_phone')),
+                    subtitle: Text(
+                      (user.phone ?? '').isEmpty
+                          ? context.t('profile_not_set')
+                          : (context.isBn ? toBn(user.phone!) : user.phone!),
+                    ),
+                    trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+                    onTap: () => showModalBottomSheet<void>(
+                      context: context,
+                      isScrollControlled: true,
+                      showDragHandle: true,
+                      builder: (_) => const _PhoneChangeSheet(),
+                    ),
+                  ),
+                  ListTile(
+                    key: const ValueKey('profile_field_email'),
+                    leading: const Icon(PhosphorIconsRegular.envelopeSimple),
+                    title: Text(context.t('profile_email')),
+                    subtitle: Text(
+                      (user.email ?? '').isEmpty ? context.t('profile_not_set') : user.email!,
+                    ),
+                    trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+                    onTap: () => _editAccountField(
+                      context,
+                      field: 'email',
+                      titleKey: 'profile_email',
+                      current: user.email ?? '',
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                  ),
+                ],
                 if (user != null)
                   for (final (field, icon, titleKey, value) in [
                     ('workplace', PhosphorIconsRegular.buildings, 'profile_workplace', user.workplace),
@@ -385,6 +423,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     required String field,
     required String titleKey,
     required String current,
+    TextInputType? keyboardType,
   }) async {
     final controller = TextEditingController(text: current);
     final value = await showDialog<String>(
@@ -395,7 +434,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           key: ValueKey('profile_edit_$field'),
           controller: controller,
           autofocus: true,
-          maxLength: field == 'name' ? 80 : 160,
+          keyboardType: keyboardType,
+          maxLength: field == 'name' ? 80 : (field == 'email' ? 200 : 160),
         ),
         actions: [
           TextButton(
@@ -550,5 +590,140 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     if (picked != null) {
       await ref.read(profileProvider.notifier).update(themeMode: picked);
     }
+  }
+}
+
+/// PROF-04: add or change the sign-in phone. Two steps on one sheet — the new
+/// number, then the 6-digit code sent to it; the account switches only after
+/// the code is verified.
+class _PhoneChangeSheet extends ConsumerStatefulWidget {
+  const _PhoneChangeSheet();
+
+  @override
+  ConsumerState<_PhoneChangeSheet> createState() => _PhoneChangeSheetState();
+}
+
+class _PhoneChangeSheetState extends ConsumerState<_PhoneChangeSheet> {
+  final _phone = TextEditingController();
+  final _code = TextEditingController();
+  bool _codeSent = false;
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _phone.dispose();
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _send() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final dev = await ref.read(apiProvider).requestPhoneChange(_phone.text.trim());
+      if (!mounted) return;
+      setState(() {
+        _codeSent = true;
+        if (dev != null) _code.text = dev; // mock SMS (dev/staging only)
+      });
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _verify() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final user = await ref
+          .read(apiProvider)
+          .verifyPhoneChange(_phone.text.trim(), _code.text.trim());
+      ref.read(authProvider.notifier).updateUser(user);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.t('profile_phone_changed'))),
+      );
+    } on ApiException catch (e) {
+      if (mounted) setState(() => _error = e.message);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        SLSpacing.s16,
+        0,
+        SLSpacing.s16,
+        MediaQuery.viewInsetsOf(context).bottom + SLSpacing.s16,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.t('profile_phone_change_title'),
+            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: SLSpacing.s4),
+          Text(
+            context.t('profile_phone_change_hint'),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: SLSpacing.s12),
+          TextField(
+            key: const ValueKey('phone_change_number'),
+            controller: _phone,
+            enabled: !_codeSent && !_busy,
+            keyboardType: TextInputType.phone,
+            autofocus: true,
+            decoration: InputDecoration(
+              labelText: context.t('profile_phone_new'),
+              hintText: '01XXXXXXXXX',
+            ),
+          ),
+          if (_codeSent) ...[
+            const SizedBox(height: SLSpacing.s8),
+            TextField(
+              key: const ValueKey('phone_change_code'),
+              controller: _code,
+              enabled: !_busy,
+              keyboardType: TextInputType.number,
+              maxLength: 6,
+              decoration: InputDecoration(labelText: context.t('auth_otp')),
+            ),
+          ],
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: SLSpacing.s4),
+              child: Text(
+                _error!,
+                style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error),
+              ),
+            ),
+          const SizedBox(height: SLSpacing.s12),
+          FilledButton(
+            key: const ValueKey('phone_change_submit'),
+            onPressed: _busy ? null : (_codeSent ? _verify : _send),
+            child: Text(
+              context.t(_codeSent ? 'profile_phone_verify' : 'profile_phone_send_code'),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

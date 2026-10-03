@@ -694,5 +694,13 @@
   "notif_next": "পরবর্তী",
   "notif_left": "বাকি",
   "notif_hours": "ঘণ্টা",
-  "notif_minutes": "মিনিট"
+  "notif_minutes": "মিনিট",
+  "profile_phone": "মোবাইল নম্বর",
+  "profile_email": "ইমেইল",
+  "profile_phone_change_title": "মোবাইল নম্বর যোগ / পরিবর্তন",
+  "profile_phone_change_hint": "নতুন নম্বরে একটি কোড যাবে — কোড মিলিয়ে দিলে এই নম্বরেই আপনি লগইন করবেন।",
+  "profile_phone_new": "নতুন মোবাইল নম্বর",
+  "profile_phone_send_code": "কোড পাঠান",
+  "profile_phone_verify": "নিশ্চিত করুন",
+  "profile_phone_changed": "মোবাইল নম্বর পরিবর্তন হয়েছে"
 }
