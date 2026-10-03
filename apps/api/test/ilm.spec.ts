@@ -383,7 +383,7 @@ describe("AMOL-17 — a live program can be a scheduled quiz", () => {
     const patched = await http()
       .patch(`/api/admin/live/${created.body.program.id}`)
       .set("Authorization", `Bearer ${adminToken}`)
-      .send({ quizId: null })
+      .send({ titleBn: "পরীক্ষামূলক লাইভ কুইজ", startsAt, quizId: null }) // the admin form sends the whole program
       .expect(200);
     expect(patched.body.program.quizId).toBeNull();
     await http().delete(`/api/admin/live/${created.body.program.id}`).set("Authorization", `Bearer ${adminToken}`).expect(200);
