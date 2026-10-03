@@ -2003,4 +2003,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adhkar_post_salat => 'أذكار بعد الصلاة';
+
+  @override
+  String get journey_joined => 'الانضمام';
+
+  @override
+  String get journey_farze_ain => 'فرض العين';
+
+  @override
+  String get journey_months => '%n% أشهر في هذا المستوى';
+
+  @override
+  String get journey_reqs_met => '%done%/%total%';
+
+  @override
+  String get review_latest_title => 'تعليق رئيس الأسرة الأسبوعي';
+
+  @override
+  String get review_next_goals => 'أهداف الأسبوع القادم';
+
+  @override
+  String get dawah_joined_count => 'انضم %n% بدعوتك';
 }

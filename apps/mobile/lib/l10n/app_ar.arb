@@ -650,5 +650,12 @@
   "quick_tracker": "متابعة الأعمال",
   "quick_tracker_desc": "هذا الشهر",
   "forbidden_short": "أوقات النهي عن الصلاة",
-  "adhkar_post_salat": "أذكار بعد الصلاة"
+  "adhkar_post_salat": "أذكار بعد الصلاة",
+  "journey_joined": "الانضمام",
+  "journey_farze_ain": "فرض العين",
+  "journey_months": "%n% أشهر في هذا المستوى",
+  "journey_reqs_met": "%done%/%total%",
+  "review_latest_title": "تعليق رئيس الأسرة الأسبوعي",
+  "review_next_goals": "أهداف الأسبوع القادم",
+  "dawah_joined_count": "انضم %n% بدعوتك"
 }

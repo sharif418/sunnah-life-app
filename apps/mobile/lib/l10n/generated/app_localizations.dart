@@ -4005,6 +4005,48 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'নামাজের পরের আযকার'**
   String get adhkar_post_salat;
+
+  /// No description provided for @journey_joined.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোগদান'**
+  String get journey_joined;
+
+  /// No description provided for @journey_farze_ain.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফরযে আইন'**
+  String get journey_farze_ain;
+
+  /// No description provided for @journey_months.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই স্তরে %n% মাস'**
+  String get journey_months;
+
+  /// No description provided for @journey_reqs_met.
+  ///
+  /// In bn, this message translates to:
+  /// **'শর্ত %done%/%total%'**
+  String get journey_reqs_met;
+
+  /// No description provided for @review_latest_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরা প্রধানের সাপ্তাহিক মন্তব্য'**
+  String get review_latest_title;
+
+  /// No description provided for @review_next_goals.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরের সপ্তাহের লক্ষ্য'**
+  String get review_next_goals;
+
+  /// No description provided for @dawah_joined_count.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার দাওয়াতে যোগ দিয়েছেন %n% জন'**
+  String get dawah_joined_count;
 }
 
 class _AppLocalizationsDelegate

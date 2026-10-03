@@ -52,12 +52,73 @@ const String _kLink = 'https://sunnahlife.app/join/DS-000004';
 /// A valid 1×1 transparent PNG — the stub capture payload (fake-zone
 /// safe; the real capture has its own dedicated test).
 final List<int> _tinyPngBytes = [
-  0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,
-  0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-  0x08, 0x06, 0x00, 0x00, 0x00, 0x1F, 0x15, 0xC4, 0x89, 0x00, 0x00, 0x00,
-  0x0D, 0x49, 0x44, 0x41, 0x54, 0x78, 0x9C, 0x62, 0x00, 0x01, 0x00, 0x00,
-  0x05, 0x00, 0x01, 0x0D, 0x0A, 0x2D, 0xB4, 0x00, 0x00, 0x00, 0x00, 0x49,
-  0x45, 0x4E, 0x44, 0xAE, 0x42, 0x60, 0x82,
+  0x89,
+  0x50,
+  0x4E,
+  0x47,
+  0x0D,
+  0x0A,
+  0x1A,
+  0x0A,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x48,
+  0x44,
+  0x52,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x00,
+  0x01,
+  0x08,
+  0x06,
+  0x00,
+  0x00,
+  0x00,
+  0x1F,
+  0x15,
+  0xC4,
+  0x89,
+  0x00,
+  0x00,
+  0x00,
+  0x0D,
+  0x49,
+  0x44,
+  0x41,
+  0x54,
+  0x78,
+  0x9C,
+  0x62,
+  0x00,
+  0x01,
+  0x00,
+  0x00,
+  0x05,
+  0x00,
+  0x01,
+  0x0D,
+  0x0A,
+  0x2D,
+  0xB4,
+  0x00,
+  0x00,
+  0x00,
+  0x00,
+  0x49,
+  0x45,
+  0x4E,
+  0x44,
+  0xAE,
+  0x42,
+  0x60,
+  0x82,
 ];
 
 DawahOverview _overview({List<DownlineNode> downline = const []}) =>
@@ -212,6 +273,18 @@ Future<ProviderContainer> bootDawah(
   return container;
 }
 
+/// The invite card now sits below the journey + requirements on the
+/// (lazy) overview list — scroll it into view before tapping.
+Future<void> revealAndTap(WidgetTester tester, Finder target) async {
+  await tester.scrollUntilVisible(
+    target,
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+  await tester.tap(target);
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() {
@@ -292,7 +365,7 @@ void main() {
     await bootDawah(tester, api: _TreeApi());
 
     // Primary: the overview's দাওয়াত কার্ড শেয়ার করুন CTA.
-    await tester.tap(find.byKey(const Key('dawahShareCardButton')));
+    await revealAndTap(tester, find.byKey(const Key('dawahShareCardButton')));
     await tester.pumpAndSettle();
 
     expect(find.text(S.tr(Lang.bn, 'dawah_card_title')), findsOneWidget);
@@ -306,7 +379,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(ReferralCard), findsNothing);
 
-    await tester.tap(find.byTooltip(S.tr(Lang.bn, 'share')));
+    await revealAndTap(tester, find.byTooltip(S.tr(Lang.bn, 'share')));
     await tester.pumpAndSettle();
     expect(find.byType(ReferralCard), findsOneWidget);
   });
@@ -323,7 +396,7 @@ void main() {
     addTearDown(() => PathProviderPlatform.instance = originalPathProvider);
 
     await bootDawah(tester, api: _TreeApi());
-    await tester.tap(find.byKey(const Key('dawahShareCardButton')));
+    await revealAndTap(tester, find.byKey(const Key('dawahShareCardButton')));
     await tester.pumpAndSettle();
 
     // Stage the off-screen capture entry exactly like production, in the
@@ -367,59 +440,61 @@ void main() {
     expect(pngHeight, ReferralCard.size.height);
   });
 
-  testWidgets('শেয়ার করুন hands the rendered file to shareFile + the invite text', (
-    tester,
-  ) async {
-    // A stub capture (the seam) — the REAL render is proven above and by
-    // the card golden; this test pins the sheet's wiring: the button
-    // produces the file → shareFile(path, text) → toast → sheet closes.
-    // Sync: real-async IO starves under fake-async (see the FaqRepository
-    // note) — the test body runs before any runAsync bridge.
-    final tmp = Directory.systemTemp.createTempSync('w4e_wiring');
-    addTearDown(() => tmp.deleteSync(recursive: true));
-    final stubPng = File('${tmp.path}/stub_card.png');
-    stubPng.writeAsBytesSync(_tinyPngBytes);
-    referralCardCapture = (context, card) async => stubPng;
-    addTearDown(
-      () => referralCardCapture = renderReferralCardPng,
-    );
+  testWidgets(
+    'শেয়ার করুন hands the rendered file to shareFile + the invite text',
+    (tester) async {
+      // A stub capture (the seam) — the REAL render is proven above and by
+      // the card golden; this test pins the sheet's wiring: the button
+      // produces the file → shareFile(path, text) → toast → sheet closes.
+      // Sync: real-async IO starves under fake-async (see the FaqRepository
+      // note) — the test body runs before any runAsync bridge.
+      final tmp = Directory.systemTemp.createTempSync('w4e_wiring');
+      addTearDown(() => tmp.deleteSync(recursive: true));
+      final stubPng = File('${tmp.path}/stub_card.png');
+      stubPng.writeAsBytesSync(_tinyPngBytes);
+      referralCardCapture = (context, card) async => stubPng;
+      addTearDown(() => referralCardCapture = renderReferralCardPng);
 
-    final calls = <MethodCall>[];
-    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-        .setMockMethodCallHandler(const MethodChannel('sunnahlife/system'), (
-          call,
-        ) async {
-          calls.add(call);
-          return true;
-        });
-    addTearDown(() {
+      final calls = <MethodCall>[];
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(const MethodChannel('sunnahlife/system'), null);
-    });
+          .setMockMethodCallHandler(const MethodChannel('sunnahlife/system'), (
+            call,
+          ) async {
+            calls.add(call);
+            return true;
+          });
+      addTearDown(() {
+        TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+            .setMockMethodCallHandler(
+              const MethodChannel('sunnahlife/system'),
+              null,
+            );
+      });
 
-    await bootDawah(tester, api: _TreeApi());
-    await tester.tap(find.byKey(const Key('dawahShareCardButton')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('referralShareButton')));
-    await tester.pumpAndSettle();
+      await bootDawah(tester, api: _TreeApi());
+      await revealAndTap(tester, find.byKey(const Key('dawahShareCardButton')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('referralShareButton')));
+      await tester.pumpAndSettle();
 
-    expect(calls, isNotEmpty);
-    final shareFileCalls = calls
-        .where((c) => c.method == 'shareFile')
-        .toList();
-    expect(shareFileCalls, hasLength(1));
-    final args = shareFileCalls.first.arguments as Map;
-    expect(args['path'], stubPng.path);
-    expect(args['mimeType'], 'image/png');
+      expect(calls, isNotEmpty);
+      final shareFileCalls = calls
+          .where((c) => c.method == 'shareFile')
+          .toList();
+      expect(shareFileCalls, hasLength(1));
+      final args = shareFileCalls.first.arguments as Map;
+      expect(args['path'], stubPng.path);
+      expect(args['mimeType'], 'image/png');
 
-    // The invitation text rides along with the image.
-    expect(args['text'] as String, contains(_kLink));
-    // No plain-text fallback when the file share succeeded.
-    expect(calls.where((c) => c.method == 'shareText'), isEmpty);
-    // The confirmation toast + the sheet closed.
-    expect(find.textContaining('জাযাকুমুল্লাহু খাইরান'), findsOneWidget);
-    expect(find.byType(ReferralCard), findsNothing);
-  });
+      // The invitation text rides along with the image.
+      expect(args['text'] as String, contains(_kLink));
+      // No plain-text fallback when the file share succeeded.
+      expect(calls.where((c) => c.method == 'shareText'), isEmpty);
+      // The confirmation toast + the sheet closed.
+      expect(find.textContaining('জাযাকুমুল্লাহু খাইরান'), findsOneWidget);
+      expect(find.byType(ReferralCard), findsNothing);
+    },
+  );
 
   testWidgets('honest fallback — text share when the platform refuses files', (
     tester,
@@ -442,7 +517,10 @@ void main() {
         });
     addTearDown(() {
       TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
-          .setMockMethodCallHandler(const MethodChannel('sunnahlife/system'), null);
+          .setMockMethodCallHandler(
+            const MethodChannel('sunnahlife/system'),
+            null,
+          );
     });
 
     // Stub capture (the seam): the fallback logic is what's under test —
@@ -454,7 +532,7 @@ void main() {
     addTearDown(() => referralCardCapture = renderReferralCardPng);
 
     await bootDawah(tester, api: _TreeApi());
-    await tester.tap(find.byKey(const Key('dawahShareCardButton')));
+    await revealAndTap(tester, find.byKey(const Key('dawahShareCardButton')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('referralShareButton')));
     await tester.pump();
@@ -484,10 +562,7 @@ void main() {
     await tester.pumpWidget(
       UncontrolledProviderScope(
         container: container,
-        child: MaterialApp(
-          theme: buildSunnahLightTheme(),
-          home: child,
-        ),
+        child: MaterialApp(theme: buildSunnahLightTheme(), home: child),
       ),
     );
   }
@@ -536,8 +611,9 @@ void main() {
     // sister (light theme tokens).
     BoxDecoration decorationOf(String id) =>
         tester
-            .widget<Container>(find.byKey(ValueKey('maduAvatar_$id')))
-            .decoration! as BoxDecoration;
+                .widget<Container>(find.byKey(ValueKey('maduAvatar_$id')))
+                .decoration!
+            as BoxDecoration;
     expect(decorationOf('m1').color, SLColors.primarySoftLight);
     expect(decorationOf('m3').color, SLColors.goldSoftLight);
 
@@ -609,15 +685,15 @@ void main() {
 
   // ── Screen integration ────────────────────────────────────────────────────
 
-/// The overview tab's VERTICAL scrollable — `Scrollable.first` on this
-/// screen is the TabBarView's horizontal PageView, which never scrolls to
-/// the downline section.
-final Finder overviewScroll = find
-    .descendant(
-      of: find.byType(ListView).first,
-      matching: find.byType(Scrollable),
-    )
-    .first;
+  /// The overview tab's VERTICAL scrollable — `Scrollable.first` on this
+  /// screen is the TabBarView's horizontal PageView, which never scrolls to
+  /// the downline section.
+  final Finder overviewScroll = find
+      .descendant(
+        of: find.byType(ListView).first,
+        matching: find.byType(Scrollable),
+      )
+      .first;
 
   testWidgets('empty downline keeps the madu empty state', (tester) async {
     await bootDawah(tester, api: _TreeApi(downline: const []));

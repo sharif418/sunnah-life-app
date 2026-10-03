@@ -20,6 +20,7 @@ import '../../state/remote_state.dart';
 import '../shared/global_header.dart';
 import '../shared/widgets.dart';
 import 'assessment_confirm_sheet.dart';
+import 'dawah_journey.dart';
 import 'madu_tree.dart';
 import 'referral_share_sheet.dart';
 import '../../design/phosphor_icons.dart';
@@ -193,6 +194,66 @@ class _DawahOverviewTab extends ConsumerWidget {
           children: [
             // W4-fix4: cache-served snapshot — subtle banner + the stamp.
             if (remote.stale) OfflineBanner(fetchedAt: remote.fetchedAt),
+
+            // The journey first: where I am, what's left (the prototype's
+            // order — the invite card follows the progress, not the reverse).
+            LevelJourneyCard(
+              level: overview.level,
+              nextLevel: overview.nextLevel,
+              monthsInLevel: overview.monthsInLevel,
+              requirementsMet: overview.requirements
+                  .where((r) => r.done)
+                  .length,
+              requirementsTotal: overview.requirements.length,
+            ),
+            const SizedBox(height: SLSpacing.s16),
+
+            // Requirements checklist — “Live checklist” opens the live screen
+            // (GET /api/dawah/requirements, B9 mobile parity with the web).
+            SectionHeader(
+              context.t('dawah_requirements'),
+              icon: PhosphorIconsRegular.listChecks,
+              action: TextButton.icon(
+                onPressed: () => context.push('/dawah/requirements'),
+                icon: const Icon(PhosphorIconsRegular.lightning, size: 16),
+                label: Text(context.t('dawah_req_live_action')),
+              ),
+            ),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (var i = 0; i < overview.requirements.length; i++)
+                    ListTile(
+                      leading: Icon(
+                        overview.requirements[i].done
+                            ? PhosphorIconsFill.checkCircle
+                            : PhosphorIconsRegular.circle,
+                        color: overview.requirements[i].done
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.outline,
+                      ),
+                      title: Text(overview.requirements[i].label),
+                      subtitle: Text(overview.requirements[i].detail),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: SLSpacing.s16),
+
+            // The usrah head's latest weekly comment to ME.
+            ...switch (_latestReviewFor(ref)) {
+              final review? => [
+                LatestReviewCard(
+                  review: review,
+                  onSeeAll: () =>
+                      DefaultTabController.maybeOf(context)?.animateTo(2),
+                ),
+                const SizedBox(height: SLSpacing.s16),
+              ],
+              _ => const <Widget>[],
+            },
+
             // Member code + referral
             AppCard(
               child: Column(
@@ -258,6 +319,18 @@ class _DawahOverviewTab extends ConsumerWidget {
                   // W4e — the overview's primary share action: the branded
                   // card preview (hidden when there is no code to invite
                   // with — the empty-code edge stays honest).
+                  const SizedBox(height: SLSpacing.s4),
+                  Text(
+                    context
+                        .t('dawah_joined_count')
+                        .replaceAll(
+                          '%n%',
+                          bn
+                              ? toBn(overview.invitedCount)
+                              : '${overview.invitedCount}',
+                        ),
+                    style: theme.textTheme.bodyMedium,
+                  ),
                   if (overview.memberCode.isNotEmpty) ...[
                     const SizedBox(height: SLSpacing.s12),
                     FilledButton.icon(
@@ -270,73 +343,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: SLSpacing.s12),
-
-            // Stats row — equal-height cells (IntrinsicHeight + stretch) so a
-            // two-line level name doesn't leave its neighbours short.
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                spacing: SLSpacing.s8,
-                children: [
-                  _StatCell(
-                    label: context.t('dawah_invited'),
-                    value:
-                        '${bn ? toBn(overview.invitedCount) : overview.invitedCount}',
-                  ),
-                  _StatCell(
-                    label: context.t('dawah_my_level'),
-                    value: context.t(overview.level.labelKey),
-                  ),
-                  _StatCell(
-                    label: context.t('dawah_months_in_level'),
-                    value:
-                        '${bn ? toBn(overview.monthsInLevel) : overview.monthsInLevel}',
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: SLSpacing.s12),
-
-            // Requirements checklist — “Live checklist” opens the live screen
-            // (GET /api/dawah/requirements, B9 mobile parity with the web).
-            SectionHeader(
-              context.t('dawah_requirements'),
-              icon: PhosphorIconsRegular.listChecks,
-              action: TextButton.icon(
-                onPressed: () => context.push('/dawah/requirements'),
-                icon: const Icon(PhosphorIconsRegular.lightning, size: 16),
-                label: Text(context.t('dawah_req_live_action')),
-              ),
-            ),
-            AppCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                children: [
-                  for (var i = 0; i < overview.requirements.length; i++)
-                    ListTile(
-                      dense: true,
-                      leading: Icon(
-                        overview.requirements[i].done
-                            ? PhosphorIconsFill.checkCircle
-                            : PhosphorIconsRegular.circle,
-                        color: overview.requirements[i].done
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
-                      ),
-                      title: Text(overview.requirements[i].label),
-                      subtitle: Text(overview.requirements[i].detail),
-                    ),
-                ],
-              ),
-            ),
             const SizedBox(height: SLSpacing.s8),
-            Text(
-              '${context.t('dawah_next_level')}: ${context.t(overview.nextLevel.labelKey)}',
-              style: theme.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
 
             // Madu tree — W4e: the flat depth-sorted downline rendered as
             // an indented tree with connector rails (read-only — the API
@@ -463,46 +470,15 @@ class _DawahOverviewTab extends ConsumerWidget {
   }
 }
 
-class _StatCell extends StatelessWidget {
-  const _StatCell({required this.label, required this.value});
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(SLSpacing.s12),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLow,
-          borderRadius: SLRadius.brMd,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              // W5: "মোট দাওয়াত দিয়েছি" truncated with an ellipsis at
-              // 412dp — the label wraps instead (3 lines at 360dp/1.3x).
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodyLarge?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+/// The newest weekly review with a comment, written FOR the signed-in member.
+WeeklyReview? _latestReviewFor(WidgetRef ref) {
+  final me = ref.watch(authProvider).userOrNull?.id;
+  final reviews = ref.watch(reviewsProvider).valueOrNull?.data ?? const [];
+  final mine = [
+    for (final r in reviews)
+      if (r.userId == me && (r.comment ?? '').trim().isNotEmpty) r,
+  ]..sort((a, b) => b.weekStart.compareTo(a.weekStart));
+  return mine.isEmpty ? null : mine.first;
 }
 
 // ── Tab 2: usrah ─────────────────────────────────────────────────────────────

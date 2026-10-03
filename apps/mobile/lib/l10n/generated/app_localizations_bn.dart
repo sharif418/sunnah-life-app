@@ -2022,4 +2022,25 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get adhkar_post_salat => 'নামাজের পরের আযকার';
+
+  @override
+  String get journey_joined => 'যোগদান';
+
+  @override
+  String get journey_farze_ain => 'ফরযে আইন';
+
+  @override
+  String get journey_months => 'এই স্তরে %n% মাস';
+
+  @override
+  String get journey_reqs_met => 'শর্ত %done%/%total%';
+
+  @override
+  String get review_latest_title => 'উসরা প্রধানের সাপ্তাহিক মন্তব্য';
+
+  @override
+  String get review_next_goals => 'পরের সপ্তাহের লক্ষ্য';
+
+  @override
+  String get dawah_joined_count => 'আপনার দাওয়াতে যোগ দিয়েছেন %n% জন';
 }

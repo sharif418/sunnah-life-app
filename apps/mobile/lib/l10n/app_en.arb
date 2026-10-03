@@ -650,5 +650,12 @@
   "quick_tracker": "Amal tracker",
   "quick_tracker_desc": "This month",
   "forbidden_short": "No salah at these times",
-  "adhkar_post_salat": "After-salah adhkar"
+  "adhkar_post_salat": "After-salah adhkar",
+  "journey_joined": "Joined",
+  "journey_farze_ain": "Farze Ain",
+  "journey_months": "%n% months at this level",
+  "journey_reqs_met": "%done%/%total% met",
+  "review_latest_title": "Your usrah head's weekly comment",
+  "review_next_goals": "Next week's goals",
+  "dawah_joined_count": "%n% joined through your invitation"
 }

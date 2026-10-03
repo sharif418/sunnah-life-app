@@ -2018,4 +2018,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adhkar_post_salat => 'After-salah adhkar';
+
+  @override
+  String get journey_joined => 'Joined';
+
+  @override
+  String get journey_farze_ain => 'Farze Ain';
+
+  @override
+  String get journey_months => '%n% months at this level';
+
+  @override
+  String get journey_reqs_met => '%done%/%total% met';
+
+  @override
+  String get review_latest_title => 'Your usrah head\'s weekly comment';
+
+  @override
+  String get review_next_goals => 'Next week\'s goals';
+
+  @override
+  String get dawah_joined_count => '%n% joined through your invitation';
 }
