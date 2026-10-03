@@ -176,29 +176,43 @@ export function isAyyamBeez(d: Date = new Date(), adjustDays = 0): boolean {
 // ── Bengali clock ───────────────────────────────────────────────────────────
 
 export function timePeriodBn(hour: number): string {
-  if (hour < 4) return "রাত";
-  if (hour < 6) return "ভোর";
-  if (hour < 12) return "সকাল";
-  if (hour < 16) return "দুপুর";
-  if (hour < 18) return "বিকাল";
-  if (hour < 19) return "সন্ধ্যা";
+  return timePeriodBnFromMinutes(hour * 60);
+}
+
+/**
+ * Minute-precision Bengali day parts — the mobile app's map
+ * (apps/mobile/lib/core/calendars.dart): Zuhr at 11:48 is দুপুর, a 17:48
+ * Maghrib is সন্ধ্যা (the old hour-only cut called them সকাল / বিকাল).
+ *   রাত < 4:00 · ভোর 4:00–6:00 · সকাল 6:00–11:30 · দুপুর 11:30–15:00 ·
+ *   বিকাল 15:00–17:00 · সন্ধ্যা 17:00–19:00 · রাত ≥ 19:00.
+ */
+export function timePeriodBnFromMinutes(minutesFromMidnight: number): string {
+  const m = ((minutesFromMidnight % 1440) + 1440) % 1440;
+  if (m < 4 * 60) return "রাত";
+  if (m < 6 * 60) return "ভোর";
+  if (m < 11 * 60 + 30) return "সকাল";
+  if (m < 15 * 60) return "দুপুর";
+  if (m < 17 * 60) return "বিকাল";
+  if (m < 19 * 60) return "সন্ধ্যা";
   return "রাত";
 }
 
 /** Format minutes-from-midnight as a Bengali clock string, e.g. "ভোর ৩:৪৩". */
 export function formatTimeBn(minutes: number): string {
-  const m = ((minutes % 1440) + 1440) % 1440;
+  // Round the TOTAL first: rounding only the minute part printed 18:59.6 as
+  // "৬:৬০" instead of "৭:০০".
+  const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
   const h24 = Math.floor(m / 60);
-  const mm = Math.round(m % 60);
+  const mm = m % 60;
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
-  return `${timePeriodBn(h24)} ${toBn(h12)}:${toBn(String(mm).padStart(2, "0"))}`;
+  return `${timePeriodBnFromMinutes(m)} ${toBn(h12)}:${toBn(String(mm).padStart(2, "0"))}`;
 }
 
 /** English format: "3:43 AM". */
 export function formatTimeEn(minutes: number): string {
-  const m = ((minutes % 1440) + 1440) % 1440;
+  const m = ((Math.round(minutes) % 1440) + 1440) % 1440;
   const h24 = Math.floor(m / 60);
-  const mm = Math.round(m % 60);
+  const mm = m % 60;
   const ampm = h24 < 12 ? "AM" : "PM";
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
   return `${h12}:${String(mm).padStart(2, "0")} ${ampm}`;
