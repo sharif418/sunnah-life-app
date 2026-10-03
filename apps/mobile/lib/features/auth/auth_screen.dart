@@ -296,8 +296,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             ),
           ] else ...[
             const SizedBox(height: SLSpacing.s16),
-            if (_devCode != null && kDebugMode)
-              // debug-only: the code chip never renders in release builds
+            // The SERVER is the gate: it returns devCode only for the mock SMS
+            // provider outside production (shouldExposeDevCode). Staging
+            // testers on a release APK have no SMS, so the chip must show
+            // whenever the server sent one — production never does.
+            if (_devCode != null)
               Container(
                 margin: const EdgeInsets.only(bottom: SLSpacing.s12),
                 padding: const EdgeInsets.all(SLSpacing.s12),
