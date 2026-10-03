@@ -390,6 +390,40 @@ describe("RLS e2e — W2e tightening", () => {
     expect(res.body).toBeTruthy();
   });
 
+  it("(e) a reviewer/assessor cannot write a CROSS-GENDER review or assessment by naming themself (2026-10-03)", async () => {
+    // The old policies let "reviewerId"/"assessorId" = self through with no
+    // gender check — a male head could create a female member's review.
+    const maleHead = await signInUser(M_HEAD);
+    const femaleMember = await signInUser(F_MEMBER);
+    await expect(
+      rls.run(maleHead, (tx) =>
+        tx.weeklyReview.create({
+          data: { userId: femaleMember.id, reviewerId: maleHead.id, weekStart: "2000-01-01", comment: "x" },
+        })
+      )
+    ).rejects.toThrow();
+    await expect(
+      rls.run(maleHead, (tx) =>
+        tx.assessment.create({
+          data: { templateKey: "farze_ain_v1.1", assesseeId: femaleMember.id, assessorId: maleHead.id, scoresJson: {} },
+        })
+      )
+    ).rejects.toThrow();
+    // nothing leaked through
+    expect(await maintenance.weeklyReview.count({ where: { userId: femaleMember.id, reviewerId: maleHead.id } })).toBe(0);
+    expect(await maintenance.assessment.count({ where: { assesseeId: femaleMember.id, assessorId: maleHead.id } })).toBe(0);
+  });
+
+  it("(e) positive control — the same head CAN review his own same-gender member", async () => {
+    const maleHead = await signInUser(M_HEAD);
+    const weekStart = "2000-01-08";
+    await maintenance.weeklyReview.deleteMany({ where: { userId: maleMember.id, weekStart } });
+    await rls.run(maleHead, (tx) =>
+      tx.weeklyReview.create({ data: { userId: maleMember.id, reviewerId: maleHead.id, weekStart, comment: "e2e" } })
+    );
+    await maintenance.weeklyReview.deleteMany({ where: { userId: maleMember.id, weekStart } });
+  });
+
   it("(d) a user cannot change own role / gender / usrahId at the DB level (trigger)", async () => {
     await expect(
       rls.run(maleMember, (tx) => tx.user.update({ where: { id: maleMember.id }, data: { role: "full_admin" } }))

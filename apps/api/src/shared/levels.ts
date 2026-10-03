@@ -245,9 +245,17 @@ export function invalidateLevelRulesCache(): void {
 }
 
 /** Whole months spent in the current level (30.44-day months). */
-export function monthsInLevelOf(user: Pick<User, "levelStartedAt">): number {
-  if (!user.levelStartedAt) return 0;
-  const ms = Date.now() - new Date(user.levelStartedAt).getTime();
+/**
+ * Whole months the user has spent at their current level. A user who never
+ * transitioned (signed up at `none`, or seeded/imported at a level) has no
+ * levelStartedAt — they have been at that level since the account was made,
+ * so createdAt is the start. (Returning 0 there made the 4-month Muhibbus
+ * gate unreachable for every member who joined before their first promotion.)
+ */
+export function monthsInLevelOf(user: Pick<User, "levelStartedAt" | "createdAt">): number {
+  const start = user.levelStartedAt ?? user.createdAt;
+  if (!start) return 0;
+  const ms = Date.now() - new Date(start).getTime();
   if (ms <= 0) return 0;
   return Math.floor(ms / (30.44 * 86_400_000));
 }
@@ -296,7 +304,7 @@ export function buildLevelChecklist(rules: LevelRules, facts: LevelFacts): Level
     rows.push({
       key: "assessment_passed",
       labelBn: rules.assessmentKey
-        ? `${rules.assessmentKey} মূল্যায়নে উত্তীর্ণ হওয়া (প্রতি সেকশনে অধিকাংশ 'সম্পূর্ণ')`
+        ? `${rules.assessmentKey} মূল্যায়নে উত্তীর্ণ হওয়া (অধিকাংশ ক্রাইটেরিয়া 'সম্পূর্ণ')`
         : "ফরযে আইন মূল্যায়নে উত্তীর্ণ হওয়া",
       current: facts.assessmentPassed ? 1 : 0,
       target: 1,
@@ -369,8 +377,12 @@ export async function gatherLevelFacts(
     select: { descendantId: true },
   });
   const downlineIds = closures.map((c) => c.descendantId);
+  // "আরো ৫ জনকে মুহিব্বুস সুন্নাহ স্তরে নিয়ে আসা" — a madu who has since
+  // moved on to Farze Ain was still brought to Muhibbus: count at-or-above.
   const referralsAtLevel = downlineIds.length
-    ? await tx.user.count({ where: { id: { in: downlineIds }, level: "muhibbus_sunnah" } })
+    ? await tx.user.count({
+        where: { id: { in: downlineIds }, level: { in: ["muhibbus_sunnah", "farze_ain_1", "farze_ain_2"] } },
+      })
     : 0;
 
   return { months, assessmentPassed: !!passed, referralsAtLevel };

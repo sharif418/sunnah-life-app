@@ -140,7 +140,7 @@ const List<FallbackAmal> kFallbackAmalCatalog = <FallbackAmal>[
     inputType: 'quantity',
     cadence: 'daily',
     sortOrder: 100,
-    target: {'general': 1, 'hafez': 20, 'alim': 10},
+    target: {'general': 1, 'hafez': 1, 'alim': 10},
     unit: 'পৃষ্ঠা/পারা — হাফেজ: ১ পারা · আলেম: ১০ পৃষ্ঠা · সাধারণ: ১ পৃষ্ঠা',
     autoSource: 'auto:quran:tilawat',
   ),
@@ -158,7 +158,7 @@ const List<FallbackAmal> kFallbackAmalCatalog = <FallbackAmal>[
   ),
   (
     key: 'adhkar_morning',
-    titleBn: 'সকালের মাসনূন আযকার (৫ মিনিট+)',
+    titleBn: 'সকালের মাসনূন আযকার (কমপক্ষে ৫ টি)',
     titleEn: 'Morning Adhkar (5 min+)',
     category: 'dhikr',
     inputType: 'boolean',
@@ -170,7 +170,7 @@ const List<FallbackAmal> kFallbackAmalCatalog = <FallbackAmal>[
   ),
   (
     key: 'adhkar_evening',
-    titleBn: 'সন্ধ্যার মাসনূন আযকার (৫ মিনিট+)',
+    titleBn: 'সন্ধ্যার মাসনূন আযকার (কমপক্ষে ৫ টি)',
     titleEn: 'Evening Adhkar (5 min+)',
     category: 'dhikr',
     inputType: 'boolean',

@@ -4,9 +4,11 @@
 //   • the narrow allowlist: non-CMS packs (adhkar/quran packs) → 404
 //   • validation: array body → 400; object without a non-empty array → 400;
 //     over the size cap → 400
-//   • a valid write: atomic tmp+rename (no .admin-tmp residue), audit row
-//     content_pack_update with bytes + itemCount, and the PUBLIC read
-//     (GET /api/content/faq) serves the edited pack immediately (cache bust)
+//   • a valid write: lands in STORAGE_DIR/content-overrides (the persistent
+//     volume — CONTENT_DIR is baked into the image and lost edits on every
+//     redeploy), atomic tmp+rename (no .admin-tmp residue), the baked pack is
+//     untouched, audit row content_pack_update with bytes + itemCount, and
+//     the PUBLIC read (GET /api/content/faq) serves the edit immediately
 // The spec runs against a TEMP CONTENT_DIR (copies of the real packs) and
 // restores process.env.CONTENT_DIR in afterAll — the repo packs are untouched
 // (the byte-identical mobile-asset test in content-packs.spec depends on them).
@@ -30,7 +32,9 @@ const MEMBER = "01000000008"; // সাইফুল ইসলাম — plain us
 
 const ORIGINAL_CONTENT_DIR = contentDir();
 const origEnvContentDir = process.env.CONTENT_DIR;
+const origEnvStorageDir = process.env.STORAGE_DIR;
 let tmpDir: string;
+let tmpStorage: string;
 
 let app: INestApplication;
 let http: () => ReturnType<typeof request>;
@@ -53,6 +57,8 @@ beforeAll(async () => {
     path.join(tmpDir, "faq.json")
   );
   process.env.CONTENT_DIR = tmpDir;
+  tmpStorage = await fs.mkdtemp(path.join(os.tmpdir(), "sl-storage-"));
+  process.env.STORAGE_DIR = tmpStorage;
 
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
   app = moduleRef.createNestApplication();
@@ -66,8 +72,11 @@ afterAll(async () => {
   await app.close();
   if (origEnvContentDir === undefined) delete process.env.CONTENT_DIR;
   else process.env.CONTENT_DIR = origEnvContentDir;
+  if (origEnvStorageDir === undefined) delete process.env.STORAGE_DIR;
+  else process.env.STORAGE_DIR = origEnvStorageDir;
   invalidatePackCache();
   await fs.rm(tmpDir, { recursive: true, force: true });
+  await fs.rm(tmpStorage, { recursive: true, force: true });
 });
 
 describe("roles + allowlist", () => {
@@ -163,11 +172,15 @@ describe("a valid write", () => {
     expect((after.body.data as { items: unknown[] }).items).toHaveLength(edited.items.length);
     expect(JSON.stringify(after.body.data)).toContain("ই২ই প্রশ্ন?");
 
-    // the file on disk is the serialized document; no tmp residue (atomic rename)
-    const onDisk = await fs.readFile(path.join(tmpDir, "faq.json"), "utf8");
+    // the override on the storage volume is the serialized document; no tmp
+    // residue (atomic rename); the pack baked into CONTENT_DIR is untouched
+    const overrides = path.join(tmpStorage, "content-overrides");
+    const onDisk = await fs.readFile(path.join(overrides, "faq.json"), "utf8");
     expect(JSON.parse(onDisk)).toEqual(edited);
-    const files = await fs.readdir(tmpDir);
+    const files = await fs.readdir(overrides);
     expect(files.some((f) => f.endsWith(".admin-tmp"))).toBe(false);
+    const baked = await fs.readFile(path.join(tmpDir, "faq.json"), "utf8");
+    expect(JSON.parse(baked)).toEqual(doc);
 
     // audit row
     const audit = await rls.system((tx) =>

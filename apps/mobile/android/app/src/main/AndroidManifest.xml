@@ -1,4 +1,5 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- Network for the typed API client (production NestJS API). -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,6 +21,13 @@
          the balanced-power priority at runtime. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <!-- Social-media detox (/more/detox): UsageStatsManager screen-time
+         totals. A special-access permission — the user grants it in
+         Settings → Usage access (MainActivity opens that page); without this
+         declaration the app never even appears in that list. -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
 
     <application
         android:label="সুন্নাহ লাইফ"
