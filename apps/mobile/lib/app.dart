@@ -243,6 +243,15 @@ final routerProvider = Provider<GoRouter>((ref) {
                     pageBuilder: (c, s) =>
                         slFadePage(child: const GoalsScreen()),
                   ),
+                  // AMOL-15: the usrah question board belongs to the আমল
+                  // page's কুইজ ও পরীক্ষা — every usrah MEMBER reaches it here
+                  // (under /dawah it was da'ee-only, so plain members never
+                  // could). The API already scopes it to the user's usrah.
+                  GoRoute(
+                    path: 'questions',
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const UsrahQuestionsScreen()),
+                  ),
                 ],
               ),
             ],

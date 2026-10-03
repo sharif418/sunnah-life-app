@@ -28,6 +28,7 @@ import '../../state/providers.dart';
 import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
+import '../dawah/dawah_journey.dart' show LatestReviewCard, latestReviewFor;
 import 'amal_widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -200,6 +201,9 @@ class _TodayView extends ConsumerWidget {
                   '/amal/self-test',
                 ),
                 (PhosphorIconsRegular.flagBanner, 'goals_title', '/amal/goals'),
+                // AMOL-15: the usrah's question board, for usrah members
+                if (ref.watch(authProvider).userOrNull?.usrahId != null)
+                  (PhosphorIconsRegular.chats, 'usrah_q_title', '/amal/questions'),
               ])
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
@@ -243,6 +247,17 @@ class _TodayView extends ConsumerWidget {
             ),
           const SizedBox(height: SLSpacing.s16),
         ],
+
+        // the usrah head's latest weekly comment — feedback where the diary
+        // is kept (plain members never saw these: the review tab is under
+        // দাওয়াত, which they don't have)
+        ...switch (latestReviewFor(ref)) {
+          final review? => [
+            LatestReviewCard(review: review),
+            const SizedBox(height: SLSpacing.s16),
+          ],
+          _ => const <Widget>[],
+        },
 
         // ── everything beyond the paper ───────────────────────────────────
         if (extras.isNotEmpty) ...[

@@ -242,7 +242,7 @@ class _DawahOverviewTab extends ConsumerWidget {
             const SizedBox(height: SLSpacing.s16),
 
             // The usrah head's latest weekly comment to ME.
-            ...switch (_latestReviewFor(ref)) {
+            ...switch (latestReviewFor(ref)) {
               final review? => [
                 LatestReviewCard(
                   review: review,
@@ -468,17 +468,6 @@ class _DawahOverviewTab extends ConsumerWidget {
       },
     );
   }
-}
-
-/// The newest weekly review with a comment, written FOR the signed-in member.
-WeeklyReview? _latestReviewFor(WidgetRef ref) {
-  final me = ref.watch(authProvider).userOrNull?.id;
-  final reviews = ref.watch(reviewsProvider).valueOrNull?.data ?? const [];
-  final mine = [
-    for (final r in reviews)
-      if (r.userId == me && (r.comment ?? '').trim().isNotEmpty) r,
-  ]..sort((a, b) => b.weekStart.compareTo(a.weekStart));
-  return mine.isEmpty ? null : mine.first;
 }
 
 // ── Tab 2: usrah ─────────────────────────────────────────────────────────────

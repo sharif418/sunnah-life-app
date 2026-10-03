@@ -4,11 +4,14 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../design/phosphor_icons.dart';
 import '../../models/domain.dart';
+import '../../state/providers.dart';
+import '../../state/remote_state.dart' show reviewsProvider;
 import '../shared/widgets.dart';
 
 /// Three steps with the current one marked, then this level's progress:
@@ -222,13 +225,11 @@ class _JourneyStep extends StatelessWidget {
 /// The usrah head's latest weekly comment to this member — members never saw
 /// these outside the রিভিউ tab before.
 class LatestReviewCard extends StatelessWidget {
-  const LatestReviewCard({
-    super.key,
-    required this.review,
-    required this.onSeeAll,
-  });
+  const LatestReviewCard({super.key, required this.review, this.onSeeAll});
   final WeeklyReview review;
-  final VoidCallback onSeeAll;
+
+  /// Opens the full review list (the দাওয়াত রিভিউ tab); null = not tappable.
+  final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context) {
@@ -282,4 +283,17 @@ class LatestReviewCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// The newest weekly review with a comment, written FOR the signed-in member
+/// (GET /api/reviews returns a member's own reviews — any role).
+WeeklyReview? latestReviewFor(WidgetRef ref) {
+  final me = ref.watch(authProvider).userOrNull?.id;
+  if (me == null) return null;
+  final reviews = ref.watch(reviewsProvider).valueOrNull?.data ?? const [];
+  final mine = [
+    for (final r in reviews)
+      if (r.userId == me && (r.comment ?? '').trim().isNotEmpty) r,
+  ]..sort((a, b) => b.weekStart.compareTo(a.weekStart));
+  return mine.isEmpty ? null : mine.first;
 }
