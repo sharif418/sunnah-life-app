@@ -39,6 +39,8 @@ export interface MonthlyReportData {
     memberCode: string | null;
     district: string | null;
     usrahName: string | null;
+    /** BD date the account was created — no ✗ before the member existed. */
+    joinedOn?: string;
   };
   month: string; // YYYY-MM
   days: string[]; // every YYYY-MM-DD of the month
@@ -46,6 +48,64 @@ export interface MonthlyReportData {
   entries: ReportEntry[];
   reviews: ReportWeekComment[];
   generatedAt: Date;
+  /** The paper monthly sheet's groups/rows (diary-instructions.json
+   *  paperLayout). When present, page 1 mirrors the paper exactly and every
+   *  other active amal moves to an "অতিরিক্ত আমল" page. */
+  paperLayout?: PaperGroup[];
+}
+
+/** One row of the paper monthly sheet; the first key with a value fills it. */
+export interface PaperRow {
+  labelBn: string;
+  amalKeys: string[];
+}
+
+export interface PaperGroup {
+  groupBn: string;
+  noteBn?: string;
+  rows: PaperRow[];
+}
+
+/** A paper row bound to the active catalog definitions it reads from. */
+export interface ResolvedPaperRow {
+  labelBn: string;
+  defs: ReportAmalDef[];
+}
+
+export interface ResolvedPaperGroup {
+  groupBn: string;
+  noteBn?: string;
+  rows: ResolvedPaperRow[];
+}
+
+/**
+ * Bind the paper layout to the ACTIVE definitions: rows whose keys are all
+ * inactive drop out (and empty groups with them); every active definition
+ * the paper does not name is returned as an extra, in catalog order.
+ */
+export function resolvePaperLayout(
+  layout: PaperGroup[],
+  defs: ReportAmalDef[]
+): { groups: ResolvedPaperGroup[]; extras: ReportAmalDef[] } {
+  const byKey = new Map(defs.map((d) => [d.key, d]));
+  const used = new Set<string>();
+  const groups: ResolvedPaperGroup[] = [];
+  for (const g of layout) {
+    const rows: ResolvedPaperRow[] = [];
+    for (const r of g.rows) {
+      const rowDefs = r.amalKeys.map((k) => byKey.get(k)).filter((d): d is ReportAmalDef => !!d);
+      if (!rowDefs.length) continue;
+      rowDefs.forEach((d) => used.add(d.key));
+      rows.push({ labelBn: r.labelBn, defs: rowDefs });
+    }
+    if (rows.length) groups.push({ groupBn: g.groupBn, noteBn: g.noteBn, rows });
+  }
+  return { groups, extras: defs.filter((d) => !used.has(d.key)) };
+}
+
+/** Bangladesh calendar date (YYYY-MM-DD) of an instant. */
+export function bdDateKey(at: Date): string {
+  return new Date(at.getTime() + 6 * 3_600_000).toISOString().slice(0, 10);
 }
 
 /** One Saturday-start week that intersects the month. */
@@ -192,11 +252,41 @@ export function districtLabelBn(district: string | null): string | null {
 //             simply have no rows in the DB; we render what exists.
 // Count/quantity cells show the recorded number in Bengali digits; boolean
 // cells show a ✔ when true. Weekly-cadence amals mark their due day only.
+//   ✗  অসম্পন্ন — the paper's instruction ১: "অসম্পন্ন থাকলে ক্রস (✗) দিন".
+//      Drawn on a PAST day the amal was due (daily, or the Friday of a
+//      Friday amal) with nothing recorded; today and future days stay blank,
+//      and flexible-day amals (any day of the week / ayyam al-beez) never ✗.
 
 export type CellMark =
-  | { kind: "mark"; mark: "jamaat" | "alone" | "qaza" | "done" }
+  | { kind: "mark"; mark: "jamaat" | "alone" | "qaza" | "done" | "missed" }
   | { kind: "number"; text: string }
   | { kind: "empty" };
+
+/** Whether an amal is due on a given day (drives the ✗ for misses). */
+export function isDueOn(def: ReportAmalDef, day: string): boolean {
+  if (def.cadence === "daily") return true;
+  if (def.cadence === "weekly:fri") {
+    const [y, m, d] = day.split("-").map(Number);
+    return new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 5;
+  }
+  return false;
+}
+
+/** The cell for one row on one day, with ✗ for a past, due, unrecorded day. */
+export function cellForDay(
+  def: ReportAmalDef,
+  value: unknown,
+  day: string,
+  todayKey: string,
+  joinedOn = ""
+): CellMark {
+  const cell = cellFor(def, value);
+  if (cell.kind !== "empty") return cell;
+  if (day < todayKey && day >= joinedOn && isDueOn(def, day) && def.inputType !== "text") {
+    return { kind: "mark", mark: "missed" };
+  }
+  return cell;
+}
 
 /** Map one entry value to its grid cell rendering. */
 export function cellFor(def: ReportAmalDef, value: unknown): CellMark {

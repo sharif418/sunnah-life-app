@@ -29,5 +29,170 @@
       "no": 6,
       "textBn": "কোনো আমল ছুটে গেলে হতাশ না হয়ে তাওবা করুন এবং পরবর্তী দিন থেকে নতুন উদ্যমে আবার শুরু করুন।"
     }
+  ],
+  "paperLayoutSource": "client paper diary — monthly sheet (মাসের মুহাসাবা রিপোর্ট): group + row labels VERBATIM (only কম্পক্ষে → কমপক্ষে corrected). amalKeys: the catalog keys whose value fills the row; the first key with a value wins.",
+  "paperLayout": [
+    {
+      "groupBn": "সালাত ট্র্যাকার",
+      "noteBn": "জামাতে আদায় করলে ✔, একাকী করলে /, কাযা হলে □ চিহ্ন ব্যবহার করুন",
+      "rows": [
+        {
+          "labelBn": "ফজর",
+          "amalKeys": [
+            "salat_fajr"
+          ]
+        },
+        {
+          "labelBn": "যোহর",
+          "amalKeys": [
+            "salat_dhuhr"
+          ]
+        },
+        {
+          "labelBn": "আসর",
+          "amalKeys": [
+            "salat_asr"
+          ]
+        },
+        {
+          "labelBn": "মাগরিব",
+          "amalKeys": [
+            "salat_maghrib"
+          ]
+        },
+        {
+          "labelBn": "এশা",
+          "amalKeys": [
+            "salat_isha"
+          ]
+        }
+      ]
+    },
+    {
+      "groupBn": "বিতর",
+      "rows": [
+        {
+          "labelBn": "বিতর সালাত আদায় করেছি",
+          "amalKeys": [
+            "salat_witr"
+          ]
+        }
+      ]
+    },
+    {
+      "groupBn": "সুন্নাহ ও নফল সালাত",
+      "rows": [
+        {
+          "labelBn": "সুন্নাতে মুয়াক্কাদাহ (দৈনিক ১২ রাকাত) আদায় করেছি",
+          "amalKeys": [
+            "sunnah_muakkadah_12"
+          ]
+        }
+      ]
+    },
+    {
+      "groupBn": "জিকর ও তিলাওয়াত",
+      "rows": [
+        {
+          "labelBn": "সকালের মাসনূন আযকার (কমপক্ষে ৫ টি)",
+          "amalKeys": [
+            "adhkar_morning"
+          ]
+        },
+        {
+          "labelBn": "সন্ধ্যার মাসনূন আযকার (কমপক্ষে ৫ টি)",
+          "amalKeys": [
+            "adhkar_evening"
+          ]
+        }
+      ]
+    },
+    {
+      "groupBn": "ইলম বা জ্ঞানার্জন",
+      "rows": [
+        {
+          "labelBn": "কুরআন তিলাওয়াত বা কায়দা (সময় লিখুন)",
+          "amalKeys": [
+            "tilawat_minutes",
+            "tilawat"
+          ]
+        }
+      ]
+    },
+    {
+      "groupBn": "করণীয়-বর্জনীয় কাজ (হারাম বর্জন)",
+      "rows": [
+        {
+          "labelBn": "কমপক্ষে ১ জনের সাথে ঈমানী মুজাকারা করেছি",
+          "amalKeys": [
+            "muzakara_imani"
+          ]
+        },
+        {
+          "labelBn": "সালাত ধীরস্থিরভাবে পড়েছি (প্রতি রাকাত ২.৫ মিনিট)",
+          "amalKeys": [
+            "salat_slowly"
+          ]
+        },
+        {
+          "labelBn": "হারাম বিনোদন (নাটক, সিনেমা, মিউজিক) থেকে বিরত থেকেছি",
+          "amalKeys": [
+            "avoided_entertainment"
+          ]
+        },
+        {
+          "labelBn": "রাত ১০:৩০ টার মধ্যে বিছানায় গিয়েছি",
+          "amalKeys": [
+            "bed_by_1030"
+          ]
+        },
+        {
+          "labelBn": "আজ ইশরাকের সালাতের পূর্বে ঘুমাইনি",
+          "amalKeys": [
+            "no_sleep_before_ishraq"
+          ]
+        }
+      ]
+    },
+    {
+      "groupBn": "সাপ্তাহিক আমল",
+      "rows": [
+        {
+          "labelBn": "শুক্রবার সূরা কাহফ তিলাওয়াত করেছি",
+          "amalKeys": [
+            "kahf_friday"
+          ]
+        },
+        {
+          "labelBn": "শুক্রবার মাগরিবের পূর্বে দোয়া করেছি",
+          "amalKeys": [
+            "dua_before_maghrib_friday"
+          ]
+        },
+        {
+          "labelBn": "সোম ও বৃহস্পতিবার থেকে কমপক্ষে ১ দিন রোযা রেখেছি",
+          "amalKeys": [
+            "fast_mon_thu"
+          ]
+        },
+        {
+          "labelBn": "আজ একজন আত্মীয়ের খোঁজ নিয়েছি",
+          "amalKeys": [
+            "check_relative"
+          ]
+        }
+      ]
+    },
+    {
+      "groupBn": "মাসিক আমল",
+      "rows": [
+        {
+          "labelBn": "আইয়্যামে বীজের রোযা রেখেছি",
+          "amalKeys": [
+            "ayyam_beez"
+          ]
+        }
+      ]
+    }
   ]
 }
