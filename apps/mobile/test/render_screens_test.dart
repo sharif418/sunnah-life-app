@@ -23,6 +23,7 @@ import 'dart:ui' as ui;
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -124,7 +125,34 @@ void main() {
               ],
             );
 
+            // Layout errors (overflow, bad ParentData) are FINDINGS, not
+            // reasons to lose the picture: collect them into <name>.errors.txt
+            // and keep rendering. The test still fails so the run summary
+            // lists every screen that has one.
+            final errors = <String>[];
+            final previousOnError = FlutterError.onError;
+            FlutterError.onError = (details) => errors.add(
+              [
+                details.exceptionAsString(),
+                ...?details.informationCollector?.call().take(3),
+              ].join('\n'),
+            );
+
             await warmAppFonts(tester);
+            // Material icons (BackButton, checkmarks) ship with the SDK, not
+            // the app; without them every back arrow renders as a tofu box.
+            await tester.runAsync(() async {
+              final font = File(
+                '${Platform.environment['FLUTTER_ROOT']}/bin/cache/artifacts/'
+                'material_fonts/materialicons-regular.otf',
+              );
+              if (font.existsSync()) {
+                final bytes = ByteData.sublistView(await font.readAsBytes());
+                await (FontLoader(
+                  'MaterialIcons',
+                )..addFont(Future.value(bytes))).load();
+              }
+            });
             await tester.pumpWidget(
               UncontrolledProviderScope(
                 container: container,
@@ -133,7 +161,17 @@ void main() {
             );
             await tester.pumpAndSettle();
             container.read(routerProvider).go(path);
-            await tester.pumpAndSettle();
+            // Screens with a live ticker (Qur'an audio, compass) never
+            // settle — fall back to a fixed pump.
+            try {
+              await tester.pumpAndSettle(
+                const Duration(milliseconds: 100),
+                EnginePhase.sendSemanticsUpdate,
+                const Duration(seconds: 5),
+              );
+            } on FlutterError {
+              await tester.pump(const Duration(seconds: 1));
+            }
 
             final element = find.byType(MaterialApp).evaluate().single;
             await tester.runAsync(() async {
@@ -144,7 +182,15 @@ void main() {
               final file = File('$outDir/$name.png');
               await file.parent.create(recursive: true);
               await file.writeAsBytes(bytes!.buffer.asUint8List());
+              final log = File('$outDir/$name.errors.txt');
+              if (errors.isEmpty) {
+                if (log.existsSync()) await log.delete();
+              } else {
+                await log.writeAsString(errors.join('\n\n---\n\n'));
+              }
             });
+            FlutterError.onError = previousOnError;
+            expect(errors, isEmpty, reason: errors.join('\n---\n'));
 
             // Inside the body — cancels the periodic sync-flush timer in time.
             container.dispose();

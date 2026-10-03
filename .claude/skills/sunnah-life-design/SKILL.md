@@ -33,7 +33,11 @@ MSYS_NO_PATHCONV=1 SL_RENDER_DIR=<scratch>/screens SL_RENDER_PATHS=/amal,/amal/m
 `MSYS_NO_PATHCONV=1` stops Git Bash rewriting `/` routes into Windows paths.
 Without `SL_RENDER_PATHS` it renders every main route. Each route comes out in
 light and dark, at 412dp/1.0x and 360dp/1.3x text. Look at the PNGs with
-Read. The fixtures (pinned clock, signed-in da'ee, fake API) live in
+Read. A screen with a layout error (overflow, misplaced `Expanded`) still
+gets its PNG plus a `<name>.errors.txt` beside it, and that test fails, so
+the run summary lists every broken screen; treat each as a bug. Failures
+with no `.errors.txt` (MissingPluginException on profile, qibla, mosques) are
+plugins absent from the test engine, not app bugs. The fixtures (pinned clock, signed-in da'ee, fake API) live in
 `test/golden_fixtures.dart`; extend `GoldenApi` when a screen needs data.
 For widgets in isolation the debug route `/__gallery` (kit gallery) renders
 every shared component.
@@ -48,7 +52,10 @@ writing Flutter. Small fixes go straight to code.
 
 ## 4. Per-screen checklist
 
-Run it on the rendered PNGs before and after a change.
+Run it on the rendered PNGs before and after a change. If the user-level
+skills from Anthropic's Design plugin are installed (`design-critique`,
+`accessibility-review`, `ux-copy`), use their report formats for critiques,
+WCAG audits and copy reviews; the rules below still win where they differ.
 
 - **Job.** The screen's single job is obvious within 3 seconds; one filled
   primary action at most.
