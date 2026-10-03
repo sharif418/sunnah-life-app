@@ -325,8 +325,50 @@ void main() {
     expect(find.text('পুরনো পর্ব'), findsNothing);
     expect(find.byKey(const ValueKey('home_live_chip')), findsOneWidget);
     expect(find.text(S.tr(Lang.bn, 'live_next')), findsOneWidget);
-    expect(find.text('2026-10-01 20:00'), findsOneWidget);
+    // local time, Bengali (the old raw '2026-10-01 20:00' was the UTC clock)
+    expect(find.textContaining('অক্টোবর ·'), findsOneWidget);
     expect(find.text(S.tr(Lang.bn, 'live_join_hint')), findsOneWidget);
+
+    container.dispose();
+    await db.close();
+  });
+
+  testWidgets('HOME-10: a program live NOW wins, with এখন লাইভ + watch', (
+    tester,
+  ) async {
+    final db = makeDb();
+    final container = await bootHome(
+      tester,
+      db,
+      extra: [
+        ...quietRemote(),
+        liveProvider.overrideWith(
+          (ref) async => [
+            const LiveProgramItem(
+              id: 'up-1',
+              titleBn: 'আগামী পর্ব',
+              startsAt: '2026-10-01T20:00:00.000Z',
+              gender: Gender.m,
+              status: 'upcoming',
+            ),
+            const LiveProgramItem(
+              id: 'live-now',
+              titleBn: 'জুমার আলোচনা',
+              startsAt: '2026-09-30T08:00:00.000Z',
+              gender: Gender.m,
+              status: 'live',
+              youtubeId: 'abc123',
+            ),
+          ],
+        ),
+      ],
+    );
+
+    await scrollTo(tester, find.byKey(const ValueKey('home_live_preview')));
+    expect(find.text('জুমার আলোচনা'), findsOneWidget);
+    expect(find.text('আগামী পর্ব'), findsNothing);
+    expect(find.text(S.tr(Lang.bn, 'live_now')), findsOneWidget);
+    expect(find.byKey(const ValueKey('home_live_watch')), findsOneWidget);
 
     container.dispose();
     await db.close();

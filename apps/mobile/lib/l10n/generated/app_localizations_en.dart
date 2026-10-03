@@ -2137,4 +2137,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guest_nudge_later => 'Later';
+
+  @override
+  String get notifications_for_you => 'For you';
+
+  @override
+  String get notif_now => 'Now';
+
+  @override
+  String get notif_next => 'Next';
+
+  @override
+  String get notif_left => 'left';
+
+  @override
+  String get notif_hours => 'h';
+
+  @override
+  String get notif_minutes => 'min';
 }

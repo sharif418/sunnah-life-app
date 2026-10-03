@@ -688,5 +688,11 @@
   "guest_nudge_usrah": "انضم إلى أسرة واحصل على توجيه مسؤولك",
   "guest_nudge_journey": "تابع تقدّمك من محب السنة إلى فرض العين",
   "guest_nudge_cta": "أنشئ حسابًا",
-  "guest_nudge_later": "لاحقًا"
+  "guest_nudge_later": "لاحقًا",
+  "notifications_for_you": "لك",
+  "notif_now": "الآن",
+  "notif_next": "التالي",
+  "notif_left": "متبقٍ",
+  "notif_hours": "س",
+  "notif_minutes": "د"
 }

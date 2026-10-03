@@ -688,5 +688,11 @@
   "guest_nudge_usrah": "উসরায় যুক্ত হয়ে দায়িত্বশীলের পরামর্শ পাবেন",
   "guest_nudge_journey": "মুহিব্বুস সুন্নাহ থেকে ফরযে আইন — নিজের অগ্রগতি দেখবেন",
   "guest_nudge_cta": "অ্যাকাউন্ট খুলুন",
-  "guest_nudge_later": "পরে"
+  "guest_nudge_later": "পরে",
+  "notifications_for_you": "আপনার জন্য",
+  "notif_now": "এখন",
+  "notif_next": "পরবর্তী",
+  "notif_left": "বাকি",
+  "notif_hours": "ঘণ্টা",
+  "notif_minutes": "মিনিট"
 }

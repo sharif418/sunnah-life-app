@@ -23,7 +23,7 @@ import '../../design/brand_mark.dart';
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../state/providers.dart';
-import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
+import '../../state/remote_state.dart' show effectiveHijriAdjustProvider, inboxUnreadProvider;
 import 'city_picker.dart';
 import 'notifications_sheet.dart';
 import 'reminders_sheet.dart';
@@ -94,6 +94,7 @@ class GlobalHeader extends ConsumerWidget {
                 icon: PhosphorIconsRegular.bell,
                 tooltipKey: 'header_notifications',
                 onTap: () => showNotificationsSheet(context),
+                dot: ref.watch(inboxUnreadProvider) > 0,
               ),
               _HeaderAction(
                 icon: PhosphorIconsRegular.clock,
@@ -169,14 +170,19 @@ class _HeaderAction extends StatelessWidget {
     required this.icon,
     required this.tooltipKey,
     required this.onTap,
+    this.dot = false,
   });
 
   final IconData icon;
   final String tooltipKey;
   final VoidCallback onTap;
 
+  /// An unread marker (the bell, when the inbox has unread messages).
+  final bool dot;
+
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Tooltip(
       message: context.t(tooltipKey),
       child: InkWell(
@@ -185,10 +191,26 @@ class _HeaderAction extends StatelessWidget {
         child: SizedBox(
           width: 40,
           height: 44,
-          child: Icon(
-            icon,
-            size: 22,
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(icon, size: 22, color: cs.onSurfaceVariant),
+              if (dot)
+                Positioned(
+                  key: const ValueKey('header_unread_dot'),
+                  top: 10,
+                  right: 9,
+                  child: Container(
+                    width: 9,
+                    height: 9,
+                    decoration: BoxDecoration(
+                      color: cs.error,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: cs.surface, width: 1.5),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),

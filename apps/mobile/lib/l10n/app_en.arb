@@ -688,5 +688,11 @@
   "guest_nudge_usrah": "Join an usrah and get your mentor's guidance",
   "guest_nudge_journey": "See your progress from Muhibbus Sunnah to Farze Ain",
   "guest_nudge_cta": "Create an account",
-  "guest_nudge_later": "Later"
+  "guest_nudge_later": "Later",
+  "notifications_for_you": "For you",
+  "notif_now": "Now",
+  "notif_next": "Next",
+  "notif_left": "left",
+  "notif_hours": "h",
+  "notif_minutes": "min"
 }

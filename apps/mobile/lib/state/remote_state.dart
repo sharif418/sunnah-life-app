@@ -189,6 +189,34 @@ final usrahQuizResultsProvider = FutureProvider<UsrahQuizResults?>((ref) async {
   }
 });
 
+/// Kinds of Reminder rows that are MESSAGES to the member (something
+/// happened) rather than self-set reminders (live / prayer / detox).
+const kInboxKinds = {'review', 'goal', 'assessment', 'broadcast'};
+
+/// The member's personal inbox — GET /api/reminders filtered to messages
+/// whose time has come, newest first. Null for guests and offline.
+final inboxProvider = FutureProvider<List<ReminderItem>?>((ref) async {
+  if (!ref.watch(authProvider).signedIn) return null;
+  try {
+    final all = await ref.watch(apiProvider).reminders();
+    final now = DateTime.now();
+    return [
+      for (final r in all)
+        if (kInboxKinds.contains(r.kind) &&
+            (DateTime.tryParse(r.scheduledAt ?? '')?.isBefore(now) ?? true))
+          r,
+    ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  } on ApiException {
+    return null;
+  }
+});
+
+/// Unread inbox messages — the dot on the header bell.
+final inboxUnreadProvider = Provider<int>((ref) {
+  final items = ref.watch(inboxProvider).valueOrNull ?? const [];
+  return items.where((r) => !r.read).length;
+});
+
 /// Usrah question board (RLS — own usrah only; empty while a guest).
 final usrahQuestionsProvider = FutureProvider<List<UsrahQuestion>>((ref) async {
   final auth = ref.watch(authProvider);

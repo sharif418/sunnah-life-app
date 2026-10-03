@@ -4233,6 +4233,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'পরে'**
   String get guest_nudge_later;
+
+  /// No description provided for @notifications_for_you.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার জন্য'**
+  String get notifications_for_you;
+
+  /// No description provided for @notif_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন'**
+  String get notif_now;
+
+  /// No description provided for @notif_next.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরবর্তী'**
+  String get notif_next;
+
+  /// No description provided for @notif_left.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাকি'**
+  String get notif_left;
+
+  /// No description provided for @notif_hours.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঘণ্টা'**
+  String get notif_hours;
+
+  /// No description provided for @notif_minutes.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট'**
+  String get notif_minutes;
 }
 
 class _AppLocalizationsDelegate

@@ -37,6 +37,8 @@ import '../../l10n/app_strings.dart';
 import '../amal/amal_widgets.dart' show CompletionRing;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
+import '../../core/external_urls.dart' show livePlaybackUrl, openExternalApp;
+import '../shared/when_bn.dart';
 import 'guest_nudge.dart';
 import 'home_sections.dart';
 
@@ -769,19 +771,18 @@ class _LivePreviewSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     // Live is PUBLIC data; the section stays hidden while loading/offline
-    // and when nothing is upcoming (home degrades like the other sections
-    // do for guests — the full list lives at /more/live).
-    final upcoming = ref
-        .watch(liveProvider)
-        .maybeWhen(
-          data: (programs) =>
-              (programs.where((p) => p.status == 'upcoming').toList()
-                    ..sort((a, b) => a.startsAt.compareTo(b.startsAt)))
-                  .firstOrNull,
-          orElse: () => null,
-        );
-    if (upcoming == null) return const SizedBox.shrink();
-    final p = upcoming;
+    // and when nothing is live or upcoming (home degrades like the other
+    // sections do for guests — the full list lives at /more/live).
+    // HOME-10: a program that is live NOW wins over the next upcoming one.
+    final programs = ref.watch(liveProvider).valueOrNull ?? const [];
+    LiveProgramItem? pick(String status) =>
+        (programs.where((p) => p.status == status).toList()
+              ..sort((a, b) => a.startsAt.compareTo(b.startsAt)))
+            .firstOrNull;
+    final p = pick('live') ?? pick('upcoming');
+    if (p == null) return const SizedBox.shrink();
+    final isLive = p.status == 'live';
+    final watchUrl = isLive ? livePlaybackUrl(youtubeId: p.youtubeId) : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -800,13 +801,19 @@ class _LivePreviewSection extends ConsumerWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primaryContainer,
+                  color: isLive
+                      ? theme.colorScheme.error
+                      : theme.colorScheme.primaryContainer,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  PhosphorIconsRegular.broadcast,
+                  isLive
+                      ? PhosphorIconsFill.broadcast
+                      : PhosphorIconsRegular.broadcast,
                   size: 22,
-                  color: theme.colorScheme.primary,
+                  color: isLive
+                      ? theme.colorScheme.onError
+                      : theme.colorScheme.primary,
                 ),
               ),
               const SizedBox(width: SLSpacing.s12),
@@ -823,13 +830,17 @@ class _LivePreviewSection extends ConsumerWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: SLColors.gold.withValues(alpha: 0.18),
+                            color: isLive
+                                ? theme.colorScheme.error
+                                : SLColors.gold.withValues(alpha: 0.18),
                             borderRadius: SLRadius.brPill,
                           ),
                           child: Text(
-                            context.t('live_next'),
+                            context.t(isLive ? 'live_now' : 'live_next'),
                             style: theme.textTheme.bodySmall?.copyWith(
-                              color: theme.brightness == Brightness.dark
+                              color: isLive
+                                  ? theme.colorScheme.onError
+                                  : theme.brightness == Brightness.dark
                                   ? SLColors.darkGoldText
                                   : SLColors.lightGoldText,
                               fontWeight: FontWeight.w700,
@@ -848,19 +859,31 @@ class _LivePreviewSection extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: SLSpacing.s4),
-                    Text(
-                      _liveWhen(p.startsAt),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    if (!isLive)
+                      Text(
+                        whenBn(context, p.startsAt),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
-                    ),
-                    Text(
-                      context.t('live_join_hint'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.w600,
+                    if (watchUrl != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: SLSpacing.s8),
+                        child: FilledButton.icon(
+                          key: const ValueKey('home_live_watch'),
+                          icon: const Icon(PhosphorIconsFill.broadcast, size: 18),
+                          label: Text(context.t('live_watch_now')),
+                          onPressed: () => openExternalApp(watchUrl),
+                        ),
+                      )
+                    else
+                      Text(
+                        context.t('live_join_hint'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),
@@ -870,12 +893,6 @@ class _LivePreviewSection extends ConsumerWidget {
       ],
     );
   }
-
-  /// Day/time line in the Live screen's convention (ISO → 'YYYY-MM-DD HH:MM'),
-  /// length-guarded so a short/odd server string never crashes home.
-  static String _liveWhen(String startsAt) => startsAt.length >= 16
-      ? startsAt.substring(0, 16).replaceAll('T', ' ')
-      : startsAt;
 }
 
 // ── Post-prayer prompt (20 min after the waqt begins) ───────────────────────

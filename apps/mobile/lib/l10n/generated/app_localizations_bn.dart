@@ -2141,4 +2141,22 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get guest_nudge_later => 'পরে';
+
+  @override
+  String get notifications_for_you => 'আপনার জন্য';
+
+  @override
+  String get notif_now => 'এখন';
+
+  @override
+  String get notif_next => 'পরবর্তী';
+
+  @override
+  String get notif_left => 'বাকি';
+
+  @override
+  String get notif_hours => 'ঘণ্টা';
+
+  @override
+  String get notif_minutes => 'মিনিট';
 }

@@ -2118,4 +2118,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guest_nudge_later => 'لاحقًا';
+
+  @override
+  String get notifications_for_you => 'لك';
+
+  @override
+  String get notif_now => 'الآن';
+
+  @override
+  String get notif_next => 'التالي';
+
+  @override
+  String get notif_left => 'متبقٍ';
+
+  @override
+  String get notif_hours => 'س';
+
+  @override
+  String get notif_minutes => 'د';
 }
