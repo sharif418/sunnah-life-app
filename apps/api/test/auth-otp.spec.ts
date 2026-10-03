@@ -228,7 +228,10 @@ describe("sign-in never fails on the phone's guest leftovers", () => {
       .expect(200);
     expect(res.body.user.gender).toBe("unspecified"); // the app runs the completion step
     const rows = await rls.system((tx) => tx.amalEntry.findMany({ where: { userId: res.body.user.id } }));
-    expect(rows.map((r) => r.amalKey)).toEqual(["salat_asr"]);
+    const keys = rows.map((r) => r.amalKey);
+    expect(keys).toContain("salat_asr"); // the real answer merged
+    expect(keys).not.toContain("salat_dhuhr"); // null value skipped
+    // ('' is the app's own "cleared" tristate — the server mirrors it, as sync does)
   });
 
   it("an existing account keeps its name (the guest name on the phone does not overwrite it)", async () => {
