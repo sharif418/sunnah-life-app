@@ -6,7 +6,7 @@ import { GuardService } from "../common/guard.service";
 import { currentUser } from "../common/auth.guard";
 import type { AuthedRequest } from "../common/auth.guard";
 import { ApiError } from "../common/api-error";
-import { computeRequirements, monthsInLevelOf, nextLevelOf } from "../shared/levels";
+import { computeRequirements, monthsInLevelOf, nextLevelFor } from "../shared/levels";
 import { LevelsService } from "../levels/levels.service";
 import type { AssessmentSummary, DownlineNode, Gender, Level, User } from "../shared/domain";
 
@@ -99,7 +99,7 @@ export class DawahService {
         levelStartedAt: user.levelStartedAt,
         monthsInLevel: monthsInLevelOf(user),
         requirements,
-        nextLevel: nextLevelOf(user.level),
+        nextLevel: await nextLevelFor(tx, user),
         assessments,
       };
     });

@@ -125,8 +125,8 @@ export function AssessmentDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">১ — সাধারণ</SelectItem>
-                    <SelectItem value="2">২ — হাফেজ</SelectItem>
+                    <SelectItem value="1">১ — প্রাথমিক দ্বীন শিক্ষা ও দাওয়াত</SelectItem>
+                    <SelectItem value="2">২ — অগ্রগামী ইলম ও পূর্ণাঙ্গ দাঈ</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

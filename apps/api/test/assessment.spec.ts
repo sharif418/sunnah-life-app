@@ -10,6 +10,7 @@ import request from "supertest";
 import { AppModule } from "src/app.module";
 import { RlsService } from "src/common/rls.service";
 import { assessmentPassed, scorePctOf } from "src/assessments/assessments.controller";
+import { gatherLevelFacts, nextLevelFor } from "src/shared/levels";
 import type { AssessmentTemplate } from "src/shared/domain";
 
 const template: AssessmentTemplate = {
@@ -278,6 +279,20 @@ describe("assessment acknowledgment lifecycle (W4i e2e)", () => {
       (r) => r.key === "assessment_passed"
     );
     expect(row!.met).toBe(true);
+  });
+
+  it("Farze Ain categories are alternative tracks: a category-1 pass does not satisfy category 2", async () => {
+    const member = await rls.system((tx) => tx.user.findUniqueOrThrow({ where: { id: memberId } }));
+    const domainMember = { ...member, levelStartedAt: member.levelStartedAt?.toISOString() ?? null, createdAt: member.createdAt.toISOString() } as never;
+    const [cat1, cat2, next] = await rls.system(async (tx) => [
+      await gatherLevelFacts(tx, domainMember, 1),
+      await gatherLevelFacts(tx, domainMember, 2),
+      await nextLevelFor(tx, member as never),
+    ]);
+    expect((cat1 as { assessmentPassed: boolean }).assessmentPassed).toBe(true);
+    expect((cat2 as { assessmentPassed: boolean }).assessmentPassed).toBe(false);
+    // the track follows the member's latest assessment (category 1 here)
+    expect(next).toBe("farze_ain_1");
   });
 
   it("decline → status declined + reason + Fajr reminder to the invigilator + audit", async () => {

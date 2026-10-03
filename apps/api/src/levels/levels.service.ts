@@ -7,7 +7,7 @@ import {
   buildLevelChecklist,
   gatherLevelFacts,
   loadLevelRules,
-  nextLevelOf,
+  nextLevelFor,
   type LevelChecklist,
   type LevelRules,
 } from "../shared/levels";
@@ -63,11 +63,9 @@ export class LevelsService {
     tx: Prisma.TransactionClient,
     user: User
   ): Promise<{ rules: LevelRules; checklist: LevelChecklist; nextLevel: Level }> {
-    const nextLevel = nextLevelOf(user.level);
-    const [rules, facts] = await Promise.all([
-      loadLevelRules(nextLevel === "none" ? "muhibbus_sunnah" : nextLevel, tx),
-      gatherLevelFacts(tx, user),
-    ]);
+    const nextLevel = await nextLevelFor(tx, user);
+    const rules = await loadLevelRules(nextLevel === "none" ? "muhibbus_sunnah" : nextLevel, tx);
+    const facts = await gatherLevelFacts(tx, user, rules.assessmentCategory);
     return { rules, checklist: buildLevelChecklist(rules, facts), nextLevel };
   }
 

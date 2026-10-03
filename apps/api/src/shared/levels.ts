@@ -357,10 +357,16 @@ export function buildLevelChecklist(rules: LevelRules, facts: LevelFacts): Level
   return { rows, allMet, autoEligible: allMet && rules.autoPromote };
 }
 
-/** Query the three facts for a user inside an RLS transaction. */
+/**
+ * Query the three facts for a user inside an RLS transaction.
+ * `assessmentCategory` (the target level's rules) restricts the assessment
+ * fact to that category: ক্যাটাগরি ১ and ২ are alternative tracks on the
+ * paper form, so a category-1 pass must not satisfy farze_ain_2.
+ */
 export async function gatherLevelFacts(
   tx: Prisma.TransactionClient,
-  user: User
+  user: User,
+  assessmentCategory?: number
 ): Promise<LevelFacts> {
   const months = monthsInLevelOf(user);
 
@@ -368,7 +374,12 @@ export async function gatherLevelFacts(
   // assessment satisfies the rule — a pending_confirmation or declined
   // result is not final and must never gate/promote a level transition.
   const passed = await tx.assessment.findFirst({
-    where: { assesseeId: user.id, result: "passed", status: "confirmed" },
+    where: {
+      assesseeId: user.id,
+      result: "passed",
+      status: "confirmed",
+      ...(assessmentCategory ? { participantCategory: assessmentCategory } : {}),
+    },
     select: { id: true },
   });
 
@@ -519,12 +530,10 @@ export async function computeRequirements(
   user: User
 ): Promise<LevelRequirement[]> {
   // Rules apply to the user's NEXT level (Phase C/D ladder: none → muhibbus
-  // via outline review; muhibbus → farze_ain via the assessment).
-  const target = nextLevelOf(user.level);
-  const [rules, facts] = await Promise.all([
-    loadLevelRules(target === "none" ? "muhibbus_sunnah" : target, tx),
-    gatherLevelFacts(tx, user),
-  ]);
+  // via outline review; muhibbus → farze_ain_1 OR _2 via the assessment).
+  const target = await nextLevelFor(tx, user);
+  const rules = await loadLevelRules(target === "none" ? "muhibbus_sunnah" : target, tx);
+  const facts = await gatherLevelFacts(tx, user, rules.assessmentCategory);
   const { rows } = buildLevelChecklist(rules, facts);
   return rows.map((r) => ({
     key: r.key,
@@ -534,7 +543,26 @@ export async function computeRequirements(
   }));
 }
 
-/** Next rung of the tarbiyah ladder (used by /api/dawah). */
+/**
+ * The user's next level, track-aware. From Muhibbus the paper form offers two
+ * ALTERNATIVE Farze Ain tracks (ক্যাটাগরি ১: প্রাথমিক · ক্যাটাগরি ২:
+ * অগ্রগামী); the track is the participantCategory of the member's latest
+ * non-declined assessment, defaulting to ক্যাটাগরি ১ before any assessment.
+ */
+export async function nextLevelFor(
+  tx: Prisma.TransactionClient,
+  user: Pick<User, "id" | "level">
+): Promise<User["level"]> {
+  if (user.level !== "muhibbus_sunnah") return nextLevelOf(user.level);
+  const latest = await tx.assessment.findFirst({
+    where: { assesseeId: user.id, status: { not: "declined" } },
+    orderBy: { createdAt: "desc" },
+    select: { participantCategory: true },
+  });
+  return latest?.participantCategory === 2 ? "farze_ain_2" : "farze_ain_1";
+}
+
+/** Next rung of the tarbiyah ladder, ignoring the Farze Ain track choice. */
 export function nextLevelOf(level: User["level"]): User["level"] {
   switch (level) {
     case "none":
