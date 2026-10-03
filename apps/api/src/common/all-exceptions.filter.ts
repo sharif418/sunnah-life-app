@@ -26,12 +26,19 @@ export class AllExceptionsFilter implements ExceptionFilter {
       const status = exception.getStatus();
       const body = exception.getResponse();
       let message = "সার্ভারে সমস্যা হয়েছে";
+      const b = body && typeof body === "object" ? (body as Record<string, unknown>) : null;
       if (typeof body === "string") {
         message = body;
-      } else if (body && typeof body === "object" && "error" in (body as Record<string, unknown>)) {
-        message = String((body as Record<string, unknown>).error);
-      } else if (body && typeof body === "object" && "message" in (body as Record<string, unknown>)) {
-        const m = (body as Record<string, unknown>).message;
+      } else if (b && "statusCode" in b && "message" in b) {
+        // Nest's own errors (ValidationPipe…): {statusCode, message, error:
+        // "Bad Request"} — the MESSAGE is the useful (Bengali) part; "error"
+        // is only the HTTP reason phrase members used to see
+        const m = b.message;
+        message = Array.isArray(m) ? String(m[0]) : String(m);
+      } else if (b && "error" in b) {
+        message = String(b.error); // ApiError: {error: "<Bengali message>"}
+      } else if (b && "message" in b) {
+        const m = b.message;
         message = Array.isArray(m) ? String(m[0]) : String(m);
       }
       res.status(status).json({ error: message });
