@@ -724,5 +724,17 @@
   "iman_check_keep_going": "Keep going",
   "iman_check_private": "These answers are stored only on your phone — no one else sees them.",
   "iman_check_retake": "Review again",
-  "iman_check_appbar": "Iman self-review"
+  "iman_check_appbar": "Iman self-review",
+  "auth_not_now": "Not now",
+  "auth_welcome": "Welcome to Sunnah Life",
+  "auth_welcome_sub": "Create an account or sign in — it takes a minute",
+  "auth_google_continue": "Continue with Google",
+  "auth_google_hint": "The easiest way — no code needed",
+  "auth_or_phone": "or with your mobile number",
+  "auth_code_sent_to": "A 6-digit code was sent to %n%",
+  "auth_change_number": "Change number",
+  "auth_dev_fill": "Fill in",
+  "auth_resend_in": "Resend in %n% s",
+  "auth_resend": "Resend code",
+  "auth_privacy": "Your data is protected — sisters' data is seen only by sister supervisors."
 }

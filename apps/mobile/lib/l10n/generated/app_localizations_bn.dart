@@ -155,13 +155,13 @@ class AppLocalizationsBn extends AppLocalizations {
   String get auth_request_otp => 'কোড পাঠান';
 
   @override
-  String get auth_otp => 'ভেরিফিকেশন কোড';
+  String get auth_otp => '৬ সংখ্যার কোড';
 
   @override
   String get auth_verify => 'যাচাই করুন';
 
   @override
-  String get auth_dev_code => 'ডেভ কোড';
+  String get auth_dev_code => 'পরীক্ষামূলক কোড';
 
   @override
   String get auth_signout => 'সাইন আউট';
@@ -2254,4 +2254,42 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get iman_check_appbar => 'ঈমান আত্মমূল্যায়ন';
+
+  @override
+  String get auth_not_now => 'এখন নয়';
+
+  @override
+  String get auth_welcome => 'সুন্নাহ লাইফে স্বাগতম';
+
+  @override
+  String get auth_welcome_sub =>
+      'একটি অ্যাকাউন্ট খুলুন বা আগেরটিতে ঢুকুন — এক মিনিট লাগে';
+
+  @override
+  String get auth_google_continue => 'Google দিয়ে চালিয়ে যান';
+
+  @override
+  String get auth_google_hint => 'সবচেয়ে সহজ — কোনো কোড লাগে না';
+
+  @override
+  String get auth_or_phone => 'অথবা মোবাইল নম্বর দিয়ে';
+
+  @override
+  String get auth_code_sent_to => '%n% নম্বরে ৬ সংখ্যার কোড পাঠানো হয়েছে';
+
+  @override
+  String get auth_change_number => 'নম্বর বদলান';
+
+  @override
+  String get auth_dev_fill => 'বসিয়ে দিন';
+
+  @override
+  String get auth_resend_in => '%n% সেকেন্ড পর আবার পাঠানো যাবে';
+
+  @override
+  String get auth_resend => 'কোড আবার পাঠান';
+
+  @override
+  String get auth_privacy =>
+      'আপনার তথ্য সুরক্ষিত — বোনদের তথ্য শুধু বোন দায়িত্বশীলরাই দেখতে পান।';
 }

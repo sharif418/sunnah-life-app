@@ -391,7 +391,7 @@ abstract class AppLocalizations {
   /// No description provided for @auth_otp.
   ///
   /// In bn, this message translates to:
-  /// **'ভেরিফিকেশন কোড'**
+  /// **'৬ সংখ্যার কোড'**
   String get auth_otp;
 
   /// No description provided for @auth_verify.
@@ -403,7 +403,7 @@ abstract class AppLocalizations {
   /// No description provided for @auth_dev_code.
   ///
   /// In bn, this message translates to:
-  /// **'ডেভ কোড'**
+  /// **'পরীক্ষামূলক কোড'**
   String get auth_dev_code;
 
   /// No description provided for @auth_signout.
@@ -4449,6 +4449,78 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'ঈমান আত্মমূল্যায়ন'**
   String get iman_check_appbar;
+
+  /// No description provided for @auth_not_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন নয়'**
+  String get auth_not_now;
+
+  /// No description provided for @auth_welcome.
+  ///
+  /// In bn, this message translates to:
+  /// **'সুন্নাহ লাইফে স্বাগতম'**
+  String get auth_welcome;
+
+  /// No description provided for @auth_welcome_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'একটি অ্যাকাউন্ট খুলুন বা আগেরটিতে ঢুকুন — এক মিনিট লাগে'**
+  String get auth_welcome_sub;
+
+  /// No description provided for @auth_google_continue.
+  ///
+  /// In bn, this message translates to:
+  /// **'Google দিয়ে চালিয়ে যান'**
+  String get auth_google_continue;
+
+  /// No description provided for @auth_google_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'সবচেয়ে সহজ — কোনো কোড লাগে না'**
+  String get auth_google_hint;
+
+  /// No description provided for @auth_or_phone.
+  ///
+  /// In bn, this message translates to:
+  /// **'অথবা মোবাইল নম্বর দিয়ে'**
+  String get auth_or_phone;
+
+  /// No description provided for @auth_code_sent_to.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n% নম্বরে ৬ সংখ্যার কোড পাঠানো হয়েছে'**
+  String get auth_code_sent_to;
+
+  /// No description provided for @auth_change_number.
+  ///
+  /// In bn, this message translates to:
+  /// **'নম্বর বদলান'**
+  String get auth_change_number;
+
+  /// No description provided for @auth_dev_fill.
+  ///
+  /// In bn, this message translates to:
+  /// **'বসিয়ে দিন'**
+  String get auth_dev_fill;
+
+  /// No description provided for @auth_resend_in.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n% সেকেন্ড পর আবার পাঠানো যাবে'**
+  String get auth_resend_in;
+
+  /// No description provided for @auth_resend.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোড আবার পাঠান'**
+  String get auth_resend;
+
+  /// No description provided for @auth_privacy.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার তথ্য সুরক্ষিত — বোনদের তথ্য শুধু বোন দায়িত্বশীলরাই দেখতে পান।'**
+  String get auth_privacy;
 }
 
 class _AppLocalizationsDelegate

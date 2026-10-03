@@ -2250,4 +2250,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get iman_check_appbar => 'Iman self-review';
+
+  @override
+  String get auth_not_now => 'Not now';
+
+  @override
+  String get auth_welcome => 'Welcome to Sunnah Life';
+
+  @override
+  String get auth_welcome_sub =>
+      'Create an account or sign in — it takes a minute';
+
+  @override
+  String get auth_google_continue => 'Continue with Google';
+
+  @override
+  String get auth_google_hint => 'The easiest way — no code needed';
+
+  @override
+  String get auth_or_phone => 'or with your mobile number';
+
+  @override
+  String get auth_code_sent_to => 'A 6-digit code was sent to %n%';
+
+  @override
+  String get auth_change_number => 'Change number';
+
+  @override
+  String get auth_dev_fill => 'Fill in';
+
+  @override
+  String get auth_resend_in => 'Resend in %n% s';
+
+  @override
+  String get auth_resend => 'Resend code';
+
+  @override
+  String get auth_privacy =>
+      'Your data is protected — sisters\' data is seen only by sister supervisors.';
 }

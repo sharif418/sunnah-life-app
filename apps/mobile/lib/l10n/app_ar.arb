@@ -724,5 +724,17 @@
   "iman_check_keep_going": "واصل",
   "iman_check_private": "تُحفظ هذه الإجابات على هاتفك فقط — لا يراها أحد.",
   "iman_check_retake": "أعد التقييم",
-  "iman_check_appbar": "تقييم الإيمان"
+  "iman_check_appbar": "تقييم الإيمان",
+  "auth_not_now": "ليس الآن",
+  "auth_welcome": "مرحبًا بك في سنة لايف",
+  "auth_welcome_sub": "أنشئ حسابًا أو سجّل الدخول — يستغرق دقيقة",
+  "auth_google_continue": "المتابعة باستخدام Google",
+  "auth_google_hint": "الأسهل — لا حاجة لرمز",
+  "auth_or_phone": "أو برقم الجوال",
+  "auth_code_sent_to": "أُرسل رمز من ٦ أرقام إلى %n%",
+  "auth_change_number": "تغيير الرقم",
+  "auth_dev_fill": "املأ",
+  "auth_resend_in": "إعادة الإرسال بعد %n% ث",
+  "auth_resend": "أعد إرسال الرمز",
+  "auth_privacy": "بياناتك محمية — بيانات الأخوات لا تراها إلا المسؤولات من الأخوات."
 }
