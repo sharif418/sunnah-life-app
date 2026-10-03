@@ -3867,6 +3867,72 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল'**
   String get search_offline_note;
+
+  /// No description provided for @diary_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের মুহাসাবা'**
+  String get diary_title;
+
+  /// No description provided for @diary_done_of.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ %total%টির মধ্যে %done%টি সম্পন্ন'**
+  String get diary_done_of;
+
+  /// No description provided for @diary_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন যা বাকি'**
+  String get diary_pending;
+
+  /// No description provided for @diary_read_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'পড়ুন'**
+  String get diary_read_now;
+
+  /// No description provided for @diary_opens_at.
+  ///
+  /// In bn, this message translates to:
+  /// **'%time% থেকে'**
+  String get diary_opens_at;
+
+  /// No description provided for @diary_extras.
+  ///
+  /// In bn, this message translates to:
+  /// **'অতিরিক্ত আমল'**
+  String get diary_extras;
+
+  /// No description provided for @diary_extras_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'কাগজের ডায়েরির বাইরে · %done%/%total% সম্পন্ন'**
+  String get diary_extras_sub;
+
+  /// No description provided for @diary_instructions.
+  ///
+  /// In bn, this message translates to:
+  /// **'নির্দেশনা'**
+  String get diary_instructions;
+
+  /// No description provided for @diary_instructions_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুহাসাবা ডায়েরির নির্দেশনাবলী'**
+  String get diary_instructions_title;
+
+  /// No description provided for @diary_privacy.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার ডায়েরি দেখতে পান শুধু আপনি আর আপনার উসরা প্রধান।'**
+  String get diary_privacy;
+
+  /// No description provided for @diary_standing.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান'**
+  String get diary_standing;
 }
 
 class _AppLocalizationsDelegate

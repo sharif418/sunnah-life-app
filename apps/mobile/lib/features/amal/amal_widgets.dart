@@ -105,30 +105,34 @@ class TriStateChips extends StatelessWidget {
       );
     }
 
-    return Row(
-      children: [
-        chip(
-          'jamaat',
-          labels.jamaat,
-          PhosphorIconsRegular.usersThree,
-          theme.colorScheme.primary,
-          theme.colorScheme.onPrimary,
-        ),
-        chip(
-          'alone',
-          labels.alone,
-          PhosphorIconsRegular.user,
-          theme.colorScheme.tertiary,
-          theme.colorScheme.onTertiary,
-        ),
-        chip(
-          'qaza',
-          labels.qaza,
-          PhosphorIconsRegular.clock,
-          theme.colorScheme.error,
-          theme.colorScheme.onError,
-        ),
-      ],
+    // A locked row (its waqt hasn't begun) reads as locked, not just inert.
+    return Opacity(
+      opacity: enabled ? 1 : 0.45,
+      child: Row(
+        children: [
+          chip(
+            'jamaat',
+            labels.jamaat,
+            PhosphorIconsRegular.usersThree,
+            theme.colorScheme.primary,
+            theme.colorScheme.onPrimary,
+          ),
+          chip(
+            'alone',
+            labels.alone,
+            PhosphorIconsRegular.user,
+            theme.colorScheme.tertiary,
+            theme.colorScheme.onTertiary,
+          ),
+          chip(
+            'qaza',
+            labels.qaza,
+            PhosphorIconsRegular.clock,
+            theme.colorScheme.error,
+            theme.colorScheme.onError,
+          ),
+        ],
+      ),
     );
   }
 }

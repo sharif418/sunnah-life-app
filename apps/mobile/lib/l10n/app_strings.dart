@@ -689,6 +689,17 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'search_hint' => l.search_hint,
   'search_no_results' => l.search_no_results,
   'search_offline_note' => l.search_offline_note,
+  'diary_title' => l.diary_title,
+  'diary_done_of' => l.diary_done_of,
+  'diary_pending' => l.diary_pending,
+  'diary_read_now' => l.diary_read_now,
+  'diary_opens_at' => l.diary_opens_at,
+  'diary_extras' => l.diary_extras,
+  'diary_extras_sub' => l.diary_extras_sub,
+  'diary_instructions' => l.diary_instructions,
+  'diary_instructions_title' => l.diary_instructions_title,
+  'diary_privacy' => l.diary_privacy,
+  'diary_standing' => l.diary_standing,
   _ => key, // unknown keys surface themselves (never in shipped ARBs)
 };
 // ─── END GENERATED KEY MAP ──────────────────────────────────────────────────

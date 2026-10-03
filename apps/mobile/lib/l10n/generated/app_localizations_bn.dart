@@ -1951,4 +1951,39 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get search_offline_note =>
       'অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল';
+
+  @override
+  String get diary_title => 'আজকের মুহাসাবা';
+
+  @override
+  String get diary_done_of => 'আজ %total%টির মধ্যে %done%টি সম্পন্ন';
+
+  @override
+  String get diary_pending => 'এখন যা বাকি';
+
+  @override
+  String get diary_read_now => 'পড়ুন';
+
+  @override
+  String get diary_opens_at => '%time% থেকে';
+
+  @override
+  String get diary_extras => 'অতিরিক্ত আমল';
+
+  @override
+  String get diary_extras_sub =>
+      'কাগজের ডায়েরির বাইরে · %done%/%total% সম্পন্ন';
+
+  @override
+  String get diary_instructions => 'নির্দেশনা';
+
+  @override
+  String get diary_instructions_title => 'মুহাসাবা ডায়েরির নির্দেশনাবলী';
+
+  @override
+  String get diary_privacy =>
+      'আপনার ডায়েরি দেখতে পান শুধু আপনি আর আপনার উসরা প্রধান।';
+
+  @override
+  String get diary_standing => 'আপনার অবস্থান';
 }

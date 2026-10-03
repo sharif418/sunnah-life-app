@@ -58,6 +58,9 @@ Future<void> _pumpHeatmap(
   await tester.pumpAndSettle();
 }
 
+/// One grid row per bundled definition (the full catalog since 2026-10-03).
+final int _rows = fallbackDefinitions().length;
+
 void main() {
   setUp(() {
     SharedPreferences.setMockInitialValues(<String, Object>{});
@@ -75,9 +78,9 @@ void main() {
     addTearDown(db.close);
     await _pumpHeatmap(tester, db: db, today: '2025-03-05');
 
-    // March 2025 has 31 days × 15 fallback definitions = 465 cells.
+    // March 2025 has 31 days × every bundled definition.
     expect(monthDayKeys('2025-03-05').length, 31);
-    expect(find.byType(HeatmapCell), findsNWidgets(31 * 15));
+    expect(find.byType(HeatmapCell), findsNWidgets(31 * _rows));
 
     // Day headers are Bengali numerals ১..৩১ (12 rows below each header do
     // not repeat the number, so exactly one per day).
@@ -100,8 +103,8 @@ void main() {
     // long past its next-day Ishraq against the real wall clock → locked.
     await _pumpHeatmap(tester, db: db, today: '2025-03-05');
 
-    // 30 locked columns × 15 rows, the today column has none.
-    expect(find.byIcon(PhosphorIconsRegular.lockSimple), findsNWidgets(30 * 15));
+    // 30 locked columns × every row, the today column has none.
+    expect(find.byIcon(PhosphorIconsRegular.lockSimple), findsNWidgets(30 * _rows));
 
     // The today column is highlighted (border), still tappable.
     final todayHeader = find.text(toBn(5));
@@ -120,14 +123,14 @@ void main() {
     await _pumpHeatmap(tester, db: db, today: '2025-03-05');
 
     // Tap the first cell of the today column (fajr row).
-    await tester.tap(find.byType(HeatmapCell).at(4 * 15));
+    await tester.tap(find.byType(HeatmapCell).at(4 * _rows));
     await tester.pumpAndSettle();
 
     // Day-detail sheet: Bengali date title + one row per amal (the second
     // match of each title is the grid's fixed label column).
     expect(find.text(toBn('2025-03-05')), findsOneWidget);
     expect(find.text('ফজর নামাজ'), findsNWidgets(2));
-    expect(find.text('ইশা নামাজ'), findsNWidgets(2));
+    expect(find.text('এশা নামাজ'), findsNWidgets(2));
 
     // The today column is not locked → no unlock request button.
     expect(find.byIcon(PhosphorIconsRegular.lockSimpleOpen), findsNothing);

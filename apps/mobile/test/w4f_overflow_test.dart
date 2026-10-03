@@ -364,7 +364,7 @@ void main() {
     smallPhone(tester);
     final container = await boot(tester, const AmalHubScreen());
 
-    expect(find.text('আজকের আমল'), findsOneWidget);
+    expect(find.text('আজকের মুহাসাবা'), findsOneWidget);
     expect(tester.takeException(), isNull);
     for (var i = 0; i < 8; i++) {
       await tester.drag(_verticalScrollable(), const Offset(0, -400));

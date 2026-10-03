@@ -627,5 +627,16 @@
   "search_title": "Search",
   "search_hint": "Search duas, adhkar, names or articles…",
   "search_no_results": "Nothing found — try another word",
-  "search_offline_note": "Offline — results from the app's saved content"
+  "search_offline_note": "Offline — results from the app's saved content",
+  "diary_title": "Today's muhasaba",
+  "diary_done_of": "%done% of %total% done today",
+  "diary_pending": "Due now",
+  "diary_read_now": "Read",
+  "diary_opens_at": "from %time%",
+  "diary_extras": "More amal",
+  "diary_extras_sub": "Beyond the paper diary · %done%/%total% done",
+  "diary_instructions": "Instructions",
+  "diary_instructions_title": "Muhasaba diary instructions",
+  "diary_privacy": "Only you and your usrah head can see your diary.",
+  "diary_standing": "Your standing"
 }

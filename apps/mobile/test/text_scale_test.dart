@@ -9,7 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/design/design_tokens.dart';
 import 'package:sunnah_life/features/amal/today_screen.dart';
+import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
+
+import 'golden_fixtures.dart';
 
 void main() {
   setUp(() {
@@ -17,15 +20,20 @@ void main() {
   });
 
   for (final scale in [1.0, 1.3]) {
-    testWidgets('Amal hub lays out cleanly at ${scale}x text scale',
-        (tester) async {
+    testWidgets('Amal hub lays out cleanly at ${scale}x text scale', (
+      tester,
+    ) async {
       tester.platformDispatcher.textScaleFactorTestValue = scale;
       addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
       final db = AppDatabase.forTesting(NativeDatabase.memory());
-      final container = ProviderContainer(overrides: [
-        dbProvider.overrideWithValue(db),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          dbProvider.overrideWithValue(db),
+          // a frozen clock: no 1-second prayer ticker outliving the test
+          prayerProvider.overrideWith(GoldenPinnedPrayer.new),
+        ],
+      );
       addTearDown(container.dispose);
       addTearDown(db.close);
 
@@ -41,7 +49,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Fallback catalog (guest) renders the salat rows in Bengali.
-      expect(find.text('আজকের আমল'), findsOneWidget);
+      expect(find.text('আজকের মুহাসাবা'), findsOneWidget);
 
       // A RenderFlex overflow throws in tests — none may be pending.
       expect(tester.takeException(), isNull);

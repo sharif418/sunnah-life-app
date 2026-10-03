@@ -1948,4 +1948,38 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get search_offline_note =>
       'Offline — results from the app\'s saved content';
+
+  @override
+  String get diary_title => 'Today\'s muhasaba';
+
+  @override
+  String get diary_done_of => '%done% of %total% done today';
+
+  @override
+  String get diary_pending => 'Due now';
+
+  @override
+  String get diary_read_now => 'Read';
+
+  @override
+  String get diary_opens_at => 'from %time%';
+
+  @override
+  String get diary_extras => 'More amal';
+
+  @override
+  String get diary_extras_sub => 'Beyond the paper diary · %done%/%total% done';
+
+  @override
+  String get diary_instructions => 'Instructions';
+
+  @override
+  String get diary_instructions_title => 'Muhasaba diary instructions';
+
+  @override
+  String get diary_privacy =>
+      'Only you and your usrah head can see your diary.';
+
+  @override
+  String get diary_standing => 'Your standing';
 }

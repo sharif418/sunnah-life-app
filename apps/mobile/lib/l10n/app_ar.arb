@@ -627,5 +627,16 @@
   "search_title": "بحث",
   "search_hint": "ابحث في الأدعية والأذكار والأسماء أو المقالات…",
   "search_no_results": "لا نتائج — جرّب كلمة أخرى",
-  "search_offline_note": "غير متصل — نتائج من المحتوى المحفوظ في التطبيق"
+  "search_offline_note": "غير متصل — نتائج من المحتوى المحفوظ في التطبيق",
+  "diary_title": "محاسبة اليوم",
+  "diary_done_of": "%done% من %total% اليوم",
+  "diary_pending": "المطلوب الآن",
+  "diary_read_now": "اقرأ",
+  "diary_opens_at": "من %time%",
+  "diary_extras": "أعمال إضافية",
+  "diary_extras_sub": "خارج الدفتر الورقي · %done%/%total%",
+  "diary_instructions": "التعليمات",
+  "diary_instructions_title": "تعليمات دفتر المحاسبة",
+  "diary_privacy": "لا يرى دفترك إلا أنت ورئيس أسرتك.",
+  "diary_standing": "مستواك"
 }

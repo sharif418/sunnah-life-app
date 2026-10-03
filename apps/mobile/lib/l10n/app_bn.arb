@@ -627,5 +627,16 @@
   "search_title": "অনুসন্ধান",
   "search_hint": "দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…",
   "search_no_results": "কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন",
-  "search_offline_note": "অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল"
+  "search_offline_note": "অফলাইন — অ্যাপের সংরক্ষিত কন্টেন্ট থেকে ফলাফল",
+  "diary_title": "আজকের মুহাসাবা",
+  "diary_done_of": "আজ %total%টির মধ্যে %done%টি সম্পন্ন",
+  "diary_pending": "এখন যা বাকি",
+  "diary_read_now": "পড়ুন",
+  "diary_opens_at": "%time% থেকে",
+  "diary_extras": "অতিরিক্ত আমল",
+  "diary_extras_sub": "কাগজের ডায়েরির বাইরে · %done%/%total% সম্পন্ন",
+  "diary_instructions": "নির্দেশনা",
+  "diary_instructions_title": "মুহাসাবা ডায়েরির নির্দেশনাবলী",
+  "diary_privacy": "আপনার ডায়েরি দেখতে পান শুধু আপনি আর আপনার উসরা প্রধান।",
+  "diary_standing": "আপনার অবস্থান"
 }

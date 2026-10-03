@@ -1934,4 +1934,37 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get search_offline_note =>
       'غير متصل — نتائج من المحتوى المحفوظ في التطبيق';
+
+  @override
+  String get diary_title => 'محاسبة اليوم';
+
+  @override
+  String get diary_done_of => '%done% من %total% اليوم';
+
+  @override
+  String get diary_pending => 'المطلوب الآن';
+
+  @override
+  String get diary_read_now => 'اقرأ';
+
+  @override
+  String get diary_opens_at => 'من %time%';
+
+  @override
+  String get diary_extras => 'أعمال إضافية';
+
+  @override
+  String get diary_extras_sub => 'خارج الدفتر الورقي · %done%/%total%';
+
+  @override
+  String get diary_instructions => 'التعليمات';
+
+  @override
+  String get diary_instructions_title => 'تعليمات دفتر المحاسبة';
+
+  @override
+  String get diary_privacy => 'لا يرى دفترك إلا أنت ورئيس أسرتك.';
+
+  @override
+  String get diary_standing => 'مستواك';
 }
