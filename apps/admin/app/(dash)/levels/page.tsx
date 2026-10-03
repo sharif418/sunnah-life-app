@@ -223,7 +223,7 @@ export default function LevelsPage() {
               </li>
               <li className="flex gap-2">
                 <ArrowUpRight className="mt-1 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
-                মূল্যায়নের ফলাফল সংখ্যা-নিয়মে স্বয়ংক্রিয়: প্রতি অংশের অর্ধেকের বেশি নির্ণায়কে ≥১ স্কোর পেলে উত্তীর্ণ।
+                মূল্যায়নের ফলাফল সংখ্যা-নিয়মে স্বয়ংক্রিয়: মোট নির্ণায়কের অধিকাংশ ‘সম্পূর্ণ’ পেলে উত্তীর্ণ (আংশিক গণ্য হয় না)।
               </li>
               <li className="flex gap-2">
                 <ArrowUpRight className="mt-1 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />

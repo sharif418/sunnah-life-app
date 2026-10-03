@@ -295,12 +295,22 @@ export interface AssessmentSection {
   titleBn: string;
   criteria: AssessmentCriterion[];
 }
+/** The paper form's verbatim metadata (instructions, categories, …). */
+export interface AssessmentTemplateMeta {
+  instructionsBn?: string | null;
+  categories?: { id: number; titleBn: string; descriptionBn?: string }[] | null;
+  categoriesFooterBn?: string | null;
+  scaleNoteBn?: string | null;
+  summarySpec?: { noteBn?: string; columnsBn?: string[] } | null;
+  overallCommentLabelBn?: string | null;
+}
 export interface AssessmentTemplate {
   key: string;
   version: number;
   titleBn: string;
   titleEn: string;
   sections: AssessmentSection[];
+  meta?: AssessmentTemplateMeta;
 }
 export interface AssessmentDetail {
   id: string;

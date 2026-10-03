@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { FileCheck2, Plus, ShieldCheck, Users2 } from "lucide-react";
-import { api, type AssessmentDetail } from "@/lib/api";
+import { api, type AssessmentDetail, type AssessmentTemplate } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { dateLabelBn, relativeBn, toBn } from "@/lib/bn";
 import { ASSESSMENT_RESULT_LABELS_BN } from "@/lib/labels";
@@ -125,13 +125,22 @@ function NewAssessmentForm() {
           (100 * Object.values(scores).reduce((s, v) => s + v.score, 0)) / (2 * Math.max(scoredCount, 1))
         )
       : null;
+  // the server's rule (assessmentPassed): a strict majority of ALL the
+  // form's criteria at সম্পূর্ণ — আংশিক does not count
+  const fullCount = template
+    ? template.sections.reduce((s, sec) => s + sec.criteria.filter((c) => scores[c.key]?.score === 2).length, 0)
+    : 0;
+  const neededFull = Math.floor(totalCriteria / 2) + 1;
   const previewPassed =
-    template && scoredCount === totalCriteria && totalCriteria > 0
-      ? template.sections.every((sec) => {
-          const good = sec.criteria.filter((c) => (scores[c.key]?.score ?? 0) >= 1).length;
-          return good * 2 > sec.criteria.length;
-        })
-      : null;
+    template && scoredCount === totalCriteria && totalCriteria > 0 ? fullCount >= neededFull : null;
+  const meta = template?.meta;
+  const categories =
+    meta?.categories && meta.categories.length
+      ? meta.categories
+      : [
+          { id: 1, titleBn: "ক্যাটাগরি-১: প্রাথমিক দ্বীন শিক্ষা ও দাওয়াত", descriptionBn: "দৈনিক ৪৫ মিনিট–১ ঘণ্টা" },
+          { id: 2, titleBn: "ক্যাটাগরি-২: অগ্রগামী ইলম ও পূর্ণাঙ্গ দাঈ হওয়া", descriptionBn: "দৈনিক ১–১.৫ ঘণ্টা" },
+        ];
 
   const submit = useMutation({
     mutationFn: () => {
@@ -172,11 +181,25 @@ function NewAssessmentForm() {
           নতুন মূল্যায়ন — ফরযে আইন
         </CardTitle>
         <CardDescription>
-          ২৩টি নির্ণায়ক (ঈমান ৫ · ইলম ৫ · ইবাদত ৬ · আখলাক ৭) · প্রতিটিতে ০/১/২ স্কোর + মন্তব্য ·
-          উত্তরণের নিয়ম: প্রতি অংশের অর্ধেকের বেশি নির্ণায়কে ≥১ স্কোর
+          {template
+            ? `${toBn(totalCriteria)}টি নির্ণায়ক (${template.sections
+                .map((s) => `${s.titleBn.replace(/^[০-৯\d]+\.\s*/, "").replace(/\s*\([০-৯\d]+\)$/, "")} ${toBn(s.criteria.length)}`)
+                .join(" · ")}) · `
+            : ""}
+          প্রতিটিতে হয়নি / আংশিক / সম্পূর্ণ + মন্তব্য · উত্তরণের নিয়ম: মোট নির্ণায়কের অধিকাংশ (অন্তত{" "}
+          {toBn(neededFull)}টি) ‘সম্পূর্ণ’ — আংশিক গণ্য হয় না
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
+        {meta?.instructionsBn ? (
+          <div
+            className="rounded-lg border border-primary/30 bg-primary-soft p-4 text-sm leading-relaxed text-foreground"
+            role="note"
+          >
+            {meta.instructionsBn}
+            {meta.scaleNoteBn ? <p className="mt-2 text-xs text-muted-foreground">{meta.scaleNoteBn}</p> : null}
+          </div>
+        ) : null}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="মূল্যায়নার্থী" htmlFor="assess-member">
             <Select
@@ -211,30 +234,40 @@ function NewAssessmentForm() {
           </Field>
         </div>
 
-        <Field label="অংশগ্রহণকারীর ক্যাটাগরি" hint="সময়-ব্যবস্থাপনার ধাপ অনুযায়ী">
-          <div className="flex flex-wrap gap-2" role="radiogroup" aria-label="ক্যাটাগরি">
-            {(
-              [
-                [1, "ক্যাটাগরি ১ — প্রাথমিক দ্বীন শিক্ষা ও দাওয়াত (দৈনিক ৪৫ মিনিট–১ ঘণ্টা)"],
-                [2, "ক্যাটাগরি ২ — অগ্রগামী ইলম ও পূর্ণাঙ্গ দাঈ (দৈনিক ১–১.৫ ঘণ্টা)"],
-              ] as const
-            ).map(([v, label]) => (
-              <button
-                key={v}
-                type="button"
-                role="radio"
-                aria-checked={participantCategory === v}
-                onClick={() => setParticipantCategory(v)}
-                className={cn(
-                  "focus-ring flex min-h-11 items-center rounded-md border px-3.5 text-sm font-medium transition-colors duration-200",
-                  participantCategory === v
-                    ? "border-primary bg-primary-soft text-primary"
-                    : "border-border bg-card text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {label}
-              </button>
-            ))}
+        <Field label="অংশগ্রহণকারীর ক্যাটাগরি" hint={meta?.categoriesFooterBn ?? "সময়-ব্যবস্থাপনার ধাপ অনুযায়ী"}>
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2" role="radiogroup" aria-label="ক্যাটাগরি">
+            {categories
+              .filter((c) => c.id === 1 || c.id === 2)
+              .map((c) => {
+                const v = c.id as 1 | 2;
+                return (
+                  <button
+                    key={v}
+                    type="button"
+                    role="radio"
+                    aria-checked={participantCategory === v}
+                    onClick={() => setParticipantCategory(v)}
+                    className={cn(
+                      "focus-ring flex min-h-11 flex-col items-start gap-1 rounded-md border p-3.5 text-left transition-colors duration-200",
+                      participantCategory === v
+                        ? "border-primary bg-primary-soft"
+                        : "border-border bg-card hover:border-primary/40"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "text-sm font-semibold",
+                        participantCategory === v ? "text-primary" : "text-foreground"
+                      )}
+                    >
+                      {c.titleBn}
+                    </span>
+                    {c.descriptionBn ? (
+                      <span className="text-xs leading-relaxed text-muted-foreground">{c.descriptionBn}</span>
+                    ) : null}
+                  </button>
+                );
+              })}
           </div>
         </Field>
 
@@ -294,6 +327,8 @@ function NewAssessmentForm() {
               </fieldset>
             ))}
 
+            <SectionSummary template={template} scores={scores} />
+
             <div className="flex flex-wrap items-center gap-4 rounded-lg border border-border bg-muted/40 p-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold">অগ্রগতি:</span>
@@ -307,6 +342,12 @@ function NewAssessmentForm() {
                   <span className="text-lg font-bold text-primary">{toBn(previewPct)}%</span>
                 </div>
               ) : null}
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold">সম্পূর্ণ:</span>
+                <Badge variant={fullCount >= neededFull ? "success" : "muted"}>
+                  {toBn(fullCount)} / প্রয়োজন {toBn(neededFull)}
+                </Badge>
+              </div>
               {previewPassed !== null ? (
                 <Badge variant={previewPassed ? "success" : "warning"}>
                   প্রত্যাশিত ফলাফল: {ASSESSMENT_RESULT_LABELS_BN[previewPassed ? "passed" : "not_yet"]}
@@ -315,7 +356,7 @@ function NewAssessmentForm() {
             </div>
 
             <Field
-              label="সামগ্রিক মন্তব্য"
+              label={meta?.overallCommentLabelBn ?? "সামগ্রিক মন্তব্য"}
               htmlFor="assess-overall"
               hint="জমা দিলে মূল্যায়নকারীর ডিজিটাল স্বাক্ষর যুক্ত হবে; মূল্যায়নার্থীর স্বাক্ষর ওটিপি-নিশ্চিতকরণের পর যুক্ত হবে"
             >
@@ -350,6 +391,53 @@ function NewAssessmentForm() {
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** The paper's সারসংক্ষেপ টেবিল: per section — total, হয়নি, আংশিক, সম্পূর্ণ (live). */
+function SectionSummary({ template, scores }: { template: AssessmentTemplate; scores: ScoreState }) {
+  const cols = template.meta?.summarySpec?.columnsBn ?? ["মোট ক্রাইটেরিয়া", "হয়নি", "আংশিক", "সম্পূর্ণ"];
+  const rows = template.sections.map((sec) => {
+    const count = (v: 0 | 1 | 2) => sec.criteria.filter((c) => scores[c.key]?.score === v).length;
+    return { key: sec.key, title: sec.titleBn, total: sec.criteria.length, s0: count(0), s1: count(1), s2: count(2) };
+  });
+  const sum = (k: "total" | "s0" | "s1" | "s2") => rows.reduce((s, r) => s + r[k], 0);
+  return (
+    <div className="overflow-x-auto rounded-lg border border-border">
+      <table className="w-full text-sm">
+        <caption className="px-3 pt-3 text-left text-sm font-semibold">
+          {template.meta?.summarySpec?.noteBn ?? "সারসংক্ষেপ (প্রতি সেকশন)"}
+        </caption>
+        <thead>
+          <tr className="border-b border-border text-xs text-muted-foreground">
+            <th className="px-3 py-2 text-left font-semibold">সেকশন</th>
+            {cols.map((c) => (
+              <th key={c} className="px-3 py-2 text-right font-semibold">
+                {c}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.key} className="border-b border-border/60">
+              <td className="px-3 py-2">{r.title}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{toBn(r.total)}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{toBn(r.s0)}</td>
+              <td className="px-3 py-2 text-right tabular-nums">{toBn(r.s1)}</td>
+              <td className="px-3 py-2 text-right font-semibold tabular-nums text-primary">{toBn(r.s2)}</td>
+            </tr>
+          ))}
+          <tr className="font-semibold">
+            <td className="px-3 py-2">মোট</td>
+            <td className="px-3 py-2 text-right tabular-nums">{toBn(sum("total"))}</td>
+            <td className="px-3 py-2 text-right tabular-nums">{toBn(sum("s0"))}</td>
+            <td className="px-3 py-2 text-right tabular-nums">{toBn(sum("s1"))}</td>
+            <td className="px-3 py-2 text-right tabular-nums text-primary">{toBn(sum("s2"))}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -521,8 +609,8 @@ function TemplateViewer() {
             ))}
             <p className="rounded-md border border-border bg-muted/50 p-3 text-xs leading-relaxed text-muted-foreground">
               টেমপ্লেটটি সংস্করণযুক্ত — নতুন সংস্করণ প্রকাশের সময় আগের সংস্করণের মূল্যায়নগুলো অপরিবর্তিত
-              থাকে। মূল্যায়ন পাশের স্কোর-নিয়ম: প্রতি অংশের অর্ধেকের বেশি নির্ণায়কে ≥১ (আংশিক বা
-              সম্পূর্ণ) পেলে সেই অংশ উত্তীর্ণ।
+              থাকে। মূল্যায়ন পাশের নিয়ম (কাগজের ফর্ম অনুযায়ী): মোট নির্ণায়কের অধিকাংশ ‘সম্পূর্ণ’ পর্যায়ে
+              পৌঁছালে উত্তীর্ণ — আংশিক গণ্য হয় না।
             </p>
           </CardContent>
         </Card>
