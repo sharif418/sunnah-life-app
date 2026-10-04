@@ -2377,4 +2377,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get goal_reminder_body => 'هل حققته اليوم؟ سجّله في المذكرة.';
+
+  @override
+  String get prayer_forbidden_title => 'أوقات النهي عن الصلاة';
+
+  @override
+  String get forbidden_short_sunrise => 'الشروق';
+
+  @override
+  String get forbidden_short_zawal => 'الزوال';
+
+  @override
+  String get forbidden_short_sunset => 'الغروب';
 }

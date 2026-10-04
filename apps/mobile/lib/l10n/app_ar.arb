@@ -773,5 +773,9 @@
   "goal_reminder_daily": "يوميًا %time%",
   "goal_reminder_change": "غيّر",
   "goal_reminder_off": "إيقاف",
-  "goal_reminder_body": "هل حققته اليوم؟ سجّله في المذكرة."
+  "goal_reminder_body": "هل حققته اليوم؟ سجّله في المذكرة.",
+  "prayer_forbidden_title": "أوقات النهي عن الصلاة",
+  "forbidden_short_sunrise": "الشروق",
+  "forbidden_short_zawal": "الزوال",
+  "forbidden_short_sunset": "الغروب"
 }

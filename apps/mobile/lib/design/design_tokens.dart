@@ -184,10 +184,14 @@ TextStyle _appFontStyle(double size, [FontWeight? weight, Color? color]) =>
     );
 
 class SLType {
-  static const double caption = 12;
-  static const double body = 16;
-  static const double bodyLarge = 18;
-  static const double heading = 20;
+  // The scale matches the approved prototype (2026-10-04). Noto Sans
+  // Bengali has a tall x-height: at the old 18/20 the diary rows and card
+  // titles read a size too big and every screen looked crowded next to the
+  // prototype. Body text stays at the 15-16 floor for older eyes.
+  static const double caption = 13;
+  static const double body = 15;
+  static const double bodyLarge = 16;
+  static const double heading = 17;
   static const double headingLarge = 24;
   static const double display = 28;
 
@@ -206,24 +210,24 @@ class SLType {
   );
   static const TextStyle _headingStyle = TextStyle(
     fontFamily: kAppFontFamily,
-    fontSize: 20,
+    fontSize: 17,
     height: 1.45,
     fontWeight: FontWeight.w600,
   );
   static const TextStyle _bodyLargeStyle = TextStyle(
     fontFamily: kAppFontFamily,
-    fontSize: 18,
-    height: 1.6,
+    fontSize: 16,
+    height: 1.55,
   );
   static const TextStyle _bodyStyle = TextStyle(
     fontFamily: kAppFontFamily,
-    fontSize: 16,
-    height: 1.6,
+    fontSize: 15,
+    height: 1.55,
   );
   static const TextStyle _captionStyle = TextStyle(
     fontFamily: kAppFontFamily,
-    fontSize: 12,
-    height: 1.5,
+    fontSize: 13,
+    height: 1.45,
   );
 
   /// Bengali-first text theme — EVERY role carries the bundled Noto Sans Bengali

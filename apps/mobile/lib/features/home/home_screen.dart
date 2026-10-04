@@ -326,11 +326,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // ── the weekly guest sign-up nudge (hidden for members) ──
               const GuestNudgeCard(),
 
-              // ── Forbidden times ──
-              SectionHeader(
-                context.t('prayer_forbidden_times'),
-                icon: PhosphorIconsRegular.prohibit,
-              ),
+              // ── Forbidden times (one compact card, title inside) ──
+              const SizedBox(height: SLSpacing.s12),
               _ForbiddenTimes(prayer: prayer, bn: bn),
 
               // ── Post-prayer prompt ──
@@ -1109,9 +1106,9 @@ class _ForbiddenTimes extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = prayer.times;
     final windows = [
-      (context.t('prayer_forbidden_sunrise'), t.sunrise - 15, t.sunrise + 20),
-      (context.t('prayer_forbidden_zawal'), t.dhuhr - 10, t.dhuhr + 5),
-      (context.t('prayer_forbidden_sunset'), t.sunset - 15, t.sunset + 5),
+      (context.t('forbidden_short_sunrise'), t.sunrise - 15, t.sunrise + 20),
+      (context.t('forbidden_short_zawal'), t.dhuhr - 10, t.dhuhr + 5),
+      (context.t('forbidden_short_sunset'), t.sunset - 15, t.sunset + 5),
     ];
     final theme = Theme.of(context);
     // Spec §2.1 — a calm caution, not an alarm: light alert-tinted surface
@@ -1134,14 +1131,29 @@ class _ForbiddenTimes extends StatelessWidget {
         border: Border.all(color: alertFg.withValues(alpha: 0.25), width: 1),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
+              const SizedBox(width: SLSpacing.s8),
+              Expanded(
+                child: Text(
+                  context.t('prayer_forbidden_title'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: alertFg,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
           for (final (label, from, to) in windows)
             ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 36),
+              constraints: const BoxConstraints(minHeight: 30),
               child: Row(
                 children: [
-                  Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
-                  const SizedBox(width: SLSpacing.s8),
+                  const SizedBox(width: 26),
                   Expanded(
                     child: Text(
                       label,
@@ -1221,8 +1233,8 @@ class _Schedule extends StatelessWidget {
     final isNext = key == prayer.nextKey;
     final label = _prayerLabel(key, context.lang);
     final bellOn = bells.contains(key.name);
-    return Opacity(
-      opacity: isCurrent || isNext || key == PrayerKey.tahajjud ? 1 : 0.75,
+    return Container(
+      key: ValueKey('schedule_row_${key.name}'),
       child: Container(
         decoration: BoxDecoration(
           color: isCurrent
@@ -1237,33 +1249,42 @@ class _Schedule extends StatelessWidget {
             vertical: 0,
           ),
           minVerticalPadding: 6,
-          leading: isCurrent
-              ? Icon(
-                  PhosphorIconsRegular.record,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                )
-              : Icon(
-                  PhosphorIconsRegular.circle,
-                  color: theme.colorScheme.outline,
-                  size: 12,
+          title: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: SLSpacing.s8,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
+                  color: isCurrent ? theme.colorScheme.primary : null,
                 ),
-          title: Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-              color: isCurrent ? theme.colorScheme.primary : null,
-            ),
-          ),
-          subtitle: isNext
-              ? Text(
-                  context.t('prayer_next'),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+              ),
+              if (isCurrent || isNext)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 1,
                   ),
-                )
-              : null,
+                  decoration: BoxDecoration(
+                    color: isCurrent
+                        ? theme.colorScheme.surface
+                        : theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: SLRadius.brPill,
+                  ),
+                  child: Text(
+                    context.t(isCurrent ? 'notif_now' : 'notif_next'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 12,
+                      color: isCurrent
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           // W5: the corrected midday label 'দুপুর' is wider than the old
           // 'সকাল' — at 360dp @1.3× text scale the time + bell needed ~6px
           // more than the tile had, and ListTile hard-asserts when the
@@ -1286,7 +1307,7 @@ class _Schedule extends StatelessWidget {
                     child: Text(
                       formatTimeBn(mins, bengali: bn),
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -1334,9 +1355,11 @@ class _BellButton extends StatelessWidget {
           width: SLSpacing.minTapTarget,
           height: SLSpacing.minTapTarget,
           child: Icon(
-            on ? PhosphorIconsRegular.bellRinging : PhosphorIconsRegular.bell,
+            on ? PhosphorIconsFill.bell : PhosphorIconsRegular.bell,
             size: 20,
-            color: on ? theme.colorScheme.tertiary : theme.colorScheme.outline,
+            color: on
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
         ),
       ),

@@ -193,12 +193,18 @@ class AmalToggle extends StatelessWidget {
                 color: value ? cs.primary : cs.surface,
                 borderRadius: SLRadius.brSm,
                 border: Border.all(
-                  color: value ? cs.primary : cs.onSurfaceVariant.withValues(alpha: 0.6),
+                  color: value
+                      ? cs.primary
+                      : cs.onSurfaceVariant.withValues(alpha: 0.6),
                   width: 1.6,
                 ),
               ),
               child: value
-                  ? Icon(PhosphorIconsRegular.check, size: 18, color: cs.onPrimary)
+                  ? Icon(
+                      PhosphorIconsRegular.check,
+                      size: 18,
+                      color: cs.onPrimary,
+                    )
                   : null,
             ),
           ),
@@ -244,41 +250,49 @@ class CountStepper extends StatelessWidget {
           PhosphorIconsRegular.minus,
           () => onChanged((value - 1).clamp(0, 1 << 30)),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s8),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _n(value),
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      color: reached
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurface,
-                      fontWeight: FontWeight.w700,
+        // Flexible + scaleDown: at a large text scale on a narrow row the
+        // "১০০ বার" line shrinks a hair instead of overflowing
+        Flexible(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s8),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _n(value),
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        color: reached
+                            ? theme.colorScheme.primary
+                            : theme.colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (reached) ...[
+                      const SizedBox(width: 2),
+                      Icon(
+                        PhosphorIconsFill.checkCircle,
+                        size: 16,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ],
+                  ],
+                ),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    '${_n(target)} $unit',
+                    maxLines: 1,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                  if (reached) ...[
-                    const SizedBox(width: 2),
-                    Icon(
-                      PhosphorIconsFill.checkCircle,
-                      size: 16,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ],
-                ],
-              ),
-              Text(
-                '${_n(target)} $unit',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         _step(
@@ -439,9 +453,15 @@ class _QuantityInputState extends State<QuantityInput> {
                       _commit(raw);
                       _focus.unfocus();
                     },
+                    // not the theme's white filled field: the number and
+                    // its unit read as one quiet pill
                     decoration: const InputDecoration(
                       isCollapsed: true,
+                      filled: false,
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
                     ),
                   ),
                 ),
@@ -619,7 +639,10 @@ class TilawatBeginnerCard extends StatelessWidget {
             style: theme.textTheme.bodyMedium,
           ),
           const SizedBox(height: SLSpacing.s8),
-          Row(
+          Wrap(
+            spacing: SLSpacing.s12,
+            runSpacing: SLSpacing.s8,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               FilledButton.icon(
                 key: const ValueKey('tilawat_begin_add5'),
@@ -632,32 +655,15 @@ class TilawatBeginnerCard extends StatelessWidget {
                 icon: const Icon(PhosphorIconsRegular.plus, size: 18),
                 label: Text('+${_n(5)} ${context.t('tilawat_begin_minutes')}'),
               ),
-              const SizedBox(width: SLSpacing.s8),
-              Expanded(
-                child: Text(
-                  '${_n(value)} $unit',
-                  textAlign: TextAlign.end,
-                  style: theme.textTheme.titleMedium?.copyWith(
-                    color: value > 0
-                        ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              QuantityInput(
+                value: value,
+                target: target,
+                unit: unit,
+                enabled: enabled,
+                bengali: bengali,
+                onChanged: onChanged,
               ),
             ],
-          ),
-          const SizedBox(height: SLSpacing.s8),
-          SizedBox(
-            width: double.infinity,
-            child: QuantityInput(
-              value: value,
-              target: target,
-              unit: unit,
-              enabled: enabled,
-              bengali: bengali,
-              onChanged: onChanged,
-            ),
           ),
         ],
       ),
@@ -711,7 +717,9 @@ class HeatmapCell extends StatelessWidget {
           decoration: BoxDecoration(
             // a locked, empty day reads as a quiet gap — no lock glyph in
             // every cell (the note under the grid explains the rule)
-            color: locked && points == 0 ? color.withValues(alpha: 0.55) : color,
+            color: locked && points == 0
+                ? color.withValues(alpha: 0.55)
+                : color,
             borderRadius: SLRadius.brSm,
             border: isToday
                 ? Border.all(color: theme.colorScheme.primary, width: 2)

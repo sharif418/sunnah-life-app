@@ -2402,4 +2402,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get goal_reminder_body =>
       'Did you meet it today? Note it in the diary.';
+
+  @override
+  String get prayer_forbidden_title => 'No prayer at these times';
+
+  @override
+  String get forbidden_short_sunrise => 'Sunrise';
+
+  @override
+  String get forbidden_short_zawal => 'Zawal';
+
+  @override
+  String get forbidden_short_sunset => 'Sunset';
 }

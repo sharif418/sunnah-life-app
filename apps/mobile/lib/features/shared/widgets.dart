@@ -91,13 +91,14 @@ class SectionHeader extends StatelessWidget {
       child: Row(
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 20, color: theme.colorScheme.primary),
+            Icon(icon, size: 18, color: theme.colorScheme.primary),
             const SizedBox(width: SLSpacing.s8),
           ],
           Expanded(
             child: Text(
               title,
               style: theme.textTheme.titleMedium?.copyWith(
+                fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -329,7 +330,9 @@ class SyncBadge extends ConsumerWidget {
     // Quiet when there is nothing to say: the badge appears only while
     // something is syncing, waiting to upload or has failed (a permanent
     // grey tick next to the profile read as an unexplained control).
-    if (!sync.syncing && !hasDead && !hasPending) return const SizedBox.shrink();
+    if (!sync.syncing && !hasDead && !hasPending) {
+      return const SizedBox.shrink();
+    }
 
     final Widget indicator;
     if (sync.syncing) {

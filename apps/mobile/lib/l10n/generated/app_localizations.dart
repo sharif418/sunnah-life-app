@@ -4743,6 +4743,30 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।'**
   String get goal_reminder_body;
+
+  /// No description provided for @prayer_forbidden_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজ পড়া নিষেধ'**
+  String get prayer_forbidden_title;
+
+  /// No description provided for @forbidden_short_sunrise.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূর্যোদয়'**
+  String get forbidden_short_sunrise;
+
+  /// No description provided for @forbidden_short_zawal.
+  ///
+  /// In bn, this message translates to:
+  /// **'যাওয়াল'**
+  String get forbidden_short_zawal;
+
+  /// No description provided for @forbidden_short_sunset.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূর্যাস্ত'**
+  String get forbidden_short_sunset;
 }
 
 class _AppLocalizationsDelegate

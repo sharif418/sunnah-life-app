@@ -773,5 +773,9 @@
   "goal_reminder_daily": "প্রতিদিন %time%",
   "goal_reminder_change": "বদলান",
   "goal_reminder_off": "রিমাইন্ডার বন্ধ",
-  "goal_reminder_body": "আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।"
+  "goal_reminder_body": "আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।",
+  "prayer_forbidden_title": "নামাজ পড়া নিষেধ",
+  "forbidden_short_sunrise": "সূর্যোদয়",
+  "forbidden_short_zawal": "যাওয়াল",
+  "forbidden_short_sunset": "সূর্যাস্ত"
 }

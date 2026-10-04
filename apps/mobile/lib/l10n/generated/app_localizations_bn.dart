@@ -2406,4 +2406,16 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get goal_reminder_body =>
       'আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।';
+
+  @override
+  String get prayer_forbidden_title => 'নামাজ পড়া নিষেধ';
+
+  @override
+  String get forbidden_short_sunrise => 'সূর্যোদয়';
+
+  @override
+  String get forbidden_short_zawal => 'যাওয়াল';
+
+  @override
+  String get forbidden_short_sunset => 'সূর্যাস্ত';
 }
