@@ -2383,4 +2383,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notifications_foundation => 'From the Foundation';
+
+  @override
+  String get goal_reminder_set => 'Set a reminder';
+
+  @override
+  String get goal_reminder_pick => 'Remind me daily at';
+
+  @override
+  String get goal_reminder_daily => 'Daily at %time%';
+
+  @override
+  String get goal_reminder_change => 'Change';
+
+  @override
+  String get goal_reminder_off => 'Turn off';
+
+  @override
+  String get goal_reminder_body =>
+      'Did you meet it today? Note it in the diary.';
 }

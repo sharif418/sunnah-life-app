@@ -2359,4 +2359,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notifications_foundation => 'إعلانات المؤسسة';
+
+  @override
+  String get goal_reminder_set => 'اضبط تذكيرًا';
+
+  @override
+  String get goal_reminder_pick => 'ذكّرني يوميًا في';
+
+  @override
+  String get goal_reminder_daily => 'يوميًا %time%';
+
+  @override
+  String get goal_reminder_change => 'غيّر';
+
+  @override
+  String get goal_reminder_off => 'إيقاف';
+
+  @override
+  String get goal_reminder_body => 'هل حققته اليوم؟ سجّله في المذكرة.';
 }

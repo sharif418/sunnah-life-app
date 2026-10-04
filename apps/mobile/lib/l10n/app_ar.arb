@@ -767,5 +767,11 @@
   "quiz_past": "اختبارات مباشرة سابقة",
   "quiz_take_it": "خذ هذا الاختبار",
   "dawah_tab_mine": "طريقي",
-  "notifications_foundation": "إعلانات المؤسسة"
+  "notifications_foundation": "إعلانات المؤسسة",
+  "goal_reminder_set": "اضبط تذكيرًا",
+  "goal_reminder_pick": "ذكّرني يوميًا في",
+  "goal_reminder_daily": "يوميًا %time%",
+  "goal_reminder_change": "غيّر",
+  "goal_reminder_off": "إيقاف",
+  "goal_reminder_body": "هل حققته اليوم؟ سجّله في المذكرة."
 }

@@ -4707,6 +4707,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'ফাউন্ডেশনের ঘোষণা'**
   String get notifications_foundation;
+
+  /// No description provided for @goal_reminder_set.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিমাইন্ডার দিন'**
+  String get goal_reminder_set;
+
+  /// No description provided for @goal_reminder_pick.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতিদিন কখন মনে করিয়ে দেব?'**
+  String get goal_reminder_pick;
+
+  /// No description provided for @goal_reminder_daily.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতিদিন %time%'**
+  String get goal_reminder_daily;
+
+  /// No description provided for @goal_reminder_change.
+  ///
+  /// In bn, this message translates to:
+  /// **'বদলান'**
+  String get goal_reminder_change;
+
+  /// No description provided for @goal_reminder_off.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিমাইন্ডার বন্ধ'**
+  String get goal_reminder_off;
+
+  /// No description provided for @goal_reminder_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।'**
+  String get goal_reminder_body;
 }
 
 class _AppLocalizationsDelegate

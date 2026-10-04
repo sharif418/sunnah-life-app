@@ -767,5 +767,11 @@
   "quiz_past": "আগের লাইভ কুইজ",
   "quiz_take_it": "কুইজটি দিন",
   "dawah_tab_mine": "আমার পথ",
-  "notifications_foundation": "ফাউন্ডেশনের ঘোষণা"
+  "notifications_foundation": "ফাউন্ডেশনের ঘোষণা",
+  "goal_reminder_set": "রিমাইন্ডার দিন",
+  "goal_reminder_pick": "প্রতিদিন কখন মনে করিয়ে দেব?",
+  "goal_reminder_daily": "প্রতিদিন %time%",
+  "goal_reminder_change": "বদলান",
+  "goal_reminder_off": "রিমাইন্ডার বন্ধ",
+  "goal_reminder_body": "আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।"
 }

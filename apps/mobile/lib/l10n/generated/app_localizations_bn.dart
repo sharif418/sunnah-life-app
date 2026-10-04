@@ -2387,4 +2387,23 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get notifications_foundation => 'ফাউন্ডেশনের ঘোষণা';
+
+  @override
+  String get goal_reminder_set => 'রিমাইন্ডার দিন';
+
+  @override
+  String get goal_reminder_pick => 'প্রতিদিন কখন মনে করিয়ে দেব?';
+
+  @override
+  String get goal_reminder_daily => 'প্রতিদিন %time%';
+
+  @override
+  String get goal_reminder_change => 'বদলান';
+
+  @override
+  String get goal_reminder_off => 'রিমাইন্ডার বন্ধ';
+
+  @override
+  String get goal_reminder_body =>
+      'আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।';
 }
