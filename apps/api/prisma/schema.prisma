@@ -387,6 +387,8 @@ model MasalaQuestion {
   question  String
   status    String   @default("new") // new | answered
   answer    String?
+  answeredAt   DateTime?
+  answeredById String?
   createdAt DateTime @default(now())
 }
 

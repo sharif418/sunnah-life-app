@@ -413,6 +413,19 @@ export interface GoalItem {
   createdAt: string;
 }
 
+/** One মাসআলা question (GET /api/admin/masala). */
+export interface MasalaQuestionItem {
+  id: string;
+  name: string;
+  phone: string | null;
+  question: string;
+  status: "new" | "answered";
+  answer: string | null;
+  answeredAt: string | null;
+  createdAt: string;
+  member: { gender: Gender | null; memberCode: string | null } | null;
+}
+
 /** One app feedback message (GET /api/admin/feedback). */
 export interface FeedbackItem {
   id: string;
@@ -706,6 +719,13 @@ export const api = {
     call<{ ok: boolean }>(`/api/admin/live/${id}`, { method: "DELETE" }),
   audit: () => call<{ entries: AuditEntry[] }>("/api/admin/audit"),
 
+  // the মাসআলা inbox (full_admin)
+  masalaInbox: (status?: "new" | "answered") =>
+    call<{ questions: MasalaQuestionItem[]; newCount: number }>(
+      `/api/admin/masala${status ? `?status=${status}` : ""}`
+    ),
+  answerMasala: (id: string, answer: string) =>
+    call<{ ok: boolean }>(`/api/admin/masala/${id}/answer`, { method: "POST", json: { answer } }),
   // the app's মতামত inbox (full_admin)
   feedbackInbox: (status?: "new" | "done") =>
     call<{ feedback: FeedbackItem[]; newCount: number }>(

@@ -755,5 +755,8 @@
   "weekday_short_3": "أربعاء",
   "weekday_short_4": "خميس",
   "weekday_short_5": "جمعة",
-  "weekday_short_6": "سبت"
+  "weekday_short_6": "سبت",
+  "masala_mine": "أسئلتي والأجوبة",
+  "masala_answered": "تمت الإجابة",
+  "masala_pending": "بانتظار الجواب"
 }

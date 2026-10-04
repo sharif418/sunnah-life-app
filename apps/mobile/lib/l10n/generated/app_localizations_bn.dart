@@ -2351,4 +2351,13 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get weekday_short_6 => 'শনি';
+
+  @override
+  String get masala_mine => 'আমার প্রশ্ন ও উত্তর';
+
+  @override
+  String get masala_answered => 'উত্তর এসেছে';
+
+  @override
+  String get masala_pending => 'উত্তরের অপেক্ষায়';
 }

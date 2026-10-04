@@ -4635,6 +4635,24 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'শনি'**
   String get weekday_short_6;
+
+  /// No description provided for @masala_mine.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার প্রশ্ন ও উত্তর'**
+  String get masala_mine;
+
+  /// No description provided for @masala_answered.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর এসেছে'**
+  String get masala_answered;
+
+  /// No description provided for @masala_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তরের অপেক্ষায়'**
+  String get masala_pending;
 }
 
 class _AppLocalizationsDelegate

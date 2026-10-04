@@ -2347,4 +2347,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get weekday_short_6 => 'Sat';
+
+  @override
+  String get masala_mine => 'My questions & answers';
+
+  @override
+  String get masala_answered => 'Answered';
+
+  @override
+  String get masala_pending => 'Awaiting answer';
 }

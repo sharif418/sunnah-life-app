@@ -251,6 +251,7 @@ class _InboxCard extends ConsumerWidget {
     'review' => (PhosphorIconsRegular.chatCircle, '/dawah'),
     'goal' => (PhosphorIconsRegular.flagBanner, '/amal/goals'),
     'assessment' => (PhosphorIconsRegular.sealCheck, '/dawah'),
+    'masala' => (PhosphorIconsRegular.question, '/more/masala'),
     _ => (PhosphorIconsRegular.megaphone, null),
   };
 

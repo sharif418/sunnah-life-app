@@ -191,7 +191,7 @@ final usrahQuizResultsProvider = FutureProvider<UsrahQuizResults?>((ref) async {
 
 /// Kinds of Reminder rows that are MESSAGES to the member (something
 /// happened) rather than self-set reminders (live / prayer / detox).
-const kInboxKinds = {'review', 'goal', 'assessment', 'broadcast'};
+const kInboxKinds = {'review', 'goal', 'assessment', 'broadcast', 'masala'};
 
 /// The member's personal inbox — GET /api/reminders filtered to messages
 /// whose time has come, newest first. Null for guests and offline.

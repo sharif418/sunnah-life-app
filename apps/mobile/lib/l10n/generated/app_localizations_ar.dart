@@ -2323,4 +2323,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get weekday_short_6 => 'سبت';
+
+  @override
+  String get masala_mine => 'أسئلتي والأجوبة';
+
+  @override
+  String get masala_answered => 'تمت الإجابة';
+
+  @override
+  String get masala_pending => 'بانتظار الجواب';
 }
