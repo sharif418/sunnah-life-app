@@ -759,5 +759,11 @@
   "masala_mine": "أسئلتي والأجوبة",
   "masala_answered": "تمت الإجابة",
   "masala_pending": "بانتظار الجواب",
-  "bell_on_for_waqt": "منبّه لهذه الصلاة"
+  "bell_on_for_waqt": "منبّه لهذه الصلاة",
+  "courses_ongoing": "قيد الدراسة",
+  "courses_done": "المكتملة",
+  "courses_more": "دورات أخرى",
+  "courses_all": "كل الدورات",
+  "quiz_past": "اختبارات مباشرة سابقة",
+  "quiz_take_it": "خذ هذا الاختبار"
 }

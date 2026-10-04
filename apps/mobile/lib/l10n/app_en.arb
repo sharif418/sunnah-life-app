@@ -759,5 +759,11 @@
   "masala_mine": "My questions & answers",
   "masala_answered": "Answered",
   "masala_pending": "Awaiting answer",
-  "bell_on_for_waqt": "Alarm for this prayer"
+  "bell_on_for_waqt": "Alarm for this prayer",
+  "courses_ongoing": "In progress",
+  "courses_done": "Completed",
+  "courses_more": "More courses",
+  "courses_all": "All courses",
+  "quiz_past": "Past live quizzes",
+  "quiz_take_it": "Take this quiz"
 }

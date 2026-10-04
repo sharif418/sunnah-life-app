@@ -759,5 +759,11 @@
   "masala_mine": "আমার প্রশ্ন ও উত্তর",
   "masala_answered": "উত্তর এসেছে",
   "masala_pending": "উত্তরের অপেক্ষায়",
-  "bell_on_for_waqt": "এই ওয়াক্তে অ্যালার্ম"
+  "bell_on_for_waqt": "এই ওয়াক্তে অ্যালার্ম",
+  "courses_ongoing": "চলমান কোর্স",
+  "courses_done": "সম্পন্ন কোর্স",
+  "courses_more": "আরও কোর্স",
+  "courses_all": "সব কোর্স",
+  "quiz_past": "আগের লাইভ কুইজ",
+  "quiz_take_it": "কুইজটি দিন"
 }

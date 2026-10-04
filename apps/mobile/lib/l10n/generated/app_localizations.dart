@@ -4659,6 +4659,42 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'এই ওয়াক্তে অ্যালার্ম'**
   String get bell_on_for_waqt;
+
+  /// No description provided for @courses_ongoing.
+  ///
+  /// In bn, this message translates to:
+  /// **'চলমান কোর্স'**
+  String get courses_ongoing;
+
+  /// No description provided for @courses_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন কোর্স'**
+  String get courses_done;
+
+  /// No description provided for @courses_more.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও কোর্স'**
+  String get courses_more;
+
+  /// No description provided for @courses_all.
+  ///
+  /// In bn, this message translates to:
+  /// **'সব কোর্স'**
+  String get courses_all;
+
+  /// No description provided for @quiz_past.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগের লাইভ কুইজ'**
+  String get quiz_past;
+
+  /// No description provided for @quiz_take_it.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজটি দিন'**
+  String get quiz_take_it;
 }
 
 class _AppLocalizationsDelegate

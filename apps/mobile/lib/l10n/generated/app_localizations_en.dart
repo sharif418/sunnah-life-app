@@ -2359,4 +2359,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bell_on_for_waqt => 'Alarm for this prayer';
+
+  @override
+  String get courses_ongoing => 'In progress';
+
+  @override
+  String get courses_done => 'Completed';
+
+  @override
+  String get courses_more => 'More courses';
+
+  @override
+  String get courses_all => 'All courses';
+
+  @override
+  String get quiz_past => 'Past live quizzes';
+
+  @override
+  String get quiz_take_it => 'Take this quiz';
 }

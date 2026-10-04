@@ -2363,4 +2363,22 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get bell_on_for_waqt => 'এই ওয়াক্তে অ্যালার্ম';
+
+  @override
+  String get courses_ongoing => 'চলমান কোর্স';
+
+  @override
+  String get courses_done => 'সম্পন্ন কোর্স';
+
+  @override
+  String get courses_more => 'আরও কোর্স';
+
+  @override
+  String get courses_all => 'সব কোর্স';
+
+  @override
+  String get quiz_past => 'আগের লাইভ কুইজ';
+
+  @override
+  String get quiz_take_it => 'কুইজটি দিন';
 }

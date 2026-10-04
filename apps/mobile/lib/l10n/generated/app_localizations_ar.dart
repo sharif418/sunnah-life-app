@@ -2335,4 +2335,22 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bell_on_for_waqt => 'منبّه لهذه الصلاة';
+
+  @override
+  String get courses_ongoing => 'قيد الدراسة';
+
+  @override
+  String get courses_done => 'المكتملة';
+
+  @override
+  String get courses_more => 'دورات أخرى';
+
+  @override
+  String get courses_all => 'كل الدورات';
+
+  @override
+  String get quiz_past => 'اختبارات مباشرة سابقة';
+
+  @override
+  String get quiz_take_it => 'خذ هذا الاختبار';
 }

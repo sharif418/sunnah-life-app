@@ -65,9 +65,12 @@ class QuizzesScreen extends ConsumerWidget {
           // AMOL-17: scheduled live quizzes first, then the practice list
           return ListView.builder(
             padding: const EdgeInsets.all(SLSpacing.s16),
-            itemCount: quizzes.length + 1,
+            itemCount: quizzes.length + 2,
             itemBuilder: (context, i) => i == 0
                 ? const UpcomingQuizzesSection()
+                : i == quizzes.length + 1
+                // AMOL-16: the archive of past live quizzes, last
+                ? const PastQuizzesSection()
                 : _quizCard(
                     context,
                     quizzes[i - 1],

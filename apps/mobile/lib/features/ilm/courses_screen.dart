@@ -74,16 +74,43 @@ class CoursesScreen extends ConsumerWidget {
             );
           }
           final enrollments = enrollmentsAsync.valueOrNull;
-          return ListView.builder(
+          EnrollmentItem? enr(CourseSummary c) =>
+              enrollments?.where((e) => e.courseId == c.id).firstOrNull;
+          // BNAV-03: চলমান (started, not finished) · সম্পন্ন · the rest
+          bool finished(CourseSummary c) =>
+              c.lessonCount > 0 && (enr(c)?.done.length ?? 0) >= c.lessonCount;
+          final ongoing = [
+            for (final c in courses)
+              if (enr(c) != null && !finished(c)) c,
+          ];
+          final done = [for (final c in courses) if (finished(c)) c];
+          final rest = [
+            for (final c in courses)
+              if (enr(c) == null) c,
+          ];
+          Widget section(String key, IconData icon, List<CourseSummary> list) =>
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SectionHeader(context.t(key), icon: icon),
+                  for (final c in list) _courseCard(context, c, enr(c)),
+                ],
+              );
+          return ListView(
+            key: const ValueKey('courses_sections'),
             padding: const EdgeInsets.all(SLSpacing.s16),
-            itemCount: courses.length,
-            itemBuilder: (context, i) => _courseCard(
-              context,
-              courses[i],
-              enrollments
-                  ?.where((e) => e.courseId == courses[i].id)
-                  .firstOrNull,
-            ),
+            children: [
+              if (ongoing.isNotEmpty)
+                section('courses_ongoing', PhosphorIconsRegular.playCircle, ongoing),
+              if (rest.isNotEmpty)
+                section(
+                  ongoing.isEmpty && done.isEmpty ? 'courses_all' : 'courses_more',
+                  PhosphorIconsRegular.graduationCap,
+                  rest,
+                ),
+              if (done.isNotEmpty)
+                section('courses_done', PhosphorIconsRegular.sealCheck, done),
+            ],
           );
         },
       ),
