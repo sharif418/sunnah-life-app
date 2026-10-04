@@ -153,13 +153,14 @@ class _IlmScreenState extends State<IlmScreen> {
               GridView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                // a fixed, text-scaled height (not an aspect ratio): the
+                // square-ish 1.3 cells were ~140px tall on a wide phone and
+                // the screen read as eleven empty boxes
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   mainAxisSpacing: SLSpacing.s12,
                   crossAxisSpacing: SLSpacing.s12,
-                  // 1.3 — Noto Sans Bengali's real Bengali metrics wrap the longest
-                  // labels to three lines; the tofu-era 1.55 clipped them.
-                  childAspectRatio: 1.3,
+                  mainAxisExtent: MediaQuery.textScalerOf(context).scale(104),
                 ),
                 itemCount: entries.length,
                 itemBuilder: (context, i) {
@@ -186,12 +187,20 @@ class _IlmScreenState extends State<IlmScreen> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
-                                  e.icon,
-                                  size: 28,
-                                  color: theme.colorScheme.primary,
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer,
+                                    borderRadius: SLRadius.brMd,
+                                  ),
+                                  child: Icon(
+                                    e.icon,
+                                    size: 24,
+                                    color: theme.colorScheme.primary,
+                                  ),
                                 ),
-                                const SizedBox(height: SLSpacing.s4 + 2),
+                                const SizedBox(height: SLSpacing.s8),
                                 Text(
                                   e.title,
                                   textAlign: TextAlign.center,
