@@ -26,6 +26,7 @@ import 'package:flutter/foundation.dart';
 import '../api/api_client.dart';
 import '../core/deep_links.dart';
 import '../firebase_options.dart';
+import 'crash_reporting.dart';
 import 'notification_service.dart';
 
 /// `flutter test` sets FLUTTER_TEST=true in the process environment.
@@ -84,6 +85,8 @@ class PushService {
       debugPrint('[push] Firebase unavailable — local notifications only: $e');
       return;
     }
+    // Firebase is up: crash reports from release builds go to Crashlytics.
+    await CrashReporting.attach();
 
     try {
       final messaging = FirebaseMessaging.instance;

@@ -76,6 +76,10 @@ export default function PrivacyPage() {
               <li>
                 <b>নোটিফিকেশন টোকেন:</b> নামাজ, রিভিউ ও ঘোষণার নোটিফিকেশন পাঠাতে।
               </li>
+              <li>
+                <b>ক্র্যাশ রিপোর্ট:</b> অ্যাপ হঠাৎ বন্ধ হয়ে গেলে ত্রুটির বিবরণ, অ্যাপের সংস্করণ ও ফোনের মডেল, যাতে সমস্যাটা
+                ঠিক করা যায়। এতে আপনার নাম বা ফোন নম্বর থাকে না।
+              </li>
             </ul>
           </Section>
 
@@ -112,7 +116,8 @@ export default function PrivacyPage() {
           <Section id="share" title="যাদের সাথে তথ্য যায়">
             <ul className="list-disc space-y-1.5 ps-5">
               <li>
-                <b>গুগল:</b> গুগল সাইন-ইন ও নোটিফিকেশন পাঠানোর সেবা (Firebase Cloud Messaging)।
+                <b>গুগল:</b> গুগল সাইন-ইন, নোটিফিকেশন পাঠানোর সেবা (Firebase Cloud Messaging) ও ক্র্যাশ রিপোর্ট (Firebase
+                Crashlytics)।
               </li>
               <li>
                 <b>এসএমএস সেবাদাতা:</b> সাইন-ইনের কোড পাঠাতে আপনার মোবাইল নম্বর।
@@ -158,10 +163,11 @@ export default function PrivacyPage() {
             <p>
               Sunnah Life (As-Sunnah Foundation) stores only what the app needs: your phone number or Google account for
               sign-in, your name and gender, your profile, and — for signed-in members — your daily deeds diary, goals,
-              reviews and assessments, plus anything you write (questions, feedback, support messages) and a push token.
+              reviews and assessments, plus anything you write (questions, feedback, support messages), a push token, and
+              crash reports (error, app version, device model — no name or phone).
               GPS location, screen-time totals and the self-review stay on your phone. Supervisors see a member&apos;s diary
               only within the same gender; Foundation administrators may see it to run the programme. Data goes only to
-              Google (sign-in, notifications), the SMS provider (sign-in codes) and our own server, always over HTTPS. No
+              Google (sign-in, notifications, crash reports), the SMS provider (sign-in codes) and our own server, always over HTTPS. No
               ads, no selling. Delete your account in the app (More → Profile → Delete account) or at{" "}
               <Link href="/delete-account" className="font-semibold text-primary underline">
                 /delete-account
