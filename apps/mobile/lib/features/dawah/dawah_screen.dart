@@ -264,9 +264,10 @@ class _DawahOverviewTab extends ConsumerWidget {
                           ),
                         ),
                       ),
-                      IconButton(
+                      IconButton.filledTonal(
+                        key: const ValueKey('dawah_copy_code'),
                         tooltip: context.t('copy'),
-                        icon: const Icon(PhosphorIconsRegular.copy),
+                        icon: const Icon(PhosphorIconsRegular.copy, size: 20),
                         onPressed: () async {
                           await Clipboard.setData(
                             ClipboardData(text: overview.memberCode),
@@ -280,33 +281,10 @@ class _DawahOverviewTab extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: SLSpacing.s8),
-                  Text(
-                    context.t('dawah_referral'),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: SLSpacing.s4),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          joinLink(overview.memberCode),
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.primary,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        tooltip: context.t('share'),
-                        icon: const Icon(PhosphorIconsRegular.shareNetwork),
-                        onPressed: openCardSheet,
-                      ),
-                    ],
-                  ),
                   // W4e — the overview's primary share action: the branded
                   // card preview (hidden when there is no code to invite
-                  // with — the empty-code edge stays honest).
+                  // with — the empty-code edge stays honest). It carries the
+                  // join link, so the raw URL is not repeated on the card.
                   const SizedBox(height: SLSpacing.s4),
                   Text(
                     context
@@ -1063,14 +1041,23 @@ class _RequirementLine extends StatelessWidget {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final count = countOf(req.detail);
-    final share = req.done ? 1.0 : (count == null ? null : (count.$1 / count.$2).clamp(0.0, 1.0));
+    final share = req.done
+        ? 1.0
+        : (count == null ? null : (count.$1 / count.$2).clamp(0.0, 1.0));
     return Padding(
-      padding: const EdgeInsets.fromLTRB(SLSpacing.s16, SLSpacing.s12, SLSpacing.s16, SLSpacing.s12),
+      padding: const EdgeInsets.fromLTRB(
+        SLSpacing.s16,
+        SLSpacing.s12,
+        SLSpacing.s16,
+        SLSpacing.s12,
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            req.done ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.circle,
+            req.done
+                ? PhosphorIconsFill.checkCircle
+                : PhosphorIconsRegular.circle,
             size: 24,
             color: req.done ? cs.primary : cs.outline,
           ),
@@ -1085,13 +1072,17 @@ class _RequirementLine extends StatelessWidget {
                     Expanded(
                       child: Text(
                         req.label,
-                        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     if (count != null)
                       Text(
                         '${toBn(count.$1)}/${toBn(count.$2)}',
-                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                   ],
                 ),
@@ -1111,7 +1102,9 @@ class _RequirementLine extends StatelessWidget {
                   const SizedBox(height: SLSpacing.s4),
                   Text(
                     req.detail,
-                    style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ],

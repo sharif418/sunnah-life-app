@@ -777,5 +777,8 @@
   "prayer_forbidden_title": "أوقات النهي عن الصلاة",
   "forbidden_short_sunrise": "الشروق",
   "forbidden_short_zawal": "الزوال",
-  "forbidden_short_sunset": "الغروب"
+  "forbidden_short_sunset": "الغروب",
+  "madu_active_ago": "نشط %t%",
+  "review_this_week": "هذا الأسبوع",
+  "review_last_week": "الأسبوع الماضي"
 }

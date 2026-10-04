@@ -127,7 +127,11 @@ class _LogoMark extends StatelessWidget {
         color: SLColors.gold,
         shape: BoxShape.circle,
       ),
-      child: Icon(PhosphorIconsFill.star, color: SLColors.primaryDeep, size: starSize),
+      child: Icon(
+        PhosphorIconsFill.star,
+        color: SLColors.primaryDeep,
+        size: starSize,
+      ),
     );
   }
 }
@@ -322,8 +326,7 @@ Future<File> captureImageToPngFile(Future<ui.Image> image) async {
     throw StateError('toByteData returned null');
   }
   final tmp = await getTemporaryDirectory();
-  final shareDir = Directory('${tmp.path}/share')
-    ..createSync(recursive: true);
+  final shareDir = Directory('${tmp.path}/share')..createSync(recursive: true);
   final file = File('${shareDir.path}/sunnahlife_referral_card.png');
   // Sync write: a few hundred KB, already off the UI critical path, and
   // a real-async write starves under fake-async test beds.

@@ -2389,4 +2389,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get forbidden_short_sunset => 'الغروب';
+
+  @override
+  String get madu_active_ago => 'نشط %t%';
+
+  @override
+  String get review_this_week => 'هذا الأسبوع';
+
+  @override
+  String get review_last_week => 'الأسبوع الماضي';
 }

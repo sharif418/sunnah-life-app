@@ -2418,4 +2418,13 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get forbidden_short_sunset => 'সূর্যাস্ত';
+
+  @override
+  String get madu_active_ago => '%t% সক্রিয়';
+
+  @override
+  String get review_this_week => 'এই সপ্তাহ';
+
+  @override
+  String get review_last_week => 'গত সপ্তাহ';
 }

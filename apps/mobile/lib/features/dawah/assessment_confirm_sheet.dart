@@ -85,7 +85,8 @@ class AssessmentConfirmSheet extends ConsumerStatefulWidget {
       _AssessmentConfirmSheetState();
 }
 
-class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet> {
+class _AssessmentConfirmSheetState
+    extends ConsumerState<AssessmentConfirmSheet> {
   final _code = TextEditingController();
   bool _sending = false;
   bool _verifying = false;
@@ -129,10 +130,9 @@ class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet>
       _error = null;
     });
     try {
-      await ref.read(apiProvider).assessmentConfirm(
-            id: widget.assessment.id,
-            code: _code.text.trim(),
-          );
+      await ref
+          .read(apiProvider)
+          .assessmentConfirm(id: widget.assessment.id, code: _code.text.trim());
       // the card flips: the overview (the section's source) refetches
       ref.invalidate(dawahProvider);
       if (mounted) {
@@ -176,18 +176,20 @@ class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet>
               child: Text(context.t('cancel')),
             ),
             FilledButton.tonal(
-              onPressed: () => Navigator.of(dialogContext).pop(
-                controller.text.trim(),
-              ),
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop(controller.text.trim()),
               child: Text(context.t('assessment_decline_label')),
             ),
           ],
         );
       },
     );
-    if (reason == null) return; // the dialog's cancel returns "" — a real decline
+    // the dialog's cancel returns "" — a real decline
+    if (reason == null) return;
     try {
-      await ref.read(apiProvider).assessmentDecline(
+      await ref
+          .read(apiProvider)
+          .assessmentDecline(
             id: widget.assessment.id,
             reason: reason.isEmpty ? null : reason,
           );
@@ -268,8 +270,8 @@ class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet>
                 label: Text(context.t('auth_request_otp')),
               ),
             ] else ...[
-              if (_devCode != null) // server-gated (mock SMS, non-production only)
-
+              if (_devCode !=
+                  null) // server-gated (mock SMS, non-production only)
                 Container(
                   margin: const EdgeInsets.only(bottom: SLSpacing.s12),
                   padding: const EdgeInsets.all(SLSpacing.s12),
@@ -279,7 +281,10 @@ class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet>
                   ),
                   child: Row(
                     children: [
-                      Icon(PhosphorIconsRegular.code, color: theme.colorScheme.tertiary),
+                      Icon(
+                        PhosphorIconsRegular.code,
+                        color: theme.colorScheme.tertiary,
+                      ),
                       const SizedBox(width: SLSpacing.s8),
                       Expanded(
                         child: Text(
@@ -304,15 +309,16 @@ class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet>
               const SizedBox(height: SLSpacing.s12),
               FilledButton.icon(
                 key: const Key('assessmentConfirmVerifyButton'),
-                onPressed: _code.text.length >= 4 && !_verifying ? _verify : null,
+                onPressed: _code.text.length >= 4 && !_verifying
+                    ? _verify
+                    : null,
                 icon: _verifying
                     ? const SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Icon(PhosphorIconsRegular.checkCircle)
-                ,
+                    : const Icon(PhosphorIconsRegular.checkCircle),
                 label: Text(context.t('auth_verify')),
               ),
               TextButton(
@@ -338,7 +344,10 @@ class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet>
             ),
             if (_error != null) ...[
               const SizedBox(height: SLSpacing.s8),
-              ErrorState(message: _error!, onRetry: _codeSent ? _verify : _requestCode),
+              ErrorState(
+                message: _error!,
+                onRetry: _codeSent ? _verify : _requestCode,
+              ),
             ],
           ],
         ),

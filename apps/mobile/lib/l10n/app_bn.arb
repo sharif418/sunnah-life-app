@@ -777,5 +777,8 @@
   "prayer_forbidden_title": "নামাজ পড়া নিষেধ",
   "forbidden_short_sunrise": "সূর্যোদয়",
   "forbidden_short_zawal": "যাওয়াল",
-  "forbidden_short_sunset": "সূর্যাস্ত"
+  "forbidden_short_sunset": "সূর্যাস্ত",
+  "madu_active_ago": "%t% সক্রিয়",
+  "review_this_week": "এই সপ্তাহ",
+  "review_last_week": "গত সপ্তাহ"
 }

@@ -16,7 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/sync_policy.dart' show formatAgoBn;
 import '../../design/design_tokens.dart';
 import '../../models/dawah.dart';
-import '../../models/user.dart' show Gender, LevelJson;
+import '../../models/user.dart' show Gender, Level, LevelJson;
 import '../../state/providers.dart';
 import '../shared/widgets.dart' show AppCard, L10nX;
 
@@ -140,51 +140,54 @@ class _MaduNodeRow extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      // W4f overflow sweep — level pill + last-active flow
-                      // as a Wrap: natural sizes whenever they fit (the w4e
-                      // golden is unchanged) and the ago simply wraps under
-                      // the pill on deep indents at 360dp @1.3× instead of
-                      // spilling the row.
-                      Wrap(
-                        spacing: SLSpacing.s8,
-                        runSpacing: 2,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: SLSpacing.s8,
-                              vertical: 3,
-                            ),
-                            decoration: BoxDecoration(
-                              color: dark
-                                  ? SLColors.darkGoldSoft
-                                  : SLColors.goldSoftLight,
-                              borderRadius: SLRadius.brPill,
-                            ),
-                            child: Text(
-                              context.t(node.level.labelKey),
-                              maxLines: 1,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: dark
-                                    ? SLColors.darkGoldText
-                                    : SLColors.lightGoldText,
-                              ),
-                            ),
+                      if (ago != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          context.t('madu_active_ago').replaceAll('%t%', ago),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
                           ),
-                          if (ago != null)
-                            Text(
-                              ago,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodySmall?.copyWith(
-                                color: theme.colorScheme.onSurfaceVariant,
-                              ),
-                            ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ],
+                  ),
+                ),
+                const SizedBox(width: SLSpacing.s8),
+                // the level on the right edge; on a deep indent at a large
+                // text size it shrinks a little instead of crowding the name
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 140),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: SLSpacing.s8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: node.level == Level.none
+                            ? (dark
+                                  ? SLColors.darkGoldSoft
+                                  : SLColors.goldSoftLight)
+                            : theme.colorScheme.primaryContainer,
+                        borderRadius: SLRadius.brPill,
+                      ),
+                      child: Text(
+                        context.t(node.level.labelKey),
+                        maxLines: 1,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: node.level == Level.none
+                              ? (dark
+                                    ? SLColors.darkGoldText
+                                    : SLColors.lightGoldText)
+                              : theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -257,8 +260,18 @@ class _ConnectorPainter extends CustomPainter {
 /// The first grapheme cluster keeps a conjunct or vowel sign intact.
 String maduInitial(String name) {
   const honorifics = {
-    'মোঃ', 'মো:', 'মো.', 'মোহাম্মদ', 'মুহাম্মদ', 'মোহাম্মাদ', 'মুহাম্মাদ',
-    'md', 'md.', 'mohammad', 'muhammad', 'mohammed',
+    'মোঃ',
+    'মো:',
+    'মো.',
+    'মোহাম্মদ',
+    'মুহাম্মদ',
+    'মোহাম্মাদ',
+    'মুহাম্মাদ',
+    'md',
+    'md.',
+    'mohammad',
+    'muhammad',
+    'mohammed',
   };
   final words = name
       .trim()

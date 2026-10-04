@@ -4767,6 +4767,24 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'সূর্যাস্ত'**
   String get forbidden_short_sunset;
+
+  /// No description provided for @madu_active_ago.
+  ///
+  /// In bn, this message translates to:
+  /// **'%t% সক্রিয়'**
+  String get madu_active_ago;
+
+  /// No description provided for @review_this_week.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই সপ্তাহ'**
+  String get review_this_week;
+
+  /// No description provided for @review_last_week.
+  ///
+  /// In bn, this message translates to:
+  /// **'গত সপ্তাহ'**
+  String get review_last_week;
 }
 
 class _AppLocalizationsDelegate

@@ -2414,4 +2414,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get forbidden_short_sunset => 'Sunset';
+
+  @override
+  String get madu_active_ago => 'active %t%';
+
+  @override
+  String get review_this_week => 'This week';
+
+  @override
+  String get review_last_week => 'Last week';
 }

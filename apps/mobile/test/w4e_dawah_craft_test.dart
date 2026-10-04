@@ -359,7 +359,7 @@ void main() {
 
   // ── The preview sheet ─────────────────────────────────────────────────────
 
-  testWidgets('both overview share entry points open the preview sheet', (
+  testWidgets('the overview share CTA opens the preview sheet', (
     tester,
   ) async {
     await bootDawah(tester, api: _TreeApi());
@@ -374,14 +374,13 @@ void main() {
     expect(find.text(S.tr(Lang.bn, 'dawah_share_now')), findsOneWidget);
     expect(find.text('DS-000004'), findsWidgets); // the preview card's code
 
-    // Close, then the secondary: the referral row's share icon.
+    // The card itself carries the join link; the overview no longer
+    // repeats the raw URL beside the code (the prototype's member card) —
+    // the code has its own copy button.
     await tester.tapAt(const Offset(10, 10)); // the modal barrier
     await tester.pumpAndSettle();
     expect(find.byType(ReferralCard), findsNothing);
-
-    await revealAndTap(tester, find.byTooltip(S.tr(Lang.bn, 'share')));
-    await tester.pumpAndSettle();
-    expect(find.byType(ReferralCard), findsOneWidget);
+    expect(find.byKey(const ValueKey('dawah_copy_code')), findsOneWidget);
   });
 
   testWidgets('renderReferralCardPng produces a real 1080×1350 PNG', (
@@ -621,9 +620,9 @@ void main() {
     expect(find.text('আব্দুল্লাহ আল মামুন'), findsOneWidget);
     expect(find.text('মাহমুদা খাতুন'), findsOneWidget);
     expect(find.text(S.tr(Lang.bn, 'level_muhibbus_sunnah')), findsOneWidget);
-    expect(find.text('১ দিন আগে'), findsOneWidget);
-    expect(find.text('৩ দিন আগে'), findsOneWidget);
-    expect(find.text('৪ দিন আগে'), findsOneWidget);
+    expect(find.text('১ দিন আগে সক্রিয়'), findsOneWidget);
+    expect(find.text('৩ দিন আগে সক্রিয়'), findsOneWidget);
+    expect(find.text('৪ দিন আগে সক্রিয়'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
 
@@ -751,7 +750,7 @@ void main() {
       scrollable: overviewScroll,
     );
     expect(find.text('মাহমুদা খাতুন'), findsOneWidget);
-    expect(find.text('৩ দিন আগে'), findsOneWidget);
+    expect(find.text('৩ দিন আগে সক্রিয়'), findsOneWidget);
   });
 }
 

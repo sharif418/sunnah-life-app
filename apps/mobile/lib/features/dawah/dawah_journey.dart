@@ -256,6 +256,13 @@ class LatestReviewCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (_weekTag(review.weekStart) case final tag?)
+                Text(
+                  context.t(tag),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
             ],
           ),
           const SizedBox(height: SLSpacing.s8),
@@ -273,8 +280,8 @@ class LatestReviewCard extends StatelessWidget {
           Text(
             [
               review.reviewerName,
-              context.isBn ? toBn(review.weekStart) : review.weekStart,
-            ].whereType<String>().join(' · '),
+              _dateBn(context, review.weekStart),
+            ].whereType<String>().where((s) => s.isNotEmpty).join(' · '),
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
             ),
@@ -283,6 +290,25 @@ class LatestReviewCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// "এই সপ্তাহ" / "গত সপ্তাহ" for a recent review week, else nothing.
+String? _weekTag(String weekStart) {
+  final ws = DateTime.tryParse(weekStart);
+  if (ws == null) return null;
+  final now = DateTime.now();
+  final days = DateTime(now.year, now.month, now.day).difference(ws).inDays;
+  if (days >= 0 && days < 7) return 'review_this_week';
+  if (days >= 7 && days < 14) return 'review_last_week';
+  return null;
+}
+
+/// "৯ জুন" from a 2025-06-09 date key (empty when unparseable).
+String _dateBn(BuildContext context, String key) {
+  final d = DateTime.tryParse(key);
+  if (d == null) return '';
+  final bn = context.isBn;
+  return '${bn ? toBn(d.day) : d.day} ${context.t('month_${d.month}')}';
 }
 
 /// The newest weekly review with a comment, written FOR the signed-in member
