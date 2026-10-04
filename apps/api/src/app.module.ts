@@ -37,6 +37,7 @@ import { EngagementModule } from "./engagement/engagement.module";
 import { PushModule } from "./push/push.module";
 import { JoinModule } from "./join/join.module";
 import { LiveModule } from "./live/live.module";
+import { AnnouncementsModule } from "./announcements/announcements.controller";
 import { MeModule } from "./me/me.module";
 import { SupportModule } from "./support/support.module";
 import { LeaderboardModule } from "./leaderboard/leaderboard.controller";
@@ -99,6 +100,7 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
     PushModule, // FCM push: token registration + PushService fan-out (B2)
     JoinModule,
     LiveModule,
+    AnnouncementsModule,
     MeModule,
     SupportModule, // live support threads (user ↔ admin, W4d)
     LeaderboardModule, // gender-scoped percentile bands behind the config gate

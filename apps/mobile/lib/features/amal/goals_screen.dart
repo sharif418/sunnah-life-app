@@ -16,6 +16,7 @@ import '../../state/amal_state.dart';
 import '../../state/goals_state.dart';
 import '../../state/providers.dart';
 import '../shared/widgets.dart';
+import 'goal_reminder.dart';
 import '../../design/phosphor_icons.dart';
 
 /// Max open goals the server allows (proposed + approved).
@@ -175,6 +176,11 @@ class _GoalCard extends ConsumerWidget {
                 ),
               ),
             ],
+            // NAV-04: an approved goal can remind me daily at my time
+            if (goal.status == GoalStatus.approved) ...[
+              const SizedBox(height: SLSpacing.s4),
+              GoalReminderRow(goal: goal),
+            ],
             if (!goal.status.isTerminal)
               Align(
                 alignment: AlignmentDirectional.centerEnd,
@@ -210,6 +216,7 @@ class _GoalCard extends ConsumerWidget {
     if (confirmed != true) return;
     try {
       await ref.read(apiProvider).deleteGoal(goal.id);
+      await setGoalReminder(goal.id, minutes: null, title: '', body: '');
       ref.invalidate(goalsProvider);
     } on ApiException catch (e) {
       // The server's refusal (e.g. terminal rows are history) surfaces

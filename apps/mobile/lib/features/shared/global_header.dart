@@ -111,40 +111,51 @@ class GlobalHeader extends ConsumerWidget {
               const SyncBadge(),
             ],
           ),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: SLSpacing.s8,
+          // the prototype's order: the city as a small outlined pill (tap to
+          // change), then the three calendars on one quiet line
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               InkWell(
                 key: const ValueKey('header_city'),
-                borderRadius: SLRadius.brSm,
+                borderRadius: SLRadius.brPill,
                 onTap: () => _pickCity(context, ref),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: SLSpacing.minTapTarget,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        PhosphorIconsFill.mapPin,
-                        size: 18,
-                        color: theme.colorScheme.primary,
+                  constraints: const BoxConstraints(minHeight: SLSpacing.minTapTarget),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    widthFactor: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: SLRadius.brPill,
+                        border: Border.all(color: theme.colorScheme.outline),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        city?.nameBn ?? profile.city,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            PhosphorIconsRegular.mapPin,
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            city?.nameBn ?? profile.city,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            PhosphorIconsBold.caretDown,
+                            size: 12,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        PhosphorIconsBold.caretDown,
-                        size: 14,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -214,6 +225,63 @@ class _HeaderAction extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// The five root tabs' frame (BNAV-01): the [GlobalHeader] above [body],
+/// sliding away while the member scrolls DOWN the content and coming back
+/// the moment they scroll UP (or reach the top) — the header used to either
+/// stay pinned (আমল, দাওয়াত — a fifth of a small screen) or scroll away for
+/// good (হোম, ইলম, আরও).
+class ScrollAwareHeader extends StatefulWidget {
+  const ScrollAwareHeader({super.key, required this.body});
+  final Widget body;
+
+  @override
+  State<ScrollAwareHeader> createState() => _ScrollAwareHeaderState();
+}
+
+class _ScrollAwareHeaderState extends State<ScrollAwareHeader> {
+  bool _visible = true;
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false; // chips rows, tab swipes
+    if (n is! ScrollUpdateNotification) return false;
+    // only the member's own finger moves the header: a layout correction at
+    // the end of the list (the viewport grows as the header slides away)
+    // must not bring it back and shove the last rows off-screen
+    if (n.dragDetails == null) return false;
+    final delta = n.scrollDelta ?? 0;
+    final nearTop = n.metrics.pixels <= n.metrics.minScrollExtent + 24;
+    // a small dead-band so a resting finger does not flicker the header
+    if (delta > 4 && !nearTop && _visible) setState(() => _visible = false);
+    if ((delta < -4 || nearTop) && !_visible) setState(() => _visible = true);
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRect(
+          child: AnimatedAlign(
+            key: const ValueKey('scroll_aware_header'),
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.bottomCenter,
+            heightFactor: _visible ? 1 : 0,
+            child: const GlobalHeader(),
+          ),
+        ),
+        Expanded(
+          child: NotificationListener<ScrollNotification>(
+            onNotification: _onScroll,
+            child: widget.body,
+          ),
+        ),
+      ],
     );
   }
 }

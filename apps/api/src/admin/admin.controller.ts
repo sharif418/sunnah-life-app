@@ -895,7 +895,7 @@ export class AdminService {
       }
 
       const announcement = await tx.announcement.create({
-        data: { usrahId, authorId: user.id, kind: "announcement", body: text, pinned: false },
+        data: { usrahId, authorId: user.id, kind: "announcement", body: text, pinned: false, gender: usrahId ? null : gender },
       });
 
       if (targetUserIds.length) {

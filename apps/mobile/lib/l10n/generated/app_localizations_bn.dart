@@ -330,7 +330,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get dawah_months_in_level => 'এই স্তরে মাস';
 
   @override
-  String get dawah_requirements => 'উন্নতির শর্তাবলি';
+  String get dawah_requirements => 'এই স্তরের লক্ষ্য';
 
   @override
   String get dawah_next_level => 'পরবর্তী স্তর';
@@ -2363,4 +2363,59 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get bell_on_for_waqt => 'এই ওয়াক্তে অ্যালার্ম';
+
+  @override
+  String get courses_ongoing => 'চলমান কোর্স';
+
+  @override
+  String get courses_done => 'সম্পন্ন কোর্স';
+
+  @override
+  String get courses_more => 'আরও কোর্স';
+
+  @override
+  String get courses_all => 'সব কোর্স';
+
+  @override
+  String get quiz_past => 'আগের লাইভ কুইজ';
+
+  @override
+  String get quiz_take_it => 'কুইজটি দিন';
+
+  @override
+  String get dawah_tab_mine => 'আমার পথ';
+
+  @override
+  String get notifications_foundation => 'ফাউন্ডেশনের ঘোষণা';
+
+  @override
+  String get goal_reminder_set => 'রিমাইন্ডার দিন';
+
+  @override
+  String get goal_reminder_pick => 'প্রতিদিন কখন মনে করিয়ে দেব?';
+
+  @override
+  String get goal_reminder_daily => 'প্রতিদিন %time%';
+
+  @override
+  String get goal_reminder_change => 'বদলান';
+
+  @override
+  String get goal_reminder_off => 'রিমাইন্ডার বন্ধ';
+
+  @override
+  String get goal_reminder_body =>
+      'আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।';
+
+  @override
+  String get prayer_forbidden_title => 'নামাজ পড়া নিষেধ';
+
+  @override
+  String get forbidden_short_sunrise => 'সূর্যোদয়';
+
+  @override
+  String get forbidden_short_zawal => 'যাওয়াল';
+
+  @override
+  String get forbidden_short_sunset => 'সূর্যাস্ত';
 }

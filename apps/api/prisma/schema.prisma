@@ -343,6 +343,9 @@ model Announcement {
   kind      String   @default("announcement") // announcement | question | exam
   body      String
   pinned    Boolean  @default(false)
+  // audience of a Foundation-wide (usrahId null) announcement: null =
+  // everyone (guests too), "M"/"F" = that gender only
+  gender    String?
   createdAt DateTime @default(now())
 }
 

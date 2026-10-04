@@ -58,12 +58,8 @@ class DawahScreen extends ConsumerWidget {
       // sync badge — the badge used to live in this AppBar's actions).
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            const GlobalHeader(),
-            Expanded(child: body),
-          ],
-        ),
+        // the shared header, hiding while scrolling down (BNAV-01)
+        child: ScrollAwareHeader(body: body),
       ),
     );
   }
@@ -119,7 +115,7 @@ class _DawahTabs extends ConsumerWidget {
         children: [
           TabBar(
             tabs: [
-              Tab(text: context.t('tab_dawah')),
+              Tab(text: context.t('dawah_tab_mine')),
               Tab(text: context.t('dawah_tab_usrah')),
               Tab(text: context.t('dawah_tab_reviews')),
             ],
@@ -224,19 +220,10 @@ class _DawahOverviewTab extends ConsumerWidget {
               padding: EdgeInsets.zero,
               child: Column(
                 children: [
-                  for (var i = 0; i < overview.requirements.length; i++)
-                    ListTile(
-                      leading: Icon(
-                        overview.requirements[i].done
-                            ? PhosphorIconsFill.checkCircle
-                            : PhosphorIconsRegular.circle,
-                        color: overview.requirements[i].done
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
-                      ),
-                      title: Text(overview.requirements[i].label),
-                      subtitle: Text(overview.requirements[i].detail),
-                    ),
+                  for (var i = 0; i < overview.requirements.length; i++) ...[
+                    if (i > 0) const Divider(height: 1),
+                    _RequirementLine(req: overview.requirements[i]),
+                  ],
                 ],
               ),
             ),
@@ -334,11 +321,14 @@ class _DawahOverviewTab extends ConsumerWidget {
                   ),
                   if (overview.memberCode.isNotEmpty) ...[
                     const SizedBox(height: SLSpacing.s12),
-                    FilledButton.icon(
-                      key: const Key('dawahShareCardButton'),
-                      onPressed: openCardSheet,
-                      icon: const Icon(PhosphorIconsRegular.shareNetwork),
-                      label: Text(context.t('dawah_share_card')),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        key: const Key('dawahShareCardButton'),
+                        onPressed: openCardSheet,
+                        icon: const Icon(PhosphorIconsRegular.shareNetwork),
+                        label: Text(context.t('dawah_share_card')),
+                      ),
                     ),
                   ],
                 ],
@@ -371,8 +361,17 @@ class _DawahOverviewTab extends ConsumerWidget {
               context.t('dawah_assessments'),
               icon: PhosphorIconsRegular.clipboardText,
             ),
+            // none yet: one quiet line, not a full-page illustration at
+            // the bottom of the member's own path
             if (overview.assessments.isEmpty)
-              EmptyState(message: context.t('empty_generic'))
+              AppCard(
+                child: Text(
+                  context.t('empty_generic'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
             else
               AppCard(
                 padding: EdgeInsets.zero,
@@ -1035,6 +1034,91 @@ class _ReviewsTab extends ConsumerWidget {
           },
         );
       },
+    );
+  }
+}
+
+/// One goal of this level, the prototype's way: a ring that fills when met,
+/// the goal, a progress bar + "২/৪" when the detail carries a count, and
+/// the detail line.
+class _RequirementLine extends StatelessWidget {
+  const _RequirementLine({required this.req});
+  final LevelRequirement req;
+
+  /// The first "n/m" in the detail (Bengali or Latin digits), if any.
+  static (int, int)? countOf(String detail) {
+    const bnDigits = '০১২৩৪৫৬৭৮৯';
+    final ascii = detail.replaceAllMapped(
+      RegExp('[০-৯]'),
+      (m) => '${bnDigits.indexOf(m.group(0)!)}',
+    );
+    final m = RegExp(r'(\d+)\s*/\s*(\d+)').firstMatch(ascii);
+    if (m == null) return null;
+    final done = int.parse(m.group(1)!), total = int.parse(m.group(2)!);
+    return total <= 0 ? null : (done, total);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final count = countOf(req.detail);
+    final share = req.done ? 1.0 : (count == null ? null : (count.$1 / count.$2).clamp(0.0, 1.0));
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(SLSpacing.s16, SLSpacing.s12, SLSpacing.s16, SLSpacing.s12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            req.done ? PhosphorIconsFill.checkCircle : PhosphorIconsRegular.circle,
+            size: 24,
+            color: req.done ? cs.primary : cs.outline,
+          ),
+          const SizedBox(width: SLSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        req.label,
+                        style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                    if (count != null)
+                      Text(
+                        '${toBn(count.$1)}/${toBn(count.$2)}',
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                      ),
+                  ],
+                ),
+                if (share != null) ...[
+                  const SizedBox(height: SLSpacing.s4),
+                  ClipRRect(
+                    borderRadius: SLRadius.brPill,
+                    child: LinearProgressIndicator(
+                      value: share,
+                      minHeight: 6,
+                      backgroundColor: cs.outline,
+                      color: req.done ? cs.primary : cs.tertiary,
+                    ),
+                  ),
+                ],
+                if (req.detail.isNotEmpty) ...[
+                  const SizedBox(height: SLSpacing.s4),
+                  Text(
+                    req.detail,
+                    style: theme.textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

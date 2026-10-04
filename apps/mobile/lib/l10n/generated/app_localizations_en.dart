@@ -2359,4 +2359,59 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get bell_on_for_waqt => 'Alarm for this prayer';
+
+  @override
+  String get courses_ongoing => 'In progress';
+
+  @override
+  String get courses_done => 'Completed';
+
+  @override
+  String get courses_more => 'More courses';
+
+  @override
+  String get courses_all => 'All courses';
+
+  @override
+  String get quiz_past => 'Past live quizzes';
+
+  @override
+  String get quiz_take_it => 'Take this quiz';
+
+  @override
+  String get dawah_tab_mine => 'My path';
+
+  @override
+  String get notifications_foundation => 'From the Foundation';
+
+  @override
+  String get goal_reminder_set => 'Set a reminder';
+
+  @override
+  String get goal_reminder_pick => 'Remind me daily at';
+
+  @override
+  String get goal_reminder_daily => 'Daily at %time%';
+
+  @override
+  String get goal_reminder_change => 'Change';
+
+  @override
+  String get goal_reminder_off => 'Turn off';
+
+  @override
+  String get goal_reminder_body =>
+      'Did you meet it today? Note it in the diary.';
+
+  @override
+  String get prayer_forbidden_title => 'No prayer at these times';
+
+  @override
+  String get forbidden_short_sunrise => 'Sunrise';
+
+  @override
+  String get forbidden_short_zawal => 'Zawal';
+
+  @override
+  String get forbidden_short_sunset => 'Sunset';
 }

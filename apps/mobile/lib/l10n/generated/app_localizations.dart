@@ -727,7 +727,7 @@ abstract class AppLocalizations {
   /// No description provided for @dawah_requirements.
   ///
   /// In bn, this message translates to:
-  /// **'উন্নতির শর্তাবলি'**
+  /// **'এই স্তরের লক্ষ্য'**
   String get dawah_requirements;
 
   /// No description provided for @dawah_next_level.
@@ -4659,6 +4659,114 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'এই ওয়াক্তে অ্যালার্ম'**
   String get bell_on_for_waqt;
+
+  /// No description provided for @courses_ongoing.
+  ///
+  /// In bn, this message translates to:
+  /// **'চলমান কোর্স'**
+  String get courses_ongoing;
+
+  /// No description provided for @courses_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন কোর্স'**
+  String get courses_done;
+
+  /// No description provided for @courses_more.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও কোর্স'**
+  String get courses_more;
+
+  /// No description provided for @courses_all.
+  ///
+  /// In bn, this message translates to:
+  /// **'সব কোর্স'**
+  String get courses_all;
+
+  /// No description provided for @quiz_past.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগের লাইভ কুইজ'**
+  String get quiz_past;
+
+  /// No description provided for @quiz_take_it.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজটি দিন'**
+  String get quiz_take_it;
+
+  /// No description provided for @dawah_tab_mine.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার পথ'**
+  String get dawah_tab_mine;
+
+  /// No description provided for @notifications_foundation.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফাউন্ডেশনের ঘোষণা'**
+  String get notifications_foundation;
+
+  /// No description provided for @goal_reminder_set.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিমাইন্ডার দিন'**
+  String get goal_reminder_set;
+
+  /// No description provided for @goal_reminder_pick.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতিদিন কখন মনে করিয়ে দেব?'**
+  String get goal_reminder_pick;
+
+  /// No description provided for @goal_reminder_daily.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতিদিন %time%'**
+  String get goal_reminder_daily;
+
+  /// No description provided for @goal_reminder_change.
+  ///
+  /// In bn, this message translates to:
+  /// **'বদলান'**
+  String get goal_reminder_change;
+
+  /// No description provided for @goal_reminder_off.
+  ///
+  /// In bn, this message translates to:
+  /// **'রিমাইন্ডার বন্ধ'**
+  String get goal_reminder_off;
+
+  /// No description provided for @goal_reminder_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ লক্ষ্যটি পূরণ হয়েছে? ডায়েরিতে লিখে রাখুন।'**
+  String get goal_reminder_body;
+
+  /// No description provided for @prayer_forbidden_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজ পড়া নিষেধ'**
+  String get prayer_forbidden_title;
+
+  /// No description provided for @forbidden_short_sunrise.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূর্যোদয়'**
+  String get forbidden_short_sunrise;
+
+  /// No description provided for @forbidden_short_zawal.
+  ///
+  /// In bn, this message translates to:
+  /// **'যাওয়াল'**
+  String get forbidden_short_zawal;
+
+  /// No description provided for @forbidden_short_sunset.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূর্যাস্ত'**
+  String get forbidden_short_sunset;
 }
 
 class _AppLocalizationsDelegate

@@ -96,4 +96,36 @@ void main() {
     await _pump(tester, const []);
     expect(find.byKey(const ValueKey('upcoming_quizzes')), findsNothing);
   });
+
+  testWidgets('AMOL-16: past quizzes — newest first, recording + take it', (tester) async {
+    final db = AppDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final older = LiveProgramItem.fromJson({
+      'id': 'p1', 'titleBn': 'পুরনো কুইজ', 'startsAt': '2026-09-01T14:00:00Z', 'status': 'past', 'gender': 'M',
+      'quizId': 'quiz-salah', 'recordingUrl': 'https://youtu.be/rec',
+    });
+    final newer = LiveProgramItem.fromJson({
+      'id': 'p2', 'titleBn': 'নতুন কুইজ', 'startsAt': '2026-09-20T14:00:00Z', 'status': 'past', 'gender': 'M',
+      'quizId': 'quiz-aqeedah',
+    });
+    await tester.pumpWidget(ProviderScope(
+      overrides: [
+        dbProvider.overrideWithValue(db),
+        authProvider.overrideWith(() => _Member(null)),
+        liveProvider.overrideWith((ref) async => [older, newer]),
+      ],
+      child: MaterialApp(
+        theme: buildSunnahLightTheme(),
+        home: Scaffold(body: ListView(children: const [PastQuizzesSection()])),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    expect(find.text('আগের লাইভ কুইজ'), findsOneWidget);
+    expect(
+      tester.getTopLeft(find.text('নতুন কুইজ')).dy,
+      lessThan(tester.getTopLeft(find.text('পুরনো কুইজ')).dy),
+    );
+    expect(find.text('রেকর্ডিং দেখুন'), findsOneWidget); // only the recorded one
+    expect(find.text('কুইজটি দিন'), findsNWidgets(2));
+  });
 }

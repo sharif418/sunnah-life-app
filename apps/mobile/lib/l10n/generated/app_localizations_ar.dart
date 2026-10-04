@@ -2335,4 +2335,58 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get bell_on_for_waqt => 'منبّه لهذه الصلاة';
+
+  @override
+  String get courses_ongoing => 'قيد الدراسة';
+
+  @override
+  String get courses_done => 'المكتملة';
+
+  @override
+  String get courses_more => 'دورات أخرى';
+
+  @override
+  String get courses_all => 'كل الدورات';
+
+  @override
+  String get quiz_past => 'اختبارات مباشرة سابقة';
+
+  @override
+  String get quiz_take_it => 'خذ هذا الاختبار';
+
+  @override
+  String get dawah_tab_mine => 'طريقي';
+
+  @override
+  String get notifications_foundation => 'إعلانات المؤسسة';
+
+  @override
+  String get goal_reminder_set => 'اضبط تذكيرًا';
+
+  @override
+  String get goal_reminder_pick => 'ذكّرني يوميًا في';
+
+  @override
+  String get goal_reminder_daily => 'يوميًا %time%';
+
+  @override
+  String get goal_reminder_change => 'غيّر';
+
+  @override
+  String get goal_reminder_off => 'إيقاف';
+
+  @override
+  String get goal_reminder_body => 'هل حققته اليوم؟ سجّله في المذكرة.';
+
+  @override
+  String get prayer_forbidden_title => 'أوقات النهي عن الصلاة';
+
+  @override
+  String get forbidden_short_sunrise => 'الشروق';
+
+  @override
+  String get forbidden_short_zawal => 'الزوال';
+
+  @override
+  String get forbidden_short_sunset => 'الغروب';
 }

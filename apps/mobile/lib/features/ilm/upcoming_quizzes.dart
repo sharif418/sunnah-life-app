@@ -17,6 +17,8 @@ import '../../design/phosphor_icons.dart';
 import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart' show liveProvider;
+import '../../core/external_urls.dart' show livePlaybackUrl, openExternalApp;
+import '../shared/when_bn.dart';
 import '../shared/widgets.dart';
 
 /// Scheduled quizzes that are live now or still ahead (live first, then
@@ -181,5 +183,73 @@ class UpcomingQuizCard extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
+  }
+}
+
+/// AMOL-16: past live quizzes, newest first (the archive — anyone may watch
+/// the recording or take the same quiz alone).
+final pastQuizzesProvider = Provider<List<LiveProgramItem>>((ref) {
+  final programs = ref.watch(liveProvider).valueOrNull ?? const [];
+  return [
+    for (final p in programs)
+      if ((p.quizId ?? '').isNotEmpty && p.status == 'past') p,
+  ]..sort((a, b) => b.startsAt.compareTo(a.startsAt));
+});
+
+class PastQuizzesSection extends ConsumerWidget {
+  const PastQuizzesSection({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final list = ref.watch(pastQuizzesProvider);
+    if (list.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    return Column(
+      key: const ValueKey('past_quizzes'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(context.t('quiz_past'), icon: PhosphorIconsRegular.clockUser),
+        for (final p in list.take(20))
+          Padding(
+            padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+            child: AppCard(
+              key: ValueKey('past_quiz_${p.id}'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    p.titleBn,
+                    style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    whenBn(context, p.startsAt),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: SLSpacing.s8),
+                  Wrap(
+                    spacing: SLSpacing.s8,
+                    runSpacing: SLSpacing.s8,
+                    children: [
+                      if (livePlaybackUrl(recordingUrl: p.recordingUrl) case final url?)
+                        OutlinedButton.icon(
+                          icon: const Icon(PhosphorIconsRegular.playCircle, size: 18),
+                          label: Text(context.t('live_watch_recording')),
+                          onPressed: () => openExternalApp(url),
+                        ),
+                      TextButton.icon(
+                        icon: const Icon(PhosphorIconsRegular.play, size: 18),
+                        label: Text(context.t('quiz_take_it')),
+                        onPressed: () => context.push('/ilm/quizzes/${p.quizId}'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
   }
 }

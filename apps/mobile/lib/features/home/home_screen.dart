@@ -252,124 +252,118 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          // the schedule now sits below the muhasaba card + quick access; a
-          // lazily-built list would leave it unbuilt and the hero's
-          // "সময়সূচি দেখুন" (ensureVisible on its key) a dead tap — keep the
-          // first screens of the page built
-          scrollCacheExtent: const ScrollCacheExtent.pixels(2400),
-          // W5: the list must scroll CLEAR of the floating contact button
-          // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
-          padding: const EdgeInsets.fromLTRB(
-            SLSpacing.s16,
-            SLSpacing.s8,
-            SLSpacing.s16,
-            kContactFabClearance,
-          ),
-          children: [
-            // ── Global header (C-W4a): logo, location, triple calendar,
-            // notification/reminder/profile actions, sync badge. The date-bar
-            // logic that used to live here moved into it — no duplication.
-            const GlobalHeader(),
-
-            // ── Countdown ring hero (C-W4b) ──
-            // Same gradient family as the old countdown card, now a RING:
-            // the gold arc = REMAINING of the current waqt interval, the
-            // HH:MM:SS + arc tick every second (prayerProvider's per-second
-            // state), and the affordance row flies to the schedule below.
-            CountdownRingHero(
-              prayer: prayer,
-              lang: lang,
-              bn: bn,
-              onShowSchedule: _showSchedule,
-              todayPrayers: [
-                for (final key in const [
-                  PrayerKey.fajr,
-                  PrayerKey.dhuhr,
-                  PrayerKey.asr,
-                  PrayerKey.maghrib,
-                  PrayerKey.isha,
-                ])
-                  HeroPrayerStatus(
-                    label: context.t('waqt_${key.name}'),
-                    value: switch (ref
-                        .watch(amalProvider)
-                        .entry(prayer.dateKey, 'salat_${key.name}')
-                        ?.value) {
-                      final String v when v.isNotEmpty => v,
-                      _ => null,
-                    },
-                    started: prayer.nowMinutes >= prayer.times.byKey(key),
-                  ),
-              ],
-              onTapPrayers: () => context.go('/amal'),
+        // the shared header, hiding while scrolling down (BNAV-01)
+        child: ScrollAwareHeader(
+          body: ListView(
+            // the schedule now sits below the muhasaba card + quick access; a
+            // lazily-built list would leave it unbuilt and the hero's
+            // "সময়সূচি দেখুন" (ensureVisible on its key) a dead tap — keep the
+            // first screens of the page built
+            scrollCacheExtent: const ScrollCacheExtent.pixels(2400),
+            // W5: the list must scroll CLEAR of the floating contact button
+            // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
+            padding: const EdgeInsets.fromLTRB(
+              SLSpacing.s16,
+              SLSpacing.s8,
+              SLSpacing.s16,
+              kContactFabClearance,
             ),
-            const SizedBox(height: SLSpacing.s16),
+            children: [
+              // ── Countdown ring hero (C-W4b) ──
+              // Same gradient family as the old countdown card, now a RING:
+              // the gold arc = REMAINING of the current waqt interval, the
+              // HH:MM:SS + arc tick every second (prayerProvider's per-second
+              // state), and the affordance row flies to the schedule below.
+              CountdownRingHero(
+                prayer: prayer,
+                lang: lang,
+                bn: bn,
+                onShowSchedule: _showSchedule,
+                todayPrayers: [
+                  for (final key in const [
+                    PrayerKey.fajr,
+                    PrayerKey.dhuhr,
+                    PrayerKey.asr,
+                    PrayerKey.maghrib,
+                    PrayerKey.isha,
+                  ])
+                    HeroPrayerStatus(
+                      label: context.t('waqt_${key.name}'),
+                      value: switch (ref
+                          .watch(amalProvider)
+                          .entry(prayer.dateKey, 'salat_${key.name}')
+                          ?.value) {
+                        final String v when v.isNotEmpty => v,
+                        _ => null,
+                      },
+                      started: prayer.nowMinutes >= prayer.times.byKey(key),
+                    ),
+                ],
+                onTapPrayers: () => context.go('/amal'),
+              ),
+              const SizedBox(height: SLSpacing.s16),
 
-            // ── আজকের মুহাসাবা (the prototype's order: the diary first) ──
-            const _AmalPreviewSection(),
+              // ── আজকের মুহাসাবা (the prototype's order: the diary first) ──
+              const _AmalPreviewSection(),
 
-            // ── দ্রুত প্রবেশ ──
-            const _QuickAccessGrid(),
+              // ── দ্রুত প্রবেশ ──
+              const _QuickAccessGrid(),
 
+              // ── Schedule (the hero's in-page destination) ──
+              SectionHeader(
+                key: _scheduleKey,
+                context.t('prayer_schedule'),
+                icon: PhosphorIconsRegular.clock,
+              ),
+              _Schedule(
+                prayer: prayer,
+                bells: _bells,
+                bn: bn,
+                onBell: _openBellTiming,
+                onBellLongPress: _toggleBell, // quick toggle for those who know
+              ),
 
-            // ── Schedule (the hero's in-page destination) ──
-            SectionHeader(
-              key: _scheduleKey,
-              context.t('prayer_schedule'),
-              icon: PhosphorIconsRegular.clock,
-            ),
-            _Schedule(
-              prayer: prayer,
-              bells: _bells,
-              bn: bn,
-              onBell: _openBellTiming,
-              onBellLongPress: _toggleBell, // quick toggle for those who know
-            ),
+              // ── the weekly guest sign-up nudge (hidden for members) ──
+              const GuestNudgeCard(),
 
-            // ── the weekly guest sign-up nudge (hidden for members) ──
-            const GuestNudgeCard(),
-
-            // ── Forbidden times ──
-            SectionHeader(
-              context.t('prayer_forbidden_times'),
-              icon: PhosphorIconsRegular.prohibit,
-            ),
-            _ForbiddenTimes(prayer: prayer, bn: bn),
-
-            // ── Post-prayer prompt ──
-            if (prayer.postPrayerKey != null)
-              _PostPrayerPrompt(prayer: prayer, bn: bn),
-
-            // ── Exact alarm permission ──
-            if (_exactAlarmsGranted == false) ...[
+              // ── Forbidden times (one compact card, title inside) ──
               const SizedBox(height: SLSpacing.s12),
-              _ExactAlarmCard(onGrant: _checkExactAlarms),
-            ],
+              _ForbiddenTimes(prayer: prayer, bn: bn),
 
-            // ── সর্বাধিক ব্যবহৃত (C-W4b) ──
-            // Offline-first: ranked from the LOCAL Drift window (no API);
-            // guests see their own history, quick-log writes locally.
-            const _MostUsedSection(),
+              // ── Post-prayer prompt ──
+              if (prayer.postPrayerKey != null)
+                _PostPrayerPrompt(prayer: prayer, bn: bn),
 
-            // ── Ilm (C-W4b) ──
-            const _IlmSection(),
+              // ── Exact alarm permission ──
+              if (_exactAlarmsGranted == false) ...[
+                const SizedBox(height: SLSpacing.s12),
+                _ExactAlarmCard(onGrant: _checkExactAlarms),
+              ],
 
-            // ── Live preview (C-W4b) — public data; hidden when nothing
-            // upcoming or while it loads/offline-fails.
-            const _LivePreviewSection(),
+              // ── সর্বাধিক ব্যবহৃত (C-W4b) ──
+              // Offline-first: ranked from the LOCAL Drift window (no API);
+              // guests see their own history, quick-log writes locally.
+              const _MostUsedSection(),
 
-            const SizedBox(height: SLSpacing.s24),
-            Center(
-              child: Text(
-                '${context.t('prayer_offline_chip')} · ${city?.nameEn ?? ''} ${bn ? toBn(profile.lat.toStringAsFixed(2)) : profile.lat.toStringAsFixed(2)}°, ${bn ? toBn(profile.lng.toStringAsFixed(2)) : profile.lng.toStringAsFixed(2)}°',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+              // ── Ilm (C-W4b) ──
+              const _IlmSection(),
+
+              // ── Live preview (C-W4b) — public data; hidden when nothing
+              // upcoming or while it loads/offline-fails.
+              const _LivePreviewSection(),
+
+              const SizedBox(height: SLSpacing.s24),
+              Center(
+                child: Text(
+                  '${context.t('prayer_offline_chip')} · ${city?.nameEn ?? ''} ${bn ? toBn(profile.lat.toStringAsFixed(2)) : profile.lat.toStringAsFixed(2)}°, ${bn ? toBn(profile.lng.toStringAsFixed(2)) : profile.lng.toStringAsFixed(2)}°',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -965,7 +959,10 @@ class _LivePreviewSection extends ConsumerWidget {
                         padding: const EdgeInsets.only(top: SLSpacing.s8),
                         child: FilledButton.icon(
                           key: const ValueKey('home_live_watch'),
-                          icon: const Icon(PhosphorIconsFill.broadcast, size: 18),
+                          icon: const Icon(
+                            PhosphorIconsFill.broadcast,
+                            size: 18,
+                          ),
                           label: Text(context.t('live_watch_now')),
                           onPressed: () => openExternalApp(watchUrl),
                         ),
@@ -1109,9 +1106,9 @@ class _ForbiddenTimes extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = prayer.times;
     final windows = [
-      (context.t('prayer_forbidden_sunrise'), t.sunrise - 15, t.sunrise + 20),
-      (context.t('prayer_forbidden_zawal'), t.dhuhr - 10, t.dhuhr + 5),
-      (context.t('prayer_forbidden_sunset'), t.sunset - 15, t.sunset + 5),
+      (context.t('forbidden_short_sunrise'), t.sunrise - 15, t.sunrise + 20),
+      (context.t('forbidden_short_zawal'), t.dhuhr - 10, t.dhuhr + 5),
+      (context.t('forbidden_short_sunset'), t.sunset - 15, t.sunset + 5),
     ];
     final theme = Theme.of(context);
     // Spec §2.1 — a calm caution, not an alarm: light alert-tinted surface
@@ -1134,14 +1131,29 @@ class _ForbiddenTimes extends StatelessWidget {
         border: Border.all(color: alertFg.withValues(alpha: 0.25), width: 1),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          Row(
+            children: [
+              Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
+              const SizedBox(width: SLSpacing.s8),
+              Expanded(
+                child: Text(
+                  context.t('prayer_forbidden_title'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: alertFg,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
           for (final (label, from, to) in windows)
             ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 36),
+              constraints: const BoxConstraints(minHeight: 30),
               child: Row(
                 children: [
-                  Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
-                  const SizedBox(width: SLSpacing.s8),
+                  const SizedBox(width: 26),
                   Expanded(
                     child: Text(
                       label,
@@ -1221,8 +1233,8 @@ class _Schedule extends StatelessWidget {
     final isNext = key == prayer.nextKey;
     final label = _prayerLabel(key, context.lang);
     final bellOn = bells.contains(key.name);
-    return Opacity(
-      opacity: isCurrent || isNext || key == PrayerKey.tahajjud ? 1 : 0.75,
+    return Container(
+      key: ValueKey('schedule_row_${key.name}'),
       child: Container(
         decoration: BoxDecoration(
           color: isCurrent
@@ -1237,33 +1249,42 @@ class _Schedule extends StatelessWidget {
             vertical: 0,
           ),
           minVerticalPadding: 6,
-          leading: isCurrent
-              ? Icon(
-                  PhosphorIconsRegular.record,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                )
-              : Icon(
-                  PhosphorIconsRegular.circle,
-                  color: theme.colorScheme.outline,
-                  size: 12,
+          title: Wrap(
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: SLSpacing.s8,
+            children: [
+              Text(
+                label,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
+                  color: isCurrent ? theme.colorScheme.primary : null,
                 ),
-          title: Text(
-            label,
-            style: theme.textTheme.bodyLarge?.copyWith(
-              fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w500,
-              color: isCurrent ? theme.colorScheme.primary : null,
-            ),
-          ),
-          subtitle: isNext
-              ? Text(
-                  context.t('prayer_next'),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.w600,
+              ),
+              if (isCurrent || isNext)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 1,
                   ),
-                )
-              : null,
+                  decoration: BoxDecoration(
+                    color: isCurrent
+                        ? theme.colorScheme.surface
+                        : theme.colorScheme.surfaceContainerHighest,
+                    borderRadius: SLRadius.brPill,
+                  ),
+                  child: Text(
+                    context.t(isCurrent ? 'notif_now' : 'notif_next'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 12,
+                      color: isCurrent
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+            ],
+          ),
           // W5: the corrected midday label 'দুপুর' is wider than the old
           // 'সকাল' — at 360dp @1.3× text scale the time + bell needed ~6px
           // more than the tile had, and ListTile hard-asserts when the
@@ -1286,7 +1307,7 @@ class _Schedule extends StatelessWidget {
                     child: Text(
                       formatTimeBn(mins, bengali: bn),
                       style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
@@ -1334,9 +1355,11 @@ class _BellButton extends StatelessWidget {
           width: SLSpacing.minTapTarget,
           height: SLSpacing.minTapTarget,
           child: Icon(
-            on ? PhosphorIconsRegular.bellRinging : PhosphorIconsRegular.bell,
+            on ? PhosphorIconsFill.bell : PhosphorIconsRegular.bell,
             size: 20,
-            color: on ? theme.colorScheme.tertiary : theme.colorScheme.outline,
+            color: on
+                ? theme.colorScheme.primary
+                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
           ),
         ),
       ),

@@ -59,6 +59,10 @@ abstract final class Nid {
   /// cancelled the moment the user signs in.
   static const int guestNudge = 6100;
 
+  /// Per-goal daily reminders (NAV-04): base + a stable hash of the goal id
+  /// % 500 — see features/amal/goal_reminder.dart.
+  static const int goalReminderBase = 6200;
+
   static const int _dayStride = 16;
 
   /// Bell notification id for [key] on the day [dayOffset] days from today.
