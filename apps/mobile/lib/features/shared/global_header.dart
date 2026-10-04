@@ -248,6 +248,10 @@ class _ScrollAwareHeaderState extends State<ScrollAwareHeader> {
   bool _onScroll(ScrollNotification n) {
     if (n.metrics.axis != Axis.vertical) return false; // chips rows, tab swipes
     if (n is! ScrollUpdateNotification) return false;
+    // only the member's own finger moves the header: a layout correction at
+    // the end of the list (the viewport grows as the header slides away)
+    // must not bring it back and shove the last rows off-screen
+    if (n.dragDetails == null) return false;
     final delta = n.scrollDelta ?? 0;
     final nearTop = n.metrics.pixels <= n.metrics.minScrollExtent + 24;
     // a small dead-band so a resting finger does not flicker the header
