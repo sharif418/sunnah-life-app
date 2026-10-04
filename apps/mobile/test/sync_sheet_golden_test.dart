@@ -34,6 +34,7 @@ import 'package:sunnah_life/l10n/generated/app_localizations.dart';
 import 'package:sunnah_life/state/amal_state.dart';
 import 'package:sunnah_life/state/providers.dart';
 
+import 'golden_fixtures.dart' show GoldenSignedInDaee;
 import 'golden_fonts.dart' show warmAppFonts;
 
 /// The pinned instant: 2025-06-15 12:00 (local-wall irrelevant — only the
@@ -100,6 +101,8 @@ void main() {
       // Pinned clock: the relative "last synced" label is pure arithmetic
       // on now − lastSyncedAt, so the golden never drifts with the calendar.
       syncClockProvider.overrideWithValue(() => _kNow),
+      // the badge is a member-only control (guests never sync)
+      authProvider.overrideWith(GoldenSignedInDaee.new),
       syncProvider.overrideWith(
         () => _FixedSyncNotifier(
           SyncState(
