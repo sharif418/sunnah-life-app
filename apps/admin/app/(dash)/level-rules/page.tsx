@@ -484,7 +484,7 @@ export default function LevelRulesPage() {
           <div className="space-y-4">
             {rules.data?.packNote ? (
               <div className="rounded-lg border border-gold/40 bg-gold-soft/60 p-3.5 text-xs leading-relaxed text-foreground dark:text-gold">
-                <strong>প্যাক নোট:</strong> {rules.data.packNote}
+                {rules.data.packNote}
               </div>
             ) : null}
 

@@ -365,15 +365,22 @@ export class UsrahQuestionsService {
     const user = this.guard.requireUser(viewer);
     const usrahId = user.usrahId;
     if (!usrahId) return { questions: [] };
-    const rows = (await this.rls.run(user, (tx) =>
-      tx.usrahQuestion.findMany({
-        where: { usrahId },
-        orderBy: { createdAt: "desc" },
-        take: 50,
-        include: { author: { select: { name: true } }, answeredBy: { select: { name: true } } },
-      })
-    )) as unknown as UsrahQuestionRow[];
-    return { questions: rows.map(toQuestionDto) };
+    const rows = await this.rls.run(user, (tx) =>
+      tx.usrahQuestion.findMany({ where: { usrahId }, orderBy: { createdAt: "desc" }, take: 50 })
+    );
+    // names only, outside the member's RLS scope (a plain member cannot see
+    // peers' or the head's User rows — an include came back null → 500)
+    const ids = [...new Set(rows.flatMap((r) => [r.authorId, r.answeredById]).filter((x): x is string => !!x))];
+    const people = ids.length
+      ? await this.rls.system((tx) => tx.user.findMany({ where: { id: { in: ids } }, select: { id: true, name: true } }))
+      : [];
+    const byId = new Map(people.map((p) => [p.id, { name: p.name }]));
+    const withNames = rows.map((r) => ({
+      ...r,
+      author: (r.authorId && byId.get(r.authorId)) || null,
+      answeredBy: (r.answeredById && byId.get(r.answeredById)) || null,
+    })) as unknown as UsrahQuestionRow[];
+    return { questions: withNames.map(toQuestionDto) };
   }
 
   /** POST /api/usrah-questions — a member asks inside their own usrah. */

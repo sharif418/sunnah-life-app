@@ -203,6 +203,8 @@ export interface AuditEntry {
   id: string;
   actorId: string | null;
   actorName?: string | null;
+  /** the member the action touched, when it touched one */
+  targetName?: string | null;
   action: string;
   targetType: string;
   targetId: string | null;
@@ -578,6 +580,16 @@ export interface MonthlyReportItem {
   generatedAt: string;
 }
 
+/** What is waiting for this admin (nav badges + the dashboard's to-do).
+ * The inbox counts are null for roles that cannot open those inboxes. */
+export interface AdminQueues {
+  reviews: number;
+  support: number | null;
+  masala: number | null;
+  feedback: number | null;
+  joinRequests: number | null;
+}
+
 // ── endpoints ────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -617,6 +629,7 @@ export const api = {
 
   // admin
   overview: () => call<AdminOverview>("/api/admin/overview"),
+  queues: () => call<AdminQueues>("/api/admin/queues"),
   users: (q: string) => call<{ users: User[] }>(`/api/admin/users?q=${encodeURIComponent(q)}`),
   importUsers: (rows: Record<string, string>[], dryRun: boolean, offset: number) =>
     call<MemberImportResponse>("/api/admin/users/import", { method: "POST", json: { rows, dryRun, offset } }),
@@ -638,6 +651,8 @@ export const api = {
     call<{ transitions: LevelTransitionItem[] }>("/api/admin/level-transitions"),
   monthGrid: (userId: string, month: string) =>
     call<{ grid: MonthGrid }>(`/api/admin/month-grid?userId=${userId}&month=${month}`),
+  /** The Foundation-wide announcements everyone sees in the app (public). */
+  publicAnnouncements: () => call<{ announcements: Announcement[] }>("/api/announcements"),
   broadcast: (dto: { usrahId?: string | null; gender?: Gender | null; body: string }) =>
     call<{ ok: boolean }>("/api/admin/broadcast", { method: "POST", json: dto }),
   upsertCatalog: (dto: {

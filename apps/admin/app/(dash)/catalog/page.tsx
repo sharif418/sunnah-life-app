@@ -345,13 +345,6 @@ export default function CatalogPage() {
         cell: (c) => <span className="tabular-nums">{toBn(c.getValue<number>())}</span>,
       },
       {
-        accessorKey: "key",
-        header: "কী",
-        cell: (c) => (
-          <span className="font-mono text-xs text-muted-foreground">{String(c.getValue())}</span>
-        ),
-      },
-      {
         accessorKey: "titleBn",
         header: "আমল",
         cell: (c) => (

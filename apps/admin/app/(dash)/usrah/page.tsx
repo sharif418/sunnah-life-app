@@ -4,19 +4,19 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Megaphone, Pin, Plus, TrendingDown, UserCheck, UserMinus, UserPlus, UserRound, UserRoundX, UsersRound } from "lucide-react";
+import { Megaphone, Pin, Plus, TrendingDown, UserCheck, UserMinus, UserPlus, UserRound, UserRoundX, UsersRound, Users } from "lucide-react";
 import type { ColumnDef } from "@tanstack/react-table";
 import { api, type Gender, type UsrahJoinRequestItem, type User, type UsrahMember } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { relativeBn, toBn } from "@/lib/bn";
-import { JOIN_STATUS_LABELS_BN, ROLE_LABELS_BN } from "@/lib/labels";
+import { JOIN_STATUS_LABELS_BN, ROLE_LABELS_BN, districtBn } from "@/lib/labels";
 import { BothGendersBadge, CategoryBadge, FScopeBadge, GenderBadge, LevelBadge, RoleBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
 import { Field, Input, Select } from "@/components/ui/input";
-import { EmptyState, ErrorState } from "@/components/ui/states";
+import { EmptyState, ErrorState, PageHeading } from "@/components/ui/states";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -135,7 +135,7 @@ function OwnUsrahView() {
           <div>
             <CardTitle className="text-lg">{usrah.name}</CardTitle>
             <CardDescription>
-              প্রধান: {usrah.headName ?? "—"} · জেলা: {usrah.district ?? "—"} · সদস্য {toBn(usrah.memberCount ?? usrah.members.length)} জন
+              প্রধান: {usrah.headName ?? "—"} · জেলা: {districtBn(usrah.district)} · সদস্য {toBn(usrah.memberCount ?? usrah.members.length)} জন
             </CardDescription>
           </div>
           <GenderBadge gender={usrah.gender} />
@@ -340,7 +340,7 @@ function JoinRequestSection() {
                             <option value="">উসরা নির্বাচন করুন…</option>
                             {sameGenderUsrahs.map((u) => (
                               <option key={u.id} value={u.id}>
-                                {u.name} {u.district ? `· ${u.district}` : ""}
+                                {u.name} {u.district ? `· ${districtBn(u.district)}` : ""}
                               </option>
                             ))}
                           </Select>
@@ -532,7 +532,7 @@ function UsrahManageSection() {
                       <p className="truncate text-sm font-semibold">{u.name}</p>
                       <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                         <GenderBadge gender={u.gender} /> · {toBn(members.length)} সদস্য
-                        {u.district ? ` · ${u.district}` : ""}
+                        {u.district ? ` · ${districtBn(u.district)}` : ""}
                       </p>
                     </div>
                     <Button
@@ -787,6 +787,11 @@ export default function UsrahPage() {
   if (user?.usrahId && !fullAdmin) return <OwnUsrahView />;
   return (
     <div className="space-y-6">
+      <PageHeading
+        icon={<Users className="h-6 w-6" aria-hidden />}
+        title="উসরা"
+        description="উসরায় যোগ দেওয়ার অনুরোধ, নতুন উসরা, সদস্য বদল ও প্রতিটি উসরার অবস্থা।"
+      />
       {fullAdmin ? <JoinRequestSection /> : null}
       {fullAdmin ? <UsrahManageSection /> : null}
       <InvigilatorView />

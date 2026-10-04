@@ -37,10 +37,20 @@ export class ReviewsService {
           where: { userId: user.id },
           orderBy: { createdAt: "desc" },
           take: 60,
-          include: { reviewer: { select: { name: true } } },
         })
-      )) as unknown as (ReviewRow & { reviewer?: { name: string } })[];
-      return { reviews: rows.map((r) => mapReview(r, r.reviewer?.name ?? null)) };
+      )) as unknown as ReviewRow[];
+      // The reviewer's NAME only, looked up outside the member's RLS scope:
+      // a review by someone the member cannot see (a full admin or an
+      // invigilator reviewing a usrah head) made the relation include come
+      // back null and the member's whole review history fail with a 500.
+      const reviewerIds = [...new Set(rows.map((r) => r.reviewerId).filter((x): x is string => !!x))];
+      const reviewers = reviewerIds.length
+        ? await this.rls.system((tx) =>
+            tx.user.findMany({ where: { id: { in: reviewerIds } }, select: { id: true, name: true } })
+          )
+        : [];
+      const names = new Map(reviewers.map((r) => [r.id, r.name]));
+      return { reviews: rows.map((r) => mapReview(r, (r.reviewerId && names.get(r.reviewerId)) || null)) };
     }
 
     if (!this.guard.isSupervisor(user)) throw new ApiError(403, "রিভিউ সারণি দেখার অনুমতি নেই");

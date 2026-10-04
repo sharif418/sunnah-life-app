@@ -15,7 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable } from "@/components/ui/data-table";
-import { EmptyState } from "@/components/ui/states";
+import { EmptyState, PageHeading } from "@/components/ui/states";
 import { useToast } from "@/components/ui/toast";
 
 export default function ReviewsPage() {
@@ -128,14 +128,16 @@ export default function ReviewsPage() {
 
   return (
     <div className="space-y-6">
+      <PageHeading
+        icon={<ClipboardCheck className="h-6 w-6" aria-hidden />}
+        title="সাপ্তাহিক রিভিউ"
+        description="প্রতি সপ্তাহে প্রত্যেক দায়ীর আমল দেখে মন্তব্য, রেটিং ও আগামী সপ্তাহের লক্ষ্য দিন।"
+      />
       <Card>
         <CardHeader className="flex-row flex-wrap items-center justify-between gap-3">
           <div>
-            <CardTitle>রিভিউ কিউ — এই সপ্তাহে প্রত্যাশিত</CardTitle>
-            <CardDescription>
-              সপ্তাহ শুরু (শনিবার): {dateLabelBn(currentWeek)} · প্রতি দায়ীর জন্য সাপ্তাহিক রিভিউ
-              বাধ্যতামূলক
-            </CardDescription>
+            <CardTitle>এই সপ্তাহের রিভিউ</CardTitle>
+            <CardDescription>সপ্তাহ শুরু শনিবার, {dateLabelBn(currentWeek)}</CardDescription>
           </div>
           <div className="flex items-center gap-1.5" role="group" aria-label="ফিল্টার">
             {(

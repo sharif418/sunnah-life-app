@@ -557,14 +557,14 @@ export default function ContentPage() {
         <PageHeading
           icon={<BookOpen className="h-6 w-6" aria-hidden />}
           title="কন্টেন্ট ম্যানেজমেন্ট"
-          description="অ্যাপের কন্টেন্ট প্যাক সম্পাদনা — সংরক্ষণ তাৎক্ষণিকভাবে সব ব্যবহারকারীর কাছে যায়, প্রতিটি লেখা অডিট-লগড।"
+          description="অ্যাপে যা দেখা যায় — জিজ্ঞাসা, আর্টিকেল, মসজিদ, দোয়া, কোর্স ও কুইজ। সংরক্ষণ করলেই সবার অ্যাপে পৌঁছে যায়।"
         />
 
         <div className="rounded-lg border border-border bg-primary-soft p-3.5 text-xs leading-relaxed text-foreground">
           <Info className="mr-1 inline h-3.5 w-3.5" aria-hidden />
           সংরক্ষণ সার্ভারের স্থায়ী স্টোরেজে যায় — রিডেপ্লয়েও থাকে। কোর্স ও কুইজের আইডি একবার দিলে আর বদলাবেন না
-          (সদস্যদের অগ্রগতি ও ফলাফল আইডিতে বাঁধা)। কুরআন ও রেফারেন্স প্যাক (adhkar, names99, sunnahs…) এখানে
-          সম্পাদনাযোগ্য নয়।
+          (সদস্যদের অগ্রগতি ও ফলাফল আইডিতে বাঁধা)। কুরআন, আযকার, আল্লাহর ৯৯ নাম ও সুন্নাহর তালিকা এখান থেকে
+          বদলানো যায় না।
         </div>
 
         <Tabs defaultValue="faq" aria-label="কন্টেন্ট প্যাক">

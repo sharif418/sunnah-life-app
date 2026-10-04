@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
+  BookOpenCheck,
   ChevronRight,
+  Headset,
+  MessageSquareText,
   ClipboardCheck,
   FileCheck2,
   ListTodo,
@@ -228,8 +231,7 @@ function InvigilatorHealthSection({ role }: { role: string }) {
             <ScoreBadge score={self.score} />
           </CardTitle>
           <CardDescription>
-            স্কোর = ০.৩৫×সাপ্তাহিক রিভিউ + ০.৩৫×আমল সম্পূর্ণতা + ০.২০×সক্রিয়তা + ০.১০×সময়মতো —
-            আপনার লিঙ্গ-পরিসরের সদস্যদের ওপর হিসাব ({toBn(self.memberCount)} সদস্য)
+            রিভিউ, আমল, সক্রিয়তা ও সময়মতো কাজের ভিত্তিতে — আপনার পরিসরের {toBn(self.memberCount)} সদস্য
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -260,9 +262,7 @@ function InvigilatorHealthSection({ role }: { role: string }) {
           <Activity className="h-[18px] w-[18px] text-primary" aria-hidden />
           পরিদর্শকদের তত্ত্বাবধান স্বাস্থ্য ({toBn(rows.length)} জন)
         </CardTitle>
-        <CardDescription>
-          সারিতে চাপ দিয়ে উপাদান দেখুন — স্কোর = ০.৩৫×রিভিউ + ০.৩৫×আমল + ০.২০×সক্রিয়তা + ০.১০×সময়মতো
-        </CardDescription>
+        <CardDescription>রিভিউ, আমল, সক্রিয়তা ও সময়মতো কাজের ভিত্তিতে — বিস্তারিত দেখতে সারিতে চাপুন</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {rows.map((h) => (
@@ -318,6 +318,96 @@ function InvigilatorHealthRowView({ h }: { h: InvigilatorHealthRow }) {
   );
 }
 
+interface Queue {
+  n: number | null | undefined;
+  label: string;
+  done: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+/** One waiting queue: the count, what it is, where to go. */
+function TodoTile({ q }: { q: Queue }) {
+  const Icon = q.icon;
+  return (
+    <Link
+      href={q.href}
+      className="focus-ring flex min-h-20 items-center gap-3 rounded-lg border border-gold/60 bg-gold-soft p-4 transition-shadow duration-200 hover:shadow-lifted"
+    >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-gold text-gold-foreground">
+        <Icon className="h-5 w-5" aria-hidden />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-2xl font-bold leading-tight tabular-nums">{toBn(q.n ?? 0)}</p>
+        <p className="text-sm font-medium">{q.label}</p>
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+    </Link>
+  );
+}
+
+/** "আজকের কাজ": what is waiting comes first as cards; queues with nothing
+ * waiting collapse into one quiet line of ticks instead of five empty boxes. */
+function TodaysWork({ fullAdmin }: { fullAdmin: boolean }) {
+  const q = useQuery({ queryKey: ["admin-queues"], queryFn: () => api.queues(), refetchInterval: 60_000 });
+  const d = q.data;
+  const queues: Queue[] = [
+    { n: d?.reviews, label: "সাপ্তাহিক রিভিউ বাকি", done: "রিভিউ", href: "/reviews", icon: ClipboardCheck },
+    ...(fullAdmin
+      ? [
+          { n: d?.joinRequests, label: "উসরায় যোগ দেওয়ার অনুরোধ", done: "উসরার অনুরোধ", href: "/usrah", icon: Users },
+          { n: d?.support, label: "সাপোর্ট বার্তার উত্তর বাকি", done: "সাপোর্ট", href: "/support", icon: Headset },
+          { n: d?.masala, label: "মাসআলার উত্তর বাকি", done: "মাসআলা", href: "/masala", icon: BookOpenCheck },
+          { n: d?.feedback, label: "নতুন মতামত", done: "মতামত", href: "/feedback", icon: MessageSquareText },
+        ]
+      : []),
+  ];
+  const waiting = queues.filter((x) => (x.n ?? 0) > 0);
+  const clear = queues.filter((x) => !((x.n ?? 0) > 0));
+  return (
+    <section aria-label="আজকের কাজ" className="space-y-3">
+      <h3 className="text-base font-bold">আজকের কাজ</h3>
+      {q.isLoading ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="skeleton h-20" />
+          <div className="skeleton h-20" />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {waiting.map((x) => (
+              <TodoTile key={x.href} q={x} />
+            ))}
+            <Link
+              href="/assessments"
+              className="focus-ring flex min-h-20 items-center gap-3 rounded-lg border border-dashed border-border bg-card p-4 transition-shadow duration-200 hover:shadow-lifted"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
+                <FileCheck2 className="h-5 w-5" aria-hidden />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">নতুন মূল্যায়ন নিন</p>
+                <p className="text-xs text-muted-foreground">ফরযে আইন মূল্যায়ন ফর্ম</p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </Link>
+          </div>
+          {clear.length ? (
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span className="font-semibold text-success">✓ কিছু বাকি নেই:</span>
+              {clear.map((x) => (
+                <Link key={x.href} href={x.href} className="focus-ring rounded hover:text-primary hover:underline">
+                  {x.done}
+                </Link>
+              ))}
+            </p>
+          ) : null}
+        </>
+      )}
+    </section>
+  );
+}
+
 export default function OverviewPage() {
   const { user, fullAdmin } = useSession();
 
@@ -355,10 +445,12 @@ export default function OverviewPage() {
         </div>
       </section>
 
+      <TodaysWork fullAdmin={!!fullAdmin} />
+
       {overview.isError ? (
         <ErrorState error={overview.error} onRetry={() => overview.refetch()} />
       ) : (
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="সারসংক্ষেপ">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="সারসংক্ষেপ">
           <StatCard
             label="পরিসরের সদস্য"
             value={overview.data?.totals.users ?? null}
@@ -367,13 +459,6 @@ export default function OverviewPage() {
           />
           <StatCard label="দায়ী" value={overview.data?.totals.daees ?? null} icon={UserRoundCheck} hint="সক্রিয় দাওয়াত কর্মী" />
           <StatCard label="উসরা" value={overview.data?.totals.usrahs ?? null} icon={Users} hint="তত্ত্বাবধানের উসরা" />
-          <StatCard
-            label="অপেক্ষমাণ রিভিউ"
-            value={overview.data?.totals.pendingReviews ?? null}
-            icon={ListTodo}
-            hint={overdue > 0 ? `বিলম্বিত: ${toBn(overdue)}টি` : "কোনো বিলম্বিত নেই"}
-            href="/reviews"
-          />
         </section>
       )}
 
@@ -497,24 +582,6 @@ export default function OverviewPage() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Link href="/assessments" className="focus-ring block rounded-lg">
-              <Card className="h-full transition-shadow duration-200 hover:shadow-lifted">
-                <CardContent className="flex items-center gap-3 pt-5">
-                  <FileCheck2 className="h-6 w-6 text-gold" aria-hidden />
-                  <span className="text-sm font-semibold">নতুন মূল্যায়ন</span>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href="/live" className="focus-ring block rounded-lg">
-              <Card className="h-full transition-shadow duration-200 hover:shadow-lifted">
-                <CardContent className="flex items-center gap-3 pt-5">
-                  <Radio className="h-6 w-6 text-gold" aria-hidden />
-                  <span className="text-sm font-semibold">লাইভ প্রোগ্রাম</span>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
         </div>
       </div>
     </div>
