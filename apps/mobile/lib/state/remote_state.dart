@@ -123,7 +123,9 @@ final quizPackProvider = FutureProvider<List<Quiz>>((ref) async {
   final auth = ref.watch(authProvider);
   auth.signedIn; // re-resolve when the session flips
   try {
-    return await ref.watch(apiProvider).quizPack();
+    final remote = await ref.watch(apiProvider).quizPack();
+    // an empty answer is no reason to show an empty screen
+    return remote.isNotEmpty ? remote : await ContentPack.quizzes();
   } on ApiException {
     return ContentPack.quizzes();
   }

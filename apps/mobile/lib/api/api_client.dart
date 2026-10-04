@@ -890,11 +890,19 @@ class ApiClient {
     },
   );
 
-  /// GET /api/content/quizzes — the quiz pack (server mirror; the bundled
-  /// asset is the offline fallback).
+  /// GET /api/content/:pack — the pack document the admin CMS edits. The
+  /// route answers `{pack, data}`; reading the top level (as quizPack did)
+  /// found nothing, so the app silently showed an EMPTY quiz list.
+  Future<Map<String, dynamic>?> contentPackData(String key) async {
+    final j = await _req('GET', '/api/content/${Uri.encodeComponent(key)}');
+    final data = j['data'];
+    return data is Map ? data.cast<String, dynamic>() : null;
+  }
+
+  /// The quiz pack from the server (see [contentPackData]).
   Future<List<Quiz>> quizPack() async {
-    final j = await _req('GET', '/api/content/quizzes');
-    return ((j['quizzes'] as List?) ?? [])
+    final data = await contentPackData('quizzes');
+    return ((data?['quizzes'] as List?) ?? [])
         .whereType<Map>()
         .map((e) => Quiz.fromJson(e.cast<String, dynamic>()))
         .toList();

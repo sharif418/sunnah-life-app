@@ -6,6 +6,7 @@ library;
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 // ── Pack models (mirror domain.ts content interfaces) ────────────────────────
@@ -497,9 +498,52 @@ class ContentPack {
 
   @visibleForTesting
   static void resetForTesting() {
+    remote = null;
     _loadAsset = rootBundle.loadString;
     _cache.clear();
     _loading.clear();
+  }
+
+  /// The admin-editable packs, by file → API pack key. These load from the
+  /// server first (so a CMS edit reaches the app), then the last copy kept
+  /// on the phone (offline), then the bundled asset.
+  static const Map<String, String> _remotePacks = {
+    'duas.json': 'duas',
+    'articles.json': 'articles',
+    'faq.json': 'faq',
+    'mosques.json': 'mosques',
+    'quizzes.json': 'quizzes',
+  };
+
+  /// Set at app start (GET /api/content/:pack). Null in tests → the bundle.
+  static Future<Map<String, dynamic>?> Function(String packKey)? remote;
+
+  static Future<Map<String, dynamic>?> _remoteOrCached(String file) async {
+    final key = _remotePacks[file];
+    final fetch = remote;
+    if (key == null || fetch == null) return null;
+    final prefsKey = 'content_pack_cache_$file';
+    try {
+      final data = await fetch(key).timeout(const Duration(seconds: 6));
+      if (data != null && data.isNotEmpty) {
+        try {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString(prefsKey, jsonEncode(data));
+        } catch (_) {}
+        return data;
+      }
+    } catch (_) {
+      // offline / server error → the copy from last time
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(prefsKey);
+      if (raw != null) {
+        final d = jsonDecode(raw);
+        if (d is Map<String, dynamic>) return d;
+      }
+    } catch (_) {}
+    return null;
   }
 
   static Future<Map<String, dynamic>> _load(String file) {
@@ -507,6 +551,12 @@ class ContentPack {
     if (cached != null) return Future.value(cached);
     return _loading[file] ??= () async {
       try {
+        final fresh = await _remoteOrCached(file);
+        if (fresh != null) {
+          _cache[file] = fresh;
+          _loading.remove(file);
+          return fresh;
+        }
         final raw = await _loadAsset('assets/content/$file');
         final decoded = jsonDecode(raw);
         final data =

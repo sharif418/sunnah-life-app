@@ -67,6 +67,7 @@ import 'models/domain.dart';
 import 'services/notification_service.dart';
 import 'services/push_service.dart';
 import 'services/app_link_service.dart';
+import 'models/content_models.dart' show ContentPack;
 import 'state/amal_state.dart';
 import 'state/prayer_state.dart';
 import 'state/providers.dart';
@@ -80,6 +81,9 @@ final bootstrapProvider = FutureProvider<void>((ref) async {
   ref.read(profileProvider.notifier).hydrateFrom(row);
   // Offline-first background sync: 60s outbox flush (see SyncNotifier).
   ref.read(syncProvider.notifier).startPeriodicFlush();
+  // The admin-editable content packs (duas, articles, FAQ, mosques,
+  // quizzes) load from the server first, so a CMS edit reaches the app.
+  ContentPack.remote = (key) => ref.read(apiProvider).contentPackData(key);
   // Post-prayer জামাতে/একা/কাযা action taps that reach the FOREGROUND
   // callback go through the same Riverpod flow as the in-app prompt
   // (optimistic state + shared DB connection + debounced sync flush);
