@@ -312,7 +312,7 @@ class _SkeletonState extends State<Skeleton>
 class SyncBadge extends ConsumerWidget {
   const SyncBadge({super.key});
 
-  /// idle / syncing / pending N / dead M (error accent, only when M > 0).
+  /// syncing / pending N / dead M (error accent); nothing while idle.
   /// Tapping opens the sync sheet (counts, last sync, dead entries, sync now).
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -320,6 +320,10 @@ class SyncBadge extends ConsumerWidget {
     final theme = Theme.of(context);
     final hasDead = sync.dead > 0;
     final hasPending = sync.pending > 0;
+    // Quiet when there is nothing to say: the badge appears only while
+    // something is syncing, waiting to upload or has failed (a permanent
+    // grey tick next to the profile read as an unexplained control).
+    if (!sync.syncing && !hasDead && !hasPending) return const SizedBox.shrink();
 
     final Widget indicator;
     if (sync.syncing) {
@@ -334,17 +338,11 @@ class SyncBadge extends ConsumerWidget {
         size: 18,
         color: theme.colorScheme.error,
       );
-    } else if (hasPending) {
+    } else {
       indicator = Icon(
         PhosphorIconsRegular.cloudArrowUp,
         size: 18,
         color: theme.colorScheme.tertiary,
-      );
-    } else {
-      indicator = Icon(
-        PhosphorIconsRegular.checkCircle,
-        size: 18,
-        color: theme.colorScheme.outline,
       );
     }
 

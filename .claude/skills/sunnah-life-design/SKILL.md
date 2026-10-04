@@ -52,10 +52,10 @@ writing Flutter. Small fixes go straight to code.
 
 ## 4. Per-screen checklist
 
-Run it on the rendered PNGs before and after a change. If the user-level
-skills from Anthropic's Design plugin are installed (`design-critique`,
-`accessibility-review`, `ux-copy`), use their report formats for critiques,
-WCAG audits and copy reviews; the rules below still win where they differ.
+Run it on the rendered PNGs before and after a change. Anthropic's
+`frontend-design` plugin skill is enabled for the user (aesthetic direction,
+avoiding templated defaults) — lean on it for new surfaces; the rules below
+and DESIGN.md still win where they differ.
 
 - **Job.** The screen's single job is obvious within 3 seconds; one filled
   primary action at most.

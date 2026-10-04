@@ -129,7 +129,7 @@
   --shadow-card: 0 1px 2px rgb(31 77 61 / 0.05), 0 4px 16px rgb(31 77 61 / 0.06);
   --shadow-lifted: 0 2px 4px rgb(31 77 61 / 0.08), 0 12px 32px rgb(31 77 61 / 0.12);
 
-  --font-bn: var(--font-hind-siliguri), "Hind Siliguri", "Noto Sans Bengali", system-ui, sans-serif;
+  --font-bn: var(--font-noto-bengali), "Noto Sans Bengali", system-ui, sans-serif;
 
   --spacing: 0.25rem;
 }

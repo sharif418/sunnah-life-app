@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 /// `flutter test` does NOT load pubspec-declared families — golden tests
 /// warm them explicitly through test/golden_fonts.dart (warmAppFonts),
 /// and test/tofu_guard_test.dart fails if the glyphs ever go missing.
-const String kAppFontFamily = 'HindSiliguri';
+const String kAppFontFamily = 'NotoSansBengali';
 
 /// Uthmani Qur'an family (pubspec-declared, bundled TTF).
 const String kQuranFontFamily = 'AmiriQuran';
@@ -226,7 +226,7 @@ class SLType {
     height: 1.5,
   );
 
-  /// Bengali-first text theme — EVERY role carries the bundled Hind Siliguri
+  /// Bengali-first text theme — EVERY role carries the bundled Noto Sans Bengali
   /// family so no Material component (tab bars, chips, buttons, snackbars,
   /// dialogs, list tiles, inputs, menus…) ever falls back to the platform
   /// font (mixed typefaces on a real phone, tofu in bundle-only renders).
@@ -420,7 +420,7 @@ extension _ThemeTweaks on ThemeData {
         ),
       ),
       // ── Font consistency + explicit colors (W5): every component theme
-      // carries the bundled Hind Siliguri family AND a token color — see
+      // carries the bundled Noto Sans Bengali family AND a token color — see
       // _appFontStyle for why color-less styles were invisible text.
       tabBarTheme: TabBarThemeData(
         labelColor: onSurface,

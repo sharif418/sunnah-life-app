@@ -2229,4 +2229,65 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get iman_check_appbar => 'تقييم الإيمان';
+
+  @override
+  String get auth_not_now => 'ليس الآن';
+
+  @override
+  String get auth_welcome => 'مرحبًا بك في سنة لايف';
+
+  @override
+  String get auth_welcome_sub => 'أنشئ حسابًا أو سجّل الدخول — يستغرق دقيقة';
+
+  @override
+  String get auth_google_continue => 'المتابعة باستخدام Google';
+
+  @override
+  String get auth_google_hint => 'الأسهل — لا حاجة لرمز';
+
+  @override
+  String get auth_or_phone => 'أو برقم الجوال';
+
+  @override
+  String get auth_code_sent_to => 'أُرسل رمز من ٦ أرقام إلى %n%';
+
+  @override
+  String get auth_change_number => 'تغيير الرقم';
+
+  @override
+  String get auth_dev_fill => 'املأ';
+
+  @override
+  String get auth_resend_in => 'إعادة الإرسال بعد %n% ث';
+
+  @override
+  String get auth_resend => 'أعد إرسال الرمز';
+
+  @override
+  String get auth_privacy =>
+      'بياناتك محمية — بيانات الأخوات لا تراها إلا المسؤولات من الأخوات.';
+
+  @override
+  String get home_muhasaba_title => 'محاسبة اليوم';
+
+  @override
+  String get home_muhasaba_pending => 'المتبقي';
+
+  @override
+  String get home_muhasaba_on_track => 'كل ما حان وقته مكتوب — الحمد لله';
+
+  @override
+  String get home_muhasaba_all_done => 'اكتملت مذكرة اليوم — الحمد لله';
+
+  @override
+  String get home_muhasaba_start => 'ابدأ مذكرة اليوم';
+
+  @override
+  String get home_muhasaba_continue => 'أكمل المذكرة';
+
+  @override
+  String get home_pending_morning_adhkar => 'أذكار الصباح';
+
+  @override
+  String get home_pending_evening_adhkar => 'أذكار المساء';
 }

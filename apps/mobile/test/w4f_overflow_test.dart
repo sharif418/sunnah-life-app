@@ -342,13 +342,10 @@ void main() {
       ],
     );
 
-    // Scroll the whole page: the illustrated most-used empty state, the
-    // quick-access grid, forbidden times and the footer all lay out.
-    await scrollTo(
-      tester,
-      find.text(S.tr(Lang.bn, 'most_used_empty')),
-    );
-    expect(find.text(S.tr(Lang.bn, 'most_used_empty')), findsOneWidget);
+    // Scroll the whole page: the muhasaba card, the quick-access grid, the
+    // schedule, forbidden times and the footer all lay out.
+    await scrollTo(tester, find.byKey(const ValueKey('home_muhasaba_open')));
+    expect(find.byKey(const ValueKey('home_muhasaba_open')), findsOneWidget);
     expect(tester.takeException(), isNull);
     for (var i = 0; i < 6; i++) {
       await tester.drag(_verticalScrollable(), const Offset(0, -400));

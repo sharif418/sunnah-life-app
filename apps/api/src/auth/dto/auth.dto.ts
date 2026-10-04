@@ -11,11 +11,9 @@ import {
   MaxLength,
   MinLength,
   Validate,
-  ValidateNested,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from "class-validator";
-import { Type } from "class-transformer";
 import type { AmalValue } from "../../shared/domain";
 
 const phoneMsg = "সঠিক মোবাইল নম্বর দিন";
@@ -91,8 +89,11 @@ export class OtpVerifyDto {
 
   @ApiProperty({ required: false, enum: ["M", "F"] })
   @IsOptional()
-  @IsIn(["M", "F"], { message: "লিঙ্গ ঠিক নয়" })
-  gender?: "M" | "F";
+  // "unspecified" = the guest skipped it on this phone; the account is then
+  // created gender-less and the app runs the one-time completion step —
+  // a sign-in must never fail on it
+  @IsIn(["M", "F", "unspecified"], { message: "লিঙ্গ ঠিক নয়" })
+  gender?: "M" | "F" | "unspecified";
 
   @ApiProperty({ required: false, example: "DS-000004" })
   @IsOptional()
@@ -103,8 +104,9 @@ export class OtpVerifyDto {
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(500, { message: "একবারে সর্বোচ্চ ৫০০টি এন্ট্রি পাঠানো যায়" })
-  @ValidateNested({ each: true })
-  @Type(() => GuestEntryDto)
+  // NOT validated per item: one cleared / odd local diary row must never
+  // block a sign-in. importGuestEntries checks each row and skips the bad
+  // ones (and without @ValidateNested the whitelist leaves items intact).
   guestEntries?: GuestEntryDto[];
 }
 
@@ -141,8 +143,11 @@ export class SocialSignInDto {
       "Only applied at ACCOUNT CREATION (onboarding gender). Ignored for existing accounts — gender is locked afterwards.",
   })
   @IsOptional()
-  @IsIn(["M", "F"], { message: "লিঙ্গ ঠিক নয়" })
-  gender?: "M" | "F";
+  // "unspecified" = the guest skipped it on this phone; the account is then
+  // created gender-less and the app runs the one-time completion step —
+  // a sign-in must never fail on it
+  @IsIn(["M", "F", "unspecified"], { message: "লিঙ্গ ঠিক নয়" })
+  gender?: "M" | "F" | "unspecified";
 
   @ApiProperty({ required: false, example: "DS-000004" })
   @IsOptional()
@@ -153,8 +158,9 @@ export class SocialSignInDto {
   @IsOptional()
   @IsArray()
   @ArrayMaxSize(500, { message: "একবারে সর্বোচ্চ ৫০০টি এন্ট্রি পাঠানো যায়" })
-  @ValidateNested({ each: true })
-  @Type(() => GuestEntryDto)
+  // NOT validated per item: one cleared / odd local diary row must never
+  // block a sign-in. importGuestEntries checks each row and skips the bad
+  // ones (and without @ValidateNested the whitelist leaves items intact).
   guestEntries?: GuestEntryDto[];
 }
 

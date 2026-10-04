@@ -10,7 +10,7 @@
 // (or a glyph the loaded fonts don't cover) falls back to Ahem — the
 // metafont where EVERY glyph is an opaque box advancing by EXACTLY the
 // style's fontSize. Real proportional typefaces never behave that way:
-// distinct base letters carry distinct advances (Hind Siliguri consonants
+// distinct base letters carry distinct advances (Noto Sans Bengali consonants
 // measure ~0.6-0.9 em, Amiri letters ~0.2-0.9 em — even a letter that
 // happens near 1.0 em, like Amiri seen (99.2/100), is not the exact box,
 // and never identical to its neighbours). So the tofu signature is:
@@ -43,7 +43,7 @@ double advanceOf(String family, String sample) {
 /// Every family the app renders, with three base letters its scripts must
 /// carry (Bengali consonants; Arabic base letters for du'a + Qur'an).
 const List<(String, List<String>)> _samplesByFamily = [
-  ('HindSiliguri', ['অ', 'ম', 'ক']),
+  ('NotoSansBengali', ['অ', 'ম', 'ক']),
   ('Amiri', ['ب', 'م', 'ل']),
   ('AmiriQuran', ['ب', 'ل', 'م']),
 ];

@@ -199,3 +199,52 @@ describe("PROF-04 — change phone (OTP to the new number) and e-mail", () => {
     expect(cleared.body.user.email).toBeNull();
   });
 });
+
+describe("sign-in never fails on the phone's guest leftovers", () => {
+  const PHONE = "01799990021";
+
+  afterAll(async () => {
+    await rls.system((tx) => tx.user.deleteMany({ where: { phone: PHONE } }));
+    await rls.system((tx) => tx.otpCode.deleteMany({ where: { phone: PHONE } }));
+  });
+
+  it("gender 'unspecified' + a cleared diary row → signs in gender-less; the good row merges", async () => {
+    const otp = await http().post("/api/auth/otp/request").send({ phone: PHONE }).expect(200);
+    const today = new Date().toISOString().slice(0, 10);
+    const res = await http()
+      .post("/api/auth/otp/verify")
+      .send({
+        phone: PHONE,
+        code: otp.body.devCode,
+        name: "অতিথি নাম",
+        gender: "unspecified",
+        guestEntries: [
+          { amalKey: "salat_fajr", date: today, value: "", clientUpdatedAt: new Date().toISOString() }, // cleared
+          { amalKey: "salat_dhuhr", date: today, value: null, clientUpdatedAt: new Date().toISOString() },
+          { amalKey: "salat_asr", date: today, value: "jamaat", clientUpdatedAt: new Date().toISOString() },
+          { nonsense: true },
+        ],
+      })
+      .expect(200);
+    expect(res.body.user.gender).toBe("unspecified"); // the app runs the completion step
+    const rows = await rls.system((tx) => tx.amalEntry.findMany({ where: { userId: res.body.user.id } }));
+    const keys = rows.map((r) => r.amalKey);
+    expect(keys).toContain("salat_asr"); // the real answer merged
+    expect(keys).not.toContain("salat_dhuhr"); // null value skipped
+    // ('' is the app's own "cleared" tristate — the server mirrors it, as sync does)
+  });
+
+  it("an existing account keeps its name (the guest name on the phone does not overwrite it)", async () => {
+    const otp = await http().post("/api/auth/otp/request").send({ phone: PHONE }).expect(200);
+    const res = await http()
+      .post("/api/auth/otp/verify")
+      .send({ phone: PHONE, code: otp.body.devCode, name: "অন্য নাম" })
+      .expect(200);
+    expect(res.body.user.name).toBe("অতিথি নাম");
+  });
+
+  it("validation errors say what is wrong (not the bare 'Bad Request')", async () => {
+    const res = await http().post("/api/auth/otp/verify").send({ phone: PHONE, gender: "X" }).expect(400);
+    expect(res.body.error).not.toBe("Bad Request");
+  });
+});

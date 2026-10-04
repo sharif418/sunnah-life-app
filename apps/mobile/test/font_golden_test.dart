@@ -1,7 +1,7 @@
 // Font-consistency goldens (V1→W5) — the five tab surfaces (Home, Amal
 // Today, Dawah, Ilm, More) in bn light. The engine in flutter test loads
 // NO pubspec-declared family on its own, so warmAppFonts (see
-// test/golden_fonts.dart) registers the real Hind Siliguri / Amiri /
+// test/golden_fonts.dart) registers the real Noto Sans Bengali / Amiri /
 // AmiriQuran / Phosphor TTFs first: the committed pixels must show real
 // glyphs, never tofu boxes (the W5 lesson — every golden in this suite
 // used to be tofu because only the icons were warmed).
@@ -46,7 +46,7 @@ import 'golden_fonts.dart';
 /// Families that carry real bundled glyphs. Everything else = platform
 /// fallback = tofu on a bundle-only device.
 const Set<String> _bundledFamilies = {
-  'HindSiliguri',
+  'NotoSansBengali',
   'Amiri',
   'AmiriQuran',
   'MaterialIcons',

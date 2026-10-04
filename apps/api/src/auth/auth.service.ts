@@ -150,7 +150,7 @@ export class AuthService {
     phone: string,
     code: string,
     name?: string,
-    gender?: "M" | "F",
+    gender?: "M" | "F" | "unspecified",
     referredByCode?: string,
     guestEntries?: GuestEntryDto[]
   ): Promise<VerifyResult> {
@@ -170,15 +170,17 @@ export class AuthService {
           data: {
             phone: normalized,
             name: name?.trim() || "ব্যবহারকারী",
-            gender: gender === "F" ? "F" : "M", // set once at onboarding; admin-only change later
+            // set once at onboarding (admin-only change later); none given →
+            // gender-less, and the app runs the completion step
+            gender: gender === "F" ? "F" : gender === "M" ? "M" : "unspecified",
             referredById,
           },
         });
         // build the referral closure (ancestor paths of inviter + self)
         await AuthService.createReferralClosure(tx, row.id, referredById);
-      } else if (name?.trim()) {
-        row = await tx.user.update({ where: { id: row.id }, data: { name: name.trim() } });
       }
+      // an EXISTING account keeps its name — the name typed on this phone
+      // as a guest must not overwrite the member's real one
       return row;
     });
 
@@ -225,7 +227,7 @@ export class AuthService {
     provider: SocialProvider,
     idToken: string,
     name?: string,
-    gender?: "M" | "F",
+    gender?: "M" | "F" | "unspecified",
     referredByCode?: string,
     guestEntries?: GuestEntryDto[]
   ): Promise<VerifyResult> {
@@ -411,6 +413,15 @@ export class AuthService {
     const now = new Date();
     const parsed = guestEntries
       .slice(0, MAX_BATCH)
+      .filter(
+        (e) =>
+          !!e &&
+          typeof e === "object" &&
+          typeof e.amalKey === "string" &&
+          typeof e.date === "string" &&
+          /^\d{4}-\d{2}-\d{2}$/.test(e.date) &&
+          typeof e.clientUpdatedAt === "string"
+      )
       .map((e) => ({ e, ts: new Date(e.clientUpdatedAt) }))
       .filter((x) => !isNaN(x.ts.getTime()))
       .sort((a, b) => a.ts.getTime() - b.ts.getTime()) // oldest first — newest lands last

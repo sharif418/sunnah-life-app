@@ -137,6 +137,7 @@ export type AmalValue = "jamaat" | "alone" | "qaza" | boolean | number | string;
 export interface User {
   id: string;
   phone: string | null;
+  email?: string | null;
   name: string;
   photoUrl: string | null;
   gender: Gender;

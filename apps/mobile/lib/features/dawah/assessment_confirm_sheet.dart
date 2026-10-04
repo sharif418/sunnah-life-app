@@ -268,8 +268,8 @@ class _AssessmentConfirmSheetState extends ConsumerState<AssessmentConfirmSheet>
                 label: Text(context.t('auth_request_otp')),
               ),
             ] else ...[
-              if (_devCode != null && kDebugMode)
-                // debug-only: the code chip never renders in release builds
+              if (_devCode != null) // server-gated (mock SMS, non-production only)
+
                 Container(
                   margin: const EdgeInsets.only(bottom: SLSpacing.s12),
                   padding: const EdgeInsets.all(SLSpacing.s12),
