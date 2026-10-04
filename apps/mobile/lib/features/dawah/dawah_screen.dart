@@ -321,11 +321,14 @@ class _DawahOverviewTab extends ConsumerWidget {
                   ),
                   if (overview.memberCode.isNotEmpty) ...[
                     const SizedBox(height: SLSpacing.s12),
-                    FilledButton.icon(
-                      key: const Key('dawahShareCardButton'),
-                      onPressed: openCardSheet,
-                      icon: const Icon(PhosphorIconsRegular.shareNetwork),
-                      label: Text(context.t('dawah_share_card')),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        key: const Key('dawahShareCardButton'),
+                        onPressed: openCardSheet,
+                        icon: const Icon(PhosphorIconsRegular.shareNetwork),
+                        label: Text(context.t('dawah_share_card')),
+                      ),
                     ),
                   ],
                 ],
@@ -358,8 +361,17 @@ class _DawahOverviewTab extends ConsumerWidget {
               context.t('dawah_assessments'),
               icon: PhosphorIconsRegular.clipboardText,
             ),
+            // none yet: one quiet line, not a full-page illustration at
+            // the bottom of the member's own path
             if (overview.assessments.isEmpty)
-              EmptyState(message: context.t('empty_generic'))
+              AppCard(
+                child: Text(
+                  context.t('empty_generic'),
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
             else
               AppCard(
                 padding: EdgeInsets.zero,
