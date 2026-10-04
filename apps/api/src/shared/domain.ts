@@ -395,6 +395,7 @@ export interface AuditEntry {
   id: string;
   actorId: string | null;
   actorName?: string | null;
+  targetName?: string | null;
   action: string;
   targetType: string;
   targetId: string | null;

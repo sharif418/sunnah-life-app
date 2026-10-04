@@ -499,6 +499,38 @@ export class AdminService {
     private readonly prisma: PrismaService
   ) {}
 
+  /**
+   * GET /api/admin/queues — what is waiting for this admin, for the nav
+   * badges and the dashboard's "আজকের কাজ". Supervisors get their scoped
+   * pending weekly reviews; the inboxes (support / masala / feedback / usrah
+   * join requests) are full_admin-only and null for everyone else.
+   */
+  async queues(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    if (!this.guard.isSupervisor(user)) throw new ApiError(403, "অ্যাডমিন প্যানেল দেখার অনুমতি নেই");
+    const full = user.role === "full_admin";
+    return this.rls.run(user, async (tx) => {
+      const usrahWhere = full
+        ? {}
+        : user.role === "invigilator"
+          ? { gender: user.gender }
+          : { OR: [{ headUserId: user.id }, ...(user.usrahId ? [{ id: user.usrahId }] : [])] };
+      const usrahs = await tx.usrah.findMany({ where: usrahWhere, select: { members: { select: { id: true } } } });
+      const memberIds = [...new Set(usrahs.flatMap((u) => u.members.map((m) => m.id)))];
+      const reviews = memberIds.length
+        ? await tx.weeklyReview.count({ where: { userId: { in: memberIds }, status: "pending" } })
+        : 0;
+      if (!full) return { reviews, support: null, masala: null, feedback: null, joinRequests: null };
+      const [support, masala, feedback, joinRequests] = await Promise.all([
+        tx.supportThread.count({ where: { status: "open" } }),
+        tx.masalaQuestion.count({ where: { status: "new" } }),
+        tx.feedback.count({ where: { status: "new" } }),
+        tx.usrahJoinRequest.count({ where: { status: "pending" } }),
+      ]);
+      return { reviews, support, masala, feedback, joinRequests };
+    });
+  }
+
   /** GET /api/admin/overview — role-scoped dashboard. */
   async overview(viewer: User | null) {
     const user = this.guard.requireUser(viewer);
@@ -2009,16 +2041,32 @@ export class AdminService {
 
     return this.rls.run(user, async (tx) => {
       const rows = await tx.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 100 });
-      const actorIds = [...new Set(rows.map((a) => a.actorId).filter((x): x is string => !!x))];
-      const actors = actorIds.length
-        ? await tx.user.findMany({ where: { id: { in: actorIds } }, select: { id: true, name: true } })
+      // the people involved: who acted, and the member the action touched
+      // (a user target, or meta.userId) — so the log reads as names
+      const metaUser = (a: (typeof rows)[number]) => {
+        const m = a.metaJson as Record<string, unknown> | null;
+        return m && typeof m.userId === "string" ? m.userId : null;
+      };
+      const personIds = new Set<string>();
+      for (const a of rows) {
+        if (a.actorId) personIds.add(a.actorId);
+        if (a.targetType === "user" && a.targetId) personIds.add(a.targetId);
+        const mu = metaUser(a);
+        if (mu) personIds.add(mu);
+      }
+      const people = personIds.size
+        ? await tx.user.findMany({ where: { id: { in: [...personIds] } }, select: { id: true, name: true } })
         : [];
-      const actorNames = new Map(actors.map((a) => [a.id, a.name]));
+      const actorNames = new Map(people.map((a) => [a.id, a.name]));
 
       const entries: AuditEntry[] = rows.map((a) => ({
         id: a.id,
         actorId: a.actorId,
         actorName: a.actorId ? actorNames.get(a.actorId) ?? null : null,
+        targetName:
+          (a.targetType === "user" && a.targetId ? actorNames.get(a.targetId) : undefined) ??
+          (metaUser(a) ? actorNames.get(metaUser(a)!) : undefined) ??
+          null,
         action: a.action,
         targetType: a.targetType,
         targetId: a.targetId,
@@ -2418,6 +2466,12 @@ function mapLiveProgram(row: {
 @Roles("usrah_head")
 export class AdminController {
   constructor(private readonly service: AdminService) {}
+
+  @Get("queues")
+  @ApiOperation({ summary: "What is waiting for this admin (nav badges + dashboard to-do)" })
+  queues(@Req() req: AuthedRequest) {
+    return this.service.queues(currentUser(req));
+  }
 
   @Get("overview")
   @ApiOperation({ summary: "Role-scoped admin overview (usrah health)" })

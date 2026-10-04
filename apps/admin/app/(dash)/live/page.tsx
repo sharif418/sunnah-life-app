@@ -76,7 +76,7 @@ function ProgramCard({ p, editable }: { p: LiveProgramItem; editable?: boolean }
           ) : null}
           {p.quizId ? <Badge variant="outline">লাইভ কুইজ</Badge> : null}
           {p.youtubeId && !femaleOnly && p.status !== "upcoming" ? (
-            <Badge variant="outline">YouTube (unlisted)</Badge>
+            <Badge variant="outline">ইউটিউব · শুধু লিংকে</Badge>
           ) : null}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -341,7 +341,7 @@ export default function LivePage() {
           <div>
             <h1 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">লাইভ প্রোগ্রাম</h1>
             <p className="mt-0.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              সরাসরি দারস ও প্রশিক্ষণ — YouTube (unlisted) এমবেডে। নারীদের সেশন কখনো প্রকাশ্য নয়।
+              সরাসরি দারস ও প্রশিক্ষণ — ইউটিউবের লিংক-শুধু ভিডিওতে। বোনদের সেশন কখনো সবার জন্য খোলা নয়।
             </p>
           </div>
         </div>

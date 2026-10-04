@@ -4,8 +4,10 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
+import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
+  ChevronRight,
   FileCheck2,
   ClipboardCheck,
   Download,
@@ -32,66 +34,108 @@ import {
 import { useSession } from "@/lib/session";
 import { ROLE_LABELS_BN } from "@/lib/labels";
 import { cn } from "@/lib/utils";
+import { api } from "@/lib/api";
 import { RoleBadge } from "@/components/badges";
 import { Button } from "@/components/ui/button";
 import { toBn, todayLineBn } from "@/lib/bn";
+
+type QueueKey = "reviews" | "support" | "masala" | "feedback" | "joinRequests";
 
 interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  /** full_admin only (the API surface behind it is full_admin-only) */
+  admin?: boolean;
+  /** the waiting-work count shown beside the label */
+  queue?: QueueKey;
 }
 
-// W4h — role-based nav, mirroring the API's actual role floors:
-//   • the তত্ত্বাবধায়ক group is supervisor-floor (usrah_head AND invigilator
-//     share rank 2 — the API differs only in RLS data scope, never by route);
-//   • the প্রধান অ্যাডমিন group lists the pages whose whole surface is
-//     @Roles("full_admin"). The usrah JOIN queue lives inside /usrah as a
-//     full_admin section (heads never assign membership — W4d boundary).
-const COMMON_NAV: NavItem[] = [
-  { href: "/", label: "ড্যাশবোর্ড", icon: LayoutDashboard },
-  { href: "/usrah", label: "উসরা", icon: Users },
-  { href: "/reviews", label: "সাপ্তাহিক রিভিউ", icon: ClipboardCheck },
-  { href: "/assessments", label: "মূল্যায়ন", icon: FileCheck2 },
-  { href: "/levels", label: "স্তর ও শর্তাবলি", icon: TrendingUp },
-  { href: "/broadcast", label: "ঘোষণা ও রিমাইন্ডার", icon: Megaphone },
-  { href: "/live", label: "লাইভ প্রোগ্রাম", icon: Radio },
-  { href: "/exports", label: "রিপোর্ট ও এক্সপোর্ট", icon: Download },
+interface NavGroup {
+  label: string | null;
+  items: NavItem[];
+}
+
+// The menu follows the WORK, not the org chart: what a tarbiyah team does
+// in a week (reviews, assessments, usrahs), who talks to them (inboxes),
+// who the members are, what the app shows, and the system itself. Each
+// item knows its role floor; supervisors simply see a shorter menu. The
+// numbers are what is waiting (GET /api/admin/queues, refreshed each
+// minute), so nobody has to open five pages to find the work.
+const NAV: NavGroup[] = [
+  { label: null, items: [{ href: "/", label: "ড্যাশবোর্ড", icon: LayoutDashboard }] },
+  {
+    label: "তারবিয়াত",
+    items: [
+      { href: "/reviews", label: "সাপ্তাহিক রিভিউ", icon: ClipboardCheck, queue: "reviews" },
+      { href: "/assessments", label: "মূল্যায়ন", icon: FileCheck2 },
+      { href: "/usrah", label: "উসরা", icon: Users, queue: "joinRequests" },
+      { href: "/levels", label: "স্তর ও অগ্রগতি", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "যোগাযোগ",
+    items: [
+      { href: "/broadcast", label: "ঘোষণা পাঠান", icon: Megaphone },
+      { href: "/support", label: "সাপোর্ট বার্তা", icon: Headset, admin: true, queue: "support" },
+      { href: "/masala", label: "মাসআলা প্রশ্ন", icon: BookOpenCheck, admin: true, queue: "masala" },
+      { href: "/feedback", label: "অ্যাপের মতামত", icon: MessageSquareText, admin: true, queue: "feedback" },
+    ],
+  },
+  {
+    label: "সদস্য",
+    items: [
+      { href: "/users", label: "সদস্য তালিকা", icon: UserCog, admin: true },
+      { href: "/referrals", label: "দাওয়াহ নেটওয়ার্ক", icon: Network, admin: true },
+    ],
+  },
+  {
+    label: "অ্যাপের কনটেন্ট",
+    items: [
+      { href: "/content", label: "দোয়া, আর্টিকেল ও কোর্স", icon: BookOpen, admin: true },
+      { href: "/live", label: "লাইভ প্রোগ্রাম", icon: Radio },
+      { href: "/catalog", label: "ডায়েরির আমল", icon: ListChecks, admin: true },
+    ],
+  },
+  {
+    label: "সিস্টেম",
+    items: [
+      { href: "/exports", label: "রিপোর্ট ডাউনলোড", icon: Download },
+      { href: "/level-rules", label: "স্তরের নিয়ম", icon: SlidersHorizontal, admin: true },
+      { href: "/settings", label: "অ্যাপ সেটিংস", icon: Settings, admin: true },
+      { href: "/audit", label: "কার্যক্রমের রেকর্ড", icon: ScrollText, admin: true },
+    ],
+  },
 ];
 
-const FULL_ADMIN_NAV: NavItem[] = [
-  { href: "/support", label: "সাপোর্ট ইনবক্স", icon: Headset },
-  { href: "/masala", label: "মাসআলা", icon: BookOpenCheck },
-  { href: "/feedback", label: "মতামত", icon: MessageSquareText },
-  { href: "/users", label: "ব্যবহারকারী", icon: UserCog },
-  { href: "/referrals", label: "রেফারেল ট্রি", icon: Network },
-  { href: "/catalog", label: "আমল ক্যাটালগ", icon: ListChecks },
-  { href: "/level-rules", label: "লেভেল রুলস", icon: SlidersHorizontal },
-  { href: "/content", label: "কন্টেন্ট ম্যানেজমেন্ট", icon: BookOpen },
-  { href: "/settings", label: "অ্যাপ কনফিগারেশন", icon: Settings },
-  { href: "/audit", label: "অডিট লগ", icon: ScrollText },
-];
+/** The page's place in the menu: (group, label) — the top bar shows it as a
+ * quiet breadcrumb so the page's own heading is not repeated above it. */
+function navPlace(pathname: string): { group: string | null; label: string } | null {
+  if (pathname.startsWith("/members/")) return { group: "সদস্য", label: "সদস্য প্রোফাইল" };
+  if (pathname.startsWith("/users/import")) return { group: "সদস্য", label: "সদস্য ইমপোর্ট" };
+  for (const g of NAV) {
+    for (const it of g.items) {
+      const hit = it.href === "/" ? pathname === "/" : pathname === it.href || pathname.startsWith(`${it.href}/`);
+      if (hit) return { group: g.label, label: it.label };
+    }
+  }
+  return null;
+}
 
-const PAGE_TITLES: Record<string, string> = {
-  "/": "ড্যাশবোর্ড",
-  "/usrah": "উসরা",
-  "/reviews": "সাপ্তাহিক রিভিউ",
-  "/assessments": "মূল্যায়ন",
-  "/levels": "স্তর ও শর্তাবলি",
-  "/broadcast": "ঘোষণা ও রিমাইন্ডার",
-  "/live": "লাইভ প্রোগ্রাম",
-  "/exports": "রিপোর্ট ও এক্সপোর্ট",
-  "/users": "ব্যবহারকারী ব্যবস্থাপনা",
-  "/referrals": "রেফারেল ট্রি",
-  "/catalog": "আমল ক্যাটালগ",
-  "/level-rules": "লেভেল রুলস",
-  "/content": "কন্টেন্ট ম্যানেজমেন্ট",
-  "/settings": "অ্যাপ কনফিগারেশন",
-  "/audit": "অডিট লগ",
-  "/support": "সাপোর্ট ইনবক্স",
-  "/feedback": "মতামত",
-  "/masala": "মাসআলা জিজ্ঞাসা",
-};
+function QueueCount({ n, active }: { n: number | null | undefined; active: boolean }) {
+  if (!n) return null;
+  return (
+    <span
+      className={cn(
+        "ml-auto min-w-6 rounded-full px-2 text-center text-xs font-bold leading-6 tabular-nums",
+        active ? "bg-primary-foreground text-primary" : "bg-gold text-gold-foreground"
+      )}
+      aria-label={`${toBn(n)}টি অপেক্ষায়`}
+    >
+      {toBn(n > 99 ? "৯৯+" : n)}
+    </span>
+  );
+}
 
 function BrandMark() {
   return (
@@ -120,18 +164,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setDrawerOpen(false);
   }
 
-  const title = React.useMemo(() => {
-    if (pathname.startsWith("/members/")) return "সদস্য প্রোফাইল";
-    return PAGE_TITLES[pathname] ?? "সুন্নাহ লাইফ অ্যাডমিন";
-  }, [pathname]);
+  const place = React.useMemo(() => navPlace(pathname), [pathname]);
 
   const navGroups = React.useMemo(
-    () => [
-      { label: "তত্ত্বাবধায়ক", items: COMMON_NAV },
-      ...(fullAdmin ? [{ label: "প্রধান অ্যাডমিন", items: FULL_ADMIN_NAV }] : []),
-    ],
+    () =>
+      NAV.map((g) => ({ ...g, items: g.items.filter((it) => !it.admin || fullAdmin) })).filter(
+        (g) => g.items.length > 0
+      ),
     [fullAdmin]
   );
+
+  const queues = useQuery({
+    queryKey: ["admin-queues"],
+    queryFn: () => api.queues(),
+    enabled: !!user,
+    refetchInterval: 60_000,
+  });
 
   const onLogout = async () => {
     await logout();
@@ -154,12 +202,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <X className="h-5 w-5" aria-hidden />
         </button>
       </div>
-      <nav aria-label="প্রধান মেনু" className="scroll-thin flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+      <nav aria-label="প্রধান মেনু" className="scroll-thin flex-1 space-y-4 overflow-y-auto px-3 pb-4">
         {navGroups.map((group) => (
-          <div key={group.label}>
-            <p className="px-2.5 pb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground/80">
-              {group.label}
-            </p>
+          <div key={group.label ?? "home"}>
+            {group.label ? (
+              <p className="px-2.5 pb-1 text-xs font-semibold text-muted-foreground">{group.label}</p>
+            ) : null}
             <ul className="space-y-0.5">
               {group.items.map((item) => {
                 const active =
@@ -171,14 +219,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       href={item.href}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "focus-ring flex min-h-11 items-center gap-3 rounded-md px-2.5 py-2 text-sm font-medium transition-colors duration-200",
+                        "focus-ring flex min-h-10 items-center gap-3 rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors duration-200",
                         active
                           ? "bg-primary text-primary-foreground shadow-card"
                           : "text-foreground/85 hover:bg-primary-soft hover:text-primary"
                       )}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
-                      {item.label}
+                      <span className="min-w-0 truncate">{item.label}</span>
+                      {item.queue ? <QueueCount n={queues.data?.[item.queue]} active={active} /> : null}
                     </Link>
                   </li>
                 );
@@ -240,7 +289,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           >
             <Menu className="h-5 w-5" aria-hidden />
           </button>
-          <h1 className="truncate text-base font-bold sm:text-lg">{title}</h1>
+          {/* a quiet breadcrumb — each page carries its own heading */}
+          <p className="flex min-w-0 items-center gap-1.5 truncate text-sm">
+            {place?.group ? (
+              <>
+                <span className="text-muted-foreground">{place.group}</span>
+                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+              </>
+            ) : null}
+            <span className="truncate font-semibold">{place?.label ?? "সুন্নাহ লাইফ অ্যাডমিন"}</span>
+          </p>
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden text-xs text-muted-foreground md:block">{todayLineBn()}</span>
             {user ? <RoleBadge role={user.role} /> : null}

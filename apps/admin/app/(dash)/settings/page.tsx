@@ -129,7 +129,7 @@ function SettingsForm({
     mutationFn: async () => {
       const hijri = Number(form.hijriAdjust);
       if (form.hijriAdjust !== "" && (!Number.isInteger(hijri) || Math.abs(hijri) > 2)) {
-        throw new Error("হিজরি adjust −২ থেকে +২ এর মধ্যে হতে হবে");
+        throw new Error("হিজরি তারিখ সমন্বয় −২ থেকে +২ দিনের মধ্যে হতে হবে");
       }
       return api.updateAdminConfig(formToPatch(form) as never);
     },
@@ -164,7 +164,7 @@ function SettingsForm({
           <CardDescription>দানের বাটন, শেয়ার-লিংকের ডোমেইন, অডিও বেস ইউআরএল</CardDescription>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Field label="দানের লিংক (donationUrl)" htmlFor="cf-donation">
+          <Field label="দানের লিংক" htmlFor="cf-donation">
             <Input
               id="cf-donation"
               value={form.donationUrl}
@@ -188,7 +188,7 @@ function SettingsForm({
               className="font-mono text-xs"
             />
           </Field>
-          <Field label="হিজরি adjust (−২..+২)" htmlFor="cf-hijri" hint="চান্দ্র তারিখ ±দিন ঠিক করতে">
+          <Field label="হিজরি তারিখ সমন্বয় (−২ থেকে +২ দিন)" htmlFor="cf-hijri" hint="চান্দ্র তারিখ ±দিন ঠিক করতে">
             <Input
               id="cf-hijri"
               type="number"

@@ -5,7 +5,10 @@ import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
   Activity,
+  BookOpenCheck,
   ChevronRight,
+  Headset,
+  MessageSquareText,
   ClipboardCheck,
   FileCheck2,
   ListTodo,
@@ -228,8 +231,7 @@ function InvigilatorHealthSection({ role }: { role: string }) {
             <ScoreBadge score={self.score} />
           </CardTitle>
           <CardDescription>
-            স্কোর = ০.৩৫×সাপ্তাহিক রিভিউ + ০.৩৫×আমল সম্পূর্ণতা + ০.২০×সক্রিয়তা + ০.১০×সময়মতো —
-            আপনার লিঙ্গ-পরিসরের সদস্যদের ওপর হিসাব ({toBn(self.memberCount)} সদস্য)
+            রিভিউ, আমল, সক্রিয়তা ও সময়মতো কাজের ভিত্তিতে — আপনার পরিসরের {toBn(self.memberCount)} সদস্য
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -260,9 +262,7 @@ function InvigilatorHealthSection({ role }: { role: string }) {
           <Activity className="h-[18px] w-[18px] text-primary" aria-hidden />
           পরিদর্শকদের তত্ত্বাবধান স্বাস্থ্য ({toBn(rows.length)} জন)
         </CardTitle>
-        <CardDescription>
-          সারিতে চাপ দিয়ে উপাদান দেখুন — স্কোর = ০.৩৫×রিভিউ + ০.৩৫×আমল + ০.২০×সক্রিয়তা + ০.১০×সময়মতো
-        </CardDescription>
+        <CardDescription>রিভিউ, আমল, সক্রিয়তা ও সময়মতো কাজের ভিত্তিতে — বিস্তারিত দেখতে সারিতে চাপুন</CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
         {rows.map((h) => (
@@ -318,6 +318,89 @@ function InvigilatorHealthRowView({ h }: { h: InvigilatorHealthRow }) {
   );
 }
 
+/** One waiting queue on the dashboard: the count, what it is, where to go. */
+function TodoTile({
+  n,
+  label,
+  done,
+  href,
+  icon: Icon,
+}: {
+  n: number | null | undefined;
+  label: string;
+  done: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+}) {
+  const waiting = (n ?? 0) > 0;
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "focus-ring flex min-h-20 items-center gap-3 rounded-lg border p-4 transition-shadow duration-200 hover:shadow-lifted",
+        waiting ? "border-gold/60 bg-gold-soft" : "border-border bg-card"
+      )}
+    >
+      <div
+        className={cn(
+          "flex h-11 w-11 shrink-0 items-center justify-center rounded-md",
+          waiting ? "bg-gold text-gold-foreground" : "bg-primary-soft text-primary"
+        )}
+      >
+        <Icon className="h-5 w-5" aria-hidden />
+      </div>
+      <div className="min-w-0 flex-1">
+        {waiting ? (
+          <>
+            <p className="text-2xl font-bold leading-tight tabular-nums">{toBn(n ?? 0)}</p>
+            <p className="text-sm font-medium">{label}</p>
+          </>
+        ) : (
+          <>
+            <p className="text-sm font-semibold text-success">✓ {done}</p>
+            <p className="text-xs text-muted-foreground">{label}</p>
+          </>
+        )}
+      </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+    </Link>
+  );
+}
+
+function TodaysWork({ fullAdmin }: { fullAdmin: boolean }) {
+  const q = useQuery({ queryKey: ["admin-queues"], queryFn: () => api.queues(), refetchInterval: 60_000 });
+  const d = q.data;
+  return (
+    <section aria-label="আজকের কাজ" className="space-y-3">
+      <h3 className="text-base font-bold">আজকের কাজ</h3>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        <TodoTile n={d?.reviews} label="সাপ্তাহিক রিভিউ বাকি" done="সব রিভিউ শেষ" href="/reviews" icon={ClipboardCheck} />
+        {fullAdmin ? (
+          <>
+            <TodoTile n={d?.joinRequests} label="উসরায় যোগ দেওয়ার অনুরোধ" done="কোনো অনুরোধ নেই" href="/usrah" icon={Users} />
+            <TodoTile n={d?.support} label="সাপোর্ট বার্তার উত্তর বাকি" done="সব বার্তার উত্তর দেওয়া" href="/support" icon={Headset} />
+            <TodoTile n={d?.masala} label="মাসআলার উত্তর বাকি" done="সব মাসআলার উত্তর দেওয়া" href="/masala" icon={BookOpenCheck} />
+            <TodoTile n={d?.feedback} label="নতুন মতামত" done="সব মতামত পড়া হয়েছে" href="/feedback" icon={MessageSquareText} />
+          </>
+        ) : null}
+        <Link
+          href="/assessments"
+          className="focus-ring flex min-h-20 items-center gap-3 rounded-lg border border-dashed border-border bg-card p-4 transition-shadow duration-200 hover:shadow-lifted"
+        >
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
+            <FileCheck2 className="h-5 w-5" aria-hidden />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">নতুন মূল্যায়ন নিন</p>
+            <p className="text-xs text-muted-foreground">ফরযে আইন মূল্যায়ন ফর্ম</p>
+          </div>
+          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export default function OverviewPage() {
   const { user, fullAdmin } = useSession();
 
@@ -355,10 +438,12 @@ export default function OverviewPage() {
         </div>
       </section>
 
+      <TodaysWork fullAdmin={!!fullAdmin} />
+
       {overview.isError ? (
         <ErrorState error={overview.error} onRetry={() => overview.refetch()} />
       ) : (
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="সারসংক্ষেপ">
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3" aria-label="সারসংক্ষেপ">
           <StatCard
             label="পরিসরের সদস্য"
             value={overview.data?.totals.users ?? null}
@@ -367,13 +452,6 @@ export default function OverviewPage() {
           />
           <StatCard label="দায়ী" value={overview.data?.totals.daees ?? null} icon={UserRoundCheck} hint="সক্রিয় দাওয়াত কর্মী" />
           <StatCard label="উসরা" value={overview.data?.totals.usrahs ?? null} icon={Users} hint="তত্ত্বাবধানের উসরা" />
-          <StatCard
-            label="অপেক্ষমাণ রিভিউ"
-            value={overview.data?.totals.pendingReviews ?? null}
-            icon={ListTodo}
-            hint={overdue > 0 ? `বিলম্বিত: ${toBn(overdue)}টি` : "কোনো বিলম্বিত নেই"}
-            href="/reviews"
-          />
         </section>
       )}
 
@@ -497,24 +575,6 @@ export default function OverviewPage() {
             </CardContent>
           </Card>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Link href="/assessments" className="focus-ring block rounded-lg">
-              <Card className="h-full transition-shadow duration-200 hover:shadow-lifted">
-                <CardContent className="flex items-center gap-3 pt-5">
-                  <FileCheck2 className="h-6 w-6 text-gold" aria-hidden />
-                  <span className="text-sm font-semibold">নতুন মূল্যায়ন</span>
-                </CardContent>
-              </Card>
-            </Link>
-            <Link href="/live" className="focus-ring block rounded-lg">
-              <Card className="h-full transition-shadow duration-200 hover:shadow-lifted">
-                <CardContent className="flex items-center gap-3 pt-5">
-                  <Radio className="h-6 w-6 text-gold" aria-hidden />
-                  <span className="text-sm font-semibold">লাইভ প্রোগ্রাম</span>
-                </CardContent>
-              </Card>
-            </Link>
-          </div>
         </div>
       </div>
     </div>

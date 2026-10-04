@@ -37,7 +37,7 @@ const REQUIREMENT_LABELS: { key: string; label: string; detail: string }[] = [
   {
     key: "min_months",
     label: "স্তরে ন্যূনতম সময়",
-    detail: "বর্তমান স্তরে অন্তত ৪ মাস অতিবাহিত করা (মাস গণনা levelStartedAt থেকে)।",
+    detail: "বর্তমান স্তরে অন্তত ৪ মাস অতিবাহিত করা (এই স্তরে ওঠার দিন থেকে গণনা)।",
   },
   {
     key: "assessment_passed",
@@ -67,7 +67,7 @@ function TransitionHistory() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <History className="h-[18px] w-[18px] text-primary" aria-hidden />
-          উন্নয়নের ইতিহাস (LevelTransition)
+          স্তর উন্নয়নের ইতিহাস
         </CardTitle>
         <CardDescription>
           প্রতিটি স্তর-উন্নয়নের রেকর্ড — কে, কখন, কোন স্তর থেকে কোন স্তরে, কারণসহ · রাত ১২:৩০-এর
@@ -139,7 +139,7 @@ export default function LevelsPage() {
           </CardTitle>
           <CardDescription>
             দাওয়াতুস সুন্নাহ তারবিয়াত কার্যক্রমের চার স্তর — উন্নয়ন শুধুমাত্র প্রধান অ্যাডমিন,
-            প্রতিটি উন্নয়ন LevelTransition ও অডিট লগে সংরক্ষিত
+            প্রতিটি উন্নয়ন ইতিহাসে ও কার্যক্রমের রেকর্ডে থাকে
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -182,8 +182,8 @@ export default function LevelsPage() {
               মুহিব্বুস সুন্নাহ উন্নয়নের শর্তাবলি
             </CardTitle>
             <CardDescription>
-              চারটি শর্তের সবগুলো পূরণ হলে প্রধান অ্যাডমিন সদস্যকে উন্নীত করতে পারেন — অপূর্ণ
-              থাকলে সার্ভার ৪২২-এ বাকি শর্তগুলো জানিয়ে দেয়
+              চারটি শর্তের সবগুলো পূরণ হলে প্রধান অ্যাডমিন সদস্যকে উন্নীত করতে পারেন — কোনো শর্ত
+              বাকি থাকলে তা দেখিয়ে দেওয়া হয়
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -227,7 +227,7 @@ export default function LevelsPage() {
               </li>
               <li className="flex gap-2">
                 <ArrowUpRight className="mt-1 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
-                উন্নয়নের সময় LevelTransition রেকর্ড হয় (প্রমাণ: শর্তের অবস্থা, মাস, মাদউ সংখ্যা) ও সদস্য রিমাইন্ডার পান।
+                উন্নয়নের সময় কারণসহ (শর্তের অবস্থা, মাস, মাদউ সংখ্যা) ইতিহাসে লেখা থাকে, আর সদস্য অ্যাপে বার্তা পান।
               </li>
             </ul>
             {fullAdmin ? (

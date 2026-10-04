@@ -9,7 +9,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { api, type Gender, type UsrahJoinRequestItem, type User, type UsrahMember } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { relativeBn, toBn } from "@/lib/bn";
-import { JOIN_STATUS_LABELS_BN, ROLE_LABELS_BN } from "@/lib/labels";
+import { JOIN_STATUS_LABELS_BN, ROLE_LABELS_BN, districtBn } from "@/lib/labels";
 import { BothGendersBadge, CategoryBadge, FScopeBadge, GenderBadge, LevelBadge, RoleBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -135,7 +135,7 @@ function OwnUsrahView() {
           <div>
             <CardTitle className="text-lg">{usrah.name}</CardTitle>
             <CardDescription>
-              প্রধান: {usrah.headName ?? "—"} · জেলা: {usrah.district ?? "—"} · সদস্য {toBn(usrah.memberCount ?? usrah.members.length)} জন
+              প্রধান: {usrah.headName ?? "—"} · জেলা: {districtBn(usrah.district)} · সদস্য {toBn(usrah.memberCount ?? usrah.members.length)} জন
             </CardDescription>
           </div>
           <GenderBadge gender={usrah.gender} />
@@ -340,7 +340,7 @@ function JoinRequestSection() {
                             <option value="">উসরা নির্বাচন করুন…</option>
                             {sameGenderUsrahs.map((u) => (
                               <option key={u.id} value={u.id}>
-                                {u.name} {u.district ? `· ${u.district}` : ""}
+                                {u.name} {u.district ? `· ${districtBn(u.district)}` : ""}
                               </option>
                             ))}
                           </Select>
@@ -532,7 +532,7 @@ function UsrahManageSection() {
                       <p className="truncate text-sm font-semibold">{u.name}</p>
                       <p className="mt-0.5 flex items-center gap-2 text-xs text-muted-foreground">
                         <GenderBadge gender={u.gender} /> · {toBn(members.length)} সদস্য
-                        {u.district ? ` · ${u.district}` : ""}
+                        {u.district ? ` · ${districtBn(u.district)}` : ""}
                       </p>
                     </div>
                     <Button
