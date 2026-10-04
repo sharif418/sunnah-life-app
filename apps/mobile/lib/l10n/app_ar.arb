@@ -744,5 +744,20 @@
   "home_muhasaba_start": "ابدأ مذكرة اليوم",
   "home_muhasaba_continue": "أكمل المذكرة",
   "home_pending_morning_adhkar": "أذكار الصباح",
-  "home_pending_evening_adhkar": "أذكار المساء"
+  "home_pending_evening_adhkar": "أذكار المساء",
+  "month_paper_grid": "الشهر كاملًا (مثل الورق)",
+  "month_legend_none": "لم يُكتب",
+  "month_legend_some": "جزئيًا",
+  "month_legend_full": "شبه مكتمل",
+  "weekday_short_0": "أحد",
+  "weekday_short_1": "إثنين",
+  "weekday_short_2": "ثلاثاء",
+  "weekday_short_3": "أربعاء",
+  "weekday_short_4": "خميس",
+  "weekday_short_5": "جمعة",
+  "weekday_short_6": "سبت",
+  "masala_mine": "أسئلتي والأجوبة",
+  "masala_answered": "تمت الإجابة",
+  "masala_pending": "بانتظار الجواب",
+  "bell_on_for_waqt": "منبّه لهذه الصلاة"
 }

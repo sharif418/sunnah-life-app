@@ -10,6 +10,8 @@ import {
   ClipboardCheck,
   Download,
   Headset,
+  MessageSquareText,
+  BookOpenCheck,
   LayoutDashboard,
   ListChecks,
   LogOut,
@@ -59,6 +61,8 @@ const COMMON_NAV: NavItem[] = [
 
 const FULL_ADMIN_NAV: NavItem[] = [
   { href: "/support", label: "সাপোর্ট ইনবক্স", icon: Headset },
+  { href: "/masala", label: "মাসআলা", icon: BookOpenCheck },
+  { href: "/feedback", label: "মতামত", icon: MessageSquareText },
   { href: "/users", label: "ব্যবহারকারী", icon: UserCog },
   { href: "/referrals", label: "রেফারেল ট্রি", icon: Network },
   { href: "/catalog", label: "আমল ক্যাটালগ", icon: ListChecks },
@@ -85,6 +89,8 @@ const PAGE_TITLES: Record<string, string> = {
   "/settings": "অ্যাপ কনফিগারেশন",
   "/audit": "অডিট লগ",
   "/support": "সাপোর্ট ইনবক্স",
+  "/feedback": "মতামত",
+  "/masala": "মাসআলা জিজ্ঞাসা",
 };
 
 function BrandMark() {

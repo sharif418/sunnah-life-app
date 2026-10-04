@@ -4569,6 +4569,96 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'সন্ধ্যার আযকার'**
   String get home_pending_evening_adhkar;
+
+  /// No description provided for @month_paper_grid.
+  ///
+  /// In bn, this message translates to:
+  /// **'পুরো মাসের ডায়েরি (কাগজের মতো)'**
+  String get month_paper_grid;
+
+  /// No description provided for @month_legend_none.
+  ///
+  /// In bn, this message translates to:
+  /// **'লেখা হয়নি'**
+  String get month_legend_none;
+
+  /// No description provided for @month_legend_some.
+  ///
+  /// In bn, this message translates to:
+  /// **'আংশিক'**
+  String get month_legend_some;
+
+  /// No description provided for @month_legend_full.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রায় সম্পূর্ণ'**
+  String get month_legend_full;
+
+  /// No description provided for @weekday_short_0.
+  ///
+  /// In bn, this message translates to:
+  /// **'রবি'**
+  String get weekday_short_0;
+
+  /// No description provided for @weekday_short_1.
+  ///
+  /// In bn, this message translates to:
+  /// **'সোম'**
+  String get weekday_short_1;
+
+  /// No description provided for @weekday_short_2.
+  ///
+  /// In bn, this message translates to:
+  /// **'মঙ্গল'**
+  String get weekday_short_2;
+
+  /// No description provided for @weekday_short_3.
+  ///
+  /// In bn, this message translates to:
+  /// **'বুধ'**
+  String get weekday_short_3;
+
+  /// No description provided for @weekday_short_4.
+  ///
+  /// In bn, this message translates to:
+  /// **'বৃহঃ'**
+  String get weekday_short_4;
+
+  /// No description provided for @weekday_short_5.
+  ///
+  /// In bn, this message translates to:
+  /// **'শুক্র'**
+  String get weekday_short_5;
+
+  /// No description provided for @weekday_short_6.
+  ///
+  /// In bn, this message translates to:
+  /// **'শনি'**
+  String get weekday_short_6;
+
+  /// No description provided for @masala_mine.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার প্রশ্ন ও উত্তর'**
+  String get masala_mine;
+
+  /// No description provided for @masala_answered.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তর এসেছে'**
+  String get masala_answered;
+
+  /// No description provided for @masala_pending.
+  ///
+  /// In bn, this message translates to:
+  /// **'উত্তরের অপেক্ষায়'**
+  String get masala_pending;
+
+  /// No description provided for @bell_on_for_waqt.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই ওয়াক্তে অ্যালার্ম'**
+  String get bell_on_for_waqt;
 }
 
 class _AppLocalizationsDelegate

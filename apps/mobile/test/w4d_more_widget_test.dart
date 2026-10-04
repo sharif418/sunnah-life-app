@@ -170,7 +170,7 @@ class FakeW4dApi extends ApiClient {
   }
 
   @override
-  Future<void> feedback(String message) async {
+  Future<void> feedback(String message, {String? context}) async {
     feedbackCalls++;
     lastFeedback = message;
   }

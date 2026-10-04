@@ -2036,6 +2036,120 @@ export class AdminService {
    * ?status=open|answered|closed), OPEN ones first, then answered, then
    * closed; within a group by last activity (updatedAt) desc.
    */
+  /**
+   * GET /api/admin/feedback — full_admin: the app's মতামত inbox, new first,
+   * newest within; each with the sender (name / phone / gender / role) and
+   * the device context the app attached. ?status=new|done filters.
+   */
+  async feedbackList(viewer: User | null, status: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const filter = status === "new" || status === "done" ? status : undefined;
+    return this.rls.run(user, async (tx) => {
+      const rows = await tx.feedback.findMany({
+        ...(filter ? { where: { status: filter } } : {}),
+        orderBy: [{ status: "desc" }, { createdAt: "desc" }], // "new" > "done"
+        take: 300,
+        include: { user: { select: { name: true, phone: true, gender: true, role: true, memberCode: true } } },
+      });
+      return {
+        feedback: rows.map((r) => ({
+          id: r.id,
+          message: r.message,
+          context: r.context,
+          status: r.status,
+          createdAt: r.createdAt.toISOString(),
+          user: r.user,
+        })),
+        newCount: await tx.feedback.count({ where: { status: "new" } }),
+      };
+    });
+  }
+
+  /** PATCH /api/admin/feedback/:id — full_admin: mark new / done. */
+  async feedbackSetStatus(viewer: User | null, id: string, status: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    if (status !== "new" && status !== "done") throw new ApiError(400, "অবস্থা ঠিক নয়");
+    return this.rls.run(user, async (tx) => {
+      const row = await tx.feedback.findUnique({ where: { id } });
+      if (!row) throw new ApiError(404, "মতামত পাওয়া যায়নি");
+      await tx.feedback.update({ where: { id }, data: { status } });
+      return { ok: true };
+    });
+  }
+
+  /**
+   * GET /api/admin/masala — full_admin: the মাসআলা inbox (new first).
+   * The asker's name / phone come from the form (guests too).
+   */
+  async masalaList(viewer: User | null, status: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const filter = status === "new" || status === "answered" ? status : undefined;
+    return this.rls.run(user, async (tx) => {
+      const rows = await tx.masalaQuestion.findMany({
+        ...(filter ? { where: { status: filter } } : {}),
+        orderBy: [{ status: "desc" }, { createdAt: "desc" }], // "new" > "answered"
+        take: 300,
+        include: { user: { select: { gender: true, memberCode: true } } },
+      });
+      return {
+        questions: rows.map((r) => ({
+          id: r.id,
+          name: r.name,
+          phone: r.phone,
+          question: r.question,
+          status: r.status,
+          answer: r.answer,
+          answeredAt: r.answeredAt?.toISOString() ?? null,
+          createdAt: r.createdAt.toISOString(),
+          member: r.userId ? { gender: r.user?.gender ?? null, memberCode: r.user?.memberCode ?? null } : null,
+        })),
+        newCount: await tx.masalaQuestion.count({ where: { status: "new" } }),
+      };
+    });
+  }
+
+  /**
+   * POST /api/admin/masala/:id/answer — full_admin answers; a signed-in
+   * asker gets it in their inbox (Reminder kind 'masala') and as a push.
+   * Guests are reached through the phone they left. Audited.
+   */
+  async masalaAnswer(viewer: User | null, id: string, rawAnswer: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const answer = (rawAnswer ?? "").trim().slice(0, 8000);
+    if (answer.length < 2) throw new ApiError(400, "উত্তর লিখুন");
+    const row = await this.rls.run(user, async (tx) => {
+      const q = await tx.masalaQuestion.findUnique({ where: { id } });
+      if (!q) throw new ApiError(404, "প্রশ্ন পাওয়া যায়নি");
+      const updated = await tx.masalaQuestion.update({
+        where: { id },
+        data: { answer, status: "answered", answeredAt: new Date(), answeredById: user.id },
+      });
+      if (q.userId) {
+        await tx.reminder.create({
+          data: {
+            userId: q.userId,
+            kind: "masala",
+            title: "আপনার মাসআলার উত্তর এসেছে",
+            body: answer.slice(0, 200),
+            link: "/more/masala",
+          },
+        });
+      }
+      return updated;
+    });
+    await this.guard.audit(user.id, "answer_masala", "masala", id, { length: answer.length });
+    if (row.userId) {
+      await this.push
+        .send([row.userId], { title: "আপনার মাসআলার উত্তর এসেছে", body: answer.slice(0, 120), deepLink: "/more/masala" }, { actor: user })
+        .catch(() => undefined);
+    }
+    return { ok: true };
+  }
+
   async supportThreads(viewer: User | null, status: string | undefined) {
     const user = this.guard.requireUser(viewer);
     await this.guard.assertFullAdmin(user);
@@ -2545,6 +2659,35 @@ export class AdminController {
     @Req() req: AuthedRequest
   ) {
     return this.service.updateContentPack(currentUser(req), pack, body);
+  }
+
+  @Get("masala")
+  @ApiOperation({ summary: "full_admin: the মাসআলা inbox (?status=new|answered)" })
+  @Roles("full_admin")
+  masalaList(@Query("status") status: string | undefined, @Req() req: AuthedRequest) {
+    return this.service.masalaList(currentUser(req), status);
+  }
+
+  @Post("masala/:id/answer")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "full_admin: answer a masala question (inbox + push to the asker)" })
+  @Roles("full_admin")
+  masalaAnswer(@Param("id") id: string, @Body() body: { answer?: string }, @Req() req: AuthedRequest) {
+    return this.service.masalaAnswer(currentUser(req), id, body?.answer);
+  }
+
+  @Get("feedback")
+  @ApiOperation({ summary: "full_admin: the app feedback inbox (?status=new|done)" })
+  @Roles("full_admin")
+  feedbackList(@Query("status") status: string | undefined, @Req() req: AuthedRequest) {
+    return this.service.feedbackList(currentUser(req), status);
+  }
+
+  @Patch("feedback/:id")
+  @ApiOperation({ summary: "full_admin: mark a feedback message new / done" })
+  @Roles("full_admin")
+  feedbackSetStatus(@Param("id") id: string, @Body() body: { status?: string }, @Req() req: AuthedRequest) {
+    return this.service.feedbackSetStatus(currentUser(req), id, body?.status);
   }
 
   @Get("support")

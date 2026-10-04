@@ -36,6 +36,13 @@ export class FeedbackDto {
   @IsNotEmpty({ message: "আপনার মতামত লিখুন" })
   @MaxLength(4000)
   message!: string;
+
+  /** "app 1.0.0 · Android 13" — added by the app, shown to the admin. */
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  context?: string;
 }
 
 export class EnrollDto {
@@ -110,12 +117,32 @@ export class EngagementService {
     return { ok: true };
   }
 
+  /** GET /api/masala/mine — the signed-in member's own questions + answers. */
+  async myMasala(viewer: User | null) {
+    const user = this.guard.requireUser(viewer);
+    const rows = await this.rls.run(user, (tx) =>
+      tx.masalaQuestion.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 50 })
+    );
+    return {
+      questions: rows.map((r) => ({
+        id: r.id,
+        question: r.question,
+        status: r.status,
+        answer: r.answer,
+        answeredAt: r.answeredAt?.toISOString() ?? null,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    };
+  }
+
   /** POST /api/feedback — app feedback (guests allowed). */
   async feedback(viewer: User | null, dto: FeedbackDto) {
     const message = (dto.message ?? "").toString().trim().slice(0, 4000);
     if (!message) throw new ApiError(400, "আপনার মতামত লিখুন");
     await this.rls.run(viewer ?? null, (tx) =>
-      tx.feedback.create({ data: { userId: viewer?.id ?? null, message } })
+      tx.feedback.create({
+        data: { userId: viewer?.id ?? null, message, context: dto.context?.trim().slice(0, 300) || null },
+      })
     );
     return { ok: true };
   }
@@ -201,6 +228,12 @@ export class EngagementService {
 @Controller("masala")
 export class MasalaController {
   constructor(private readonly service: EngagementService) {}
+  @Get("mine")
+  @ApiOperation({ summary: "My masala questions with their answers (login)" })
+  mine(@Req() req: AuthedRequest) {
+    return this.service.myMasala(currentUser(req));
+  }
+
   @Post()
   @ApiOperation({ summary: "Ask a fiqh question (guests allowed)" })
   masala(@Body() dto: MasalaDto, @Req() req: AuthedRequest) {

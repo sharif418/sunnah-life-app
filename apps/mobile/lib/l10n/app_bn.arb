@@ -744,5 +744,20 @@
   "home_muhasaba_start": "আজকের ডায়েরি শুরু করুন",
   "home_muhasaba_continue": "ডায়েরি পূরণ করুন",
   "home_pending_morning_adhkar": "সকালের আযকার",
-  "home_pending_evening_adhkar": "সন্ধ্যার আযকার"
+  "home_pending_evening_adhkar": "সন্ধ্যার আযকার",
+  "month_paper_grid": "পুরো মাসের ডায়েরি (কাগজের মতো)",
+  "month_legend_none": "লেখা হয়নি",
+  "month_legend_some": "আংশিক",
+  "month_legend_full": "প্রায় সম্পূর্ণ",
+  "weekday_short_0": "রবি",
+  "weekday_short_1": "সোম",
+  "weekday_short_2": "মঙ্গল",
+  "weekday_short_3": "বুধ",
+  "weekday_short_4": "বৃহঃ",
+  "weekday_short_5": "শুক্র",
+  "weekday_short_6": "শনি",
+  "masala_mine": "আমার প্রশ্ন ও উত্তর",
+  "masala_answered": "উত্তর এসেছে",
+  "masala_pending": "উত্তরের অপেক্ষায়",
+  "bell_on_for_waqt": "এই ওয়াক্তে অ্যালার্ম"
 }

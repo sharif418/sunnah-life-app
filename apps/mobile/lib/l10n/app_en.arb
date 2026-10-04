@@ -744,5 +744,20 @@
   "home_muhasaba_start": "Start today's diary",
   "home_muhasaba_continue": "Continue the diary",
   "home_pending_morning_adhkar": "morning adhkar",
-  "home_pending_evening_adhkar": "evening adhkar"
+  "home_pending_evening_adhkar": "evening adhkar",
+  "month_paper_grid": "The whole month (paper layout)",
+  "month_legend_none": "Not written",
+  "month_legend_some": "Partly",
+  "month_legend_full": "Nearly all",
+  "weekday_short_0": "Sun",
+  "weekday_short_1": "Mon",
+  "weekday_short_2": "Tue",
+  "weekday_short_3": "Wed",
+  "weekday_short_4": "Thu",
+  "weekday_short_5": "Fri",
+  "weekday_short_6": "Sat",
+  "masala_mine": "My questions & answers",
+  "masala_answered": "Answered",
+  "masala_pending": "Awaiting answer",
+  "bell_on_for_waqt": "Alarm for this prayer"
 }

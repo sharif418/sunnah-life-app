@@ -2314,4 +2314,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_pending_evening_adhkar => 'evening adhkar';
+
+  @override
+  String get month_paper_grid => 'The whole month (paper layout)';
+
+  @override
+  String get month_legend_none => 'Not written';
+
+  @override
+  String get month_legend_some => 'Partly';
+
+  @override
+  String get month_legend_full => 'Nearly all';
+
+  @override
+  String get weekday_short_0 => 'Sun';
+
+  @override
+  String get weekday_short_1 => 'Mon';
+
+  @override
+  String get weekday_short_2 => 'Tue';
+
+  @override
+  String get weekday_short_3 => 'Wed';
+
+  @override
+  String get weekday_short_4 => 'Thu';
+
+  @override
+  String get weekday_short_5 => 'Fri';
+
+  @override
+  String get weekday_short_6 => 'Sat';
+
+  @override
+  String get masala_mine => 'My questions & answers';
+
+  @override
+  String get masala_answered => 'Answered';
+
+  @override
+  String get masala_pending => 'Awaiting answer';
+
+  @override
+  String get bell_on_for_waqt => 'Alarm for this prayer';
 }

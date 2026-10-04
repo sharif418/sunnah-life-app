@@ -4,6 +4,11 @@
 /// point at the SAME /ilm routes (no duplicate screens).
 library;
 
+import 'package:package_info_plus/package_info_plus.dart';
+
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -657,7 +662,9 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
     if (text.isEmpty) return;
     setState(() => _sending = true);
     try {
-      await ref.read(apiProvider).feedback(text);
+      await ref
+          .read(apiProvider)
+          .feedback(text, context: await feedbackContext());
       if (!mounted) return;
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context)
@@ -719,4 +726,22 @@ class _FeedbackSheetState extends ConsumerState<_FeedbackSheet> {
       ),
     );
   }
+}
+
+/// "app 1.0.0+12 · Android 13 (…)" — attached to each মতামত so the admin
+/// knows which build and phone a report came from. Never throws.
+Future<String> feedbackContext() async {
+  var app = 'app ?';
+  try {
+    final info = await PackageInfo.fromPlatform();
+    app = 'app ${info.version}+${info.buildNumber}';
+  } catch (_) {}
+  var os = '';
+  try {
+    if (!kIsWeb) {
+      os = '${Platform.operatingSystem} ${Platform.operatingSystemVersion}';
+    }
+  } catch (_) {}
+  final out = [app, if (os.isNotEmpty) os].join(' · ');
+  return out.length > 300 ? out.substring(0, 300) : out;
 }

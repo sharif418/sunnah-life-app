@@ -94,9 +94,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
-  /// Per-waqt bell timing (long-press on the bell): lead minutes before the
+  /// The bell sheet (HOME-02a: a TAP on the bell opens it — a long-press was
+  /// undiscoverable): on/off for this waqt's alarm, lead minutes before the
   /// waqt + lag minutes before the diary prompt, persisted per waqt.
   Future<void> _openBellTiming(PrayerKey key) async {
+    var on = _bells.contains(key.name);
     final prefs = await SharedPreferences.getInstance();
     var bell = bellMinutesFor(
       key,
@@ -164,6 +166,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Text(
                   '${sheetContext.t('bell_minutes_title')} — ${_prayerLabel(key, sheetContext.lang)}',
                   style: theme.textTheme.titleMedium,
+                ),
+                SwitchListTile(
+                  key: const ValueKey('bell_sheet_switch'),
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(sheetContext.t('bell_on_for_waqt')),
+                  value: on,
+                  onChanged: (v) async {
+                    await _toggleBell(key);
+                    setSheet(() => on = v);
+                  },
                 ),
                 row('bell_minutes_before', bell, 0, 60, 60, (v) => bell = v),
                 row('bell_minutes_after', post, 5, 120, 23, (v) => post = v),
@@ -311,8 +323,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               prayer: prayer,
               bells: _bells,
               bn: bn,
-              onBell: _toggleBell,
-              onBellLongPress: _openBellTiming,
+              onBell: _openBellTiming,
+              onBellLongPress: _toggleBell, // quick toggle for those who know
             ),
 
             // ── the weekly guest sign-up nudge (hidden for members) ──

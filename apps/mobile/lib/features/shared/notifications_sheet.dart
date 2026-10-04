@@ -91,15 +91,22 @@ class _NotificationsSheet extends ConsumerWidget {
         orElse: () => const [],
       );
       if (announcements.isEmpty && programs.isEmpty && inbox.isEmpty) {
-        body = usrahAsync.hasValue && liveAsync.hasValue
-            ? EmptyState(
-                message: context.t('notifications_empty'),
-                icon: PhosphorIconsRegular.bell,
-              )
-            : const SizedBox(
-                height: 160,
-                child: Center(child: CircularProgressIndicator()),
-              );
+        // the prayer alert stays even when there is nothing else to say
+        body = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const _PrayerAlertCard(),
+            usrahAsync.hasValue && liveAsync.hasValue
+                ? EmptyState(
+                    message: context.t('notifications_empty'),
+                    icon: PhosphorIconsRegular.bell,
+                  )
+                : const SizedBox(
+                    height: 160,
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+          ],
+        );
       } else {
         body = Column(
           mainAxisSize: MainAxisSize.min,
@@ -251,6 +258,7 @@ class _InboxCard extends ConsumerWidget {
     'review' => (PhosphorIconsRegular.chatCircle, '/dawah'),
     'goal' => (PhosphorIconsRegular.flagBanner, '/amal/goals'),
     'assessment' => (PhosphorIconsRegular.sealCheck, '/dawah'),
+    'masala' => (PhosphorIconsRegular.question, '/more/masala'),
     _ => (PhosphorIconsRegular.megaphone, null),
   };
 

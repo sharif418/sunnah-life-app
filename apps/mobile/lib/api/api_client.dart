@@ -59,6 +59,35 @@ List<Map<String, dynamic>> sendableGuestEntries(Iterable<AmalEntry> entries) => 
       e.toJson(),
 ];
 
+/// One of my মাসআলা questions (GET /api/masala/mine).
+class MasalaItem {
+  const MasalaItem({
+    required this.id,
+    required this.question,
+    required this.status,
+    this.answer,
+    this.answeredAt,
+    required this.createdAt,
+  });
+  final String id;
+  final String question;
+  final String status; // new | answered
+  final String? answer;
+  final String? answeredAt;
+  final String createdAt;
+
+  bool get answered => status == 'answered' && (answer ?? '').isNotEmpty;
+
+  factory MasalaItem.fromJson(Map<String, dynamic> j) => MasalaItem(
+    id: j['id'] as String? ?? '',
+    question: j['question'] as String? ?? '',
+    status: j['status'] as String? ?? 'new',
+    answer: j['answer'] as String?,
+    answeredAt: j['answeredAt'] as String?,
+    createdAt: j['createdAt'] as String? ?? '',
+  );
+}
+
 class OtpResponse {
   const OtpResponse({required this.ok, this.devCode});
   final bool ok;
@@ -759,8 +788,22 @@ class ApiClient {
     },
   );
 
-  Future<void> feedback(String message) =>
-      _req('POST', '/api/feedback', body: {'message': message});
+  /// GET /api/masala/mine — my questions and their answers (signed in).
+  Future<List<MasalaItem>> myMasala() async {
+    final j = await _req('GET', '/api/masala/mine');
+    return ((j['questions'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((e) => MasalaItem.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
+  /// POST /api/feedback — [context] ("app 1.0.0+12 · Android 13 …") lets the
+  /// admin read a tester's report with the device it came from.
+  Future<void> feedback(String message, {String? context}) => _req(
+    'POST',
+    '/api/feedback',
+    body: {'message': message, if (context != null && context.isNotEmpty) 'context': context},
+  );
 
   // ── Push (B2) — device token registration ────────────────────────────────────
 

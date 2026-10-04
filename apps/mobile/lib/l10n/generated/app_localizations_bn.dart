@@ -2318,4 +2318,49 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get home_pending_evening_adhkar => 'সন্ধ্যার আযকার';
+
+  @override
+  String get month_paper_grid => 'পুরো মাসের ডায়েরি (কাগজের মতো)';
+
+  @override
+  String get month_legend_none => 'লেখা হয়নি';
+
+  @override
+  String get month_legend_some => 'আংশিক';
+
+  @override
+  String get month_legend_full => 'প্রায় সম্পূর্ণ';
+
+  @override
+  String get weekday_short_0 => 'রবি';
+
+  @override
+  String get weekday_short_1 => 'সোম';
+
+  @override
+  String get weekday_short_2 => 'মঙ্গল';
+
+  @override
+  String get weekday_short_3 => 'বুধ';
+
+  @override
+  String get weekday_short_4 => 'বৃহঃ';
+
+  @override
+  String get weekday_short_5 => 'শুক্র';
+
+  @override
+  String get weekday_short_6 => 'শনি';
+
+  @override
+  String get masala_mine => 'আমার প্রশ্ন ও উত্তর';
+
+  @override
+  String get masala_answered => 'উত্তর এসেছে';
+
+  @override
+  String get masala_pending => 'উত্তরের অপেক্ষায়';
+
+  @override
+  String get bell_on_for_waqt => 'এই ওয়াক্তে অ্যালার্ম';
 }

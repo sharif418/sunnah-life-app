@@ -317,6 +317,12 @@ class SyncBadge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sync = ref.watch(syncProvider);
+    // A guest's diary lives on the phone by design and never uploads — a
+    // pending count there is permanent noise (it appeared a moment after
+    // launch, once the outbox count loaded). The badge is for members only.
+    if (!ref.watch(authProvider.select((a) => a.signedIn))) {
+      return const SizedBox.shrink();
+    }
     final theme = Theme.of(context);
     final hasDead = sync.dead > 0;
     final hasPending = sync.pending > 0;

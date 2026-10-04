@@ -1,6 +1,9 @@
-/// মাসের গ্রিড — the 31-day paper-diary heatmap (rows = amals, columns =
-/// days), month navigation, day-detail sheet, streaks, category rings and
-/// the locking rule with 🔒 + "আনলক চাই".
+/// মাসের গ্রিড — month navigation, streak + category rings, a 7-column
+/// calendar (each day tinted by how much of the diary it holds — the
+/// at-a-glance view a phone can show), and the full paper-style grid (rows
+/// in the paper diary's order, then the extras; columns = days; it opens
+/// scrolled to today). Tapping a day opens its detail sheet; a locked day
+/// offers "আনলক চাই".
 library;
 
 import 'package:flutter/material.dart';
@@ -10,11 +13,13 @@ import '../../api/api_client.dart';
 import '../../core/amal_engine.dart';
 import '../../core/bn_digits.dart';
 import '../../core/date_keys.dart';
+import '../../core/diary_layout.dart';
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../models/domain.dart';
 import '../../state/amal_state.dart';
 import '../../state/providers.dart';
+import '../../state/remote_state.dart' show effectiveHijriAdjustProvider;
 import '../shared/widgets.dart';
 import 'amal_widgets.dart';
 import '../../design/phosphor_icons.dart';
@@ -137,9 +142,33 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: SLSpacing.s12),
-              MonthHeatmap(
+              const SizedBox(height: SLSpacing.s16),
+              _MonthCalendar(
+                days: days,
+                today: today,
                 defs: defs,
+                entries: entries,
+                profile: profile,
+                hijriAdjust: ref.watch(effectiveHijriAdjustProvider),
+                bengali: bn,
+              ),
+              const SizedBox(height: SLSpacing.s20),
+              Text(
+                context.t('month_paper_grid'),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: SLSpacing.s8),
+              MonthHeatmap(
+                defs: () {
+                  final (:paper, :extras) = layoutDiary(defs);
+                  return [
+                    for (final g in paper)
+                      for (final r in g.rows) r.def,
+                    ...extras,
+                  ];
+                }(),
                 entries: entries,
                 days: days,
                 today: today,
@@ -193,10 +222,10 @@ class MonthHeatmap extends ConsumerWidget {
   final bool bengali;
   final void Function(String day)? onDayTap;
 
-  static const double cellSize = 22.0;
-  static const double cellStride = 24.0; // cell + 2px margins
-  static const double headerHeight = 22.0;
-  static const double labelWidth = 128.0;
+  static const double cellSize = 26.0;
+  static const double cellStride = 28.0; // cell + 2px margins
+  static const double headerHeight = 26.0;
+  static const double labelWidth = 156.0;
 
   AmalEntry? _entryFor(String day, String amalKey) {
     for (final e in entries) {
@@ -238,7 +267,7 @@ class MonthHeatmap extends ConsumerWidget {
                       ? toBn(int.parse(day.substring(8)))
                       : day.substring(8),
                   style: theme.textTheme.bodySmall?.copyWith(
-                    fontSize: 9,
+                    fontSize: 11,
                     fontWeight: isToday ? FontWeight.w800 : FontWeight.w500,
                     color: isToday
                         ? theme.colorScheme.primary
@@ -291,7 +320,7 @@ class MonthHeatmap extends ConsumerWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 10,
+                            fontSize: 12,
                           ),
                         ),
                       ),
@@ -304,6 +333,13 @@ class MonthHeatmap extends ConsumerWidget {
           // Scrollable day columns
           Expanded(
             child: ListView.builder(
+              // open on today (a few days of context to its left)
+              controller: ScrollController(
+                initialScrollOffset: () {
+                  final i = days.indexOf(today);
+                  return i <= 3 ? 0.0 : (i - 3) * cellStride;
+                }(),
+              ),
               scrollDirection: Axis.horizontal,
               itemCount: days.length,
               itemBuilder: (context, i) => dayColumn(days[i]),
@@ -314,7 +350,11 @@ class MonthHeatmap extends ConsumerWidget {
     );
   }
 
-  Future<void> _openDay(BuildContext context, WidgetRef ref, String day) async {
+  Future<void> _openDay(BuildContext context, WidgetRef ref, String day) =>
+      openDay(context, ref, day);
+
+  /// The day-detail sheet (also opened from the calendar).
+  Future<void> openDay(BuildContext context, WidgetRef ref, String day) async {
     final theme = Theme.of(context);
     final locked = _isLocked(day);
     final dayEntries = <(AmalDefinition, AmalEntry?, double)>[
@@ -448,5 +488,150 @@ class _PointsDot extends StatelessWidget {
         ? theme.colorScheme.tertiary
         : theme.colorScheme.outline;
     return Icon(PhosphorIconsFill.circle, size: 12, color: color);
+  }
+}
+
+/// The month at a glance: weekday header + one tinted square per day —
+/// empty, partial (gold) or full (green) by the share of that day's due
+/// diary rows that carry an answer; today ringed, future days muted.
+class _MonthCalendar extends ConsumerWidget {
+  const _MonthCalendar({
+    required this.days,
+    required this.today,
+    required this.defs,
+    required this.entries,
+    required this.profile,
+    required this.hijriAdjust,
+    required this.bengali,
+  });
+  final List<String> days;
+  final String today;
+  final List<AmalDefinition> defs;
+  final List<AmalEntry> entries;
+  final ProfileState profile;
+  final int hijriAdjust;
+  final bool bengali;
+
+  double _share(String day) {
+    final due = defs.where((d) => isAmalDay(d, day, hijriAdjust: hijriAdjust));
+    var total = 0, sum = 0.0;
+    for (final d in due) {
+      total++;
+      AmalEntry? e;
+      for (final x in entries) {
+        if (x.date == day && x.amalKey == d.key) {
+          e = x;
+          break;
+        }
+      }
+      sum += cellPoints(e?.value, d, profile.category);
+    }
+    return total == 0 ? 0 : sum / total;
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (days.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final first = parseKey(days.first);
+    final lead = first.weekday % 7; // Sunday-first weeks (BD calendars)
+    final heat = MonthHeatmap(
+      defs: defs,
+      entries: entries,
+      days: days,
+      today: today,
+      profile: profile,
+      bengali: bengali,
+    );
+    String n(int v) => bengali ? toBn(v) : '$v';
+    final weekdays = [for (var i = 0; i < 7; i++) context.t('weekday_short_$i')];
+
+    return Column(
+      key: const ValueKey('month_calendar'),
+      children: [
+        Row(
+          children: [
+            for (final w in weekdays)
+              Expanded(
+                child: Center(
+                  child: Text(
+                    w,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: SLSpacing.s4),
+        GridView.count(
+          crossAxisCount: 7,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          mainAxisSpacing: 6,
+          crossAxisSpacing: 6,
+          children: [
+            for (var i = 0; i < lead; i++) const SizedBox.shrink(),
+            for (final day in days)
+              () {
+                final future = day.compareTo(today) > 0;
+                final share = future ? 0.0 : _share(day);
+                final (Color bg, Color fg) = future
+                    ? (Colors.transparent, cs.onSurfaceVariant.withValues(alpha: 0.6))
+                    : share >= 0.8
+                    ? (cs.primary, cs.onPrimary)
+                    : share > 0
+                    ? (cs.tertiary.withValues(alpha: 0.35 + share * 0.5), cs.onSurface)
+                    : (cs.outline, cs.onSurface);
+                return InkWell(
+                  key: ValueKey('month_day_$day'),
+                  borderRadius: SLRadius.brSm,
+                  onTap: future ? null : () => heat.openDay(context, ref, day),
+                  child: Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: bg,
+                      borderRadius: SLRadius.brSm,
+                      border: day == today
+                          ? Border.all(color: cs.primary, width: 2.5)
+                          : null,
+                    ),
+                    child: Text(
+                      n(int.parse(day.substring(8))),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: fg,
+                        fontWeight: day == today ? FontWeight.w800 : FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                );
+              }(),
+          ],
+        ),
+        const SizedBox(height: SLSpacing.s8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (final (c, key) in [
+              (cs.outline, 'month_legend_none'),
+              (cs.tertiary.withValues(alpha: 0.6), 'month_legend_some'),
+              (cs.primary, 'month_legend_full'),
+            ]) ...[
+              Container(
+                width: 14,
+                height: 14,
+                decoration: BoxDecoration(color: c, borderRadius: SLRadius.brSm),
+              ),
+              const SizedBox(width: 4),
+              Text(context.t(key), style: theme.textTheme.bodySmall),
+              const SizedBox(width: SLSpacing.s12),
+            ],
+          ],
+        ),
+      ],
+    );
   }
 }
