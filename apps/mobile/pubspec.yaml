@@ -50,6 +50,9 @@ dependencies:
   package_info_plus: ^8.1.2
   firebase_core: ^4.15.0
   firebase_messaging: ^16.7.0
+  # Crash reports from release builds (Dart errors; attached once Firebase
+  # is up — see lib/services/crash_reporting.dart).
+  firebase_crashlytics: ^5.4.0
   google_sign_in: ^7.2.0
   sign_in_with_apple: ^8.2.0
   flutter_timezone: ^5.1.0
