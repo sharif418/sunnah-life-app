@@ -4701,6 +4701,12 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আমার পথ'**
   String get dawah_tab_mine;
+
+  /// No description provided for @notifications_foundation.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফাউন্ডেশনের ঘোষণা'**
+  String get notifications_foundation;
 }
 
 class _AppLocalizationsDelegate

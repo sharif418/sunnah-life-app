@@ -2384,4 +2384,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get dawah_tab_mine => 'আমার পথ';
+
+  @override
+  String get notifications_foundation => 'ফাউন্ডেশনের ঘোষণা';
 }

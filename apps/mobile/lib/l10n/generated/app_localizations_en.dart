@@ -2380,4 +2380,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get dawah_tab_mine => 'My path';
+
+  @override
+  String get notifications_foundation => 'From the Foundation';
 }

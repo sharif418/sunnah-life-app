@@ -788,6 +788,16 @@ class ApiClient {
     },
   );
 
+  /// GET /api/announcements — the Foundation's own notices (public; a
+  /// gender-addressed one only for that gender).
+  Future<List<Announcement>> foundationAnnouncements() async {
+    final j = await _req('GET', '/api/announcements');
+    return ((j['announcements'] as List?) ?? const [])
+        .whereType<Map>()
+        .map((e) => Announcement.fromJson(e.cast<String, dynamic>()))
+        .toList();
+  }
+
   /// GET /api/masala/mine — my questions and their answers (signed in).
   Future<List<MasalaItem>> myMasala() async {
     final j = await _req('GET', '/api/masala/mine');

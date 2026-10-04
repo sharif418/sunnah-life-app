@@ -63,12 +63,31 @@ class _NotificationsSheet extends ConsumerWidget {
     );
     final bn = context.isBn;
 
+    final foundation = (ref.watch(foundationAnnouncementsProvider).valueOrNull ?? const [])
+        .take(5)
+        .toList();
+    Widget foundationSection() => foundation.isEmpty
+        ? const SizedBox.shrink()
+        : Column(
+            key: const ValueKey('notif_foundation'),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(
+                context.t('notifications_foundation'),
+                icon: PhosphorIconsRegular.megaphone,
+              ),
+              for (final a in foundation) _AnnouncementCard(a: a),
+            ],
+          );
+
     Widget body;
     if (!signedIn) {
       body = Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const _PrayerAlertCard(),
+          foundationSection(),
           EmptyState(
             message: context.t('notifications_guest_hint'),
             icon: PhosphorIconsRegular.bellSlash,
@@ -90,7 +109,7 @@ class _NotificationsSheet extends ConsumerWidget {
             .toList(),
         orElse: () => const [],
       );
-      if (announcements.isEmpty && programs.isEmpty && inbox.isEmpty) {
+      if (announcements.isEmpty && programs.isEmpty && inbox.isEmpty && foundation.isEmpty) {
         // the prayer alert stays even when there is nothing else to say
         body = Column(
           mainAxisSize: MainAxisSize.min,
@@ -120,6 +139,7 @@ class _NotificationsSheet extends ConsumerWidget {
               ),
               for (final r in inbox) _InboxCard(r: r),
             ],
+            foundationSection(),
             if (announcements.isNotEmpty) ...[
               SectionHeader(
                 context.t('notifications_announcements'),

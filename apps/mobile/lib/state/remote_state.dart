@@ -189,6 +189,18 @@ final usrahQuizResultsProvider = FutureProvider<UsrahQuizResults?>((ref) async {
   }
 });
 
+/// NAV-03: Foundation-wide announcements — everyone, guests too. Re-fetches
+/// when the session changes (a sister then also sees sisters-only notices).
+/// Empty offline.
+final foundationAnnouncementsProvider = FutureProvider<List<Announcement>>((ref) async {
+  ref.watch(authProvider.select((a) => a.userOrNull?.id));
+  try {
+    return await ref.watch(apiProvider).foundationAnnouncements();
+  } on ApiException {
+    return const [];
+  }
+});
+
 /// Kinds of Reminder rows that are MESSAGES to the member (something
 /// happened) rather than self-set reminders (live / prayer / detox).
 const kInboxKinds = {'review', 'goal', 'assessment', 'broadcast', 'masala'};

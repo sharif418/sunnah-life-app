@@ -2356,4 +2356,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dawah_tab_mine => 'طريقي';
+
+  @override
+  String get notifications_foundation => 'إعلانات المؤسسة';
 }
