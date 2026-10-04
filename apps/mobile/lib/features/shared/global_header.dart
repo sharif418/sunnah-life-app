@@ -228,3 +228,56 @@ class _HeaderAction extends StatelessWidget {
     );
   }
 }
+
+/// The five root tabs' frame (BNAV-01): the [GlobalHeader] above [body],
+/// sliding away while the member scrolls DOWN the content and coming back
+/// the moment they scroll UP (or reach the top) — the header used to either
+/// stay pinned (আমল, দাওয়াত — a fifth of a small screen) or scroll away for
+/// good (হোম, ইলম, আরও).
+class ScrollAwareHeader extends StatefulWidget {
+  const ScrollAwareHeader({super.key, required this.body});
+  final Widget body;
+
+  @override
+  State<ScrollAwareHeader> createState() => _ScrollAwareHeaderState();
+}
+
+class _ScrollAwareHeaderState extends State<ScrollAwareHeader> {
+  bool _visible = true;
+
+  bool _onScroll(ScrollNotification n) {
+    if (n.metrics.axis != Axis.vertical) return false; // chips rows, tab swipes
+    if (n is! ScrollUpdateNotification) return false;
+    final delta = n.scrollDelta ?? 0;
+    final nearTop = n.metrics.pixels <= n.metrics.minScrollExtent + 24;
+    // a small dead-band so a resting finger does not flicker the header
+    if (delta > 4 && !nearTop && _visible) setState(() => _visible = false);
+    if ((delta < -4 || nearTop) && !_visible) setState(() => _visible = true);
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ClipRect(
+          child: AnimatedAlign(
+            key: const ValueKey('scroll_aware_header'),
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            alignment: Alignment.bottomCenter,
+            heightFactor: _visible ? 1 : 0,
+            child: const GlobalHeader(),
+          ),
+        ),
+        Expanded(
+          child: NotificationListener<ScrollNotification>(
+            onNotification: _onScroll,
+            child: widget.body,
+          ),
+        ),
+      ],
+    );
+  }
+}

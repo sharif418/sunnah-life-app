@@ -42,23 +42,16 @@ class AmalHubScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // C-W4a: the shared global header (logo, location, triple
-            // calendar, notification/reminder/profile, sync badge).
-            const GlobalHeader(),
-            Expanded(
-              child: defsAsync.when(
-                loading: () => const Skeleton(height: 72, count: 6),
-                error: (e, _) => ErrorState(
-                  message: '$e',
-                  onRetry: () => ref.invalidate(amalDefinitionsProvider),
-                ),
-                data: (defs) => _TodayView(defs: defs),
-              ),
+        // the shared header, hiding while scrolling down (BNAV-01)
+        child: ScrollAwareHeader(
+          body: defsAsync.when(
+            loading: () => const Skeleton(height: 72, count: 6),
+            error: (e, _) => ErrorState(
+              message: '$e',
+              onRetry: () => ref.invalidate(amalDefinitionsProvider),
             ),
-          ],
+            data: (defs) => _TodayView(defs: defs),
+          ),
         ),
       ),
     );

@@ -58,12 +58,8 @@ class DawahScreen extends ConsumerWidget {
       // sync badge — the badge used to live in this AppBar's actions).
       body: SafeArea(
         bottom: false,
-        child: Column(
-          children: [
-            const GlobalHeader(),
-            Expanded(child: body),
-          ],
-        ),
+        // the shared header, hiding while scrolling down (BNAV-01)
+        child: ScrollAwareHeader(body: body),
       ),
     );
   }

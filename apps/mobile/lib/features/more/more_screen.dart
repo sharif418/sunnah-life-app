@@ -52,241 +52,241 @@ class MoreScreen extends ConsumerWidget {
     return Scaffold(
       body: SafeArea(
         bottom: false,
-        child: ListView(
-          // W5: the list must scroll CLEAR of the floating contact button
-          // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
-          padding: const EdgeInsets.fromLTRB(
-            SLSpacing.s16,
-            SLSpacing.s8,
-            SLSpacing.s16,
-            kContactFabClearance,
-          ),
-          children: [
-            // C-W4a: the shared global header (logo, location, triple
-            // calendar, notification/reminder/profile, sync badge).
-            const GlobalHeader(),
-            const SizedBox(height: SLSpacing.s8),
-            Text(
-              context.t('tab_more'),
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+        // the shared header, hiding while scrolling down (BNAV-01)
+        child: ScrollAwareHeader(
+          body: ListView(
+            // W5: the list must scroll CLEAR of the floating contact button
+            // (52 + 16 + 12 = 80dp) — it used to cover the last rows' chevrons.
+            padding: const EdgeInsets.fromLTRB(
+              SLSpacing.s16,
+              SLSpacing.s8,
+              SLSpacing.s16,
+              kContactFabClearance,
             ),
-            const SizedBox(height: SLSpacing.s16),
+            children: [
+              const SizedBox(height: SLSpacing.s8),
+              Text(
+                context.t('tab_more'),
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: SLSpacing.s16),
 
-            // Profile card
-            AppCard(
-              onTap: () => context.push('/more/profile'),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 26,
-                    backgroundColor: theme.colorScheme.primaryContainer,
-                    child: Text(
-                      (auth.userOrNull?.name.isNotEmpty ?? false)
-                          ? auth.user!.name.characters.first
-                          : '👤',
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
+              // Profile card
+              AppCard(
+                onTap: () => context.push('/more/profile'),
+                child: Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 26,
+                      backgroundColor: theme.colorScheme.primaryContainer,
+                      child: Text(
+                        (auth.userOrNull?.name.isNotEmpty ?? false)
+                            ? auth.user!.name.characters.first
+                            : '👤',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: SLSpacing.s12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          auth.userOrNull?.name ??
-                              ref.watch(profileProvider).name,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
+                    const SizedBox(width: SLSpacing.s12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            auth.userOrNull?.name ??
+                                ref.watch(profileProvider).name,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                        Text(
-                          auth.signedIn
-                              ? '${context.t(auth.user!.role.labelKey)}${auth.user!.memberCode != null ? ' · ${auth.user!.memberCode}' : ''}'
-                              : context.t('guest'),
-                          style: theme.textTheme.bodySmall,
-                        ),
-                      ],
+                          Text(
+                            auth.signedIn
+                                ? '${context.t(auth.user!.role.labelKey)}${auth.user!.memberCode != null ? ' · ${auth.user!.memberCode}' : ''}'
+                                : context.t('guest'),
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  const DirectionalIcon(PhosphorIconsRegular.caretRight),
-                ],
+                    const DirectionalIcon(PhosphorIconsRegular.caretRight),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: SLSpacing.s16),
+              const SizedBox(height: SLSpacing.s16),
 
-            // ── ফাউন্ডেশন — donate + the five services ──
-            SectionHeader(
-              context.t('more_section_foundation'),
-              icon: PhosphorIconsRegular.handHeart,
-            ),
-            if (canDonate) _DonateCard(url: donationUrl),
-            if (contacts.isNotEmpty)
-              _FoundationServicesCard(contacts: contacts),
-
-            // ── ইবাদত ও টুলস ──
-            SectionHeader(
-              context.t('more_section_worship'),
-              icon: PhosphorIconsRegular.mosque,
-            ),
-            _MoreGroupCard(
-              rows: [
-                _MoreRow(
-                  icon: PhosphorIconsRegular.calculator,
-                  title: context.t('more_zakat'),
-                  onTap: () => context.push('/more/zakat'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.compass,
-                  title: context.t('more_qibla'),
-                  onTap: () => context.push('/more/qibla'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.mosque,
-                  title: context.t('more_mosque'),
-                  onTap: () => context.push('/more/mosques'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.question,
-                  title: context.t('more_masala'),
-                  onTap: () => context.push('/more/masala'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.broadcast,
-                  title: context.t('more_live'),
-                  onTap: () => context.push('/more/live'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.minusCircle,
-                  title: context.t('more_autosilent'),
-                  onTap: () => context.push('/more/autosilent'),
-                ),
-                // Guard-module seed (W4d) — hidden while the admin flag is off.
-                if (detoxEnabled)
-                  _MoreRow(
-                    icon: PhosphorIconsRegular.shield,
-                    title: context.t('more_detox'),
-                    onTap: () => context.push('/more/detox'),
-                  ),
-              ],
-            ),
-
-            // ── জ্ঞান ── (same routes as the Ilm tab — no duplicates)
-            SectionHeader(
-              context.t('more_section_knowledge'),
-              icon: PhosphorIconsRegular.graduationCap,
-            ),
-            _MoreGroupCard(
-              rows: [
-                _MoreRow(
-                  icon: PhosphorIconsRegular.sun,
-                  title: context.t('ilm_names99'),
-                  onTap: () => context.push('/ilm/names99'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.baby,
-                  title: context.t('ilm_baby_names'),
-                  onTap: () => context.push('/ilm/islamic-names'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.heart,
-                  title: context.t('ilm_iman_branches'),
-                  onTap: () => context.push('/ilm/iman-branches'),
-                ),
-              ],
-            ),
-
-            // ── সহায়তা ──
-            SectionHeader(
-              context.t('more_section_support'),
-              icon: PhosphorIconsRegular.headset,
-            ),
-            _MoreGroupCard(
-              rows: [
-                _MoreRow(
-                  icon: PhosphorIconsRegular.headset,
-                  title: context.t('more_support'),
-                  onTap: () => context.push('/more/support'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.userPlus,
-                  title: context.t('more_usrah_join'),
-                  onTap: () => showUsrahJoinSheet(context),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.star,
-                  title: context.t('more_feedback'),
-                  onTap: () => showFeedbackSheet(context),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.question,
-                  title: context.t('more_faq'),
-                  onTap: () => context.push('/more/faq'),
-                ),
-              ],
-            ),
-
-            // ── অ্যাপ ──
-            SectionHeader(
-              context.t('more_section_app'),
-              icon: PhosphorIconsRegular.dotsNine,
-            ),
-            _MoreGroupCard(
-              rows: [
-                _MoreRow(
-                  icon: PhosphorIconsRegular.info,
-                  title: context.t('more_about'),
-                  onTap: () => context.push('/more/about'),
-                ),
-                _MoreRow(
-                  icon: PhosphorIconsRegular.shareNetwork,
-                  title: context.t('more_share_app'),
-                  onTap: () => _shareApp(context),
-                ),
-              ],
-            ),
-            if (groups.isNotEmpty) ...[
-              const SizedBox(height: SLSpacing.s8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s4),
-                child: Text(context.t('more_groups')),
+              // ── ফাউন্ডেশন — donate + the five services ──
+              SectionHeader(
+                context.t('more_section_foundation'),
+                icon: PhosphorIconsRegular.handHeart,
               ),
-              const SizedBox(height: SLSpacing.s4),
+              if (canDonate) _DonateCard(url: donationUrl),
+              if (contacts.isNotEmpty)
+                _FoundationServicesCard(contacts: contacts),
+
+              // ── ইবাদত ও টুলস ──
+              SectionHeader(
+                context.t('more_section_worship'),
+                icon: PhosphorIconsRegular.mosque,
+              ),
               _MoreGroupCard(
                 rows: [
-                  for (final g in groups)
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.calculator,
+                    title: context.t('more_zakat'),
+                    onTap: () => context.push('/more/zakat'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.compass,
+                    title: context.t('more_qibla'),
+                    onTap: () => context.push('/more/qibla'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.mosque,
+                    title: context.t('more_mosque'),
+                    onTap: () => context.push('/more/mosques'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.question,
+                    title: context.t('more_masala'),
+                    onTap: () => context.push('/more/masala'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.broadcast,
+                    title: context.t('more_live'),
+                    onTap: () => context.push('/more/live'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.minusCircle,
+                    title: context.t('more_autosilent'),
+                    onTap: () => context.push('/more/autosilent'),
+                  ),
+                  // Guard-module seed (W4d) — hidden while the admin flag is off.
+                  if (detoxEnabled)
                     _MoreRow(
-                      icon: PhosphorIconsRegular.globe,
-                      title: g.titleBn,
-                      subtitle: g.descBn,
-                      onTap: () async {
-                        final opened = await openInAppBrowser(g.url);
-                        if (!opened && context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(context.t('group_open_failed')),
-                            ),
-                          );
-                        }
-                      },
+                      icon: PhosphorIconsRegular.shield,
+                      title: context.t('more_detox'),
+                      onTap: () => context.push('/more/detox'),
                     ),
                 ],
               ),
-            ],
 
-            const SizedBox(height: SLSpacing.s24),
-            Center(
-              child: Text(
-                context.t('org_footer'),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+              // ── জ্ঞান ── (same routes as the Ilm tab — no duplicates)
+              SectionHeader(
+                context.t('more_section_knowledge'),
+                icon: PhosphorIconsRegular.graduationCap,
+              ),
+              _MoreGroupCard(
+                rows: [
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.sun,
+                    title: context.t('ilm_names99'),
+                    onTap: () => context.push('/ilm/names99'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.baby,
+                    title: context.t('ilm_baby_names'),
+                    onTap: () => context.push('/ilm/islamic-names'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.heart,
+                    title: context.t('ilm_iman_branches'),
+                    onTap: () => context.push('/ilm/iman-branches'),
+                  ),
+                ],
+              ),
+
+              // ── সহায়তা ──
+              SectionHeader(
+                context.t('more_section_support'),
+                icon: PhosphorIconsRegular.headset,
+              ),
+              _MoreGroupCard(
+                rows: [
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.headset,
+                    title: context.t('more_support'),
+                    onTap: () => context.push('/more/support'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.userPlus,
+                    title: context.t('more_usrah_join'),
+                    onTap: () => showUsrahJoinSheet(context),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.star,
+                    title: context.t('more_feedback'),
+                    onTap: () => showFeedbackSheet(context),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.question,
+                    title: context.t('more_faq'),
+                    onTap: () => context.push('/more/faq'),
+                  ),
+                ],
+              ),
+
+              // ── অ্যাপ ──
+              SectionHeader(
+                context.t('more_section_app'),
+                icon: PhosphorIconsRegular.dotsNine,
+              ),
+              _MoreGroupCard(
+                rows: [
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.info,
+                    title: context.t('more_about'),
+                    onTap: () => context.push('/more/about'),
+                  ),
+                  _MoreRow(
+                    icon: PhosphorIconsRegular.shareNetwork,
+                    title: context.t('more_share_app'),
+                    onTap: () => _shareApp(context),
+                  ),
+                ],
+              ),
+              if (groups.isNotEmpty) ...[
+                const SizedBox(height: SLSpacing.s8),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s4),
+                  child: Text(context.t('more_groups')),
+                ),
+                const SizedBox(height: SLSpacing.s4),
+                _MoreGroupCard(
+                  rows: [
+                    for (final g in groups)
+                      _MoreRow(
+                        icon: PhosphorIconsRegular.globe,
+                        title: g.titleBn,
+                        subtitle: g.descBn,
+                        onTap: () async {
+                          final opened = await openInAppBrowser(g.url);
+                          if (!opened && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(context.t('group_open_failed')),
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: SLSpacing.s24),
+              Center(
+                child: Text(
+                  context.t('org_footer'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
