@@ -69,7 +69,7 @@ void main() {
   testWidgets('renders all 31 columns of a 31-day month with Bengali numerals',
       (tester) async {
     // Wide surface so the horizontal ListView builds every day column.
-    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.physicalSize = const Size(1400, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -92,7 +92,7 @@ void main() {
 
   testWidgets('past days show the lock overlay; today stays editable',
       (tester) async {
-    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.physicalSize = const Size(1400, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -104,7 +104,9 @@ void main() {
     await _pumpHeatmap(tester, db: db, today: '2025-03-05');
 
     // 30 locked columns × every row, the today column has none.
-    expect(find.byIcon(PhosphorIconsRegular.lockSimple), findsNWidgets(30 * _rows));
+    // no lock glyph in every cell any more (a quiet, dimmed gap; the note
+    // under the grid explains the rule) — the day sheet carries the lock
+    expect(find.byIcon(PhosphorIconsRegular.lockSimple), findsNothing);
 
     // The today column is highlighted (border), still tappable.
     final todayHeader = find.text(toBn(5));
@@ -113,7 +115,7 @@ void main() {
 
   testWidgets('tapping a cell opens the day-detail sheet with all amals',
       (tester) async {
-    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.physicalSize = const Size(1400, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -137,7 +139,7 @@ void main() {
   });
 
   testWidgets('locked day-detail offers the unlock request', (tester) async {
-    tester.view.physicalSize = const Size(1400, 900);
+    tester.view.physicalSize = const Size(1400, 1200);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -150,7 +152,7 @@ void main() {
     await tester.tap(find.byType(HeatmapCell).at(0));
     await tester.pumpAndSettle();
 
-    // Locked chip is present (the grid behind also carries lock icons).
+    // Locked chip is present in the day sheet.
     expect(find.text(toBn('2025-03-01')), findsOneWidget);
     expect(find.byIcon(PhosphorIconsRegular.lockSimple), findsWidgets);
 

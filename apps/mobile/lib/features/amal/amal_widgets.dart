@@ -673,7 +673,9 @@ class HeatmapCell extends StatelessWidget {
     } else if (points > 0) {
       color = theme.colorScheme.tertiary;
     } else {
-      color = theme.colorScheme.surfaceContainerHighest;
+      // the border token: visible on the card in both themes (the derived
+      // surfaceContainerHighest vanished into the background)
+      color = theme.colorScheme.outline;
     }
     return Semantics(
       button: onTap != null,
@@ -681,23 +683,18 @@ class HeatmapCell extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          width: 22,
-          height: 22,
+          width: 26,
+          height: 26,
           margin: const EdgeInsets.all(1),
           decoration: BoxDecoration(
-            color: color,
+            // a locked, empty day reads as a quiet gap — no lock glyph in
+            // every cell (the note under the grid explains the rule)
+            color: locked && points == 0 ? color.withValues(alpha: 0.55) : color,
             borderRadius: SLRadius.brSm,
             border: isToday
                 ? Border.all(color: theme.colorScheme.primary, width: 2)
                 : null,
           ),
-          child: locked
-              ? Icon(
-                  PhosphorIconsRegular.lockSimple,
-                  size: 12,
-                  color: theme.colorScheme.onSurfaceVariant,
-                )
-              : null,
         ),
       ),
     );
@@ -777,9 +774,9 @@ class CompletionRing extends StatelessWidget {
                 color: theme.colorScheme.primary,
                 // dark: the derived container tone sank into the dark card
                 // (a 0% ring looked empty) — the border token reads in both
-                track: theme.brightness == Brightness.dark
-                    ? theme.colorScheme.outline
-                    : theme.colorScheme.surfaceContainerHighest,
+                // the border token reads in both themes (the derived
+                // container tone sank into the card — a 0% ring looked empty)
+                track: theme.colorScheme.outline,
               ),
               child: Center(
                 child: Text(

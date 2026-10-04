@@ -2290,4 +2290,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get home_pending_evening_adhkar => 'أذكار المساء';
+
+  @override
+  String get month_paper_grid => 'الشهر كاملًا (مثل الورق)';
+
+  @override
+  String get month_legend_none => 'لم يُكتب';
+
+  @override
+  String get month_legend_some => 'جزئيًا';
+
+  @override
+  String get month_legend_full => 'شبه مكتمل';
+
+  @override
+  String get weekday_short_0 => 'أحد';
+
+  @override
+  String get weekday_short_1 => 'إثنين';
+
+  @override
+  String get weekday_short_2 => 'ثلاثاء';
+
+  @override
+  String get weekday_short_3 => 'أربعاء';
+
+  @override
+  String get weekday_short_4 => 'خميس';
+
+  @override
+  String get weekday_short_5 => 'جمعة';
+
+  @override
+  String get weekday_short_6 => 'سبت';
 }

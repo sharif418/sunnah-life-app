@@ -339,16 +339,21 @@ class _CategoryChip extends StatelessWidget {
                   : theme.colorScheme.outline,
             ),
           ),
-          child: Center(
-            child: Text(
-              context.t(labelKey),
-              style: theme.textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: selected
-                    ? theme.colorScheme.onPrimary
-                    : theme.colorScheme.onSurfaceVariant,
+          // shrink-wrap: a Center here took the Wrap's full width, so every
+          // chip sat on its own line
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                context.t(labelKey),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: selected
+                      ? theme.colorScheme.onPrimary
+                      : theme.colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
