@@ -72,13 +72,22 @@ export class UsrahService {
         where: { usrahId: usrahRow.id },
         orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],
         take: 50,
-        include: { author: { select: { name: true } } },
       });
+      // Author NAMES only, outside the member's RLS scope: a plain member
+      // cannot see the head's (or a full admin's) User row, so including the
+      // relation came back null and the whole usrah tab failed with a 500.
+      const authorIds = [...new Set(announcementRows.map((a) => a.authorId).filter((x): x is string => !!x))];
+      const authors = authorIds.length
+        ? await this.rls.system((stx) =>
+            stx.user.findMany({ where: { id: { in: authorIds } }, select: { id: true, name: true } })
+          )
+        : [];
+      const authorNames = new Map(authors.map((a) => [a.id, a.name]));
       const announcements: Announcement[] = announcementRows.map((a) => ({
         id: a.id,
         usrahId: a.usrahId,
         authorId: a.authorId,
-        authorName: a.author?.name ?? null,
+        authorName: authorNames.get(a.authorId),
         kind: a.kind as Announcement["kind"],
         body: a.body,
         pinned: a.pinned,
