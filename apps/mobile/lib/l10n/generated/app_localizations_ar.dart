@@ -2353,4 +2353,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quiz_take_it => 'خذ هذا الاختبار';
+
+  @override
+  String get dawah_tab_mine => 'طريقي';
 }

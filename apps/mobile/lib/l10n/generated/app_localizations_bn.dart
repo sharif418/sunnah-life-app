@@ -330,7 +330,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get dawah_months_in_level => 'এই স্তরে মাস';
 
   @override
-  String get dawah_requirements => 'উন্নতির শর্তাবলি';
+  String get dawah_requirements => 'এই স্তরের লক্ষ্য';
 
   @override
   String get dawah_next_level => 'পরবর্তী স্তর';
@@ -2381,4 +2381,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quiz_take_it => 'কুইজটি দিন';
+
+  @override
+  String get dawah_tab_mine => 'আমার পথ';
 }

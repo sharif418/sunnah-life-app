@@ -142,21 +142,48 @@ class _TodayView extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    context.t('diary_title'),
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          context.t('diary_title'),
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      // the paper's নির্দেশনাবলী — an icon beside the title
+                      // (its own row cost a whole line)
+                      IconButton(
+                        key: const ValueKey('diary_instructions_button'),
+                        tooltip: context.t('diary_instructions'),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => showDiaryInstructions(context),
+                        icon: Icon(
+                          PhosphorIconsRegular.info,
+                          size: 20,
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    formatDayHeaderBn(
-                      ref.watch(headerNowProvider),
-                      bengali: bn,
-                    ),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
+                  Wrap(
+                    spacing: SLSpacing.s8,
+                    runSpacing: SLSpacing.s4,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      Text(
+                        formatDayHeaderBn(
+                          ref.watch(headerNowProvider),
+                          bengali: bn,
+                        ),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      StreakBadge(days: streak, bengali: bn),
+                    ],
                   ),
                 ],
               ),
@@ -172,20 +199,7 @@ class _TodayView extends ConsumerWidget {
             ),
           ],
         ),
-        const SizedBox(height: SLSpacing.s8),
-        Row(
-          children: [
-            StreakBadge(days: streak, bengali: bn),
-            const Spacer(),
-            TextButton.icon(
-              key: const ValueKey('diary_instructions_button'),
-              onPressed: () => showDiaryInstructions(context),
-              icon: const Icon(PhosphorIconsRegular.info, size: 18),
-              label: Text(context.t('diary_instructions')),
-            ),
-          ],
-        ),
-        const SizedBox(height: SLSpacing.s8),
+        const SizedBox(height: SLSpacing.s12),
 
         // ── shortcuts: one swipeable row, never four stacked lines ────────
         SizedBox(
@@ -219,8 +233,8 @@ class _TodayView extends ConsumerWidget {
         ),
         const SizedBox(height: SLSpacing.s12),
 
-        // ── what is due right now ─────────────────────────────────────────
-        _PendingCard(today: today, defs: todayDefs, bn: bn),
+        // (the 'এখন যা বাকি' card repeated the salat rows below — Home's
+        // muhasaba card carries what is due now)
 
         // AMOL-17: the next scheduled quiz (nothing when none is planned)
         const UpcomingQuizzesSection(limit: 1),
@@ -434,160 +448,6 @@ class _DiaryGroupHeader extends StatelessWidget {
   }
 }
 
-/// "এখন যা বাকি": the fard prayers whose waqt has begun but are unrecorded,
-/// and the morning/evening adhkar while their time is on — recordable right
-/// here, so the most common daily action is one tap from the top. Hidden
-/// when nothing is due (no nagging).
-class _PendingCard extends ConsumerWidget {
-  const _PendingCard({
-    required this.today,
-    required this.defs,
-    required this.bn,
-  });
-  final String today;
-  final List<AmalDefinition> defs;
-  final bool bn;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // select(): rebuild once a minute, not on every 1-second prayer tick
-    final clock = ref.watch(
-      prayerProvider.select(
-        (p) => p == null
-            ? null
-            : (
-                day: p.dateKey,
-                minute: p.nowMinutes.floor(),
-                fajr: p.times.fajr,
-                dhuhr: p.times.dhuhr,
-                asr: p.times.asr,
-                maghrib: p.times.maghrib,
-                isha: p.times.isha,
-              ),
-      ),
-    );
-    if (clock == null || clock.day != today) {
-      return const SizedBox.shrink();
-    }
-    final amal = ref.watch(amalProvider);
-    final now = clock.minute.toDouble();
-    final t = clock;
-    final byKey = {for (final d in defs) d.key: d};
-
-    final due = <AmalDefinition>[];
-    for (final (key, start) in [
-      ('salat_fajr', t.fajr),
-      ('salat_dhuhr', t.dhuhr),
-      ('salat_asr', t.asr),
-      ('salat_maghrib', t.maghrib),
-      ('salat_isha', t.isha),
-    ]) {
-      final d = byKey[key];
-      // an empty string is the "cleared" tristate value — still unrecorded
-      final v = amal.entry(today, key)?.value;
-      if (d != null && now >= start && (v == null || v == '')) {
-        due.add(d);
-      }
-    }
-    final adhkar = <AmalDefinition>[
-      if (byKey['adhkar_morning'] != null && now >= t.fajr && now < t.dhuhr)
-        byKey['adhkar_morning']!,
-      if (byKey['adhkar_evening'] != null && now >= t.asr)
-        byKey['adhkar_evening']!,
-    ].where((d) => amal.entry(today, d.key)?.value != true).toList();
-    if (due.isEmpty && adhkar.isEmpty) return const SizedBox.shrink();
-
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.only(bottom: SLSpacing.s16),
-      child: Container(
-        key: const ValueKey('diary_pending_card'),
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerLowest,
-          borderRadius: SLRadius.brLg,
-          border: Border.all(color: theme.colorScheme.tertiary, width: 1.5),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                SLSpacing.s16,
-                SLSpacing.s12,
-                SLSpacing.s16,
-                0,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    PhosphorIconsRegular.hourglass,
-                    size: 20,
-                    color: theme.colorScheme.onSurface,
-                  ),
-                  const SizedBox(width: SLSpacing.s8),
-                  Expanded(
-                    child: Text(
-                      context.t('diary_pending'),
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            for (final d in due)
-              _AmalGroupRow(
-                row: DiaryRow(d, _paperLabel(d.key)),
-                today: today,
-                bn: bn,
-                keyPrefix: 'pending',
-              ),
-            for (final d in adhkar)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  SLSpacing.s16,
-                  SLSpacing.s4,
-                  SLSpacing.s12,
-                  SLSpacing.s8,
-                ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        bn || d.titleBn.isNotEmpty ? d.titleBn : d.titleEn,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    OutlinedButton(
-                      onPressed: () => context.push('/ilm/adhkar'),
-                      child: Text(context.t('diary_read_now')),
-                    ),
-                  ],
-                ),
-              ),
-            const SizedBox(height: SLSpacing.s4),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// The paper's own wording for a single-amal paper row (ফজর, যোহর …).
-String? _paperLabel(String key) {
-  for (final g in kPaperDiaryLayout) {
-    for (final r in g.rows) {
-      if (r.amalKeys.length == 1 && r.amalKeys.first == key) return r.labelBn;
-    }
-  }
-  return null;
-}
-
-/// Everything the app tracks beyond the paper — one collapsible card so the
-/// paper diary stays the clear first read, and nothing is lost.
 class _ExtrasCard extends StatefulWidget {
   const _ExtrasCard({
     required this.rows,
@@ -837,14 +697,12 @@ class _AmalGroupRow extends ConsumerWidget {
     required this.row,
     required this.today,
     required this.bn,
-    this.keyPrefix = 'amal_row',
   });
   final DiaryRow row;
   final String today;
   final bool bn;
 
-  /// Distinguishes the same amal rendered twice (the "এখন যা বাকি" card).
-  final String keyPrefix;
+  static const keyPrefix = 'amal_row';
 
   AmalDefinition get def => row.def;
 
@@ -941,12 +799,19 @@ class _AmalGroupRow extends ConsumerWidget {
                     ),
                 ],
               );
-              if (constraints.maxWidth >= 340) {
+              // one line on a 360dp phone too (the prototype's table row);
+              // stacked only when it truly cannot fit (narrow / large text)
+              final oneLine = constraints.maxWidth >= 290 &&
+                  MediaQuery.textScalerOf(context).scale(1) <= 1.15;
+              if (oneLine) {
                 return Row(
                   children: [
                     Expanded(child: heading),
                     const SizedBox(width: SLSpacing.s8),
-                    SizedBox(width: 216, child: chips),
+                    SizedBox(
+                      width: (constraints.maxWidth * 0.64).clamp(180.0, 216.0),
+                      child: chips,
+                    ),
                   ],
                 );
               }

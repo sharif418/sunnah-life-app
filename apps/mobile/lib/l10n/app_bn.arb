@@ -104,7 +104,7 @@
   "dawah_reviews": "সাপ্তাহিক রিভিউ ইতিহাস",
   "dawah_my_level": "আমার স্তর",
   "dawah_months_in_level": "এই স্তরে মাস",
-  "dawah_requirements": "উন্নতির শর্তাবলি",
+  "dawah_requirements": "এই স্তরের লক্ষ্য",
   "dawah_next_level": "পরবর্তী স্তর",
   "dawah_assessments": "মূল্যায়নের ইতিহাস",
   "dawah_level_none_next": "দায়ী হিসেবে নিজেকে গড়ে তুলুন — মেম্বার কোড শেয়ার করে দাওয়াত দিন",
@@ -765,5 +765,6 @@
   "courses_more": "আরও কোর্স",
   "courses_all": "সব কোর্স",
   "quiz_past": "আগের লাইভ কুইজ",
-  "quiz_take_it": "কুইজটি দিন"
+  "quiz_take_it": "কুইজটি দিন",
+  "dawah_tab_mine": "আমার পথ"
 }

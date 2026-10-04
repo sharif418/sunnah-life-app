@@ -2377,4 +2377,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quiz_take_it => 'Take this quiz';
+
+  @override
+  String get dawah_tab_mine => 'My path';
 }

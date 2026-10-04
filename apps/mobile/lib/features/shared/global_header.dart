@@ -111,40 +111,51 @@ class GlobalHeader extends ConsumerWidget {
               const SyncBadge(),
             ],
           ),
-          Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: SLSpacing.s8,
+          // the prototype's order: the city as a small outlined pill (tap to
+          // change), then the three calendars on one quiet line
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               InkWell(
                 key: const ValueKey('header_city'),
-                borderRadius: SLRadius.brSm,
+                borderRadius: SLRadius.brPill,
                 onTap: () => _pickCity(context, ref),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: SLSpacing.minTapTarget,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        PhosphorIconsFill.mapPin,
-                        size: 18,
-                        color: theme.colorScheme.primary,
+                  constraints: const BoxConstraints(minHeight: SLSpacing.minTapTarget),
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    widthFactor: 1,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: SLRadius.brPill,
+                        border: Border.all(color: theme.colorScheme.outline),
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        city?.nameBn ?? profile.city,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            PhosphorIconsRegular.mapPin,
+                            size: 16,
+                            color: theme.colorScheme.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            city?.nameBn ?? profile.city,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            PhosphorIconsBold.caretDown,
+                            size: 12,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        PhosphorIconsBold.caretDown,
-                        size: 14,
-                        color: theme.colorScheme.onSurfaceVariant,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),

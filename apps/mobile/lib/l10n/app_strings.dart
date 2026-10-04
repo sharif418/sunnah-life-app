@@ -689,6 +689,7 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'search_hint' => l.search_hint,
   'search_no_results' => l.search_no_results,
   'search_offline_note' => l.search_offline_note,
+  'dawah_tab_mine' => l.dawah_tab_mine,
   'quiz_past' => l.quiz_past,
   'quiz_take_it' => l.quiz_take_it,
   'courses_ongoing' => l.courses_ongoing,

@@ -727,7 +727,7 @@ abstract class AppLocalizations {
   /// No description provided for @dawah_requirements.
   ///
   /// In bn, this message translates to:
-  /// **'উন্নতির শর্তাবলি'**
+  /// **'এই স্তরের লক্ষ্য'**
   String get dawah_requirements;
 
   /// No description provided for @dawah_next_level.
@@ -4695,6 +4695,12 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'কুইজটি দিন'**
   String get quiz_take_it;
+
+  /// No description provided for @dawah_tab_mine.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার পথ'**
+  String get dawah_tab_mine;
 }
 
 class _AppLocalizationsDelegate

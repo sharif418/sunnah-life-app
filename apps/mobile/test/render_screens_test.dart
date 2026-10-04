@@ -62,10 +62,16 @@ const List<String> _defaultPaths = [
   '/more/about',
 ];
 
-const List<(double width, double textScale)> _viewports = [
-  (412, 1.0),
-  (360, 1.3),
-];
+// SL_RENDER_VIEWPORTS="360x1.0,412x1.0" overrides (e.g. to match a
+// prototype frame); default: a common phone + the small/large-text case.
+final List<(double width, double textScale)> _viewports = () {
+  final env = Platform.environment['SL_RENDER_VIEWPORTS'];
+  if (env == null || env.isEmpty) return const [(412.0, 1.0), (360.0, 1.3)];
+  return [
+    for (final v in env.split(','))
+      (double.parse(v.split('x')[0]), double.parse(v.split('x')[1])),
+  ];
+}();
 
 /// Logical height of every capture — tall enough for most scroll content.
 const double _height = 2000;

@@ -167,20 +167,42 @@ class AmalToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // A paper-diary tick box (the prototype's square ✓), not a settings
+    // switch: empty outlined square → filled green with a check. 44dp hit.
+    final cs = Theme.of(context).colorScheme;
     return Semantics(
       toggled: value,
       button: true,
       label: semanticsLabel,
-      child: Switch(
-        value: value,
-        onChanged: enabled
-            ? (v) {
+      child: InkResponse(
+        onTap: enabled
+            ? () {
                 HapticFeedback.selectionClick();
-                onChanged(v);
+                onChanged(!value);
               }
             : null,
-        activeThumbColor: theme.colorScheme.primary,
+        radius: 24,
+        child: SizedBox.square(
+          dimension: SLSpacing.minTapTarget,
+          child: Center(
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                color: value ? cs.primary : cs.surface,
+                borderRadius: SLRadius.brSm,
+                border: Border.all(
+                  color: value ? cs.primary : cs.onSurfaceVariant.withValues(alpha: 0.6),
+                  width: 1.6,
+                ),
+              ),
+              child: value
+                  ? Icon(PhosphorIconsRegular.check, size: 18, color: cs.onPrimary)
+                  : null,
+            ),
+          ),
+        ),
       ),
     );
   }

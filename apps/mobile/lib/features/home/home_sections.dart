@@ -551,46 +551,43 @@ class QuickAccessTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    // Compact, start-aligned: icon beside a two-line title — six tiles fit
-    // in two thumb-lengths instead of three screens of square cards.
+    // The prototype's tile: a tinted icon square on top, then the full name
+    // and a one-line hint below. Side-by-side icon + text truncated the
+    // names on a 360 dp phone ("সালাত পরবর্তী দো…").
     return AppCard(
       onTap: onTap,
       padding: const EdgeInsets.all(SLSpacing.s12),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
               color: theme.colorScheme.primaryContainer,
               borderRadius: SLRadius.brMd,
             ),
-            child: Icon(icon, size: 22, color: theme.colorScheme.primary),
+            child: Icon(icon, size: 20, color: theme.colorScheme.primary),
           ),
-          const SizedBox(width: SLSpacing.s8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    height: 1.3,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
+          const SizedBox(height: SLSpacing.s8),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w700,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            subtitle,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+              height: 1.35,
             ),
           ),
         ],
