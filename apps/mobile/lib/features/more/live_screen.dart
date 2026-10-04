@@ -62,12 +62,16 @@ class LiveScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SectionHeader(title, icon: PhosphorIconsRegular.broadcast),
+                // full width, like the program cards around it
                 if (list.isEmpty)
-                  AppCard(
-                    child: Text(
-                      context.t(emptyKey),
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppCard(
+                      child: Text(
+                        context.t(emptyKey),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                   ),

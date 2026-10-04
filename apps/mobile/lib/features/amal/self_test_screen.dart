@@ -310,7 +310,7 @@ class _QuizRunnerState extends State<_QuizRunner> {
               onPressed: _next,
               child: Text(
                 // Direction-agnostic arrow (mirrors automatically in RTL).
-                '${correct ? context.t('quiz_correct') : context.t('quiz_wrong')} →',
+                correct ? context.t('quiz_correct') : context.t('quiz_wrong'),
               ),
             ),
           ],
