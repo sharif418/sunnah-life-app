@@ -641,7 +641,8 @@ export class AdminService {
       }
 
       const rows = await tx.user.findMany({
-        where: where as never,
+        // a deleted account is an anonymous anchor, not a member
+        where: { ...where, deletedAt: null } as never,
         include: { usrah: { select: { name: true } } },
         orderBy: { name: "asc" },
         take: 100,

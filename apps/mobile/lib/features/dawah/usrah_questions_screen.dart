@@ -510,7 +510,10 @@ class _QuestionCard extends StatelessWidget {
                                       strokeWidth: 2,
                                     ),
                                   )
-                                : const Icon(PhosphorIconsRegular.paperPlaneTilt, size: 16),
+                                : const Icon(
+                                    PhosphorIconsRegular.paperPlaneTilt,
+                                    size: 16,
+                                  ),
                             label: Text(context.t('usrah_q_answer_submit')),
                           ),
                         ),

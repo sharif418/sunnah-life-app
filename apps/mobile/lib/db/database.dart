@@ -196,6 +196,18 @@ class AppDatabase extends _$AppDatabase {
     return rows.isEmpty ? null : rows.first.value;
   }
 
+  /// After the account was deleted on the server: the account's own data on
+  /// this phone goes too (diary, the sync queue, cached server answers, the
+  /// member's own checklist items, the guest profile). Reading position and
+  /// bookmarks are device conveniences and stay.
+  Future<void> wipeAccountData() => transaction(() async {
+        await delete(amalEntries).go();
+        await delete(outbox).go();
+        await delete(remoteCacheTable).go();
+        await delete(customChecklistItems).go();
+        await delete(guestProfiles).go();
+      });
+
   Future<void> setSetting(String key, String value) => into(settingsTable)
       .insertOnConflictUpdate(
         SettingsTableCompanion.insert(key: key, value: value),

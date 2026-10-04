@@ -148,7 +148,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: Text(
-                    '৳${money(nisab)} (${bn ? toBn(85) : 85}g × ৳${money(goldPrice)})',
+                    '৳${money(nisab)} (${bn ? '${toBn(85)} গ্রাম' : '85g'} × ৳${money(goldPrice)})',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                     ),

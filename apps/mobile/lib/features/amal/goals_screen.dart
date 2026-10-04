@@ -6,6 +6,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../api/api_client.dart' show ApiException;
 import '../../core/bn_digits.dart';
@@ -50,9 +51,11 @@ class GoalsScreen extends ConsumerWidget {
             return ListView(
               children: [
                 const SizedBox(height: SLSpacing.s24),
-                ErrorState(
+                EmptyState(
+                  icon: PhosphorIconsRegular.signIn,
                   message: context.t('goals_signin_needed'),
-                  onRetry: () => ref.invalidate(goalsProvider),
+                  actionLabel: context.t('onb_signin'),
+                  onAction: () => context.push('/auth'),
                 ),
               ],
             );
@@ -222,9 +225,8 @@ class _GoalCard extends ConsumerWidget {
       // The server's refusal (e.g. terminal rows are history) surfaces
       // verbatim — its messages are already Bengali.
       if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -277,9 +279,8 @@ class _ProposeSheetState extends ConsumerState<_ProposeSheet> {
     } on ApiException catch (e) {
       if (mounted) {
         setState(() => _submitting = false);
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
       }
     }
   }
@@ -327,7 +328,8 @@ class _ProposeSheetState extends ConsumerState<_ProposeSheet> {
                       ),
                     ),
                 ],
-                validator: (v) => v == null ? context.t('goals_amal_picker') : null,
+                validator: (v) =>
+                    v == null ? context.t('goals_amal_picker') : null,
                 onChanged: (v) => setState(() => _amalKey = v),
               ),
               const SizedBox(height: SLSpacing.s8),
@@ -337,8 +339,7 @@ class _ProposeSheetState extends ConsumerState<_ProposeSheet> {
                   labelText: context.t('goals_title_label'),
                 ),
                 maxLength: 200,
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty)
+                validator: (v) => (v == null || v.trim().isEmpty)
                     ? context.t('goals_title_label')
                     : null,
               ),

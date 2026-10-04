@@ -422,6 +422,14 @@ class ApiClient {
     return user is Map<String, dynamic> ? User.fromJson(user) : null;
   }
 
+  /// DELETE /api/me — deletes the signed-in member's own account (Play's
+  /// account-deletion rule). Throws ApiException with the server's Bengali
+  /// message when refused (e.g. a usrah head who still carries an usrah).
+  Future<void> deleteMe() async {
+    await _req('DELETE', '/api/me', body: {'confirm': 'DELETE'});
+    _token = null;
+  }
+
   Future<User> updateMe(Map<String, dynamic> patch) async {
     final j = await _req('PATCH', '/api/me', body: patch);
     return User.fromJson(j['user'] as Map<String, dynamic>);

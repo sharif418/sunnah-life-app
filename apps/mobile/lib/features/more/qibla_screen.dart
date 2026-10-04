@@ -230,7 +230,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
               ),
             const SizedBox(height: SLSpacing.s4),
             Text(
-              '${context.t('qibla_dial_hint')} (${bn ? context.t('qibla_north') : 'N'} → ${bn ? toBn(0) : 0}°)',
+              '${context.t('qibla_dial_hint')} (${bn ? context.t('qibla_north') : 'N'} = ${bn ? toBn(0) : 0}°)',
               style: theme.textTheme.bodySmall,
             ),
             // A11y: give the manual dial control a screen-reader label.

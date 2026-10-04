@@ -30,7 +30,10 @@ class UsrahQuizResultsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: SLSpacing.s12),
-        SectionHeader(context.t('quizres_title'), icon: PhosphorIconsRegular.listChecks),
+        SectionHeader(
+          context.t('quizres_title'),
+          icon: PhosphorIconsRegular.listChecks,
+        ),
         if (data.members.isEmpty)
           EmptyState(
             message: context.t('quizres_no_members'),
@@ -38,7 +41,11 @@ class UsrahQuizResultsSection extends ConsumerWidget {
           )
         else ...[
           for (final q in data.quizzes)
-            _QuizResultCard(quizId: q.id, title: q.titleBn, members: data.members),
+            _QuizResultCard(
+              quizId: q.id,
+              title: q.titleBn,
+              members: data.members,
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s4),
             child: Text(
@@ -108,7 +115,9 @@ class _QuizResultCard extends StatelessWidget {
             ),
             title: Text(
               title,
-              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             subtitle: Padding(
               padding: const EdgeInsets.only(top: SLSpacing.s4),
@@ -140,7 +149,9 @@ class _QuizResultCard extends StatelessWidget {
                   name: m.name,
                   trailing: _ScoreChip(result: r),
                   sub: r.attempts > 1
-                      ? context.t('quizres_tries').replaceAll('%n%', n(r.attempts))
+                      ? context
+                            .t('quizres_tries')
+                            .replaceAll('%n%', n(r.attempts))
                       : null,
                 ),
               for (final m in notYet)

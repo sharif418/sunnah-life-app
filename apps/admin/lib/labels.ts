@@ -120,6 +120,7 @@ export const AUDIT_ACTION_LABELS_BN: Record<string, string> = {
   import_members: "সদস্য ইমপোর্ট",
   reorder_amal_catalog: "আমলের ক্রম পরিবর্তন",
   update_amal_definition: "আমল সম্পাদনা",
+  delete_account: "অ্যাকাউন্ট মুছে ফেলা",
 };
 
 /** What an audited action touched, in words. */

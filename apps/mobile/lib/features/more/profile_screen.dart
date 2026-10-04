@@ -17,6 +17,7 @@ import '../../models/domain.dart';
 import '../../services/platform_channels.dart';
 import '../../state/providers.dart';
 import '../shared/city_picker.dart';
+import 'delete_account_sheet.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -371,6 +372,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+          // Play's account-deletion rule: reachable from the profile, quiet
+          // but unmistakable (opens a sheet that says what goes and stays)
+          if (user != null) ...[
+            const SizedBox(height: SLSpacing.s24),
+            Center(
+              child: TextButton.icon(
+                key: const ValueKey('profile_delete_account'),
+                style: TextButton.styleFrom(foregroundColor: theme.colorScheme.error),
+                onPressed: () => showDeleteAccountSheet(context),
+                icon: const Icon(PhosphorIconsRegular.trash, size: 18),
+                label: Text(context.t('delete_account_entry')),
               ),
             ),
           ],

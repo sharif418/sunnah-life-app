@@ -2418,4 +2418,64 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get forbidden_short_sunset => 'সূর্যাস্ত';
+
+  @override
+  String get madu_active_ago => '%t% সক্রিয়';
+
+  @override
+  String get review_this_week => 'এই সপ্তাহ';
+
+  @override
+  String get review_last_week => 'গত সপ্তাহ';
+
+  @override
+  String get delete_account_entry => 'অ্যাকাউন্ট মুছে ফেলুন';
+
+  @override
+  String get delete_account_title => 'অ্যাকাউন্ট মুছে ফেলবেন?';
+
+  @override
+  String get delete_account_goes => 'যা মুছে যাবে:';
+
+  @override
+  String get delete_account_goes_1 =>
+      'আপনার মুহাসাবা ডায়েরি, লক্ষ্য, রিভিউ ও মূল্যায়ন';
+
+  @override
+  String get delete_account_goes_2 => 'আপনার প্রশ্ন, মতামত ও সাপোর্ট বার্তা';
+
+  @override
+  String get delete_account_goes_3 =>
+      'নাম, ফোন নম্বর, ইমেইল, সদস্য কোড ও গুগল লগইন';
+
+  @override
+  String get delete_account_stays => 'যা থাকবে (নাম ছাড়া):';
+
+  @override
+  String get delete_account_stays_1 =>
+      'অন্যদের জন্য আপনি যা লিখেছেন, যেমন তাদের দেওয়া রিভিউ বা ঘোষণা — সেখানে লেখা থাকবে “মুছে ফেলা অ্যাকাউন্ট”';
+
+  @override
+  String get delete_account_final => 'এটি ফেরানো যাবে না।';
+
+  @override
+  String get delete_account_confirm_tick =>
+      'আমি বুঝেছি, আমার অ্যাকাউন্ট মুছে ফেলতে চাই';
+
+  @override
+  String get delete_account_button => 'স্থায়ীভাবে মুছে ফেলুন';
+
+  @override
+  String get delete_account_done => 'আপনার অ্যাকাউন্ট মুছে ফেলা হয়েছে';
+
+  @override
+  String get delete_account_failed =>
+      'মুছতে পারা যায়নি — ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন';
+
+  @override
+  String get privacy_policy => 'গোপনীয়তা নীতি';
+
+  @override
+  String get privacy_policy_sub =>
+      'কোন তথ্য রাখা হয়, কারা দেখেন, কীভাবে মুছবেন';
 }

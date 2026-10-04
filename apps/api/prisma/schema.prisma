@@ -58,6 +58,9 @@ model User {
   city          String?
   createdAt     DateTime  @default(now())
   lastActiveAt  DateTime  @default(now())
+  // set when the member deleted their own account (DELETE /api/me): the row
+  // stays only as an anonymous anchor for what they did for others
+  deletedAt     DateTime?
 
   sessions              Session[]
   deviceTokens          DeviceToken[]

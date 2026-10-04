@@ -2389,4 +2389,61 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get forbidden_short_sunset => 'الغروب';
+
+  @override
+  String get madu_active_ago => 'نشط %t%';
+
+  @override
+  String get review_this_week => 'هذا الأسبوع';
+
+  @override
+  String get review_last_week => 'الأسبوع الماضي';
+
+  @override
+  String get delete_account_entry => 'حذف الحساب';
+
+  @override
+  String get delete_account_title => 'حذف حسابك؟';
+
+  @override
+  String get delete_account_goes => 'ما سيُحذف:';
+
+  @override
+  String get delete_account_goes_1 => 'مذكرتك وأهدافك ومراجعاتك وتقييماتك';
+
+  @override
+  String get delete_account_goes_2 => 'أسئلتك وملاحظاتك ورسائل الدعم';
+
+  @override
+  String get delete_account_goes_3 =>
+      'اسمك وهاتفك وبريدك ورمز العضوية وتسجيل جوجل';
+
+  @override
+  String get delete_account_stays => 'ما يبقى (بدون اسمك):';
+
+  @override
+  String get delete_account_stays_1 =>
+      'ما كتبته للآخرين كالمراجعات والإعلانات — يظهر «حساب محذوف»';
+
+  @override
+  String get delete_account_final => 'لا يمكن التراجع عن هذا.';
+
+  @override
+  String get delete_account_confirm_tick => 'أفهم وأريد حذف حسابي';
+
+  @override
+  String get delete_account_button => 'حذف نهائي';
+
+  @override
+  String get delete_account_done => 'تم حذف حسابك';
+
+  @override
+  String get delete_account_failed =>
+      'تعذّر الحذف — تحقق من الاتصال وأعد المحاولة';
+
+  @override
+  String get privacy_policy => 'سياسة الخصوصية';
+
+  @override
+  String get privacy_policy_sub => 'ما نحفظه ومن يراه وكيف تحذفه';
 }
