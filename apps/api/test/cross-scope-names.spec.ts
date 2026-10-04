@@ -63,4 +63,16 @@ describe("names from outside the member's RLS view", () => {
     const r = await http().get("/api/usrah-questions").set("Authorization", `Bearer ${member}`).expect(200);
     expect(Array.isArray(r.body.questions)).toBe(true);
   });
+
+  it("the head sees members' real last activity; a plain member does not", async () => {
+    const epoch = new Date(0).toISOString();
+    const head = await signIn("01000000003");
+    const h = await http().get("/api/usrah").set("Authorization", `Bearer ${head}`).expect(200);
+    const hm = h.body.usrah.members as { lastActiveAt: string }[];
+    expect(hm.some((m) => m.lastActiveAt !== epoch)).toBe(true);
+
+    const member = await signIn("01000000004");
+    const m = await http().get("/api/usrah").set("Authorization", `Bearer ${member}`).expect(200);
+    expect((m.body.usrah.members as { lastActiveAt: string }[]).every((x) => x.lastActiveAt === epoch)).toBe(true);
+  });
 });

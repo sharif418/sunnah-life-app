@@ -39,9 +39,24 @@ export class UsrahService {
       const roster = await tx.$queryRaw<{ id: string; name: string; member_code: string | null; level: string; gender: string }[]>(
         Prisma.sql`SELECT id, name, member_code, level, gender FROM sl_usrah_roster(${user.usrahId}::text)`
       );
+      // The usrah's head (and supervisors above) see each member's real
+      // category and last activity — a plain member's roster stays names and
+      // levels only. Before, the head's own usrah page said "৫৬ বছর আগে" for
+      // everyone (the epoch placeholder) and every category as সাধারণ.
+      const seesDetail = user.role !== "user" && user.role !== "daee";
+      const detail = seesDetail
+        ? new Map(
+            (
+              await tx.user.findMany({
+                where: { id: { in: roster.map((m) => m.id) } },
+                select: { id: true, category: true, lastActiveAt: true },
+              })
+            ).map((u) => [u.id, u])
+          )
+        : new Map<string, { id: string; category: string; lastActiveAt: Date }>();
       const completions = await completion7dForUsers(
         tx,
-        roster.map((m) => ({ id: m.id, category: "general" as const }))
+        roster.map((m) => ({ id: m.id, category: (detail.get(m.id)?.category ?? "general") as UserCategory }))
       );
       const members: UsrahMember[] = roster
         .map((m) => ({
@@ -50,8 +65,8 @@ export class UsrahService {
           gender: m.gender as Gender,
           level: m.level as Level,
           memberCode: m.member_code,
-          category: "general" as UserCategory,
-          lastActiveAt: new Date(0).toISOString(),
+          category: (detail.get(m.id)?.category ?? "general") as UserCategory,
+          lastActiveAt: (detail.get(m.id)?.lastActiveAt ?? new Date(0)).toISOString(),
           completion7d: completions.get(m.id) ?? 0,
         }))
         .sort((a, b) => a.name.localeCompare(b.name, "bn"));
