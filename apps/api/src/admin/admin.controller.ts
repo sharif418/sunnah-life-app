@@ -2036,6 +2036,49 @@ export class AdminService {
    * ?status=open|answered|closed), OPEN ones first, then answered, then
    * closed; within a group by last activity (updatedAt) desc.
    */
+  /**
+   * GET /api/admin/feedback — full_admin: the app's মতামত inbox, new first,
+   * newest within; each with the sender (name / phone / gender / role) and
+   * the device context the app attached. ?status=new|done filters.
+   */
+  async feedbackList(viewer: User | null, status: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    const filter = status === "new" || status === "done" ? status : undefined;
+    return this.rls.run(user, async (tx) => {
+      const rows = await tx.feedback.findMany({
+        ...(filter ? { where: { status: filter } } : {}),
+        orderBy: [{ status: "desc" }, { createdAt: "desc" }], // "new" > "done"
+        take: 300,
+        include: { user: { select: { name: true, phone: true, gender: true, role: true, memberCode: true } } },
+      });
+      return {
+        feedback: rows.map((r) => ({
+          id: r.id,
+          message: r.message,
+          context: r.context,
+          status: r.status,
+          createdAt: r.createdAt.toISOString(),
+          user: r.user,
+        })),
+        newCount: await tx.feedback.count({ where: { status: "new" } }),
+      };
+    });
+  }
+
+  /** PATCH /api/admin/feedback/:id — full_admin: mark new / done. */
+  async feedbackSetStatus(viewer: User | null, id: string, status: string | undefined) {
+    const user = this.guard.requireUser(viewer);
+    await this.guard.assertFullAdmin(user);
+    if (status !== "new" && status !== "done") throw new ApiError(400, "অবস্থা ঠিক নয়");
+    return this.rls.run(user, async (tx) => {
+      const row = await tx.feedback.findUnique({ where: { id } });
+      if (!row) throw new ApiError(404, "মতামত পাওয়া যায়নি");
+      await tx.feedback.update({ where: { id }, data: { status } });
+      return { ok: true };
+    });
+  }
+
   async supportThreads(viewer: User | null, status: string | undefined) {
     const user = this.guard.requireUser(viewer);
     await this.guard.assertFullAdmin(user);
@@ -2545,6 +2588,20 @@ export class AdminController {
     @Req() req: AuthedRequest
   ) {
     return this.service.updateContentPack(currentUser(req), pack, body);
+  }
+
+  @Get("feedback")
+  @ApiOperation({ summary: "full_admin: the app feedback inbox (?status=new|done)" })
+  @Roles("full_admin")
+  feedbackList(@Query("status") status: string | undefined, @Req() req: AuthedRequest) {
+    return this.service.feedbackList(currentUser(req), status);
+  }
+
+  @Patch("feedback/:id")
+  @ApiOperation({ summary: "full_admin: mark a feedback message new / done" })
+  @Roles("full_admin")
+  feedbackSetStatus(@Param("id") id: string, @Body() body: { status?: string }, @Req() req: AuthedRequest) {
+    return this.service.feedbackSetStatus(currentUser(req), id, body?.status);
   }
 
   @Get("support")

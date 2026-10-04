@@ -759,8 +759,13 @@ class ApiClient {
     },
   );
 
-  Future<void> feedback(String message) =>
-      _req('POST', '/api/feedback', body: {'message': message});
+  /// POST /api/feedback — [context] ("app 1.0.0+12 · Android 13 …") lets the
+  /// admin read a tester's report with the device it came from.
+  Future<void> feedback(String message, {String? context}) => _req(
+    'POST',
+    '/api/feedback',
+    body: {'message': message, if (context != null && context.isNotEmpty) 'context': context},
+  );
 
   // ── Push (B2) — device token registration ────────────────────────────────────
 

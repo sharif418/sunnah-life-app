@@ -36,6 +36,13 @@ export class FeedbackDto {
   @IsNotEmpty({ message: "আপনার মতামত লিখুন" })
   @MaxLength(4000)
   message!: string;
+
+  /** "app 1.0.0 · Android 13" — added by the app, shown to the admin. */
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  context?: string;
 }
 
 export class EnrollDto {
@@ -115,7 +122,9 @@ export class EngagementService {
     const message = (dto.message ?? "").toString().trim().slice(0, 4000);
     if (!message) throw new ApiError(400, "আপনার মতামত লিখুন");
     await this.rls.run(viewer ?? null, (tx) =>
-      tx.feedback.create({ data: { userId: viewer?.id ?? null, message } })
+      tx.feedback.create({
+        data: { userId: viewer?.id ?? null, message, context: dto.context?.trim().slice(0, 300) || null },
+      })
     );
     return { ok: true };
   }
