@@ -52,4 +52,19 @@ describe("public announcements", () => {
     const s = await http().get("/api/announcements").set("Authorization", `Bearer ${sister}`).expect(200);
     expect(bodies(s)).toEqual(expect.arrayContaining([all, sisters]));
   });
+
+  it("a usrah head's own-gender broadcast stays out of the public Foundation list", async () => {
+    const head = await signIn("01000000003");
+    const text = `উসরা প্রধানের ঘোষণা ${Date.now()}`;
+    await http()
+      .post("/api/admin/broadcast")
+      .set("Authorization", `Bearer ${head}`)
+      .send({ body: text, gender: "M" })
+      .expect((r) => {
+        if (r.status >= 300) throw new Error(`broadcast → ${r.status} ${JSON.stringify(r.body)}`);
+      });
+    const brother = await signIn("01000000004");
+    const res = await http().get("/api/announcements").set("Authorization", `Bearer ${brother}`).expect(200);
+    expect((res.body.announcements as { body: string }[]).map((a) => a.body)).not.toContain(text);
+  });
 });

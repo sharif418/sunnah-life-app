@@ -16,7 +16,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { DataTable } from "@/components/ui/data-table";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { Skeleton, TableSkeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/ui/states";
+import { ErrorState, PageHeading } from "@/components/ui/states";
 import { Tabs, TabsList, TabsPanel, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
@@ -793,27 +793,34 @@ function TemplateVersions() {
 
 export default function AssessmentsPage() {
   return (
-    <Tabs defaultValue="new" aria-label="মূল্যায়ন বিভাগ">
-      <TabsList>
-        <TabsTrigger value="new">নতুন মূল্যায়ন</TabsTrigger>
-        <TabsTrigger value="history">ইতিহাস</TabsTrigger>
-        <TabsTrigger value="template">টেমপ্লেট দেখুন</TabsTrigger>
-        <TabsTrigger value="versions">সংস্করণ ব্যবস্থাপনা</TabsTrigger>
-      </TabsList>
-      <TabsPanel value="new">
-        <React.Suspense fallback={<Skeleton className="h-96" />}>
-          <NewAssessmentForm />
-        </React.Suspense>
-      </TabsPanel>
-      <TabsPanel value="history">
-        <AssessmentHistory />
-      </TabsPanel>
-      <TabsPanel value="template">
-        <TemplateViewer />
-      </TabsPanel>
-      <TabsPanel value="versions">
-        <TemplateVersions />
-      </TabsPanel>
-    </Tabs>
+    <div className="space-y-5">
+      <PageHeading
+        icon={<FileCheck2 className="h-6 w-6" aria-hidden />}
+        title="মূল্যায়ন"
+        description="ফরযে আইন মূল্যায়ন নিন, আগের ফলাফল দেখুন, ফর্মের সংস্করণ সামলান।"
+      />
+      <Tabs defaultValue="new" aria-label="মূল্যায়ন বিভাগ">
+        <TabsList>
+          <TabsTrigger value="new">নতুন মূল্যায়ন</TabsTrigger>
+          <TabsTrigger value="history">ইতিহাস</TabsTrigger>
+          <TabsTrigger value="template">ফর্ম দেখুন</TabsTrigger>
+          <TabsTrigger value="versions">ফর্মের সংস্করণ</TabsTrigger>
+        </TabsList>
+        <TabsPanel value="new">
+          <React.Suspense fallback={<Skeleton className="h-96" />}>
+            <NewAssessmentForm />
+          </React.Suspense>
+        </TabsPanel>
+        <TabsPanel value="history">
+          <AssessmentHistory />
+        </TabsPanel>
+        <TabsPanel value="template">
+          <TemplateViewer />
+        </TabsPanel>
+        <TabsPanel value="versions">
+          <TemplateVersions />
+        </TabsPanel>
+      </Tabs>
+    </div>
   );
 }

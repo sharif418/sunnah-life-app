@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, Check, Clock, GraduationCap, History, Users } from "lucide-react";
+import { ArrowUpRight, Check, Clock, GraduationCap, History, Users, TrendingUp } from "lucide-react";
 import { api } from "@/lib/api";
 import { useSession } from "@/lib/session";
 import { relativeBn, toBn } from "@/lib/bn";
@@ -10,7 +10,7 @@ import { LEVEL_LABELS_BN, LEVEL_ORDER, isFullAdmin } from "@/lib/labels";
 import { GenderBadge, LevelBadge } from "@/components/badges";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ErrorState } from "@/components/ui/states";
+import { ErrorState, PageHeading } from "@/components/ui/states";
 import { TableSkeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
@@ -131,11 +131,16 @@ export default function LevelsPage() {
 
   return (
     <div className="space-y-6">
+      <PageHeading
+        icon={<TrendingUp className="h-6 w-6" aria-hidden />}
+        title="স্তর ও অগ্রগতি"
+        description="তারবিয়াতের স্তরগুলো, কোন স্তরে কতজন, আর কে কবে কোন স্তরে উঠেছেন।"
+      />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <GraduationCap className="h-[18px] w-[18px] text-primary" aria-hidden />
-            স্তর-সিঁড়ি (তারবিয়াত ল্যাডার)
+            স্তরের সিঁড়ি
           </CardTitle>
           <CardDescription>
             দাওয়াতুস সুন্নাহ তারবিয়াত কার্যক্রমের চার স্তর — উন্নয়ন শুধুমাত্র প্রধান অ্যাডমিন,

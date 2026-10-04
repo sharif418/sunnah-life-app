@@ -23,6 +23,7 @@ import { DataTable } from "@/components/ui/data-table";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
+import { PageHeading } from "@/components/ui/states";
 
 const SAVED_FILTER_KEY = "sl_admin_users_filter_v1";
 
@@ -455,16 +456,21 @@ export default function UsersPage() {
 
   return (
     <div className="space-y-4">
+      <PageHeading
+        icon={<UserCog className="h-6 w-6" aria-hidden />}
+        title="সদস্য তালিকা"
+        description="নাম, ফোন বা সদস্য কোড দিয়ে খুঁজুন — সারিতে চাপ দিয়ে ভূমিকা, উসরা বা স্তর বদলান।"
+      />
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center justify-between gap-2">
-            ব্যবহারকারী ব্যবস্থাপনা
+            সব সদস্য
             {fullAdmin ? (
               <Link
                 href="/users/import"
                 className="focus-ring inline-flex min-h-9 items-center rounded-md border border-border px-3 text-sm font-semibold hover:bg-primary-soft"
               >
-                CSV থেকে সদস্য ইমপোর্ট
+                এক্সেল (CSV) থেকে সদস্য যোগ
               </Link>
             ) : null}
           </CardTitle>

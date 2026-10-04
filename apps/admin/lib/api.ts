@@ -651,6 +651,8 @@ export const api = {
     call<{ transitions: LevelTransitionItem[] }>("/api/admin/level-transitions"),
   monthGrid: (userId: string, month: string) =>
     call<{ grid: MonthGrid }>(`/api/admin/month-grid?userId=${userId}&month=${month}`),
+  /** The Foundation-wide announcements everyone sees in the app (public). */
+  publicAnnouncements: () => call<{ announcements: Announcement[] }>("/api/announcements"),
   broadcast: (dto: { usrahId?: string | null; gender?: Gender | null; body: string }) =>
     call<{ ok: boolean }>("/api/admin/broadcast", { method: "POST", json: dto }),
   upsertCatalog: (dto: {

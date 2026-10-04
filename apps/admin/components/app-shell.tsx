@@ -293,15 +293,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <p className="flex min-w-0 items-center gap-1.5 truncate text-sm">
             {place?.group ? (
               <>
-                <span className="text-muted-foreground">{place.group}</span>
-                <ChevronRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                <span className="hidden text-muted-foreground sm:inline">{place.group}</span>
+                <ChevronRight className="hidden h-3.5 w-3.5 shrink-0 text-muted-foreground sm:block" aria-hidden />
               </>
             ) : null}
             <span className="truncate font-semibold">{place?.label ?? "সুন্নাহ লাইফ অ্যাডমিন"}</span>
           </p>
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden text-xs text-muted-foreground md:block">{todayLineBn()}</span>
-            {user ? <RoleBadge role={user.role} /> : null}
+            {user ? (
+              <span className="hidden sm:inline-flex">
+                <RoleBadge role={user.role} />
+              </span>
+            ) : null}
             <button
               onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
               className="focus-ring min-h-11 min-w-11 rounded-md p-2.5 text-muted-foreground transition-colors duration-200 hover:bg-primary-soft hover:text-primary"

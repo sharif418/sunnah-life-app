@@ -23,6 +23,9 @@ export class AnnouncementsService {
         where: {
           usrahId: null,
           kind: "announcement",
+          // the Foundation's voice only: a head's or an invigilator's
+          // own-gender broadcast is for their scope, not the public bell
+          author: { role: "full_admin" },
           OR: [{ gender: null }, ...(g ? [{ gender: g }] : [])],
         },
         orderBy: [{ pinned: "desc" }, { createdAt: "desc" }],

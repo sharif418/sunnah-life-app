@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog } from "@/components/ui/dialog";
 import { Field, Input, Select, Textarea } from "@/components/ui/input";
-import { EmptyState } from "@/components/ui/states";
+import { EmptyState, PageHeading } from "@/components/ui/states";
 import { Tabs, TabsList, TabsPanel, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/toast";
 
@@ -333,25 +333,19 @@ export default function LivePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary-soft text-primary">
-            <Radio className="h-6 w-6" aria-hidden />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-foreground md:text-2xl">লাইভ প্রোগ্রাম</h1>
-            <p className="mt-0.5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
-              সরাসরি দারস ও প্রশিক্ষণ — ইউটিউবের লিংক-শুধু ভিডিওতে। বোনদের সেশন কখনো সবার জন্য খোলা নয়।
-            </p>
-          </div>
-        </div>
-        {fullAdmin ? (
-          <Button onClick={() => setCreating(true)}>
-            <Plus className="h-4 w-4" aria-hidden />
-            নতুন প্রোগ্রাম
-          </Button>
-        ) : null}
-      </div>
+      <PageHeading
+        icon={<Radio className="h-6 w-6" aria-hidden />}
+        title="লাইভ প্রোগ্রাম"
+        description="সরাসরি দারস ও প্রশিক্ষণ — ইউটিউবের লিংক-শুধু ভিডিওতে। বোনদের সেশন কখনো সবার জন্য খোলা নয়।"
+        action={
+          fullAdmin ? (
+            <Button onClick={() => setCreating(true)}>
+              <Plus className="h-4 w-4" aria-hidden />
+              নতুন প্রোগ্রাম
+            </Button>
+          ) : null
+        }
+      />
 
       {live.isLoading ? (
         <p className="py-10 text-center text-sm text-muted-foreground">লোড হচ্ছে…</p>

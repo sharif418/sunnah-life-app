@@ -318,85 +318,92 @@ function InvigilatorHealthRowView({ h }: { h: InvigilatorHealthRow }) {
   );
 }
 
-/** One waiting queue on the dashboard: the count, what it is, where to go. */
-function TodoTile({
-  n,
-  label,
-  done,
-  href,
-  icon: Icon,
-}: {
+interface Queue {
   n: number | null | undefined;
   label: string;
   done: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-}) {
-  const waiting = (n ?? 0) > 0;
+}
+
+/** One waiting queue: the count, what it is, where to go. */
+function TodoTile({ q }: { q: Queue }) {
+  const Icon = q.icon;
   return (
     <Link
-      href={href}
-      className={cn(
-        "focus-ring flex min-h-20 items-center gap-3 rounded-lg border p-4 transition-shadow duration-200 hover:shadow-lifted",
-        waiting ? "border-gold/60 bg-gold-soft" : "border-border bg-card"
-      )}
+      href={q.href}
+      className="focus-ring flex min-h-20 items-center gap-3 rounded-lg border border-gold/60 bg-gold-soft p-4 transition-shadow duration-200 hover:shadow-lifted"
     >
-      <div
-        className={cn(
-          "flex h-11 w-11 shrink-0 items-center justify-center rounded-md",
-          waiting ? "bg-gold text-gold-foreground" : "bg-primary-soft text-primary"
-        )}
-      >
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-gold text-gold-foreground">
         <Icon className="h-5 w-5" aria-hidden />
       </div>
       <div className="min-w-0 flex-1">
-        {waiting ? (
-          <>
-            <p className="text-2xl font-bold leading-tight tabular-nums">{toBn(n ?? 0)}</p>
-            <p className="text-sm font-medium">{label}</p>
-          </>
-        ) : (
-          <>
-            <p className="text-sm font-semibold text-success">✓ {done}</p>
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </>
-        )}
+        <p className="text-2xl font-bold leading-tight tabular-nums">{toBn(q.n ?? 0)}</p>
+        <p className="text-sm font-medium">{q.label}</p>
       </div>
       <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
     </Link>
   );
 }
 
+/** "আজকের কাজ": what is waiting comes first as cards; queues with nothing
+ * waiting collapse into one quiet line of ticks instead of five empty boxes. */
 function TodaysWork({ fullAdmin }: { fullAdmin: boolean }) {
   const q = useQuery({ queryKey: ["admin-queues"], queryFn: () => api.queues(), refetchInterval: 60_000 });
   const d = q.data;
+  const queues: Queue[] = [
+    { n: d?.reviews, label: "সাপ্তাহিক রিভিউ বাকি", done: "রিভিউ", href: "/reviews", icon: ClipboardCheck },
+    ...(fullAdmin
+      ? [
+          { n: d?.joinRequests, label: "উসরায় যোগ দেওয়ার অনুরোধ", done: "উসরার অনুরোধ", href: "/usrah", icon: Users },
+          { n: d?.support, label: "সাপোর্ট বার্তার উত্তর বাকি", done: "সাপোর্ট", href: "/support", icon: Headset },
+          { n: d?.masala, label: "মাসআলার উত্তর বাকি", done: "মাসআলা", href: "/masala", icon: BookOpenCheck },
+          { n: d?.feedback, label: "নতুন মতামত", done: "মতামত", href: "/feedback", icon: MessageSquareText },
+        ]
+      : []),
+  ];
+  const waiting = queues.filter((x) => (x.n ?? 0) > 0);
+  const clear = queues.filter((x) => !((x.n ?? 0) > 0));
   return (
     <section aria-label="আজকের কাজ" className="space-y-3">
       <h3 className="text-base font-bold">আজকের কাজ</h3>
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        <TodoTile n={d?.reviews} label="সাপ্তাহিক রিভিউ বাকি" done="সব রিভিউ শেষ" href="/reviews" icon={ClipboardCheck} />
-        {fullAdmin ? (
-          <>
-            <TodoTile n={d?.joinRequests} label="উসরায় যোগ দেওয়ার অনুরোধ" done="কোনো অনুরোধ নেই" href="/usrah" icon={Users} />
-            <TodoTile n={d?.support} label="সাপোর্ট বার্তার উত্তর বাকি" done="সব বার্তার উত্তর দেওয়া" href="/support" icon={Headset} />
-            <TodoTile n={d?.masala} label="মাসআলার উত্তর বাকি" done="সব মাসআলার উত্তর দেওয়া" href="/masala" icon={BookOpenCheck} />
-            <TodoTile n={d?.feedback} label="নতুন মতামত" done="সব মতামত পড়া হয়েছে" href="/feedback" icon={MessageSquareText} />
-          </>
-        ) : null}
-        <Link
-          href="/assessments"
-          className="focus-ring flex min-h-20 items-center gap-3 rounded-lg border border-dashed border-border bg-card p-4 transition-shadow duration-200 hover:shadow-lifted"
-        >
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
-            <FileCheck2 className="h-5 w-5" aria-hidden />
+      {q.isLoading ? (
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="skeleton h-20" />
+          <div className="skeleton h-20" />
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {waiting.map((x) => (
+              <TodoTile key={x.href} q={x} />
+            ))}
+            <Link
+              href="/assessments"
+              className="focus-ring flex min-h-20 items-center gap-3 rounded-lg border border-dashed border-border bg-card p-4 transition-shadow duration-200 hover:shadow-lifted"
+            >
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md bg-primary-soft text-primary">
+                <FileCheck2 className="h-5 w-5" aria-hidden />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">নতুন মূল্যায়ন নিন</p>
+                <p className="text-xs text-muted-foreground">ফরযে আইন মূল্যায়ন ফর্ম</p>
+              </div>
+              <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </Link>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">নতুন মূল্যায়ন নিন</p>
-            <p className="text-xs text-muted-foreground">ফরযে আইন মূল্যায়ন ফর্ম</p>
-          </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-        </Link>
-      </div>
+          {clear.length ? (
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span className="font-semibold text-success">✓ কিছু বাকি নেই:</span>
+              {clear.map((x) => (
+                <Link key={x.href} href={x.href} className="focus-ring rounded hover:text-primary hover:underline">
+                  {x.done}
+                </Link>
+              ))}
+            </p>
+          ) : null}
+        </>
+      )}
     </section>
   );
 }

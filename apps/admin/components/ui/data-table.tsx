@@ -73,6 +73,7 @@ export function DataTable<T>({
   if (error) return <ErrorState error={error} onRetry={onRetry} className="border-0" />;
 
   const rows = table.getRowModel().rows;
+  const headerById = new Map(table.getFlatHeaders().map((h) => [h.column.id, h]));
 
   const exportCsv = () => {
     if (!csvFilename || !csvHeaders || !csvRow || !data) return;
@@ -85,11 +86,71 @@ export function DataTable<T>({
         <div className="no-print flex justify-end">
           <Button variant="outline" size="sm" onClick={exportCsv}>
             <Download className="h-4 w-4" aria-hidden />
-            CSV ডাউনলোড
+            ডাউনলোড (এক্সেল)
           </Button>
         </div>
       ) : null}
-      <div className={cn("scroll-thin overflow-auto rounded-lg border border-border bg-card shadow-card", maxHeight)}>
+      {/* On a phone a wide table means sideways scrolling: each row becomes
+          a card — the first column as its title, the rest as label/value. */}
+      <ul className="space-y-2 md:hidden">
+        {rows.length === 0 ? (
+          <li>
+            <EmptyState title={emptyTitle} hint={emptyHint} action={emptyAction} />
+          </li>
+        ) : (
+          rows.map((row) => {
+            const [first, ...rest] = row.getVisibleCells();
+            return (
+              <li key={row.id}>
+                <div
+                  role={onRowClick ? "button" : undefined}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  aria-label={rowAriaLabel ? rowAriaLabel(row.original) : undefined}
+                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            onRowClick(row.original);
+                          }
+                        }
+                      : undefined
+                  }
+                  className={cn(
+                    "rounded-lg border border-border bg-card p-3.5 shadow-card",
+                    onRowClick && "cursor-pointer active:bg-primary-soft/60"
+                  )}
+                >
+                  {first ? (
+                    <div className="text-base font-semibold">
+                      {flexRender(first.column.columnDef.cell, first.getContext())}
+                    </div>
+                  ) : null}
+                  {rest.length ? (
+                    <dl className="mt-2 grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1.5 text-sm">
+                      {rest.map((cell) => {
+                        const h = headerById.get(cell.column.id);
+                        const label = h ? flexRender(h.column.columnDef.header, h.getContext()) : null;
+                        const empty = !label || (typeof h?.column.columnDef.header === "string" && !h.column.columnDef.header.trim());
+                        return (
+                          <React.Fragment key={cell.id}>
+                            {empty ? null : <dt className="text-xs text-muted-foreground">{label}</dt>}
+                            <dd className={cn("min-w-0 [&_*]:whitespace-normal", empty && "col-span-2")}>
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </dd>
+                          </React.Fragment>
+                        );
+                      })}
+                    </dl>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })
+        )}
+      </ul>
+      <div className={cn("scroll-thin hidden overflow-auto rounded-lg border border-border bg-card shadow-card md:block", maxHeight)}>
         <table className="w-full border-collapse text-sm">
           <thead className="sticky top-0 z-10">
             {table.getHeaderGroups().map((hg) => (
@@ -169,7 +230,7 @@ export function DataTable<T>({
       </div>
       {data ? (
         <p className="text-xs text-muted-foreground" aria-live="polite">
-          সর্বমোট {toBn(data.length)} টি সারি
+          মোট {toBn(data.length)}টি
         </p>
       ) : null}
     </div>
