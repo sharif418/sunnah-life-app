@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { api, type InvigilatorHealthRow, type UsrahHealth } from "@/lib/api";
 import { useSession } from "@/lib/session";
-import { toBn, relativeBn, todayLineBn, bdToday } from "@/lib/bn";
+import { toBn, relativeBn, todayLineBn, bdToday, dateLabelBn } from "@/lib/bn";
 import { auditActionLabel, pctBn, ROLE_LABELS_BN } from "@/lib/labels";
 import { BothGendersBadge, FScopeBadge, GenderBadge, RoleBadge } from "@/components/badges";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -486,7 +486,7 @@ export default function OverviewPage() {
                 <ClipboardCheck className="h-[18px] w-[18px] text-primary" aria-hidden />
                 এই সপ্তাহের রিভিউ
               </CardTitle>
-              <CardDescription>সপ্তাহ শুরু: {toBn(wsToday)} থেকে চলমান</CardDescription>
+              <CardDescription>সপ্তাহ শুরু {dateLabelBn(wsToday)}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               {queue.isLoading ? (

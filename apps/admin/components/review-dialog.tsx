@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, type UsrahMember, type WeeklyReview } from "@/lib/api";
-import { toBn, weekStartOf } from "@/lib/bn";
+import { dateLabelBn, toBn, weekStartOf } from "@/lib/bn";
 import { useSession } from "@/lib/session";
 import { useToast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
@@ -73,7 +73,7 @@ export function ReviewDialog({
       open={open}
       onClose={onClose}
       title={`সাপ্তাহিক রিভিউ — ${member.name}`}
-      description={`সপ্তাহ শুরু: ${toBn(weekStart)} · রিভিউকারী: ${user?.name ?? ""}`}
+      description={`সপ্তাহ শুরু ${dateLabelBn(weekStart)} · রিভিউ করছেন ${user?.name ?? ""}`}
       wide
       footer={
         <>
