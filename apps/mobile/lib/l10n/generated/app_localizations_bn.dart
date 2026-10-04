@@ -2360,4 +2360,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get masala_pending => 'উত্তরের অপেক্ষায়';
+
+  @override
+  String get bell_on_for_waqt => 'এই ওয়াক্তে অ্যালার্ম';
 }

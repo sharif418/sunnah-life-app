@@ -689,6 +689,7 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'search_hint' => l.search_hint,
   'search_no_results' => l.search_no_results,
   'search_offline_note' => l.search_offline_note,
+  'bell_on_for_waqt' => l.bell_on_for_waqt,
   'masala_mine' => l.masala_mine,
   'masala_answered' => l.masala_answered,
   'masala_pending' => l.masala_pending,

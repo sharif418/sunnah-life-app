@@ -2332,4 +2332,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get masala_pending => 'بانتظار الجواب';
+
+  @override
+  String get bell_on_for_waqt => 'منبّه لهذه الصلاة';
 }

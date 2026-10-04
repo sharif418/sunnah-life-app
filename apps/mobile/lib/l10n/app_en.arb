@@ -758,5 +758,6 @@
   "weekday_short_6": "Sat",
   "masala_mine": "My questions & answers",
   "masala_answered": "Answered",
-  "masala_pending": "Awaiting answer"
+  "masala_pending": "Awaiting answer",
+  "bell_on_for_waqt": "Alarm for this prayer"
 }

@@ -4653,6 +4653,12 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'উত্তরের অপেক্ষায়'**
   String get masala_pending;
+
+  /// No description provided for @bell_on_for_waqt.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই ওয়াক্তে অ্যালার্ম'**
+  String get bell_on_for_waqt;
 }
 
 class _AppLocalizationsDelegate

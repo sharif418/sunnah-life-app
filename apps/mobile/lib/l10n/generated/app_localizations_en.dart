@@ -2356,4 +2356,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get masala_pending => 'Awaiting answer';
+
+  @override
+  String get bell_on_for_waqt => 'Alarm for this prayer';
 }
