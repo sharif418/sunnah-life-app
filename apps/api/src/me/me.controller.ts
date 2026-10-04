@@ -1,4 +1,4 @@
-import { Res, Req, Body, Controller, Get, HttpCode, HttpStatus, Patch, Post } from "@nestjs/common";
+import { Res, Req, Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
 import { IsEmail, IsIn, IsLatitude, IsLongitude, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateIf } from "class-validator";
@@ -10,6 +10,8 @@ import type { AuthedRequest } from "../common/auth.guard";
 import { toDomainUser } from "../common/mappers";
 import { ApiError } from "../common/api-error";
 import { AuthService } from "../auth/auth.service";
+import { StorageService } from "../storage/storage.service";
+import { deleteOwnAccount } from "./account-deletion";
 
 /** Gender is locked once set: a user whose account was created WITHOUT one
  *  (social sign-in — gender "unspecified") sets it exactly once here, as the
@@ -124,8 +126,20 @@ export class MeController {
   constructor(
     private readonly rls: RlsService,
     private readonly guard: GuardService,
-    private readonly auth: AuthService
+    private readonly auth: AuthService,
+    private readonly storage: StorageService
   ) {}
+
+  /** DELETE /api/me — delete my own account (see account-deletion.ts).
+   *  The body must carry {confirm: "DELETE"} so a stray call cannot do it. */
+  @Delete()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Delete my own account (Play policy); body {confirm: 'DELETE'}" })
+  async deleteMe(@Body() body: { confirm?: string }, @Req() req: AuthedRequest) {
+    const user = this.guard.requireUser(currentUser(req));
+    if (body?.confirm !== "DELETE") throw new ApiError(400, "নিশ্চিত করে আবার চেষ্টা করুন");
+    return deleteOwnAccount({ rls: this.rls, storage: this.storage, guard: this.guard }, user);
+  }
 
   /** GET /api/me — {user|null}; refreshes lastActiveAt when signed in. */
   @Get()

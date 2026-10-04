@@ -79,6 +79,16 @@ export class StorageService {
     return fs.readFile(this.localPath(key));
   }
 
+  /** Delete an object (a missing one is not an error). */
+  async remove(key: string): Promise<void> {
+    this.assertKey(key);
+    if (this.s3) {
+      await this.s3.removeObject(this.bucket, key);
+      return;
+    }
+    await fs.rm(this.localPath(key), { force: true });
+  }
+
   /**
    * Presigned GET URL (S3/MinIO only, 1-hour TTL). Local adapter returns
    * null — callers stream local objects through their own authenticated

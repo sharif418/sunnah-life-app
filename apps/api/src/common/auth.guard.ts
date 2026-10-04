@@ -58,7 +58,8 @@ export class JwtAuthGuard implements CanActivate {
       const row = await this.rls.system((tx) =>
         tx.user.findUnique({ where: { id: payload.sub } })
       );
-      if (row) req.user = toDomainUser(row as never);
+      // a deleted account's still-unexpired access token is anonymous
+      if (row && !(row as { deletedAt?: Date | null }).deletedAt) req.user = toDomainUser(row as never);
     } catch {
       // invalid/expired token → anonymous
     }
