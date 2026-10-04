@@ -780,5 +780,20 @@
   "forbidden_short_sunset": "Sunset",
   "madu_active_ago": "active %t%",
   "review_this_week": "This week",
-  "review_last_week": "Last week"
+  "review_last_week": "Last week",
+  "delete_account_entry": "Delete account",
+  "delete_account_title": "Delete your account?",
+  "delete_account_goes": "What is deleted:",
+  "delete_account_goes_1": "Your diary, goals, reviews and assessments",
+  "delete_account_goes_2": "Your questions, feedback and support messages",
+  "delete_account_goes_3": "Your name, phone, email, member code and Google sign-in",
+  "delete_account_stays": "What stays (without your name):",
+  "delete_account_stays_1": "What you wrote for others, such as reviews or announcements — shown as “deleted account”",
+  "delete_account_final": "This cannot be undone.",
+  "delete_account_confirm_tick": "I understand and want to delete my account",
+  "delete_account_button": "Delete permanently",
+  "delete_account_done": "Your account has been deleted",
+  "delete_account_failed": "Could not delete — check your connection and try again",
+  "privacy_policy": "Privacy policy",
+  "privacy_policy_sub": "What we keep, who sees it, how to delete it"
 }

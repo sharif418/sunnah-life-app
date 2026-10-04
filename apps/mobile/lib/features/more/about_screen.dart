@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../api/api_client.dart';
+import '../../core/external_urls.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../../state/providers.dart';
@@ -82,6 +83,20 @@ class _AboutScreenState extends ConsumerState<AboutScreen> {
                   style: theme.textTheme.bodyMedium,
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: SLSpacing.s12),
+
+          // Play's rule: the privacy policy is reachable inside the app
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              key: const ValueKey('about_privacy'),
+              leading: const Icon(PhosphorIconsRegular.shieldCheck),
+              title: Text(context.t('privacy_policy')),
+              subtitle: Text(context.t('privacy_policy_sub')),
+              trailing: const Icon(PhosphorIconsRegular.arrowSquareOut, size: 18),
+              onTap: () => openInAppBrowser('${webBaseFor(ApiClient.baseUrl)}/privacy'),
             ),
           ),
           const SizedBox(height: SLSpacing.s16),

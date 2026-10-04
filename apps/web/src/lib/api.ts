@@ -145,6 +145,9 @@ export const api = {
   logout: () => req<{ ok: boolean }>(route("/auth/logout"), { method: "POST", body: "{}" }),
 
   me: () => req<{ user: User | null }>(route("/me")),
+  /** DELETE /api/me — delete the signed-in account (Play's rule; see /delete-account). */
+  deleteMe: () =>
+    req<{ ok: boolean }>(route("/me"), { method: "DELETE", body: JSON.stringify({ confirm: "DELETE" }) }),
   updateMe: (patch: Partial<Pick<User, "name" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
     req<{ user: User }>(route("/me"), { method: "PATCH", body: JSON.stringify(patch) }),
 

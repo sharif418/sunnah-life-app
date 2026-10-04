@@ -22,6 +22,17 @@ bool isLaunchableHttpUrl(String url) {
   return uri.scheme == 'http' || uri.scheme == 'https';
 }
 
+/// The website that belongs to an API base: production serves both from one
+/// origin (https://sunnahlife.app), staging puts the API on an `api-` / `api.`
+/// host beside the site (api-staging.example → staging.example).
+String webBaseFor(String apiBase) {
+  final uri = Uri.tryParse(apiBase.trim());
+  if (uri == null || uri.host.isEmpty) return apiBase;
+  var host = uri.host;
+  if (host.startsWith('api-') || host.startsWith('api.')) host = host.substring(4);
+  return '${uri.scheme}://$host';
+}
+
 /// Open [url] in the in-app browser view (Chrome Custom Tabs on Android,
 /// SFSafariViewController on iOS) with the external browser as the fallback
 /// when the in-app view throws (no Custom Tabs provider, WebView missing…).

@@ -780,5 +780,20 @@
   "forbidden_short_sunset": "সূর্যাস্ত",
   "madu_active_ago": "%t% সক্রিয়",
   "review_this_week": "এই সপ্তাহ",
-  "review_last_week": "গত সপ্তাহ"
+  "review_last_week": "গত সপ্তাহ",
+  "delete_account_entry": "অ্যাকাউন্ট মুছে ফেলুন",
+  "delete_account_title": "অ্যাকাউন্ট মুছে ফেলবেন?",
+  "delete_account_goes": "যা মুছে যাবে:",
+  "delete_account_goes_1": "আপনার মুহাসাবা ডায়েরি, লক্ষ্য, রিভিউ ও মূল্যায়ন",
+  "delete_account_goes_2": "আপনার প্রশ্ন, মতামত ও সাপোর্ট বার্তা",
+  "delete_account_goes_3": "নাম, ফোন নম্বর, ইমেইল, সদস্য কোড ও গুগল লগইন",
+  "delete_account_stays": "যা থাকবে (নাম ছাড়া):",
+  "delete_account_stays_1": "অন্যদের জন্য আপনি যা লিখেছেন, যেমন তাদের দেওয়া রিভিউ বা ঘোষণা — সেখানে লেখা থাকবে “মুছে ফেলা অ্যাকাউন্ট”",
+  "delete_account_final": "এটি ফেরানো যাবে না।",
+  "delete_account_confirm_tick": "আমি বুঝেছি, আমার অ্যাকাউন্ট মুছে ফেলতে চাই",
+  "delete_account_button": "স্থায়ীভাবে মুছে ফেলুন",
+  "delete_account_done": "আপনার অ্যাকাউন্ট মুছে ফেলা হয়েছে",
+  "delete_account_failed": "মুছতে পারা যায়নি — ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন",
+  "privacy_policy": "গোপনীয়তা নীতি",
+  "privacy_policy_sub": "কোন তথ্য রাখা হয়, কারা দেখেন, কীভাবে মুছবেন"
 }

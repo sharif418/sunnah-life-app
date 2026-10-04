@@ -4785,6 +4785,96 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'গত সপ্তাহ'**
   String get review_last_week;
+
+  /// No description provided for @delete_account_entry.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাকাউন্ট মুছে ফেলুন'**
+  String get delete_account_entry;
+
+  /// No description provided for @delete_account_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাকাউন্ট মুছে ফেলবেন?'**
+  String get delete_account_title;
+
+  /// No description provided for @delete_account_goes.
+  ///
+  /// In bn, this message translates to:
+  /// **'যা মুছে যাবে:'**
+  String get delete_account_goes;
+
+  /// No description provided for @delete_account_goes_1.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার মুহাসাবা ডায়েরি, লক্ষ্য, রিভিউ ও মূল্যায়ন'**
+  String get delete_account_goes_1;
+
+  /// No description provided for @delete_account_goes_2.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার প্রশ্ন, মতামত ও সাপোর্ট বার্তা'**
+  String get delete_account_goes_2;
+
+  /// No description provided for @delete_account_goes_3.
+  ///
+  /// In bn, this message translates to:
+  /// **'নাম, ফোন নম্বর, ইমেইল, সদস্য কোড ও গুগল লগইন'**
+  String get delete_account_goes_3;
+
+  /// No description provided for @delete_account_stays.
+  ///
+  /// In bn, this message translates to:
+  /// **'যা থাকবে (নাম ছাড়া):'**
+  String get delete_account_stays;
+
+  /// No description provided for @delete_account_stays_1.
+  ///
+  /// In bn, this message translates to:
+  /// **'অন্যদের জন্য আপনি যা লিখেছেন, যেমন তাদের দেওয়া রিভিউ বা ঘোষণা — সেখানে লেখা থাকবে “মুছে ফেলা অ্যাকাউন্ট”'**
+  String get delete_account_stays_1;
+
+  /// No description provided for @delete_account_final.
+  ///
+  /// In bn, this message translates to:
+  /// **'এটি ফেরানো যাবে না।'**
+  String get delete_account_final;
+
+  /// No description provided for @delete_account_confirm_tick.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমি বুঝেছি, আমার অ্যাকাউন্ট মুছে ফেলতে চাই'**
+  String get delete_account_confirm_tick;
+
+  /// No description provided for @delete_account_button.
+  ///
+  /// In bn, this message translates to:
+  /// **'স্থায়ীভাবে মুছে ফেলুন'**
+  String get delete_account_button;
+
+  /// No description provided for @delete_account_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অ্যাকাউন্ট মুছে ফেলা হয়েছে'**
+  String get delete_account_done;
+
+  /// No description provided for @delete_account_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'মুছতে পারা যায়নি — ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন'**
+  String get delete_account_failed;
+
+  /// No description provided for @privacy_policy.
+  ///
+  /// In bn, this message translates to:
+  /// **'গোপনীয়তা নীতি'**
+  String get privacy_policy;
+
+  /// No description provided for @privacy_policy_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'কোন তথ্য রাখা হয়, কারা দেখেন, কীভাবে মুছবেন'**
+  String get privacy_policy_sub;
 }
 
 class _AppLocalizationsDelegate

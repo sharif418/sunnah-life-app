@@ -2423,4 +2423,56 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get review_last_week => 'Last week';
+
+  @override
+  String get delete_account_entry => 'Delete account';
+
+  @override
+  String get delete_account_title => 'Delete your account?';
+
+  @override
+  String get delete_account_goes => 'What is deleted:';
+
+  @override
+  String get delete_account_goes_1 =>
+      'Your diary, goals, reviews and assessments';
+
+  @override
+  String get delete_account_goes_2 =>
+      'Your questions, feedback and support messages';
+
+  @override
+  String get delete_account_goes_3 =>
+      'Your name, phone, email, member code and Google sign-in';
+
+  @override
+  String get delete_account_stays => 'What stays (without your name):';
+
+  @override
+  String get delete_account_stays_1 =>
+      'What you wrote for others, such as reviews or announcements — shown as “deleted account”';
+
+  @override
+  String get delete_account_final => 'This cannot be undone.';
+
+  @override
+  String get delete_account_confirm_tick =>
+      'I understand and want to delete my account';
+
+  @override
+  String get delete_account_button => 'Delete permanently';
+
+  @override
+  String get delete_account_done => 'Your account has been deleted';
+
+  @override
+  String get delete_account_failed =>
+      'Could not delete — check your connection and try again';
+
+  @override
+  String get privacy_policy => 'Privacy policy';
+
+  @override
+  String get privacy_policy_sub =>
+      'What we keep, who sees it, how to delete it';
 }
