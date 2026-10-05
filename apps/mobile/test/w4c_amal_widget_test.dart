@@ -89,6 +89,12 @@ class SignedInAuth extends AuthNotifier {
 
 /// Fake API — scriptable goals/queue/leaderboard; never touches the
 /// network (the sync_pull_test _FakeApi pattern).
+class _FailingGoalsApi extends FakeGoalsApi {
+  @override
+  Future<List<PersonalGoal>> fetchGoals() async =>
+      throw ApiException(0, 'offline');
+}
+
 class FakeGoalsApi extends ApiClient {
   FakeGoalsApi({this.goals = const [], this.queue = const []});
 
@@ -544,6 +550,36 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(S.tr(Lang.bn, 'goals_signin_needed')), findsOneWidget);
+      // nothing to propose from as a guest
+      expect(find.text(S.tr(Lang.bn, 'goals_new')), findsNothing);
+    });
+
+    testWidgets('a signed-in member whose request fails sees retry, not the '
+        'sign-in gate', (tester) async {
+      final db = makeDb();
+      final container = ProviderContainer(
+        overrides: quietRemote(
+          db,
+          extra: [
+            apiProvider.overrideWithValue(_FailingGoalsApi()),
+            authProvider.overrideWith(() => SignedInAuth(member)),
+          ],
+        ),
+      );
+      addTearDown(container.dispose);
+      addTearDown(db.close);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: GoalsScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text(S.tr(Lang.bn, 'goals_signin_needed')), findsNothing);
+      expect(find.text(S.tr(Lang.bn, 'goals_load_failed')), findsOneWidget);
+      expect(find.text(S.tr(Lang.bn, 'retry')), findsOneWidget);
     });
 
     testWidgets('propose a goal → proposed chip + toast; pre-seeded statuses '

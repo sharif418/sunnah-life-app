@@ -2475,4 +2475,8 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get privacy_policy_sub =>
       'What we keep, who sees it, how to delete it';
+
+  @override
+  String get goals_load_failed =>
+      'Couldn\'t load your goals — check the connection and try again';
 }

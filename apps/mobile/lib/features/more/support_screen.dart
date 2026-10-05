@@ -46,8 +46,12 @@ class SupportScreen extends ConsumerWidget {
         title: Text(context.t('more_support')),
       ),
       body: body,
-      // New-thread affordance — hidden for guests (the gate explains why).
-      floatingActionButton: auth.signedIn
+      // New-thread affordance — hidden for guests (the gate explains why)
+      // and while the list is empty (the empty state carries the button).
+      floatingActionButton:
+          auth.signedIn &&
+              (ref.watch(supportThreadsProvider).valueOrNull?.isNotEmpty ??
+                  false)
           ? FloatingActionButton.extended(
               onPressed: () => _showCreateSheet(context, ref),
               icon: const Icon(PhosphorIconsRegular.chatCircle),
@@ -473,9 +477,7 @@ class _SupportThreadScreenState extends ConsumerState<SupportThreadScreen> {
                       ),
                     ),
                     const SizedBox(width: SLSpacing.s8),
-                    Flexible(
-                      child: SupportStatusChip(status: thread.status),
-                    ),
+                    Flexible(child: SupportStatusChip(status: thread.status)),
                   ],
                 ),
               ),
@@ -536,7 +538,9 @@ class _SupportThreadScreenState extends ConsumerState<SupportThreadScreen> {
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : const DirectionalIcon(PhosphorIconsRegular.paperPlaneTilt),
+                              : const DirectionalIcon(
+                                  PhosphorIconsRegular.paperPlaneTilt,
+                                ),
                         ),
                       ],
                     ),

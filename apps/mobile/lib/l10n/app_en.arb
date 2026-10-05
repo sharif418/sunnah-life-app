@@ -795,5 +795,6 @@
   "delete_account_done": "Your account has been deleted",
   "delete_account_failed": "Could not delete — check your connection and try again",
   "privacy_policy": "Privacy policy",
-  "privacy_policy_sub": "What we keep, who sees it, how to delete it"
+  "privacy_policy_sub": "What we keep, who sees it, how to delete it",
+  "goals_load_failed": "Couldn't load your goals — check the connection and try again"
 }

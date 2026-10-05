@@ -4875,6 +4875,12 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'কোন তথ্য রাখা হয়, কারা দেখেন, কীভাবে মুছবেন'**
   String get privacy_policy_sub;
+
+  /// No description provided for @goals_load_failed.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্যগুলো আনা যায়নি — ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন'**
+  String get goals_load_failed;
 }
 
 class _AppLocalizationsDelegate

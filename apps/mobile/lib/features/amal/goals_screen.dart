@@ -34,15 +34,18 @@ class GoalsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text(context.t('goals_title'))),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openProposeSheet(context, ref),
-        icon: const Icon(PhosphorIconsRegular.flagBanner),
-        label: Text(context.t('goals_new')),
-      ),
+      // Proposing needs a signed-in member and the list loaded.
+      floatingActionButton: async.valueOrNull == null
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: () => _openProposeSheet(context, ref),
+              icon: const Icon(PhosphorIconsRegular.flagBanner),
+              label: Text(context.t('goals_new')),
+            ),
       body: async.when(
         loading: () => const Skeleton(height: 72, count: 5),
         error: (e, _) => ErrorState(
-          message: '$e',
+          message: context.t('goals_load_failed'),
           onRetry: () => ref.invalidate(goalsProvider),
         ),
         data: (goals) {

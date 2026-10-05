@@ -689,6 +689,7 @@ String _translate(AppLocalizations l, String key) => switch (key) {
   'search_hint' => l.search_hint,
   'search_no_results' => l.search_no_results,
   'search_offline_note' => l.search_offline_note,
+  'goals_load_failed' => l.goals_load_failed,
   'privacy_policy' => l.privacy_policy,
   'privacy_policy_sub' => l.privacy_policy_sub,
   'delete_account_entry' => l.delete_account_entry,
