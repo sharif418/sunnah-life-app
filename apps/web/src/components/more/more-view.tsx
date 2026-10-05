@@ -13,6 +13,7 @@ import { MosquesView } from "@/components/more/mosques";
 import { MasalaView } from "@/components/more/masala";
 import { ContactsView } from "@/components/more/contacts";
 import { AboutView } from "@/components/more/about";
+import { SupportView } from "@/components/more/support";
 
 export function MoreView() {
   const view = useApp((s) => s.view);
@@ -34,6 +35,8 @@ export function MoreView() {
       return <ContactsView />;
     case "about":
       return <AboutView />;
+    case "support":
+      return <SupportView />;
     default:
       return <MoreMenu />;
   }

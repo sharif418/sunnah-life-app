@@ -10,6 +10,7 @@ import { useApp } from "@/lib/store";
 import { translate } from "@/lib/i18n";
 import { ROLE_LABELS_BN, LEVEL_LABELS_BN } from "@/types/domain";
 import {
+  Headset,
   ChevronLeft,
   AlarmClock,
   Compass,
@@ -28,6 +29,7 @@ const ITEMS: { view: string; icon: LucideIcon; titleKey: string; descKey: string
   { view: "zakat", icon: Calculator, titleKey: "more.zakat", descKey: "more.desc.zakat", highlight: true },
   { view: "mosques", icon: Landmark, titleKey: "more.mosques", descKey: "more.desc.mosques" },
   { view: "masala", icon: MessageCircleQuestion, titleKey: "more.masala", descKey: "more.desc.masala" },
+  { view: "support", icon: Headset, titleKey: "more.support", descKey: "more.desc.support" },
   { view: "contacts", icon: LinkIcon, titleKey: "more.contacts", descKey: "more.desc.contacts" },
   { view: "about", icon: Info, titleKey: "more.about", descKey: "more.desc.about" },
 ];

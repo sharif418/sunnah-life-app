@@ -36,6 +36,9 @@ import type {
   Usrah,
   UsrahMember,
   Announcement,
+  MyMasala,
+  SupportMessage,
+  SupportThread,
   GoalQueueItem,
   PersonalGoal,
   WeeklyReview,
@@ -246,6 +249,19 @@ export const api = {
     req<{ ok: boolean }>(route("/reminders"), { method: "PATCH", body: JSON.stringify({ id }) }),
   live: () => req<{ programs: LiveProgramItem[] }>(route("/live")),
   notifyLive: (id: string) => req<{ ok: boolean }>(route("/live"), { method: "POST", body: JSON.stringify({ id }) }),
+  /** My মাসআলা questions and their answers (signed in). */
+  myMasala: () => req<{ questions: MyMasala[] }>(route("/masala/mine")),
+  // live support (W4d)
+  supportThreads: () => req<{ threads: SupportThread[] }>(route("/support")),
+  supportCreate: (subject: string, message: string) =>
+    req<{ thread: SupportThread }>(route("/support"), { method: "POST", body: JSON.stringify({ subject, message }) }),
+  supportThread: (id: string) =>
+    req<{ thread: SupportThread; messages: SupportMessage[] }>(`/api/support/${encodeURIComponent(id)}`),
+  supportAppend: (id: string, message: string) =>
+    req<{ message: SupportMessage }>(`/api/support/${encodeURIComponent(id)}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }),
   masala: (payload: { name: string; phone?: string; question: string }) =>
     req<{ ok: boolean }>(route("/masala"), { method: "POST", body: JSON.stringify(payload) }),
   feedback: (message: string) =>

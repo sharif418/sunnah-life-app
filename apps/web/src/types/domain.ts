@@ -609,3 +609,38 @@ export interface PersonalGoal {
 export interface GoalQueueItem extends PersonalGoal {
   userName: string;
 }
+
+// ── Live support (W4d) ───────────────────────────────────────────────────────
+
+export interface SupportThread {
+  id: string;
+  userId: string;
+  subject: string;
+  status: "open" | "answered" | "closed";
+  createdAt: string;
+  updatedAt: string;
+  closedAt: string | null;
+  /** list rows only */
+  lastPreview?: string | null;
+  /** list rows only: the last message is the team's reply */
+  unreadForUser?: boolean;
+}
+
+export interface SupportMessage {
+  id: string;
+  threadId: string;
+  authorId: string;
+  isAdmin: boolean;
+  body: string;
+  createdAt: string;
+}
+
+/** One of my মাসআলা questions (GET /api/masala/mine). */
+export interface MyMasala {
+  id: string;
+  question: string;
+  status: "new" | "answered";
+  answer: string | null;
+  answeredAt: string | null;
+  createdAt: string;
+}

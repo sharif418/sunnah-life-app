@@ -164,6 +164,8 @@ export const STRINGS: Dict = {
   "more.desc.zakat": { bn: "নিসাব ও প্রদেয় হিসাব", en: "Nisab & due calculation", ar: "حساب النصاب والواجب" },
   "more.desc.mosques": { bn: "নিকটবর্তী মসজিদের তালিকা", en: "Nearby mosques", ar: "المساجد القريبة" },
   "more.desc.masala": { bn: "মুফতির কাছে প্রশ্ন করুন", en: "Ask a mufti a question", ar: "اسأل مفتيًا" },
+  "more.support": { bn: "লাইভ সাপোর্ট", en: "Live support", ar: "الدعم المباشر" },
+  "more.desc.support": { bn: "সমস্যা জানান, উত্তর পান", en: "Tell us a problem, get an answer", ar: "أخبرنا بالمشكلة واحصل على رد" },
   "more.desc.contacts": { bn: "প্রতিষ্ঠান ও গ্রুপসমূহ", en: "Institutions & groups", ar: "المؤسسات والمجموعات" },
   "more.desc.about": { bn: "সংস্করণ ও মতামত", en: "Version & feedback", ar: "الإصدار والملاحظات" },
   "more.settings": { bn: "সেটিংস", en: "Settings", ar: "الإعدادات" },
