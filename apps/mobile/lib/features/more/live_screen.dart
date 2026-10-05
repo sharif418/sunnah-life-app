@@ -219,12 +219,13 @@ class LiveScreen extends ConsumerWidget {
                   context.t('live_past'), theme.colorScheme.onSurfaceVariant,
                   programs.where((p) => p.status == 'past').toList(),
                   emptyKey: 'live_none_past'),
-              Center(
-                child: Text(
-                  '${bn ? toBn(programs.length) : programs.length} ${context.t('live_programs_count')}',
-                  style: theme.textTheme.bodySmall,
+              if (programs.isNotEmpty)
+                Center(
+                  child: Text(
+                    '${bn ? toBn(programs.length) : programs.length} ${context.t('live_programs_count')}',
+                    style: theme.textTheme.bodySmall,
+                  ),
                 ),
-              ),
             ],
           );
         },

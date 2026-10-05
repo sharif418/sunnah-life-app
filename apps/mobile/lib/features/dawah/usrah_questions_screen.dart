@@ -329,7 +329,7 @@ class _CategoryChip extends StatelessWidget {
         onTap: onTap,
         borderRadius: SLRadius.brPill,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 36),
+          constraints: const BoxConstraints(minHeight: SLSpacing.minTapTarget),
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
             borderRadius: SLRadius.brPill,

@@ -37,6 +37,7 @@ export const ROLE_RANK: Record<Role, number> = {
 export interface User {
   id: string;
   phone: string | null;
+  email?: string | null;
   name: string;
   photoUrl: string | null;
   gender: Gender;
@@ -263,6 +264,11 @@ export interface AssessmentSummary {
   assesseeSignedAt: string | null;
   participantCategory: number;
   scorePct: number | null;
+  /** W4i: final only after the assessee's own OTP confirmation */
+  status?: "pending_confirmation" | "confirmed" | "declined";
+  confirmedAt?: string | null;
+  declinedAt?: string | null;
+  decisionNote?: string | null;
 }
 
 export interface DawahOverview {
@@ -578,4 +584,77 @@ export interface AppConfig {
   }[];
   groups: { titleBn: string; url: string; descBn?: string }[];
   audioBase: string;
+}
+
+// ── Personal goals (W4c) ─────────────────────────────────────────────────────
+
+export type GoalStatus = "proposed" | "approved" | "rejected" | "completed" | "withdrawn";
+
+export interface PersonalGoal {
+  id: string;
+  userId: string;
+  amalKey: string;
+  title: string;
+  note: string | null;
+  target: string | null;
+  startDate: string; // YYYY-MM-DD
+  active: boolean;
+  status: GoalStatus;
+  decidedById: string | null;
+  decidedAt: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+/** A goal in the usrah head's approval queue, with the member's name. */
+export interface GoalQueueItem extends PersonalGoal {
+  userName: string;
+}
+
+// ── Live support (W4d) ───────────────────────────────────────────────────────
+
+export interface SupportThread {
+  id: string;
+  userId: string;
+  subject: string;
+  status: "open" | "answered" | "closed";
+  createdAt: string;
+  updatedAt: string;
+  closedAt: string | null;
+  /** list rows only */
+  lastPreview?: string | null;
+  /** list rows only: the last message is the team's reply */
+  unreadForUser?: boolean;
+}
+
+export interface SupportMessage {
+  id: string;
+  threadId: string;
+  authorId: string;
+  isAdmin: boolean;
+  body: string;
+  createdAt: string;
+}
+
+/** One of my মাসআলা questions (GET /api/masala/mine). */
+export interface MyMasala {
+  id: string;
+  question: string;
+  status: "new" | "answered";
+  answer: string | null;
+  answeredAt: string | null;
+  createdAt: string;
+}
+
+/** My request to join an usrah (W4d). */
+export interface UsrahJoinRequestItem {
+  id: string;
+  userId: string;
+  message: string | null;
+  status: "pending" | "approved" | "rejected";
+  handledById: string | null;
+  handledAt: string | null;
+  usrahId: string | null;
+  reason: string | null;
+  createdAt: string;
 }

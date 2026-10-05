@@ -1,7 +1,7 @@
 "use client";
 
 // হোম (বাড়ি) — নামাজ ড্যাশবোর্ড: তারিখ-ঘড়ি হিরো, পরবর্তী ওয়াক্ত কাউন্টডাউন,
-// সময়সূচি, কিবলা, আজকের আমল সারসংক্ষেপ, দ্রুত শর্টকাট।
+// সময়সূচি, কিবলা, আজকের আমল সারসংক্ষেপ, সর্বাধিক ব্যবহৃত আমল, দ্রুত শর্টকাট, ইলম।
 // সবকিছু গেস্ট-বান্ধব — সাইন-ইন ছাড়াই কাজ করে।
 
 import * as React from "react";
@@ -10,8 +10,11 @@ import { translate } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { PrayerHero } from "@/components/home/prayer-hero";
 import { QiblaCard } from "@/components/home/qibla-card";
+import { HomeLiveCard } from "@/components/home/live-card";
+import { ForbiddenTimesCard, WaqtAlertsToggle } from "@/components/home/forbidden-card";
 import { AmalSummaryCard } from "@/components/home/amal-summary-card";
 import { QuickLinks } from "@/components/home/quick-links";
+import { IlmPreview, MostUsedSection } from "@/components/home/home-extras";
 import { LocationSheet } from "@/components/home/city-sheet";
 import { MapPin, Navigation } from "lucide-react";
 
@@ -29,10 +32,15 @@ export function HomeView() {
   return (
     <div className="space-y-4 sm:space-y-6">
       {!hasLocation && <LocationPrompt />}
+      <HomeLiveCard />
       <PrayerHero />
+      <ForbiddenTimesCard />
+      <WaqtAlertsToggle />
       <QiblaCard />
       <AmalSummaryCard />
+      <MostUsedSection />
       <QuickLinks />
+      <IlmPreview />
     </div>
   );
 }

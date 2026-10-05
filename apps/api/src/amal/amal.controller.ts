@@ -64,6 +64,13 @@ export class AmalController {
     return this.amal.upsertEntries(currentUser(req), dto.entries as never);
   }
 
+  /** POST /api/amal/unlock-request — a member asks their head to open a locked day. */
+  @Post("unlock-request")
+  @ApiOperation({ summary: "Ask my usrah head to unlock a locked diary day (inbox + push to the head)" })
+  requestUnlock(@Body() body: { date?: string }, @Req() req: AuthedRequest) {
+    return this.amal.requestUnlock(currentUser(req), body?.date ?? "");
+  }
+
   /** POST /api/amal/unlock — usrah_head+ unlocks a locked day (audited). */
   @Post("unlock")
   @ApiOperation({ summary: "Unlock a locked diary day (usrah_head+)" })

@@ -182,6 +182,20 @@ export class MeController {
     if (data.email !== undefined) {
       const e = typeof data.email === "string" ? data.email.trim().toLowerCase() : "";
       data.email = e || null;
+      if ((data.email ?? null) !== (user.email ?? null)) {
+        // a typed address is unproven: it is shown, never used to link
+        // a Google/Apple sign-in (see User.emailVerifiedAt)
+        data.emailVerifiedAt = null;
+        if (data.email) {
+          const taken = await this.rls.system((tx) =>
+            tx.user.findFirst({
+              where: { email: { equals: data.email as string, mode: "insensitive" }, NOT: { id: user.id } },
+              select: { id: true },
+            })
+          );
+          if (taken) throw new ApiError(409, "এই ইমেইলটি অন্য একটি অ্যাকাউন্টে ব্যবহৃত হচ্ছে");
+        }
+      }
     }
     if (Object.keys(data).length === 0) {
       throw new ApiError(400, "কিছু পরিবর্তন দেওয়া হয়নি");

@@ -36,6 +36,12 @@ import type {
   Usrah,
   UsrahMember,
   Announcement,
+  UsrahJoinRequestItem,
+  MyMasala,
+  SupportMessage,
+  SupportThread,
+  GoalQueueItem,
+  PersonalGoal,
   WeeklyReview,
   ReminderItem,
   LiveProgramItem,
@@ -142,13 +148,25 @@ export const api = {
       route("/auth/otp/verify"),
       { method: "POST", body: JSON.stringify(payload) }
     ),
+  /** Which social sign-ins are on, and the web's Google client id (public). */
+  authProviders: () => req<{ google: boolean; apple: boolean; googleClientId?: string | null }>(route("/auth/providers")),
+  socialSignIn: (payload: { provider: "google" | "apple"; idToken: string; name?: string; gender?: Gender }) =>
+    req<{ user: User; accessToken?: string; refreshToken?: string }>(route("/auth/social"), {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   logout: () => req<{ ok: boolean }>(route("/auth/logout"), { method: "POST", body: "{}" }),
 
   me: () => req<{ user: User | null }>(route("/me")),
+  /** PROF-04: a code to the NEW phone, then verify it to make it the sign-in number. */
+  requestPhoneChange: (phone: string) =>
+    req<{ ok: boolean; devCode?: string }>(route("/me/phone/request"), { method: "POST", body: JSON.stringify({ phone }) }),
+  verifyPhoneChange: (phone: string, code: string) =>
+    req<{ user: User }>(route("/me/phone/verify"), { method: "POST", body: JSON.stringify({ phone, code }) }),
   /** DELETE /api/me — delete the signed-in account (Play's rule; see /delete-account). */
   deleteMe: () =>
     req<{ ok: boolean }>(route("/me"), { method: "DELETE", body: JSON.stringify({ confirm: "DELETE" }) }),
-  updateMe: (patch: Partial<Pick<User, "name" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
+  updateMe: (patch: Partial<Pick<User, "name" | "email" | "gender" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
     req<{ user: User }>(route("/me"), { method: "PATCH", body: JSON.stringify(patch) }),
 
   config: () => req<AppConfig>(route("/config")),
@@ -176,6 +194,39 @@ export const api = {
     req<{ review: WeeklyReview }>(route("/reviews"), { method: "POST", body: JSON.stringify(payload) }),
   assessments: (userId?: string) =>
     req<{ assessments: AssessmentDetail[] }>(route("/assessments", { userId })),
+  // personal goals (W4c)
+  goals: () => req<{ goals: PersonalGoal[] }>(route("/goals")),
+  proposeGoal: (payload: { amalKey: string; title: string; startDate: string; target?: string; note?: string }) =>
+    req<{ goal: PersonalGoal }>(route("/goals"), { method: "POST", body: JSON.stringify(payload) }),
+  deleteGoal: (id: string) => req<{ ok: boolean }>(route("/goals", { id }), { method: "DELETE" }),
+  usrahGoals: () => req<{ queue: GoalQueueItem[] }>(route("/usrah/goals")),
+  approveGoal: (id: string) =>
+    req<{ goal: PersonalGoal }>(`/api/goals/${encodeURIComponent(id)}/approve`, { method: "POST", body: "{}" }),
+  rejectGoal: (id: string, reason?: string) =>
+    req<{ goal: PersonalGoal }>(`/api/goals/${encodeURIComponent(id)}/reject`, {
+      method: "POST",
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
+  /** Ask my usrah head to open a locked diary day. */
+  amalUnlockRequest: (date: string) =>
+    req<{ ok: boolean }>("/api/amal/unlock-request", { method: "POST", body: JSON.stringify({ date }) }),
+  /** The signed-in member's OWN assessments, every status (W4i). */
+  myAssessments: () => req<{ assessments: AssessmentDetail[] }>(route("/assessments/me")),
+  assessmentConfirmRequest: (id: string) =>
+    req<{ ok: boolean; devCode?: string }>(`/api/assessments/${encodeURIComponent(id)}/confirm-request`, {
+      method: "POST",
+      body: "{}",
+    }),
+  assessmentConfirm: (id: string, code: string) =>
+    req<{ assessment: AssessmentDetail }>(`/api/assessments/${encodeURIComponent(id)}/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
+  assessmentDecline: (id: string, reason?: string) =>
+    req<{ assessment: AssessmentDetail }>(`/api/assessments/${encodeURIComponent(id)}/decline`, {
+      method: "POST",
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
   assessmentTemplates: () => req<{ templates: AssessmentTemplate[] }>(route("/assessments/templates")),
   createAssessment: (payload: {
     assesseeId: string;
@@ -208,10 +259,32 @@ export const api = {
 
   // misc
   reminders: () => req<{ reminders: ReminderItem[] }>(route("/reminders")),
+  /** The Foundation's announcements (public; gender-scoped ones for that gender). */
+  announcements: () => req<{ announcements: Announcement[] }>(route("/announcements")),
   readReminder: (id: string) =>
     req<{ ok: boolean }>(route("/reminders"), { method: "PATCH", body: JSON.stringify({ id }) }),
   live: () => req<{ programs: LiveProgramItem[] }>(route("/live")),
   notifyLive: (id: string) => req<{ ok: boolean }>(route("/live"), { method: "POST", body: JSON.stringify({ id }) }),
+  // usrah join request (W4d)
+  joinRequestStatus: () => req<{ request: UsrahJoinRequestItem | null }>(route("/usrah/join-request")),
+  joinRequestCreate: (message?: string) =>
+    req<{ request: UsrahJoinRequestItem }>(route("/usrah/join-request"), {
+      method: "POST",
+      body: JSON.stringify(message ? { message } : {}),
+    }),
+  /** My মাসআলা questions and their answers (signed in). */
+  myMasala: () => req<{ questions: MyMasala[] }>(route("/masala/mine")),
+  // live support (W4d)
+  supportThreads: () => req<{ threads: SupportThread[] }>(route("/support")),
+  supportCreate: (subject: string, message: string) =>
+    req<{ thread: SupportThread }>(route("/support"), { method: "POST", body: JSON.stringify({ subject, message }) }),
+  supportThread: (id: string) =>
+    req<{ thread: SupportThread; messages: SupportMessage[] }>(`/api/support/${encodeURIComponent(id)}`),
+  supportAppend: (id: string, message: string) =>
+    req<{ message: SupportMessage }>(`/api/support/${encodeURIComponent(id)}/messages`, {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    }),
   masala: (payload: { name: string; phone?: string; question: string }) =>
     req<{ ok: boolean }>(route("/masala"), { method: "POST", body: JSON.stringify(payload) }),
   feedback: (message: string) =>

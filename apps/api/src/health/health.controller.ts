@@ -149,7 +149,7 @@ export class HealthService implements OnModuleDestroy {
 // Probes are polled by Docker/Coolify every few seconds from 127.0.0.1 —
 // never rate-limit them (a 429 marks the container unhealthy and Traefik
 // drops it from routing).
-@SkipThrottle({ ip: true, "otp-phone": true })
+@SkipThrottle({ ip: true, "otp-phone": true, "otp-phone-day": true, "otp-ip": true, "otp-verify": true, "join-ip": true })
 @Controller()
 export class HealthController {
   constructor(private readonly service: HealthService) {}

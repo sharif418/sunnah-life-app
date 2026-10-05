@@ -234,8 +234,14 @@ export class AssessmentsService {
       sections: [],
     });
 
+    // names only, outside the viewer's RLS scope: a plain member cannot see
+    // the assessor's User row, so their own result showed no assessor name
     const userKeys = [...new Set(rows.flatMap((r) => [r.assesseeId, r.assessorId]))];
-    const users = await tx.user.findMany({ where: { id: { in: userKeys } }, select: { id: true, name: true } });
+    const users = userKeys.length
+      ? await this.rls.system((stx) =>
+          stx.user.findMany({ where: { id: { in: userKeys } }, select: { id: true, name: true } })
+        )
+      : [];
     const names = new Map(users.map((u) => [u.id, u.name]));
 
     return rows.map((r) =>
@@ -293,6 +299,8 @@ export class AssessmentsService {
     const assesseeId = dto.assesseeId;
     const templateKey = (dto.templateKey ?? "").trim();
     if (!assesseeId) throw new ApiError(400, "মূল্যায়নার্থী নির্বাচন করা হয়নি");
+    // a confirmed pass feeds promotion — nobody grades themselves
+    if (assesseeId === user.id) throw new ApiError(403, "নিজের মূল্যায়ন নিজে জমা দেওয়া যায় না");
     if (!templateKey) throw new ApiError(400, "টেমপ্লেট নির্বাচন করা হয়নি");
     const participantCategory = Number(dto.participantCategory) === 2 ? 2 : 1;
     if (!dto.scores || typeof dto.scores !== "object" || Array.isArray(dto.scores)) {

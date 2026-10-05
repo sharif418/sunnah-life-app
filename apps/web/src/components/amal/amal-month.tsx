@@ -15,6 +15,7 @@ import { dateKey, GREG_MONTHS_BN, toBn } from "@/lib/calendars";
 import { cn } from "@/lib/utils";
 import { AMAL_CATEGORY_LABELS_BN } from "@/types/domain";
 import type { AmalCategory, AmalDefinition, AmalEntry, UserCategory } from "@/types/domain";
+import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { amalPoints, currentStreak, isAmalDay, isDateLockedClient, valueLabelBn, type AmalGeoCfg } from "./amal-logic";
 import { CompletionRing, StreakBadge } from "./amal-controls";
 
@@ -42,6 +43,7 @@ export function AmalMonthView({
   onOpenDay: (day: string) => void;
   onBack: () => void;
 }) {
+  const hijriAdjust = useHijriAdjust();
   const [y, m] = React.useMemo(() => anchor.split("-").map(Number) as [number, number], [anchor]);
 
   const days = React.useMemo(() => {
@@ -76,7 +78,7 @@ export function AmalMonthView({
       let points = 0;
       for (const day of days) {
         if (day > today) break;
-        if (!isAmalDay(def, day)) continue;
+        if (!isAmalDay(def, day, hijriAdjust)) continue;
         due++;
         const e = byDate.get(day)?.get(def.key);
         points += e ? amalPoints(e.value, def, category) : 0;
@@ -91,7 +93,7 @@ export function AmalMonthView({
       }
     }
     return res;
-  }, [defs, days, today, byDate, category]);
+  }, [defs, days, today, byDate, category, hijriAdjust]);
 
   const thisMonthStart = today.slice(0, 8) + "01";
   const canNext = anchor < thisMonthStart;
@@ -200,7 +202,7 @@ export function AmalMonthView({
                       {defs.map((def, i) => {
                         const e = byDate.get(day)?.get(def.key);
                         const p = e ? amalPoints(e.value, def, category) : 0;
-                        const due = !future && isAmalDay(def, day);
+                        const due = !future && isAmalDay(def, day, hijriAdjust);
                         return (
                           <button
                             key={def.key}

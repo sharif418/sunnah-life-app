@@ -12,6 +12,7 @@
 
 import * as React from "react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 import { useApp } from "@/lib/store";
 import {
   addDays,
@@ -35,19 +36,14 @@ import {
   ChevronRight,
   CircleCheck,
   Flag,
-  HeartHandshake,
-  Landmark,
   Lock,
-  Megaphone,
-  MoonStar,
   RefreshCw,
-  Sparkles,
-  Star,
   Zap,
+  Info,
+  ChevronDown,
+  Flame,
 } from "lucide-react";
-import { AMAL_CATEGORY_LABELS_BN } from "@/types/domain";
 import type {
-  AmalCategory,
   AmalDefinition,
   AmalEntry,
   AmalValue,
@@ -63,6 +59,7 @@ import {
   isDateLockedClient,
   shortUnit,
   type AmalGeoCfg,
+  amalPoints,
 } from "./amal-logic";
 import {
   BooleanCheck,
@@ -73,17 +70,12 @@ import {
   TriStateChips,
 } from "./amal-controls";
 import { AmalMonthView } from "./amal-month";
-
-const CATEGORY_ICONS: Record<AmalCategory, React.ElementType> = {
-  salah: Landmark,
-  quran: BookOpen,
-  dhikr: Sparkles,
-  akhlaq: HeartHandshake,
-  dawat: Megaphone,
-  lifestyle: MoonStar,
-  sunnah: Star,
-  personal: Flag,
-};
+import { GoalsView } from "./goals";
+import { HabitView } from "./habit";
+import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
+import { LatestReviewCard } from "./latest-review";
+import { DIARY_COVER, DIARY_INSTRUCTIONS, PAPER_KEYS, PAPER_LAYOUT } from "@/lib/diary-layout";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Session-level definition cache: re-entering the tab renders instantly and
 // guests keep a working diary after the first successful fetch.
@@ -118,6 +110,7 @@ export function AmalView() {
   const amalCache = useApp((s) => s.amalCache);
   const writeEntry = useApp((s) => s.writeEntry);
   const hydrateFromServer = useApp((s) => s.hydrateFromServer);
+  const hijriAdjust = useHijriAdjust();
 
   const today = dateKey(new Date());
   const [selectedDate, setSelectedDate] = React.useState(today);
@@ -164,17 +157,30 @@ export function AmalView() {
   const lockedFn = React.useCallback((day: string) => isDateLockedClient(day, geo, today), [geo, today]);
   const locked = lockedFn(selectedDate);
 
-  const dueDefs = React.useMemo(() => (defs ?? []).filter((d) => isAmalDay(d, selectedDate)), [defs, selectedDate]);
-  const groups = React.useMemo(() => {
-    const m = new Map<AmalCategory, AmalDefinition[]>();
-    for (const d of dueDefs) {
-      const list = m.get(d.category);
-      if (list) list.push(d);
-      else m.set(d.category, [d]);
-    }
-    return m;
+  const dueDefs = React.useMemo(
+    () => (defs ?? []).filter((d) => isAmalDay(d, selectedDate, hijriAdjust)),
+    [defs, selectedDate, hijriAdjust]
+  );
+  // The paper diary's groups, in the paper's order (mobile parity): every
+  // due catalog amal a row names renders under that group; the rest are the
+  // app's extras, kept apart in a collapsed card.
+  const paperGroups = React.useMemo(() => {
+    const byKey = new Map(dueDefs.map((d) => [d.key, d] as const));
+    return PAPER_LAYOUT.map((g) => ({
+      ...g,
+      defs: g.rows.flatMap((r) => r.amalKeys.map((k) => byKey.get(k)).filter((d): d is AmalDefinition => !!d)),
+    })).filter((g) => g.defs.length > 0);
   }, [dueDefs]);
-  const completion = React.useMemo(() => dayCompletion(dayEntries, dueDefs, category), [dayEntries, dueDefs, category]);
+  const paperDefs = React.useMemo(() => dueDefs.filter((d) => PAPER_KEYS.has(d.key)), [dueDefs]);
+  const extraDefs = React.useMemo(() => dueDefs.filter((d) => !PAPER_KEYS.has(d.key)), [dueDefs]);
+  const [extrasOpen, setExtrasOpen] = React.useState(false);
+  const [instructionsOpen, setInstructionsOpen] = React.useState(false);
+  // the day's count is the paper's (as on the printed form and in the app)
+  const completion = React.useMemo(() => dayCompletion(dayEntries, paperDefs, category), [dayEntries, paperDefs, category]);
+  const extrasDone = React.useMemo(
+    () => extraDefs.filter((d) => amalPoints(dayEntries.find((e) => e.amalKey === d.key)?.value, d, category) >= 1).length,
+    [extraDefs, dayEntries, category]
+  );
   const streak = React.useMemo(() => currentStreak(allEntries, defs ?? [], category, today), [allEntries, defs, category, today]);
 
   const write = React.useCallback(
@@ -236,6 +242,16 @@ export function AmalView() {
 
   const entryOf = (key: string): AmalEntry | undefined => amalCache[`${selectedDate}#${key}`];
 
+  // ── habit challenge sub-view ───────────────────────────────────────────────
+  if (view === "habit" && defs && defs.length > 0) {
+    return <HabitView defs={defs} entries={allEntries} category={category} today={today} onBack={back} />;
+  }
+
+  // ── goals sub-view (signed-in members) ─────────────────────────────────────
+  if (view === "goals" && user && defs && defs.length > 0) {
+    return <GoalsView defs={defs} onBack={back} />;
+  }
+
   // ── month sub-view ─────────────────────────────────────────────────────────
   if (monthView && defs && defs.length > 0) {
     return (
@@ -280,7 +296,7 @@ export function AmalView() {
               {selectedDate === today ? "আজকের আমল" : "আমল ডায়েরি"}
             </h1>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {formatDayHeaderBn(parseKey(selectedDate))} · {hijriDate(parseKey(selectedDate)).formatted}
+              {formatDayHeaderBn(parseKey(selectedDate))} · {hijriDate(parseKey(selectedDate), hijriAdjust).formatted}
             </p>
           </div>
           <button
@@ -302,6 +318,16 @@ export function AmalView() {
           <CalendarDays className="size-4" />
           <span className="hidden min-[380px]:inline">মাসিক ছক</span>
         </Button>
+        <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "habit")}>
+          <Flame className="size-4" />
+          <span className="hidden min-[380px]:inline">অভ্যাস</span>
+        </Button>
+        {user ? (
+          <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "goals")}>
+            <Flag className="size-4" />
+            <span className="hidden min-[380px]:inline">আমার লক্ষ্য</span>
+          </Button>
+        ) : null}
       </div>
 
       {/* week strip */}
@@ -364,19 +390,18 @@ export function AmalView() {
               </div>
             </div>
           </div>
-          {/* per-category rings */}
-          <div className="mt-4 flex gap-4 overflow-x-auto px-1 pb-1 no-scrollbar">
-            {[...completion.byCategory.entries()].map(([cat, c]) => (
-              <div key={cat} className="flex w-14 shrink-0 flex-col items-center gap-1">
-                <CompletionRing pct={c.pct} size={44} />
-                <span className="w-full truncate text-center text-[10px] text-muted-foreground">
-                  {AMAL_CATEGORY_LABELS_BN[cat]}
-                </span>
-              </div>
-            ))}
-          </div>
+          <button
+            type="button"
+            onClick={() => setInstructionsOpen(true)}
+            className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:underline"
+          >
+            <Info className="size-3.5" /> ডায়েরির নির্দেশনাবলী
+          </button>
         </CardContent>
       </Card>
+
+      {/* the head's latest comment to me (signed in) */}
+      {user ? <LatestReviewCard /> : null}
 
       {/* locked-day banner */}
       {locked && (
@@ -389,33 +414,93 @@ export function AmalView() {
                 পরের দিন ইশরাকের পর দিন বন্ধ হয় — সম্পাদনার জন্য উসরা প্রধানের অনুমতি দরকার।
               </p>
             </div>
+            {user?.usrahId ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="ms-auto h-9 shrink-0 rounded-full border-alert/40 bg-card text-alert hover:bg-alert-soft"
+                onClick={async () => {
+                  try {
+                    await api.amalUnlockRequest(selectedDate);
+                    toast.success("উসরা প্রধানকে অনুরোধ পাঠানো হয়েছে");
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "পাঠানো যায়নি");
+                  }
+                }}
+              >
+                আনলক চাই
+              </Button>
+            ) : null}
           </CardContent>
         </Card>
       )}
 
-      {/* category sections */}
-      {[...groups.entries()].map(([cat, defsInCat]) => {
-        const cc = completion.byCategory.get(cat);
-        const Icon = CATEGORY_ICONS[cat];
+      {/* the paper diary, group by group */}
+      {paperGroups.map((g) => {
+        const done = g.defs.filter((d) => amalPoints(entryOf(d.key)?.value, d, category) >= 1).length;
         return (
-          <section key={cat} className="space-y-2.5">
-            <div className="flex items-center gap-2 px-1">
-              <Icon className="size-4 shrink-0 text-primary" />
-              <h2 className="text-sm font-bold">{AMAL_CATEGORY_LABELS_BN[cat]}</h2>
-              {cc && cc.total > 0 && (
-                <Badge variant="secondary" className="ms-auto shrink-0 font-semibold">
-                  {toBn(cc.done)}/{toBn(cc.total)}
-                </Badge>
-              )}
+          <section key={g.groupBn} className="space-y-2.5">
+            <div className="flex items-baseline gap-2 px-1">
+              <h2 className="text-sm font-bold text-primary">{g.groupBn}</h2>
+              <Badge variant="secondary" className="ms-auto shrink-0 font-semibold">
+                {toBn(done)}/{toBn(g.defs.length)}
+              </Badge>
             </div>
+            {g.noteBn ? <p className="px-1 text-[11.5px] leading-relaxed text-muted-foreground">{g.noteBn}</p> : null}
             <div className="space-y-2.5">
-              {defsInCat.map((def) => (
+              {g.defs.map((def) => (
                 <AmalRow key={def.key} def={def} entry={entryOf(def.key)} disabled={locked} category={category} onWrite={write} />
               ))}
             </div>
           </section>
         );
       })}
+
+      {/* the app's extras (not on the paper): collapsed, opt-in */}
+      {extraDefs.length > 0 ? (
+        <section className="space-y-2.5">
+          <button
+            type="button"
+            onClick={() => setExtrasOpen((v) => !v)}
+            aria-expanded={extrasOpen}
+            className="flex w-full items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-start shadow-card"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-bold">অতিরিক্ত আমল</span>
+              <span className="block text-[11.5px] text-muted-foreground">
+                কাগজের ডায়েরির বাইরে · {toBn(extrasDone)}/{toBn(extraDefs.length)}
+              </span>
+            </span>
+            <ChevronDown className={cn("size-4 shrink-0 text-muted-foreground transition-transform", extrasOpen && "rotate-180")} />
+          </button>
+          {extrasOpen ? (
+            <div className="space-y-2.5">
+              {extraDefs.map((def) => (
+                <AmalRow key={def.key} def={def} entry={entryOf(def.key)} disabled={locked} category={category} onWrite={write} />
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
+
+      <Dialog open={instructionsOpen} onOpenChange={setInstructionsOpen}>
+        <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>নির্দেশনাবলী</DialogTitle>
+          </DialogHeader>
+          {DIARY_COVER.ar ? (
+            <div className="rounded-xl bg-primary-soft px-4 py-3 text-center">
+              <p dir="rtl" lang="ar" className="font-arabic text-lg leading-loose">{DIARY_COVER.ar}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{DIARY_COVER.bn}</p>
+            </div>
+          ) : null}
+          <ol className="space-y-2 ps-5 text-sm leading-relaxed [list-style:bengali]">
+            {DIARY_INSTRUCTIONS.map((t, i) => (
+              <li key={i}>{t}</li>
+            ))}
+          </ol>
+        </DialogContent>
+      </Dialog>
 
       <p className="pt-1 text-center text-[11px] leading-relaxed text-muted-foreground">
         প্রতিদিনের আমল পরের দিনের ইশরাকের পর লক হয়ে যায় — তাই প্রতিদিন সকালে হিসাব লিখুন।

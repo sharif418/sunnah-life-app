@@ -20,6 +20,7 @@ import { api } from "@/lib/api";
 import { getPack } from "@/lib/content";
 import type { FaqPack } from "@/lib/content";
 import { useApp } from "@/lib/store";
+import type { MyMasala } from "@/types/domain";
 import { Loader2, Send, MailCheck, MessageCircleQuestion, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
 
@@ -152,6 +153,9 @@ export function MasalaView() {
           </>
         )}
 
+        {/* my questions and the mufti's answers (signed in) */}
+        {user ? <MyQuestions refreshKey={sent ? 1 : 0} /> : null}
+
         {/* FAQ */}
         <div className="pt-1">
           <SectionLabel icon={<HelpCircle className="size-4" />}>জিজ্ঞাসা (FAQ)</SectionLabel>
@@ -192,5 +196,40 @@ export function MasalaView() {
         </div>
       </div>
     </SubShell>
+  );
+}
+
+/** My questions and their answers (GET /api/masala/mine) — on the web a
+ * member could ask but never read the answer before. */
+function MyQuestions({ refreshKey }: { refreshKey: number }) {
+  const [items, setItems] = React.useState<MyMasala[] | null>(null);
+  React.useEffect(() => {
+    api
+      .myMasala()
+      .then((r) => setItems(r.questions))
+      .catch(() => setItems([]));
+  }, [refreshKey]);
+  if (!items || items.length === 0) return null;
+  return (
+    <div className="pt-1">
+      <SectionLabel icon={<MessageCircleQuestion className="size-4" />}>আমার প্রশ্ন ও উত্তর</SectionLabel>
+      <div className="mt-3 space-y-2">
+        {items.map((q) => (
+          <Card key={q.id} className="rounded-xl shadow-card">
+            <CardContent className="space-y-2 p-4">
+              <p className="text-sm font-semibold leading-relaxed">{q.question}</p>
+              {q.status === "answered" && q.answer ? (
+                <div className="rounded-lg bg-primary-soft px-3 py-2">
+                  <p className="text-xs font-bold text-primary">উত্তর</p>
+                  <p className="mt-0.5 whitespace-pre-line text-sm leading-relaxed">{q.answer}</p>
+                </div>
+              ) : (
+                <p className="text-xs text-muted-foreground">উত্তরের অপেক্ষায় — উত্তর এলে নোটিফিকেশন পাবেন।</p>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 }

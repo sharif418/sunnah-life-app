@@ -1,7 +1,8 @@
 /// Personal-goal lifecycle state (W4c): the member's own goals + the
 /// supervisor approval queue. Both are server-backed — guests get null and
-/// the screens show their sign-in gates; every ApiException degrades to a
-/// retryable null (offline never blocks the rest of the diary).
+/// the screens show their sign-in gates. The member's own list surfaces a
+/// failed request as an error (with retry); the queue degrades to null
+/// (the section hides; offline never blocks the rest of the diary).
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,11 +16,9 @@ import 'providers.dart';
 final goalsProvider = FutureProvider<List<PersonalGoal>?>((ref) async {
   final auth = ref.watch(authProvider);
   if (!auth.signedIn) return null;
-  try {
-    return await ref.watch(apiProvider).fetchGoals();
-  } on ApiException {
-    return null;
-  }
+  // A signed-in member whose request fails gets the error + retry — never
+  // the guest "sign in" gate (that told signed-in members to sign in).
+  return ref.watch(apiProvider).fetchGoals();
 });
 
 /// The approval queue for usrah_head+ (GET /api/usrah/goals — RLS scopes the

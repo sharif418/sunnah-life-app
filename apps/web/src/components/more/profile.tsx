@@ -35,6 +35,7 @@ import {
   Pencil,
   BadgeCheck,
 } from "lucide-react";
+import { DeleteAccountButton, FemalePrivacyNote, PhoneChangeCard } from "@/components/more/profile-account";
 
 const LANG_LABELS: Record<Lang, string> = { bn: "বাংলা", en: "English", ar: "العربية" };
 
@@ -110,13 +111,15 @@ function SignedIn() {
   const [district, setDistrict] = React.useState(user!.district ?? "");
   const [workplace, setWorkplace] = React.useState(user!.workplace ?? "");
   const [department, setDepartment] = React.useState(user!.department ?? "");
+  const [email, setEmail] = React.useState(user!.email ?? "");
   const [saving, setSaving] = React.useState(false);
 
   const dirty =
     name.trim() !== user!.name ||
     district !== (user!.district ?? "") ||
     workplace !== (user!.workplace ?? "") ||
-    department !== (user!.department ?? "");
+    department !== (user!.department ?? "") ||
+    email.trim() !== (user!.email ?? "");
 
   const save = async () => {
     if (!dirty || !name.trim()) return;
@@ -127,6 +130,7 @@ function SignedIn() {
         district: district.trim() || null,
         workplace: workplace.trim() || null,
         department: department.trim() || null,
+        email: email.trim() || null,
       });
       setUser(res.user);
       toast.success("সংরক্ষিত হয়েছে");
@@ -231,12 +235,28 @@ function SignedIn() {
               className="h-12 rounded-xl"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="p-email">ইমেইল (ঐচ্ছিক)</Label>
+            <Input
+              id="p-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              className="h-12 rounded-xl"
+            />
+          </div>
           <Button onClick={save} disabled={!dirty || saving || !name.trim()} className="w-full h-11 rounded-xl">
             {saving && <Loader2 className="size-4 animate-spin" />}
             {saving ? "সংরক্ষণ হচ্ছে…" : "সংরক্ষণ করুন"}
           </Button>
         </CardContent>
       </Card>
+
+      <PhoneChangeCard />
+      <FemalePrivacyNote />
 
       {/* ভাষা */}
       <Card className="rounded-xl shadow-card">
@@ -270,6 +290,7 @@ function SignedIn() {
       >
         <LogOut className="size-4" /> সাইন আউট
       </Button>
+      <DeleteAccountButton />
     </div>
   );
 }

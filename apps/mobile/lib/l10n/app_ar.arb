@@ -795,5 +795,6 @@
   "delete_account_done": "تم حذف حسابك",
   "delete_account_failed": "تعذّر الحذف — تحقق من الاتصال وأعد المحاولة",
   "privacy_policy": "سياسة الخصوصية",
-  "privacy_policy_sub": "ما نحفظه ومن يراه وكيف تحذفه"
+  "privacy_policy_sub": "ما نحفظه ومن يراه وكيف تحذفه",
+  "goals_load_failed": "تعذّر تحميل أهدافك — تحقّق من الاتصال وحاول مجددًا"
 }

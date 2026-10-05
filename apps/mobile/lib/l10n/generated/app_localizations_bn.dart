@@ -2478,4 +2478,8 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get privacy_policy_sub =>
       'কোন তথ্য রাখা হয়, কারা দেখেন, কীভাবে মুছবেন';
+
+  @override
+  String get goals_load_failed =>
+      'লক্ষ্যগুলো আনা যায়নি — ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন';
 }

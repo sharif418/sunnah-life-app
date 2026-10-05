@@ -12,9 +12,9 @@ import { Award, Brain, Check, ChevronRight, Clock, ListChecks, RefreshCw, Swords
 import { api } from "@/lib/api";
 import { getPack } from "@/lib/content";
 import type { QuizzesPack } from "@/lib/content";
-import type { Quiz, QuizAttemptItem } from "@/types/domain";
+import type { LiveProgramItem, Quiz, QuizAttemptItem } from "@/types/domain";
 import { useApp } from "@/lib/store";
-import { toBn } from "@/lib/calendars";
+import { formatTime, toBn } from "@/lib/calendars";
 import { EmptyState, SkeletonRows, StatusPill, useAsync, relTimeBn } from "./parts";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -54,6 +54,7 @@ export function QuizzesSection({ startQuizId }: { startQuizId?: string }) {
 
   return (
     <div className="space-y-3">
+      <UpcomingQuizzes quizzes={quizzes} onPractice={setPlaying} />
       {quizzes.map((q) => {
         const mine = byQuiz.get(q.id) ?? [];
         const best = mine.length ? Math.max(...mine.map((a) => a.score)) : null;
@@ -283,5 +284,95 @@ function QuizPlay({ quiz, onExit }: { quiz: Quiz; onExit: () => void }) {
         </Card>
       )}
     </motion.div>
+  );
+}
+
+/** "আজ · রাত ৮:৩০" / "আগামীকাল · …" / "৩ দিন পর · …" */
+function whenBn(iso: string): string {
+  const d = new Date(iso);
+  const day0 = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const days = Math.round((day0(d) - day0(new Date())) / 86_400_000);
+  const time = formatTime(d.getHours() * 60 + d.getMinutes(), "bn");
+  const head = days <= 0 ? "আজ" : days === 1 ? "আগামীকাল" : `${toBn(days)} দিন পর`;
+  return `${head} · ${time}`;
+}
+
+/**
+ * আসন্ন কুইজ (AMOL-17, mobile parity): live quizzes the Foundation scheduled
+ * as programs. Live now → join the usrah room; ahead → a reminder, and
+ * practising the same quiz alone first. Hidden when none.
+ */
+function UpcomingQuizzes({ quizzes, onPractice }: { quizzes: Quiz[]; onPractice: (id: string) => void }) {
+  const user = useApp((s) => s.user);
+  const setAuthModal = useApp((s) => s.setAuthModal);
+  const nav = useApp((s) => s.nav);
+  const [programs, setPrograms] = React.useState<LiveProgramItem[]>([]);
+
+  React.useEffect(() => {
+    api
+      .live()
+      .then((r) =>
+        setPrograms(
+          r.programs
+            .filter((p) => p.quizId && (p.status === "live" || p.status === "upcoming"))
+            .sort((a, b) => (a.status === b.status ? a.startsAt.localeCompare(b.startsAt) : a.status === "live" ? -1 : 1))
+        )
+      )
+      .catch(() => setPrograms([]));
+  }, []);
+
+  if (programs.length === 0) return null;
+  const titleOf = new Map(quizzes.map((q) => [q.id, q.titleBn]));
+
+  const remind = async (id: string) => {
+    if (!user) {
+      toast.info("রিমাইন্ডার নিতে অনুগ্রহ করে সাইন ইন করুন");
+      setAuthModal(true);
+      return;
+    }
+    try {
+      await api.notifyLive(id);
+      toast.success("কুইজ শুরুর সময় মনে করিয়ে দেওয়া হবে");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "রিমাইন্ডার সেট করা যায়নি");
+    }
+  };
+
+  return (
+    <section aria-label="আসন্ন কুইজ" className="space-y-2">
+      <h3 className="px-1 text-sm font-bold text-primary">আসন্ন কুইজ</h3>
+      {programs.map((p) => {
+        const live = p.status === "live";
+        return (
+          <Card key={p.id} className={cn("rounded-xl p-4 shadow-card", live && "border-alert/40")}>
+            <p className={cn("text-xs font-semibold", live ? "text-alert" : "text-muted-foreground")}>
+              {live ? "এখন চলছে" : whenBn(p.startsAt)}
+            </p>
+            <h4 className="mt-0.5 font-bold">{p.titleBn}</h4>
+            {p.quizId && titleOf.get(p.quizId) && titleOf.get(p.quizId) !== p.titleBn ? (
+              <p className="text-sm text-muted-foreground">{titleOf.get(p.quizId)}</p>
+            ) : null}
+            <div className="mt-3 flex flex-wrap gap-2">
+              {live ? (
+                <Button size="sm" className="h-10 rounded-full" onClick={() => nav("ilm", "live-quiz")}>
+                  <Swords className="size-4" /> যোগ দিন
+                </Button>
+              ) : (
+                <>
+                  <Button size="sm" variant="outline" className="h-10 rounded-full" onClick={() => remind(p.id)}>
+                    <Clock className="size-4" /> মনে করিয়ে দিন
+                  </Button>
+                  {p.quizId && titleOf.has(p.quizId) ? (
+                    <Button size="sm" variant="ghost" className="h-10 rounded-full" onClick={() => onPractice(p.quizId!)}>
+                      আগে অনুশীলন করুন
+                    </Button>
+                  ) : null}
+                </>
+              )}
+            </div>
+          </Card>
+        );
+      })}
+    </section>
   );
 }

@@ -2446,4 +2446,8 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get privacy_policy_sub => 'ما نحفظه ومن يراه وكيف تحذفه';
+
+  @override
+  String get goals_load_failed =>
+      'تعذّر تحميل أهدافك — تحقّق من الاتصال وحاول مجددًا';
 }

@@ -152,6 +152,7 @@ export class ReviewsService {
     const weekStart = dto.weekStart ?? "";
     const rating = Number(dto.rating);
     if (!userId) throw new ApiError(400, "ব্যবহারকারী নির্বাচন করা হয়নি");
+    if (userId === user.id) throw new ApiError(403, "নিজের সাপ্তাহিক রিভিউ নিজে লেখা যায় না");
     if (!isValidDateKey(weekStart)) {
       throw new ApiError(400, "সপ্তাহের তারিখ ঠিকভাবে দিন (YYYY-MM-DD)");
     }

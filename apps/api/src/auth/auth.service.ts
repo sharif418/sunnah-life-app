@@ -197,10 +197,13 @@ export class AuthService {
   // ── Social sign-in (Google + Apple — Task B5) ──────────────────────────────
 
   /** GET /api/auth/providers — which sign-in buttons the clients should show. */
-  providersStatus(): { google: boolean; apple: boolean } {
+  providersStatus(): { google: boolean; apple: boolean; googleClientId: string | null } {
     return {
       google: socialConfig("google")!.enabled,
       apple: socialConfig("apple")!.enabled,
+      // the WEB OAuth client id (a public value): the web's Google button
+      // needs it, and id_tokens it issues carry it as their audience
+      googleClientId: (process.env.GOOGLE_CLIENT_ID ?? "").trim() || null,
     };
   }
 
@@ -311,7 +314,18 @@ export class AuthService {
             throw new ApiError(400, "অ্যাপল অ্যাকাউন্টের ইমেইল পাওয়া যায়নি — অন্য উপায়ে সাইন ইন করুন");
           }
           // 2) Verified email (stored lowercase — one account per email).
-          row = await tx.user.findFirst({ where: { email: input.email } });
+          //    Only an email a provider VOUCHED for links: an address typed
+          //    into a profile or imported by an admin proves nothing, and
+          //    linking by it handed the real owner's sign-in to whoever typed
+          //    it. The provider just proved this owner, so the unproven claim
+          //    is released and the owner gets their own account.
+          row = await tx.user.findFirst({
+            where: { email: { equals: input.email, mode: "insensitive" } },
+          });
+          if (row && !row.emailVerifiedAt) {
+            await tx.user.update({ where: { id: row.id }, data: { email: null } });
+            row = null;
+          }
           if (!row) {
             // 3) Create. GENDER RULE: only honored here, at creation.
             const referredById = await AuthService.resolveInviterId(tx, input.referredByCode);
@@ -319,6 +333,7 @@ export class AuthService {
               data: {
                 phone: null,
                 email: input.email,
+                emailVerifiedAt: new Date(),
                 socialProvider: input.provider,
                 socialSub: input.sub,
                 name: input.name || "ব্যবহারকারী",
@@ -334,13 +349,31 @@ export class AuthService {
         // Existing account: stamp the social identity (and the email when it
         // was still empty) so future sign-ins link directly. A gender in the
         // payload is deliberately IGNORED (locked after creation).
-        const patch: { email?: string; socialProvider?: string; socialSub?: string } = {};
+        const patch: {
+          email?: string;
+          emailVerifiedAt?: Date;
+          socialProvider?: string;
+          socialSub?: string;
+        } = {};
         if (input.sub && (row.socialSub !== input.sub || row.socialProvider !== input.provider)) {
           patch.socialProvider = input.provider;
           patch.socialSub = input.sub;
         }
         if (input.email && !row.email) {
-          patch.email = input.email;
+          // only when no other account holds it (the partial unique index)
+          const holder = await tx.user.findFirst({
+            where: { email: { equals: input.email, mode: "insensitive" }, NOT: { id: row.id } },
+            select: { id: true, emailVerifiedAt: true },
+          });
+          if (holder && !holder.emailVerifiedAt) {
+            await tx.user.update({ where: { id: holder.id }, data: { email: null } });
+          }
+          if (!holder || !holder.emailVerifiedAt) {
+            patch.email = input.email;
+            patch.emailVerifiedAt = new Date();
+          }
+        } else if (input.email && row.email === input.email && !row.emailVerifiedAt) {
+          patch.emailVerifiedAt = new Date();
         }
         if (Object.keys(patch).length) {
           row = await tx.user.update({ where: { id: row.id }, data: patch });

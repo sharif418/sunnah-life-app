@@ -6,8 +6,8 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { LocationSheet, cityLabelBn } from "@/components/home/city-sheet";
 import { useNow, usePrayerDay, formatCountdownBn, SCHEDULE_ROWS } from "@/components/home/prayer-hooks";
-import { api } from "@/lib/api";
 import { useApp } from "@/lib/store";
+import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { banglaDate, gregorianBn, hijriDate, timePeriodBnFromMinutes, toBn, formatTimeBn, dateKey } from "@/lib/calendars";
 import { PRAYER_LABELS_BN } from "@/types/domain";
 import type { PrayerKey } from "@/types/domain";
@@ -22,15 +22,8 @@ export function PrayerHero() {
   const lang = useApp((s) => s.profile.language);
   const t = (k: string) => translate(lang, k);
   const [sheetOpen, setSheetOpen] = React.useState(false);
-  const [hijriAdjust, setHijriAdjust] = React.useState(0);
-
-  // অ্যাডমিন-নির্ধারিত হিজরি ±N দিন অ্যাডজাস্ট (ডিফল্ট ০)।
-  React.useEffect(() => {
-    api
-      .config()
-      .then((c) => setHijriAdjust(c.hijriAdjust))
-      .catch(() => null);
-  }, []);
+  // হিজরি তারিখ: অ্যাডমিন + সদস্যের নিজের ±দিন সংশোধন
+  const hijriAdjust = useHijriAdjust();
 
   const bnDate = banglaDate(now);
   const hijri = hijriDate(now, hijriAdjust);

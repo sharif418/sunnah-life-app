@@ -307,6 +307,9 @@ ThemeData buildSunnahLightTheme() {
     primary: SLColors.lightPrimary,
     onPrimary: SLColors.lightPrimaryForeground,
     primaryContainer: SLColors.lightPrimarySoft,
+    // unset, ColorScheme.light falls back to onPrimary (white) — unreadable
+    // on the pale container (FAB labels). primaryDeep: 10.8:1.
+    onPrimaryContainer: SLColors.primaryDeep,
     secondary: SLColors.lightSecondary,
     onSecondary: SLColors.lightSecondaryForeground,
     surface: SLColors.lightBackground,
@@ -342,6 +345,7 @@ ThemeData buildSunnahDarkTheme() {
     primary: SLColors.darkPrimary,
     onPrimary: SLColors.darkPrimaryForeground,
     primaryContainer: SLColors.darkPrimarySoft,
+    onPrimaryContainer: SLColors.darkForeground,
     secondary: SLColors.darkSecondary,
     onSecondary: SLColors.darkSecondaryForeground,
     surface: SLColors.darkBackground,

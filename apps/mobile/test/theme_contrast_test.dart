@@ -41,6 +41,36 @@ double contrastRatio(Color a, Color b) {
 }
 
 void main() {
+  // Every container/on-container pair of the scheme — framework widgets
+  // pick these by default (the M3 FAB draws onPrimaryContainer on
+  // primaryContainer). ColorScheme.light/dark fall back to onPrimary for an
+  // unset onPrimaryContainer: white on the pale primarySoft (the "নতুন
+  // লক্ষ্য" FAB label was unreadable).
+  for (final brightness in [Brightness.light, Brightness.dark]) {
+    test('color scheme on/container pairs contrast ≥ 4.5:1 ($brightness)', () {
+      final cs =
+          (brightness == Brightness.light
+                  ? buildSunnahLightTheme()
+                  : buildSunnahDarkTheme())
+              .colorScheme;
+      final pairs = <String, (Color, Color)>{
+        'primary': (cs.onPrimary, cs.primary),
+        'primaryContainer': (cs.onPrimaryContainer, cs.primaryContainer),
+        'secondaryContainer': (cs.onSecondaryContainer, cs.secondaryContainer),
+        'tertiaryContainer': (cs.onTertiaryContainer, cs.tertiaryContainer),
+        'surface': (cs.onSurface, cs.surface),
+        'surfaceContainer': (cs.onSurface, cs.surfaceContainer),
+        'errorContainer': (cs.onErrorContainer, cs.errorContainer),
+      };
+      final failing = {
+        for (final e in pairs.entries)
+          if (contrastRatio(e.value.$1, e.value.$2) < 4.5)
+            e.key: contrastRatio(e.value.$1, e.value.$2).toStringAsFixed(2),
+      };
+      expect(failing, isEmpty);
+    });
+  }
+
   for (final brightness in [Brightness.light, Brightness.dark]) {
     testWidgets(
       'ListTile + chip labels — effective contrast ≥ 4.5:1 ($brightness)',

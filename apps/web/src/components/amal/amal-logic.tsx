@@ -59,7 +59,7 @@ export function amalPoints(value: AmalValue | undefined, def: AmalDefinition, ca
 }
 
 /** Cadence check: is this definition expected on the given YYYY-MM-DD? */
-export function isAmalDay(def: AmalDefinition, date: string): boolean {
+export function isAmalDay(def: AmalDefinition, date: string, hijriAdjust = 0): boolean {
   const d = parseKey(date);
   switch (def.cadence) {
     case "daily":
@@ -70,7 +70,7 @@ export function isAmalDay(def: AmalDefinition, date: string): boolean {
     case "weekly:mon_thu":
       return d.getDay() === 1 || d.getDay() === 4;
     case "monthly:ayyam_beez":
-      return isAyyamBeez(d);
+      return isAyyamBeez(d, hijriAdjust);
     default:
       return true;
   }

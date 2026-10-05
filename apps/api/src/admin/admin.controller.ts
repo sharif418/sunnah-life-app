@@ -650,6 +650,10 @@ export class AdminService {
 
       const users: (import("../shared/domain").User & { usrahName?: string | null })[] = rows.map((r) => ({
         ...toDomainUser(r as never),
+        // a member's home coordinates are for their own prayer times — no
+        // admin screen needs them (the city stays)
+        lat: null,
+        lng: null,
         usrahName: r.usrah?.name ?? null,
       }));
       return { users };
@@ -707,6 +711,15 @@ export class AdminService {
       if (dto.gender !== undefined) {
         if (!GENDERS.includes(dto.gender as Gender)) throw new ApiError(400, "লিঙ্গ ঠিক নয়");
         if (dto.gender !== target.gender) {
+          // An usrah is single-gender: someone who leads or invigilates one
+          // hands it over first, and a member leaves the old usrah (its
+          // roster, questions and quiz room would otherwise mix genders).
+          const leads = await tx.usrah.count({
+            where: { OR: [{ headUserId: target.id }, { invigilatorUserId: target.id }] },
+          });
+          if (leads > 0) {
+            throw new ApiError(400, "ইনি একটি উসরার দায়িত্বে আছেন — আগে দায়িত্ব অন্য কাউকে দিন, তারপর লিঙ্গ বদলান");
+          }
           // B6: gender changes are full_admin-only AND need a Bengali reason —
           // the audit entry must explain why the protected attribute moved.
           const reason = requireBengaliReason(dto.reason);
@@ -717,6 +730,7 @@ export class AdminService {
             reason,
           });
           data.gender = dto.gender;
+          if (dto.usrahId === undefined && target.usrahId) data.usrahId = null;
         }
       }
 

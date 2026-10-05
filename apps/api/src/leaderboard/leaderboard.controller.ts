@@ -50,6 +50,8 @@ export function bandOfPercentile(p: number): LeaderboardBand {
   return "bottom";
 }
 
+const TOTALS_TTL_MS = 5 * 60_000;
+
 @Injectable()
 export class LeaderboardService {
   constructor(
@@ -59,15 +61,35 @@ export class LeaderboardService {
   ) {}
 
   /**
+   * The everyone-else side of the percentile, per gender, shared for a few
+   * minutes: it reads every same-gender diary for 30 days, and a band does
+   * not need to move by the second (the member's own points stay live).
+   */
+  private readonly totalsCache = new Map<string, { at: number; totals: Promise<Map<string, number>> }>();
+
+  private cachedGenderTotals(gender: string): Promise<Map<string, number>> {
+    const hit = this.totalsCache.get(gender);
+    if (hit && Date.now() - hit.at < TOTALS_TTL_MS) return hit.totals;
+    const totals = this.genderTotals(gender);
+    totals.catch(() => this.totalsCache.delete(gender));
+    this.totalsCache.set(gender, { at: Date.now(), totals });
+    return totals;
+  }
+
+  /**
    * Same-gender 30-day amal-points totals (userId → points) — the percentile
    * denominator. Points come from the server's shared amalPoints rule over
    * every ACTIVE catalog definition (1 = done, 0.5 = partial count/quantity,
    * 0 = missed), summed over the last `windowDays` diary days.
    */
-  async genderTotals(gender: string, windowDays = LEADERBOARD_WINDOW_DAYS): Promise<Map<string, number>> {
+  async genderTotals(
+    gender: string,
+    windowDays = LEADERBOARD_WINDOW_DAYS,
+    onlyUserId?: string
+  ): Promise<Map<string, number>> {
     return this.rls.system(async (tx) => {
       const users = (await tx.user.findMany({
-        where: { gender },
+        where: { gender, ...(onlyUserId ? { id: onlyUserId } : {}) },
         select: { id: true, category: true },
       })) as unknown as { id: string; category: string }[];
       if (!users.length) return new Map<string, number>();
@@ -78,7 +100,11 @@ export class LeaderboardService {
 
       const days = lastNDayKeys(windowDays);
       const entries = (await tx.amalEntry.findMany({
-        where: { date: { gte: days[0], lte: days[days.length - 1] } },
+        // only this gender's diaries (the other half was loaded and dropped)
+        where: {
+          date: { gte: days[0], lte: days[days.length - 1] },
+          ...(onlyUserId ? { userId: onlyUserId } : { user: { gender } }),
+        },
         select: { userId: true, amalKey: true, valueJson: true },
       })) as unknown as { userId: string; amalKey: string; valueJson: unknown }[];
 
@@ -106,8 +132,11 @@ export class LeaderboardService {
       throw new ApiError(404, "লিডারবোর্ড সাময়িকভাবে বন্ধ");
     }
 
-    const totals = await this.genderTotals(user.gender);
-    const myPoints = totals.get(user.id) ?? 0;
+    const [totals, mine] = await Promise.all([
+      this.cachedGenderTotals(user.gender),
+      this.genderTotals(user.gender, LEADERBOARD_WINDOW_DAYS, user.id),
+    ]);
+    const myPoints = mine.get(user.id) ?? 0;
     const others = [...totals.entries()]
       .filter(([id]) => id !== user.id)
       .map(([, v]) => v);
