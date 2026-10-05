@@ -37,6 +37,7 @@ export const ROLE_RANK: Record<Role, number> = {
 export interface User {
   id: string;
   phone: string | null;
+  email?: string | null;
   name: string;
   photoUrl: string | null;
   gender: Gender;

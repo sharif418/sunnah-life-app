@@ -151,10 +151,15 @@ export const api = {
   logout: () => req<{ ok: boolean }>(route("/auth/logout"), { method: "POST", body: "{}" }),
 
   me: () => req<{ user: User | null }>(route("/me")),
+  /** PROF-04: a code to the NEW phone, then verify it to make it the sign-in number. */
+  requestPhoneChange: (phone: string) =>
+    req<{ ok: boolean; devCode?: string }>(route("/me/phone/request"), { method: "POST", body: JSON.stringify({ phone }) }),
+  verifyPhoneChange: (phone: string, code: string) =>
+    req<{ user: User }>(route("/me/phone/verify"), { method: "POST", body: JSON.stringify({ phone, code }) }),
   /** DELETE /api/me — delete the signed-in account (Play's rule; see /delete-account). */
   deleteMe: () =>
     req<{ ok: boolean }>(route("/me"), { method: "DELETE", body: JSON.stringify({ confirm: "DELETE" }) }),
-  updateMe: (patch: Partial<Pick<User, "name" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
+  updateMe: (patch: Partial<Pick<User, "name" | "email" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
     req<{ user: User }>(route("/me"), { method: "PATCH", body: JSON.stringify(patch) }),
 
   config: () => req<AppConfig>(route("/config")),
