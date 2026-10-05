@@ -150,7 +150,12 @@ class _TodayView extends ConsumerWidget {
                       IconButton(
                         key: const ValueKey('diary_instructions_button'),
                         tooltip: context.t('diary_instructions'),
-                        visualDensity: VisualDensity.compact,
+                        // 44×44 tap area, the icon stays small
+                        constraints: const BoxConstraints(
+                          minWidth: SLSpacing.minTapTarget,
+                          minHeight: SLSpacing.minTapTarget,
+                        ),
+                        padding: EdgeInsets.zero,
                         onPressed: () => showDiaryInstructions(context),
                         icon: Icon(
                           PhosphorIconsRegular.info,
@@ -211,7 +216,11 @@ class _TodayView extends ConsumerWidget {
                 (PhosphorIconsRegular.flagBanner, 'goals_title', '/amal/goals'),
                 // AMOL-15: the usrah's question board, for usrah members
                 if (ref.watch(authProvider).userOrNull?.usrahId != null)
-                  (PhosphorIconsRegular.chats, 'usrah_q_title', '/amal/questions'),
+                  (
+                    PhosphorIconsRegular.chats,
+                    'usrah_q_title',
+                    '/amal/questions',
+                  ),
               ])
                 Padding(
                   padding: const EdgeInsetsDirectional.only(end: SLSpacing.s8),
@@ -794,7 +803,8 @@ class _AmalGroupRow extends ConsumerWidget {
               );
               // one line on a 360dp phone too (the prototype's table row);
               // stacked only when it truly cannot fit (narrow / large text)
-              final oneLine = constraints.maxWidth >= 290 &&
+              final oneLine =
+                  constraints.maxWidth >= 290 &&
                   MediaQuery.textScalerOf(context).scale(1) <= 1.15;
               if (oneLine) {
                 return Row(

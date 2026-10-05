@@ -708,6 +708,16 @@ class HeatmapCell extends StatelessWidget {
     return Semantics(
       button: onTap != null,
       label: semanticsLabel,
+      // TalkBack heard only "৮ · ফজর নামাজ" — the colour was the whole answer
+      value: semanticsLabel == null
+          ? null
+          : context.t(
+              points >= 1
+                  ? 'done'
+                  : points > 0
+                  ? 'month_legend_some'
+                  : 'month_legend_none',
+            ),
       child: GestureDetector(
         onTap: onTap,
         child: Container(

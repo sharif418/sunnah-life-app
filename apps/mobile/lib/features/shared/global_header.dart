@@ -23,7 +23,8 @@ import '../../design/brand_mark.dart';
 import '../../design/design_tokens.dart';
 import '../../l10n/app_strings.dart';
 import '../../state/providers.dart';
-import '../../state/remote_state.dart' show effectiveHijriAdjustProvider, inboxUnreadProvider;
+import '../../state/remote_state.dart'
+    show effectiveHijriAdjustProvider, inboxUnreadProvider;
 import 'city_picker.dart';
 import 'notifications_sheet.dart';
 import 'reminders_sheet.dart';
@@ -121,12 +122,17 @@ class GlobalHeader extends ConsumerWidget {
                 borderRadius: SLRadius.brPill,
                 onTap: () => _pickCity(context, ref),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: SLSpacing.minTapTarget),
+                  constraints: const BoxConstraints(
+                    minHeight: SLSpacing.minTapTarget,
+                  ),
                   child: Align(
                     alignment: AlignmentDirectional.centerStart,
                     widthFactor: 1,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.surface,
                         borderRadius: SLRadius.brPill,
@@ -199,9 +205,10 @@ class _HeaderAction extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(SLRadius.sm),
+        // 44×44: the design minimum (DESIGN.md) — was 40 wide
         child: SizedBox(
-          width: 40,
-          height: 44,
+          width: SLSpacing.minTapTarget,
+          height: SLSpacing.minTapTarget,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -210,7 +217,7 @@ class _HeaderAction extends StatelessWidget {
                 Positioned(
                   key: const ValueKey('header_unread_dot'),
                   top: 10,
-                  right: 9,
+                  right: 11,
                   child: Container(
                     width: 9,
                     height: 9,
