@@ -11,6 +11,7 @@ import { translate } from "@/lib/i18n";
 import { api } from "@/lib/api";
 import { AppTitle, LogoMark } from "@/components/app/logo";
 import { AuthModal } from "@/components/app/auth-modal";
+import { NotificationsInbox } from "@/components/app/inbox";
 import { InstallPrompt } from "@/components/app/install-prompt";
 import { HomeView } from "@/components/home/home-view";
 import { AmalView } from "@/components/amal/amal-view";
@@ -221,7 +222,7 @@ function Header() {
 
         <div className="ms-auto xl:ms-0 flex items-center gap-1.5">
           <SyncBadge />
-          <NotificationsButton open={remindersOpen} onOpenChange={setRemindersOpen} />
+          <NotificationsInbox open={remindersOpen} onOpenChange={setRemindersOpen} />
 
           {/* দান করুন — the ONLY gold-filled element in the header, permanently highlighted. */}
           <a
@@ -502,75 +503,6 @@ function ThemeToggle({
     >
       {mounted && theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </button>
-  );
-}
-
-function NotificationsButton({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
-  const { user, profile } = useApp();
-  const t = (k: string) => translate(profile.language, k);
-  const [reminders, setReminders] = React.useState<ReminderItem[] | null>(null);
-  const [loading, setLoading] = React.useState(false);
-  const unread = reminders?.filter((r) => !r.read).length ?? 0;
-
-  React.useEffect(() => {
-    if (open && user) {
-      setLoading(true);
-      api
-        .reminders()
-        .then((r) => setReminders(r.reminders))
-        .catch(() => setReminders([]))
-        .finally(() => setLoading(false));
-    }
-  }, [open, user]);
-
-  return (
-    <>
-      <button
-        aria-label={t("header.notifications")}
-        className="tap-target relative inline-flex size-9 items-center justify-center rounded-full text-primary-foreground/85 hover:bg-primary-foreground/10 transition-colors"
-        onClick={() => onOpenChange(true)}
-      >
-        <Bell className="size-4" />
-        {unread > 0 && <span className="absolute top-1.5 end-1.5 size-2 rounded-full bg-alert ring-2 ring-primary" />}
-      </button>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="rounded-t-2xl">
-          <SheetHeader>
-            <SheetTitle>{t("header.reminders")}</SheetTitle>
-          </SheetHeader>
-          <div className="px-4 pb-6 max-h-96 overflow-y-auto scroll-thin">
-            {!user ? (
-              <p className="py-8 text-center text-sm text-muted-foreground leading-relaxed">{t("header.remindersHint")}</p>
-            ) : loading ? (
-              <div className="space-y-2 py-2">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-16 rounded-xl bg-muted animate-pulse" />
-                ))}
-              </div>
-            ) : reminders && reminders.length > 0 ? (
-              <div className="space-y-2">
-                {reminders.map((r) => (
-                  <div key={r.id} className="rounded-xl border border-border bg-card p-3.5">
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="font-semibold text-sm">{r.title}</p>
-                      {!r.read && <span className="mt-1 size-2 shrink-0 rounded-full bg-primary" />}
-                    </div>
-                    {r.body && <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{r.body}</p>}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="py-10 text-center">
-                <div className="mx-auto size-16 rounded-full bg-primary-soft flex items-center justify-center">
-                  <Bell className="size-7 text-primary/50" />
-                </div>
-                <p className="mt-3 text-sm text-muted-foreground">{t("header.noReminders")}</p>
-              </div>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-    </>
   );
 }
 

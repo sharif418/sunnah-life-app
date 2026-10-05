@@ -208,6 +208,8 @@ export const api = {
 
   // misc
   reminders: () => req<{ reminders: ReminderItem[] }>(route("/reminders")),
+  /** The Foundation's announcements (public; gender-scoped ones for that gender). */
+  announcements: () => req<{ announcements: Announcement[] }>(route("/announcements")),
   readReminder: (id: string) =>
     req<{ ok: boolean }>(route("/reminders"), { method: "PATCH", body: JSON.stringify({ id }) }),
   live: () => req<{ programs: LiveProgramItem[] }>(route("/live")),
