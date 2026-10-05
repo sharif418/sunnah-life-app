@@ -46,7 +46,9 @@ console.log(`✓ dist/openapi.json (${Object.keys(document.paths ?? {}).length} 
 // 2) schema.d.ts via openapi-typescript (installed here as a devDependency).
 const { execSync } = require("node:child_process");
 execSync(
-  `bun x openapi-typescript ${resolve(outDir, "openapi.json")} -o ${resolve(outDir, "schema.d.ts")}`,
+  // relative to the package root (cwd below): an absolute path with a space
+  // ("…/Sunnah Life/…") breaks the shell and openapi-typescript's resolver
+  `bun x openapi-typescript dist/openapi.json -o dist/schema.d.ts`,
   { stdio: "inherit", cwd: resolve(here, "..") },
 );
 console.log("✓ dist/schema.d.ts");
