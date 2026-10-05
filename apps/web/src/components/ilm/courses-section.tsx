@@ -33,6 +33,50 @@ function readProgress(courseId: string): string[] {
   }
 }
 
+// The signed-in member's enrollments and progress from the server, so a
+// lesson finished on the phone counts here too (merged with this browser's
+// own copy). Cached for the page's life; refreshed after each save.
+let enrollmentsCache: Map<string, string[]> | null = null;
+let enrollmentsLoad: Promise<Map<string, string[]>> | null = null;
+
+function loadEnrollments(): Promise<Map<string, string[]>> {
+  if (enrollmentsCache) return Promise.resolve(enrollmentsCache);
+  enrollmentsLoad ??= api
+    .enrollments()
+    .then((r) => {
+      enrollmentsCache = new Map(r.enrollments.map((e) => [e.courseId, Array.isArray(e.progress?.done) ? e.progress!.done! : []]));
+      return enrollmentsCache;
+    })
+    .catch(() => new Map<string, string[]>())
+    .finally(() => {
+      enrollmentsLoad = null;
+    });
+  return enrollmentsLoad;
+}
+
+function useServerProgress(): Map<string, string[]> | null {
+  const user = useApp((s) => s.user);
+  const [map, setMap] = React.useState<Map<string, string[]> | null>(user ? enrollmentsCache : null);
+  React.useEffect(() => {
+    if (!user) {
+      enrollmentsCache = null;
+      setMap(null);
+      return;
+    }
+    let alive = true;
+    void loadEnrollments().then((m) => alive && setMap(m));
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+  return map;
+}
+
+/** This browser's progress ∪ the server's. */
+function mergedProgress(courseId: string, server: Map<string, string[]> | null): string[] {
+  return [...new Set([...readProgress(courseId), ...(server?.get(courseId) ?? [])])];
+}
+
 export function CoursesSection({
   courseId,
   lessonId,
@@ -42,6 +86,7 @@ export function CoursesSection({
 }) {
   const { nav } = useApp();
   const { data, loading, error } = useAsync<CoursesPack>(() => getPack("courses") as Promise<CoursesPack>);
+  const server = useServerProgress();
 
   if (loading) return <SkeletonRows count={3} className="h-28" />;
   if (error) return <EmptyState icon={GraduationCap} title="কোর্স লোড করা যায়নি" hint={error} />;
@@ -67,7 +112,7 @@ export function CoursesSection({
     <div className="space-y-3">
       {courses.map((c) => {
         const totalMin = c.lessons.reduce((s, l) => s + l.minutes, 0);
-        const done = readProgress(c.id).length;
+        const done = mergedProgress(c.id, server).length;
         return (
           <Card key={c.id} className="rounded-xl p-4 shadow-card">
             <div className="flex items-start justify-between gap-2">
@@ -99,14 +144,16 @@ export function CoursesSection({
 
 function CourseDetail({ course, initialLessonId, onBack }: { course: Course; initialLessonId?: string; onBack: () => void }) {
   const { user, setAuthModal } = useApp();
+  const server = useServerProgress();
   const [done, setDone] = React.useState<string[]>([]);
   const [openLesson, setOpenLesson] = React.useState<string | null>(initialLessonId ?? null);
   const [enrolled, setEnrolled] = React.useState(false);
   const [enrolling, setEnrolling] = React.useState(false);
 
   React.useEffect(() => {
-    setDone(readProgress(course.id));
-  }, [course.id]);
+    setDone(mergedProgress(course.id, server));
+    if (server?.has(course.id)) setEnrolled(true);
+  }, [course.id, server]);
 
   const persist = async (nextDone: string[]) => {
     setDone(nextDone);
@@ -116,9 +163,12 @@ function CourseDetail({ course, initialLessonId, onBack }: { course: Course; ini
       // storage blocked — progress stays in memory
     }
     if (user) {
-      api.saveProgress(course.id, JSON.stringify({ done: nextDone })).catch(() => {
-        /* অফলাইন হলে localStorage ভার্সনই থাকবে */
-      });
+      api
+        .saveProgress(course.id, JSON.stringify({ done: nextDone }))
+        .then(() => enrollmentsCache?.set(course.id, nextDone))
+        .catch(() => {
+          /* অফলাইন হলে localStorage ভার্সনই থাকবে */
+        });
     }
   };
 
