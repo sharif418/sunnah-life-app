@@ -333,12 +333,55 @@ const IMAN_GROUPS: { key: ImanBranch["group"]; label: string }[] = [
   { key: "body", label: "দেহের শাখা" },
 ];
 
+const IMAN_KEY = "sl-iman-check";
+type ImanScore = 0 | 1 | 2; // এখনো নয় · চেষ্টা করছি · আছে
+const IMAN_CHOICES: { v: ImanScore; label: string }[] = [
+  { v: 2, label: "আছে" },
+  { v: 1, label: "চেষ্টা করছি" },
+  { v: 0, label: "এখনো নয়" },
+];
+
+function readIman(): Record<string, ImanScore> {
+  try {
+    const raw = localStorage.getItem(IMAN_KEY);
+    const parsed = raw ? (JSON.parse(raw) as { answers?: Record<string, ImanScore> }) : null;
+    return parsed?.answers ?? {};
+  } catch {
+    return {};
+  }
+}
+
+/** ঈমানের ৭০ শাখা — read, or take the private self-review (AMOL-11, mobile
+ * parity): each branch আছে / চেষ্টা করছি / এখনো নয়; the result is a mirror
+ * (overall, each group, what to work on next). Answers stay in this browser. */
 function ImanBranchesView({ onBack }: { onBack: () => void }) {
   const { data, loading, error } = useAsync<ImanBranchesPack>(() => getPack("imanBranches") as Promise<ImanBranchesPack>);
+  const [reviewing, setReviewing] = React.useState(false);
+  const [answers, setAnswers] = React.useState<Record<string, ImanScore>>({});
+  React.useEffect(() => setAnswers(readIman()), []);
+
   if (loading) return <SkeletonRows count={5} className="h-20" />;
   if (error) return <EmptyState icon={Heart} title="লোড করা যায়নি" hint={error} />;
   const branches: ImanBranch[] = data?.branches ?? [];
   if (branches.length === 0) return <EmptyState icon={Heart} title="তালিকা খালি" />;
+
+  const answer = (id: string | number, v: ImanScore) => {
+    const next = { ...answers, [String(id)]: v };
+    setAnswers(next);
+    try {
+      localStorage.setItem(IMAN_KEY, JSON.stringify({ answers: next, updatedAt: new Date().toISOString() }));
+    } catch {
+      // storage blocked — the review still works for this visit
+    }
+  };
+  const pctOf = (list: ImanBranch[]) => {
+    const scored = list.filter((b) => answers[String(b.id)] !== undefined);
+    if (scored.length === 0) return null;
+    return Math.round((100 * scored.reduce((s, b) => s + (answers[String(b.id)] ?? 0), 0)) / (2 * list.length));
+  };
+  const answered = branches.filter((b) => answers[String(b.id)] !== undefined).length;
+  const overall = pctOf(branches);
+  const workOn = branches.filter((b) => answers[String(b.id)] === 0).slice(0, 5);
 
   return (
     <div>
@@ -347,6 +390,38 @@ function ImanBranchesView({ onBack }: { onBack: () => void }) {
       <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
         <BookHeart className="size-3.5 shrink-0" /> ঈমানের সত্তরটিরও অধিক শাখা রয়েছে (বুখারী ৯, মুসলিম ৩৫)
       </p>
+
+      <div className="mt-3 rounded-xl border border-primary/20 bg-primary-soft p-4">
+        {answered > 0 ? (
+          <>
+            <p className="text-sm font-bold">আমার আত্মমূল্যায়ন: {overall !== null ? `${toBn(overall)}%` : "—"}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {toBn(answered)}/{toBn(branches.length)} শাখা দেখা হয়েছে · এটি আয়না, রায় নয়
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2 text-xs">
+              {IMAN_GROUPS.map((g) => {
+                const pct = pctOf(branches.filter((b) => b.group === g.key));
+                return pct === null ? null : (
+                  <span key={g.key} className="rounded-full bg-card px-2.5 py-1 font-semibold">
+                    {g.label}: {toBn(pct)}%
+                  </span>
+                );
+              })}
+            </div>
+            {workOn.length > 0 ? (
+              <p className="mt-2 text-xs leading-relaxed">
+                <span className="font-semibold">যেগুলো নিয়ে কাজ করবেন:</span> {workOn.map((b) => b.titleBn).join(" · ")}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <p className="text-sm">প্রতিটি শাখায় নিজেকে মিলিয়ে দেখুন — উত্তর শুধু এই ব্রাউজারে থাকে, কেউ দেখে না।</p>
+        )}
+        <Button size="sm" className="mt-3 h-9 rounded-full" variant={reviewing ? "outline" : "default"} onClick={() => setReviewing((v) => !v)}>
+          {reviewing ? "শুধু পড়ার মোডে ফিরুন" : answered > 0 ? "আত্মমূল্যায়ন চালিয়ে যান" : "আত্মমূল্যায়ন শুরু করুন"}
+        </Button>
+      </div>
+
       {IMAN_GROUPS.map((g) => {
         const list = branches.filter((b) => b.group === g.key);
         if (list.length === 0) return null;
@@ -357,12 +432,36 @@ function ImanBranchesView({ onBack }: { onBack: () => void }) {
             </h3>
             <div className="mt-2 space-y-1.5">
               {list.map((b) => (
-                <div key={b.id} className="flex items-start gap-2.5 rounded-xl border border-border bg-card p-3 shadow-card">
-                  <span className="mt-0.5 text-xs font-bold text-muted-foreground">{toBn(b.id)}.</span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold leading-snug">{b.titleBn}</p>
-                    {b.detailBn ? <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{b.detailBn}</p> : null}
+                <div key={b.id} className="rounded-xl border border-border bg-card p-3 shadow-card">
+                  <div className="flex items-start gap-2.5">
+                    <span className="mt-0.5 text-xs font-bold text-muted-foreground">{toBn(b.id)}.</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold leading-snug">{b.titleBn}</p>
+                      {b.detailBn ? <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{b.detailBn}</p> : null}
+                    </div>
                   </div>
+                  {reviewing ? (
+                    <div className="mt-2 flex flex-wrap gap-1.5 ps-6" role="radiogroup" aria-label={b.titleBn}>
+                      {IMAN_CHOICES.map((c) => {
+                        const on = answers[String(b.id)] === c.v;
+                        return (
+                          <button
+                            key={c.v}
+                            type="button"
+                            role="radio"
+                            aria-checked={on}
+                            onClick={() => answer(b.id, c.v)}
+                            className={
+                              "rounded-full border px-3 py-1 text-xs font-semibold transition-colors " +
+                              (on ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-muted")
+                            }
+                          >
+                            {c.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
