@@ -41,6 +41,7 @@ import {
   Zap,
   Info,
   ChevronDown,
+  Flame,
 } from "lucide-react";
 import type {
   AmalDefinition,
@@ -70,6 +71,7 @@ import {
 } from "./amal-controls";
 import { AmalMonthView } from "./amal-month";
 import { GoalsView } from "./goals";
+import { HabitView } from "./habit";
 import { LatestReviewCard } from "./latest-review";
 import { DIARY_COVER, DIARY_INSTRUCTIONS, PAPER_KEYS, PAPER_LAYOUT } from "@/lib/diary-layout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -235,6 +237,11 @@ export function AmalView() {
 
   const entryOf = (key: string): AmalEntry | undefined => amalCache[`${selectedDate}#${key}`];
 
+  // ── habit challenge sub-view ───────────────────────────────────────────────
+  if (view === "habit" && defs && defs.length > 0) {
+    return <HabitView defs={defs} entries={allEntries} category={category} today={today} onBack={back} />;
+  }
+
   // ── goals sub-view (signed-in members) ─────────────────────────────────────
   if (view === "goals" && user && defs && defs.length > 0) {
     return <GoalsView defs={defs} onBack={back} />;
@@ -305,6 +312,10 @@ export function AmalView() {
         >
           <CalendarDays className="size-4" />
           <span className="hidden min-[380px]:inline">মাসিক ছক</span>
+        </Button>
+        <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "habit")}>
+          <Flame className="size-4" />
+          <span className="hidden min-[380px]:inline">অভ্যাস</span>
         </Button>
         {user ? (
           <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "goals")}>
