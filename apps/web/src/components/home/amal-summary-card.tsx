@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api";
 import { useApp } from "@/lib/store";
+import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { dateKey, isAyyamBeez, toBn, weekdayBn } from "@/lib/calendars";
 import {
   AMAL_CATEGORY_LABELS_BN,
@@ -29,7 +30,7 @@ interface CategoryStat {
 }
 
 /** আজকের তালিকায় এই আমলটি আসবে কি? (weekly:any দিন-নির্দিষ্ট নয় — বাদ) */
-function appliesToday(def: AmalDefinition, d: Date): boolean {
+function appliesToday(def: AmalDefinition, d: Date, hijriAdjust: number): boolean {
   const dow = d.getDay();
   switch (def.cadence) {
     case "daily":
@@ -41,7 +42,7 @@ function appliesToday(def: AmalDefinition, d: Date): boolean {
     case "weekly:any":
       return false;
     case "monthly:ayyam_beez":
-      return isAyyamBeez(d);
+      return isAyyamBeez(d, hijriAdjust);
     default:
       return false;
   }
@@ -66,6 +67,7 @@ export function AmalSummaryCard() {
   const { user, amalCache, outbox, nav } = useApp();
   const today = dateKey();
   const todayDate = React.useMemo(() => new Date(), []);
+  const hijriAdjust = useHijriAdjust();
 
   const [defs, setDefs] = React.useState<AmalDefinition[] | null>(null);
   const [serverEntries, setServerEntries] = React.useState<AmalEntry[] | null>(null);
@@ -107,7 +109,7 @@ export function AmalSummaryCard() {
   }, [user, serverEntries, outbox, amalCache, today]);
 
   const { applicable, byCategory, doneCount, pct } = React.useMemo(() => {
-    const applicable = (defs ?? []).filter((d) => appliesToday(d, todayDate));
+    const applicable = (defs ?? []).filter((d) => appliesToday(d, todayDate, hijriAdjust));
     const userCategory = user?.category ?? "general";
     let points = 0;
     const stats = new Map<AmalCategory, CategoryStat>();
@@ -125,7 +127,7 @@ export function AmalSummaryCard() {
       doneCount: Math.round(points),
       pct: applicable.length ? Math.round((100 * points) / applicable.length) : 0,
     };
-  }, [defs, values, user, todayDate]);
+  }, [defs, values, user, todayDate, hijriAdjust]);
 
   return (
     <Card className="rounded-xl shadow-card">
