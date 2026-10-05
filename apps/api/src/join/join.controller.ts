@@ -24,10 +24,19 @@ export class JoinController {
   async join(@Query() query: JoinQueryDto) {
     const code = query.code;
     // memberCode lookup is public (name + level only) — system bootstrap context.
+    // Codes run in sequence (DS-000001…), so anyone could walk them: a
+    // sister's name is never given out here (security review 2026-10-05),
+    // and the route has its own tight per-IP limit (throttlers.ts).
     const inviter = await this.rls.system((tx) =>
-      tx.user.findUnique({ where: { memberCode: code.toUpperCase() }, select: { name: true, level: true } })
+      tx.user.findUnique({
+        where: { memberCode: code.toUpperCase() },
+        select: { name: true, level: true, gender: true, deletedAt: true },
+      })
     );
-    if (!inviter) throw new ApiError(404, "কোডটি সঠিক নয়");
-    return { inviterName: inviter.name, inviterLevel: inviter.level as Level };
+    if (!inviter || inviter.deletedAt) throw new ApiError(404, "কোডটি সঠিক নয়");
+    return {
+      inviterName: inviter.gender === "F" ? "একজন দাঈ বোন" : inviter.name,
+      inviterLevel: inviter.level as Level,
+    };
   }
 }

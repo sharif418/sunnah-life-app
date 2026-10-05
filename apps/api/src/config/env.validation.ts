@@ -61,6 +61,10 @@ const schema = z
   APPLE_TEAM_ID: z.string().optional().default(""),
   THROTTLE_IP_PER_MIN: z.coerce.number().int().positive().default(600),
   THROTTLE_OTP_PER_10MIN: z.coerce.number().int().positive().default(5),
+  THROTTLE_OTP_PER_DAY: z.coerce.number().int().positive().default(10),
+  THROTTLE_OTP_IP_PER_HOUR: z.coerce.number().int().positive().default(60),
+  THROTTLE_OTP_VERIFY_PER_DAY: z.coerce.number().int().positive().default(30),
+  THROTTLE_JOIN_PER_MIN: z.coerce.number().int().positive().default(20),
   // HMAC secret of the live-quiz room tokens (quiz-token.ts). Dev fallback
   // "dev-secret"; production refuses to boot without a real value.
   QUIZ_SECRET: z.string().optional().default(""),

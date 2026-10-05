@@ -25,9 +25,18 @@ let app: INestApplication;
 let http: () => ReturnType<typeof request>;
 let otpCleanup: () => Promise<unknown>;
 const previousOtpCap = process.env.THROTTLE_OTP_PER_10MIN;
+const OTP_IP_CAP = 8;
+const VERIFY_CAP = 3;
+const PUMP_PREFIX = "0179999"; // 01799990100.. one code each, never real
+const previousEnv = {
+  THROTTLE_OTP_IP_PER_HOUR: process.env.THROTTLE_OTP_IP_PER_HOUR,
+  THROTTLE_OTP_VERIFY_PER_DAY: process.env.THROTTLE_OTP_VERIFY_PER_DAY,
+};
 
 beforeAll(async () => {
   process.env.THROTTLE_OTP_PER_10MIN = String(OTP_CAP);
+  process.env.THROTTLE_OTP_IP_PER_HOUR = String(OTP_IP_CAP);
+  process.env.THROTTLE_OTP_VERIFY_PER_DAY = String(VERIFY_CAP);
   const { AppModule } = await import("src/app.module");
   const { RlsService } = await import("src/common/rls.service");
   const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
@@ -36,7 +45,10 @@ beforeAll(async () => {
   await app.init();
   await app.listen(0);
   const rls = app.get(RlsService);
-  otpCleanup = () => rls.system((tx) => tx.otpCode.deleteMany({ where: { phone: THROWAWAY } }));
+  otpCleanup = () =>
+    rls.system((tx) =>
+      tx.otpCode.deleteMany({ where: { OR: [{ phone: THROWAWAY }, { phone: { startsWith: `${PUMP_PREFIX}01` } }] } })
+    );
   await otpCleanup();
   http = () => request(app.getHttpServer()) as unknown as ReturnType<typeof request>;
 });
@@ -47,6 +59,10 @@ afterAll(async () => {
   // jest --runInBand shares process.env across spec files — restore it.
   if (previousOtpCap === undefined) delete process.env.THROTTLE_OTP_PER_10MIN;
   else process.env.THROTTLE_OTP_PER_10MIN = previousOtpCap;
+  for (const [k, v] of Object.entries(previousEnv)) {
+    if (v === undefined) delete process.env[k];
+    else process.env[k] = v;
+  }
 });
 
 describe("throttler scope", () => {
@@ -75,4 +91,28 @@ describe("throttler scope", () => {
     expect(statuses[OTP_CAP]).toBe(429);
     expect(bodies[OTP_CAP]).toContain("ThrottlerException");
   });
+
+  it("one IP cannot send codes to an unlimited number of phones (SMS pumping)", async () => {
+    // the per-phone test above already used some of this IP's budget
+    const statuses: number[] = [];
+    for (let i = 0; i < OTP_IP_CAP + 2; i++) {
+      const res = await http()
+        .post("/api/auth/otp/request")
+        .send({ phone: `${PUMP_PREFIX}01${String(i).padStart(2, "0")}` });
+      statuses.push(res.status);
+    }
+    expect(statuses[0]).toBe(200);
+    expect(statuses).toContain(429);
+  });
+
+  it("code guesses for one phone are capped per day across codes", async () => {
+    const statuses: number[] = [];
+    for (let i = 0; i < VERIFY_CAP + 1; i++) {
+      const res = await http().post("/api/auth/otp/verify").send({ phone: THROWAWAY, code: "000000" });
+      statuses.push(res.status);
+    }
+    expect(statuses.slice(0, VERIFY_CAP)).not.toContain(429);
+    expect(statuses[VERIFY_CAP]).toBe(429);
+  });
 });
+

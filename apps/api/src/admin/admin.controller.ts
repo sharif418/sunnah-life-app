@@ -650,6 +650,10 @@ export class AdminService {
 
       const users: (import("../shared/domain").User & { usrahName?: string | null })[] = rows.map((r) => ({
         ...toDomainUser(r as never),
+        // a member's home coordinates are for their own prayer times — no
+        // admin screen needs them (the city stays)
+        lat: null,
+        lng: null,
         usrahName: r.usrah?.name ?? null,
       }));
       return { users };

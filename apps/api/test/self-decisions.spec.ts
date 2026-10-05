@@ -105,3 +105,31 @@ describe("admin gender change keeps usrahs single-gender", () => {
     }
   });
 });
+
+describe("database refuses what the app already refuses (defense in depth)", () => {
+  it("a member cannot write a Foundation-wide notice, nor read one addressed to the other gender", async () => {
+    const v = await http().post("/api/auth/otp/request").send({ phone: "01000000004" }).expect(200);
+    const member = (
+      await http().post("/api/auth/otp/verify").send({ phone: "01000000004", code: v.body.devCode }).expect(200)
+    ).body.user;
+    await expect(
+      rls.run(member, (tx) =>
+        tx.announcement.create({ data: { usrahId: null, authorId: member.id, kind: "announcement", body: MARK } })
+      )
+    ).rejects.toThrow();
+
+    const other = member.gender === "M" ? "F" : "M";
+    const admin = await rls.system((tx) => tx.user.findFirst({ where: { role: "full_admin" } }));
+    const notice = await rls.system((tx) =>
+      tx.announcement.create({
+        data: { usrahId: null, authorId: admin!.id, kind: "announcement", body: MARK, gender: other },
+      })
+    );
+    try {
+      const seen = await rls.run(member, (tx) => tx.announcement.findUnique({ where: { id: notice.id } }));
+      expect(seen).toBeNull();
+    } finally {
+      await rls.system((tx) => tx.announcement.delete({ where: { id: notice.id } }));
+    }
+  });
+});

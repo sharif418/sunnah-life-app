@@ -254,7 +254,9 @@ export class ReportsService {
           })
         )
         .catch(() => undefined);
-      throw new ApiError(500, `রিপোর্ট তৈরি করা যায়নি: ${errorBn}`);
+      // the failed row keeps the detail for diagnosis; the response carries
+      // only our own (Bengali) messages, never an internal error text
+      throw new ApiError(500, e instanceof ApiError ? `রিপোর্ট তৈরি করা যায়নি: ${errorBn}` : "রিপোর্ট তৈরি করা যায়নি — একটু পরে আবার চেষ্টা করুন");
     }
   }
 

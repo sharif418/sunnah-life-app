@@ -4,7 +4,6 @@ import { Module, ValidationPipe } from "@nestjs/common";
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import { ThrottlerModule } from "@nestjs/throttler";
-import type { ExecutionContext } from "@nestjs/common";
 import { validateEnv } from "./config/env.validation";
 import { CommonModule } from "./common/common.module";
 import { StorageModule } from "./storage/storage.module";
@@ -14,6 +13,7 @@ import { MetricsInterceptor } from "./common/metrics";
 import { StructuredLogger } from "./common/structured-logger";
 import { QueueModule } from "./queues/queue.module";
 import { AuthThrottlerGuard } from "./common/auth-throttler.guard";
+import { throttlers } from "./common/throttlers";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Load apps/api/.env if present (dev convenience). NO override: real
@@ -62,26 +62,8 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
       validate: validateEnv,
       // .env is loaded by Nest; prisma seed reads DIRECT_URL itself.
     }),
-    ThrottlerModule.forRoot([
-      // per-IP general limit — generous for a phone app user, hard for a flood
-      { name: "ip", ttl: 60_000, limit: Number(process.env.THROTTLE_IP_PER_MIN || 600) },
-      // per-phone OTP request limit (attempts, not just stored codes).
-      // Test/CI raise this via env: the jest suites share one Redis across
-      // 13 spec files, each signing in the same demo phones.
-      {
-        name: "otp-phone",
-        ttl: 600_000,
-        limit: Number(process.env.THROTTLE_OTP_PER_10MIN || 5),
-        // Only the OTP request route. @nestjs/throttler v6 applies EVERY named
-        // throttler to every route, so without this the 5-per-10-min OTP cap
-        // hit all traffic — including the Docker healthcheck (staging went
-        // unhealthy after 5 probes) and every user sharing the proxy IP.
-        skipIf: (ctx: ExecutionContext) => {
-          const url = ctx.switchToHttp().getRequest<{ url?: string }>()?.url ?? "";
-          return !url.includes("/auth/otp/request");
-        },
-      },
-    ]),
+    // named limits + what each counts: src/common/throttlers.ts
+    ThrottlerModule.forRoot(throttlers()),
     CommonModule, // @Global: Prisma + RLS + Guard + Jwt
     StorageModule, // @Global: S3/local object storage (monthly report PDFs)
     QueueModule, // BullMQ queues + schedulers (Redis)
