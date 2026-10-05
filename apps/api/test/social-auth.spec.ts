@@ -194,7 +194,7 @@ function track(body: { user: { id: string } }): string {
 describe("GET /api/auth/providers", () => {
   it("reports the enabled providers from env", async () => {
     const res = await http().get("/api/auth/providers").expect(200);
-    expect(res.body).toEqual({ google: true, apple: true });
+    expect(res.body).toEqual({ google: true, apple: true, googleClientId: process.env.GOOGLE_CLIENT_ID });
   });
 
   it("flips to disabled when the env is cleared at request time", async () => {
@@ -204,7 +204,7 @@ describe("GET /api/auth/providers", () => {
     process.env.GOOGLE_IOS_CLIENT_ID = "";
     try {
       const res = await http().get("/api/auth/providers").expect(200);
-      expect(res.body).toEqual({ google: false, apple: true });
+      expect(res.body).toEqual({ google: false, apple: true, googleClientId: null });
     } finally {
       process.env.GOOGLE_CLIENT_ID = saved;
       process.env.GOOGLE_IOS_CLIENT_ID = savedIos;

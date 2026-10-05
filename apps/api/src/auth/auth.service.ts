@@ -197,10 +197,13 @@ export class AuthService {
   // ── Social sign-in (Google + Apple — Task B5) ──────────────────────────────
 
   /** GET /api/auth/providers — which sign-in buttons the clients should show. */
-  providersStatus(): { google: boolean; apple: boolean } {
+  providersStatus(): { google: boolean; apple: boolean; googleClientId: string | null } {
     return {
       google: socialConfig("google")!.enabled,
       apple: socialConfig("apple")!.enabled,
+      // the WEB OAuth client id (a public value): the web's Google button
+      // needs it, and id_tokens it issues carry it as their audience
+      googleClientId: (process.env.GOOGLE_CLIENT_ID ?? "").trim() || null,
     };
   }
 

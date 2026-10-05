@@ -11,6 +11,7 @@ import { useApp } from "@/lib/store";
 import { toast } from "sonner";
 import { Loader2, Phone, ShieldCheck, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GenderCompletionDialog, GoogleSignInButton } from "@/components/app/google-sign-in";
 import type { User } from "@/types/domain";
 
 const DEMO_ACCOUNTS: { phone: string; label: string; desc: string }[] = [
@@ -20,6 +21,16 @@ const DEMO_ACCOUNTS: { phone: string; label: string; desc: string }[] = [
   { phone: "01000000004", label: "দায়ী", desc: "রাফিউল ইসলাম DS-000004" },
   { phone: "01000000007", label: "সাধারণ ব্যবহারকারী", desc: "শুধু নিজের ডেটা" },
 ];
+
+/** The one-tap demo accounts exist only in the seeded demo database: show
+ * them on staging / local builds, never on the production site (there the
+ * numbers would be real people's phones). */
+function showDemoAccounts(): boolean {
+  if (process.env.NEXT_PUBLIC_DEMO_ACCOUNTS === "1") return true;
+  if (typeof window === "undefined") return false;
+  return /(^|\.)(staging|localhost)|^localhost$|^127\.0\.0\.1$/.test(window.location.hostname) ||
+    window.location.hostname.includes("staging");
+}
 
 export function AuthModal() {
   const { authModal, setAuthModal, setUser, profile, referralCode, outbox } = useApp();
@@ -73,6 +84,8 @@ export function AuthModal() {
   };
 
   return (
+    <>
+    <GenderCompletionDialog />
     <Dialog
       open={authModal}
       onOpenChange={(o) => {
@@ -87,10 +100,24 @@ export function AuthModal() {
           </div>
           <DialogTitle className="text-xl">সুন্নাহ লাইফে সাইন ইন</DialogTitle>
           <DialogDescription className="text-sm leading-relaxed">
-            মোবাইল নম্বর দিয়ে যাচাইকরণ। অতিথি হিসেবে থাকলেও সব ফিচার ব্যবহার করা যায় —
+            গুগল বা মোবাইল নম্বর দিয়ে। অতিথি হিসেবে থাকলেও সব ফিচার ব্যবহার করা যায় —
             সাইন ইন করলে আপনার আমলের ডায়েরি অ্যাকাউন্টে সংরক্ষিত হবে।
           </DialogDescription>
         </DialogHeader>
+
+        {stage === "phone" ? (
+          <GoogleSignInButton
+            name={profile.name || undefined}
+            gender={profile.gender}
+            onSignedIn={(u) => {
+              setUser(u);
+              toast.success(`স্বাগতম, ${u.name}!`);
+              setAuthModal(false);
+              reset();
+            }}
+            onError={(m) => toast.error(m)}
+          />
+        ) : null}
 
         {stage === "phone" ? (
           <form
@@ -146,6 +173,7 @@ export function AuthModal() {
           </form>
         )}
 
+        {showDemoAccounts() ? (
         <div className="rounded-xl bg-muted/60 p-3">
           <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground mb-2">
             <Sparkles className="size-3.5 text-gold-text-text" /> ডেমো অ্যাকাউন্ট (এক ট্যাপে সাইন ইন)
@@ -169,8 +197,10 @@ export function AuthModal() {
             ))}
           </div>
         </div>
+        ) : null}
       </DialogContent>
     </Dialog>
+    </>
   );
 
   async function demoLogin(phone: string, label: string) {

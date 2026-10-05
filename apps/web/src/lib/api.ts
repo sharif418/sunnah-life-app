@@ -148,6 +148,13 @@ export const api = {
       route("/auth/otp/verify"),
       { method: "POST", body: JSON.stringify(payload) }
     ),
+  /** Which social sign-ins are on, and the web's Google client id (public). */
+  authProviders: () => req<{ google: boolean; apple: boolean; googleClientId?: string | null }>(route("/auth/providers")),
+  socialSignIn: (payload: { provider: "google" | "apple"; idToken: string; name?: string; gender?: Gender }) =>
+    req<{ user: User; accessToken?: string; refreshToken?: string }>(route("/auth/social"), {
+      method: "POST",
+      body: JSON.stringify(payload),
+    }),
   logout: () => req<{ ok: boolean }>(route("/auth/logout"), { method: "POST", body: "{}" }),
 
   me: () => req<{ user: User | null }>(route("/me")),
@@ -159,7 +166,7 @@ export const api = {
   /** DELETE /api/me — delete the signed-in account (Play's rule; see /delete-account). */
   deleteMe: () =>
     req<{ ok: boolean }>(route("/me"), { method: "DELETE", body: JSON.stringify({ confirm: "DELETE" }) }),
-  updateMe: (patch: Partial<Pick<User, "name" | "email" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
+  updateMe: (patch: Partial<Pick<User, "name" | "email" | "gender" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
     req<{ user: User }>(route("/me"), { method: "PATCH", body: JSON.stringify(patch) }),
 
   config: () => req<AppConfig>(route("/config")),
