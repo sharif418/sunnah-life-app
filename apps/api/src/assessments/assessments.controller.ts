@@ -299,6 +299,8 @@ export class AssessmentsService {
     const assesseeId = dto.assesseeId;
     const templateKey = (dto.templateKey ?? "").trim();
     if (!assesseeId) throw new ApiError(400, "মূল্যায়নার্থী নির্বাচন করা হয়নি");
+    // a confirmed pass feeds promotion — nobody grades themselves
+    if (assesseeId === user.id) throw new ApiError(403, "নিজের মূল্যায়ন নিজে জমা দেওয়া যায় না");
     if (!templateKey) throw new ApiError(400, "টেমপ্লেট নির্বাচন করা হয়নি");
     const participantCategory = Number(dto.participantCategory) === 2 ? 2 : 1;
     if (!dto.scores || typeof dto.scores !== "object" || Array.isArray(dto.scores)) {

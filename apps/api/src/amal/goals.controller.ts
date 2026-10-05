@@ -153,7 +153,9 @@ export class GoalsService {
       tx.personalGoal.findUnique({ where: { id } })
     )) as unknown as GoalRow | null;
     if (!row) throw new ApiError(404, "লক্ষ্যটি পাওয়া যায়নি");
-    if (row.userId !== viewer.id) await this.guard.assertCanAccess(viewer, row.userId);
+    // a head's own goal goes to their own supervisor, like anyone's
+    if (row.userId === viewer.id) throw new ApiError(403, "নিজের লক্ষ্যে নিজে সিদ্ধান্ত দেওয়া যায় না");
+    await this.guard.assertCanAccess(viewer, row.userId);
     return row;
   }
 
@@ -263,7 +265,8 @@ export class GoalsService {
 
     const rows = (await this.rls.run(user, (tx) =>
       tx.personalGoal.findMany({
-        where: { status: "proposed" },
+        // own goals go to the viewer's own supervisor, not this queue
+        where: { status: "proposed", userId: { not: user.id } },
         orderBy: { createdAt: "asc" },
         take: 200,
         include: { user: { select: { name: true } } },
