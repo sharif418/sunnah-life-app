@@ -209,6 +209,11 @@ class _TodayView extends ConsumerWidget {
                 (PhosphorIconsRegular.squaresFour, 'amal_month', '/amal/month'),
                 (PhosphorIconsFill.fire, 'amal_habit_builder', '/amal/habit'),
                 (
+                  PhosphorIconsRegular.personSimpleRun,
+                  'exercise_title',
+                  '/amal/exercise',
+                ),
+                (
                   PhosphorIconsRegular.question,
                   'amal_self_test',
                   '/amal/self-test',
