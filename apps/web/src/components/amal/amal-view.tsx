@@ -72,6 +72,7 @@ import {
 import { AmalMonthView } from "./amal-month";
 import { GoalsView } from "./goals";
 import { HabitView } from "./habit";
+import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { LatestReviewCard } from "./latest-review";
 import { DIARY_COVER, DIARY_INSTRUCTIONS, PAPER_KEYS, PAPER_LAYOUT } from "@/lib/diary-layout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -109,6 +110,7 @@ export function AmalView() {
   const amalCache = useApp((s) => s.amalCache);
   const writeEntry = useApp((s) => s.writeEntry);
   const hydrateFromServer = useApp((s) => s.hydrateFromServer);
+  const hijriAdjust = useHijriAdjust();
 
   const today = dateKey(new Date());
   const [selectedDate, setSelectedDate] = React.useState(today);
@@ -155,7 +157,10 @@ export function AmalView() {
   const lockedFn = React.useCallback((day: string) => isDateLockedClient(day, geo, today), [geo, today]);
   const locked = lockedFn(selectedDate);
 
-  const dueDefs = React.useMemo(() => (defs ?? []).filter((d) => isAmalDay(d, selectedDate)), [defs, selectedDate]);
+  const dueDefs = React.useMemo(
+    () => (defs ?? []).filter((d) => isAmalDay(d, selectedDate, hijriAdjust)),
+    [defs, selectedDate, hijriAdjust]
+  );
   // The paper diary's groups, in the paper's order (mobile parity): every
   // due catalog amal a row names renders under that group; the rest are the
   // app's extras, kept apart in a collapsed card.
@@ -291,7 +296,7 @@ export function AmalView() {
               {selectedDate === today ? "আজকের আমল" : "আমল ডায়েরি"}
             </h1>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {formatDayHeaderBn(parseKey(selectedDate))} · {hijriDate(parseKey(selectedDate)).formatted}
+              {formatDayHeaderBn(parseKey(selectedDate))} · {hijriDate(parseKey(selectedDate), hijriAdjust).formatted}
             </p>
           </div>
           <button

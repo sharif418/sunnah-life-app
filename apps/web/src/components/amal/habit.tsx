@@ -12,6 +12,7 @@ import type { AmalDefinition, AmalEntry, UserCategory } from "@/types/domain";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { amalPoints, isAmalDay } from "./amal-logic";
 
 const SPANS = [7, 21, 40] as const;
@@ -38,6 +39,7 @@ export function HabitView({
   today: string;
   onBack: () => void;
 }) {
+  const hijriAdjust = useHijriAdjust();
   const daily = React.useMemo(() => defs.filter((d) => d.cadence === "daily"), [defs]);
   const [key, setKey] = React.useState<string>(() => daily[0]?.key ?? "");
   const [days, setDays] = React.useState<number>(7);
@@ -60,7 +62,7 @@ export function HabitView({
   }, [entries, def?.key]);
 
   if (!def) return null;
-  const kept = (day: string) => isAmalDay(def, day) && amalPoints(valueOn.get(day), def, category) >= 1;
+  const kept = (day: string) => isAmalDay(def, day, hijriAdjust) && amalPoints(valueOn.get(day), def, category) >= 1;
   const span = Array.from({ length: days }, (_, i) => addDays(today, -(days - 1 - i)));
   const keptCount = span.filter(kept).length;
   let streak = 0;

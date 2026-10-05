@@ -17,14 +17,16 @@ import { SubShell, SectionLabel } from "@/components/more/bits";
 import { CityPicker } from "@/components/more/city-picker";
 import { useNow, usePrayerDay, SCHEDULE_ROWS } from "@/components/home/prayer-hooks";
 import { CALC_METHODS } from "@/lib/prayer-times";
-import { formatTimeBn } from "@/lib/calendars";
+import { formatTimeBn, hijriDate, toBn } from "@/lib/calendars";
+import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { useApp } from "@/lib/store";
 import { api } from "@/lib/api";
 import { PRAYER_LABELS_BN } from "@/types/domain";
 import type { CalcMethodKey, Madhhab } from "@/types/domain";
 import { toast } from "sonner";
-import { AlarmClock, MapPin, Clock3 } from "lucide-react";
+import { AlarmClock, CalendarDays, MapPin, Clock3, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export function PrayerSettingsView() {
   return (
@@ -140,6 +142,8 @@ export function PrayerSettingsControls({ withPreview = false }: { withPreview?: 
               ))}
             </div>
           </div>
+
+          <HijriAdjustRow />
         </CardContent>
       </Card>
 
@@ -169,6 +173,55 @@ export function PrayerSettingsControls({ withPreview = false }: { withPreview?: 
           </CardContent>
         </Card>
       )}
+    </div>
+  );
+}
+
+/**
+ * The member's own Hijri correction (−2..2 days, mobile parity): the moon
+ * is sighted locally, so the calculated date can be a day off. Today's
+ * Hijri date is shown so the change is easy to judge.
+ */
+function HijriAdjustRow() {
+  const own = useApp((s) => s.profile.hijriAdjust ?? 0);
+  const updateProfile = useApp((s) => s.updateProfile);
+  const effective = useHijriAdjust();
+  const set = (n: number) => updateProfile({ hijriAdjust: Math.max(-2, Math.min(2, n)) });
+  const sign = own > 0 ? "+" : own < 0 ? "−" : "";
+  return (
+    <div className="space-y-1.5">
+      <SectionLabel icon={<CalendarDays className="size-4" />}>হিজরি তারিখ সমন্বয়</SectionLabel>
+      <div className="flex items-center gap-3 rounded-xl border border-border px-3 py-2.5">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-semibold">আজ {hijriDate(new Date(), effective).formatted}</p>
+          <p className="text-xs text-muted-foreground">
+            {own === 0 ? "কোনো সমন্বয় নেই" : `${sign}${toBn(Math.abs(own))} দিন`}
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-10 rounded-full"
+          aria-label="এক দিন কমান"
+          disabled={own <= -2}
+          onClick={() => set(own - 1)}
+        >
+          <Minus className="size-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          className="size-10 rounded-full"
+          aria-label="এক দিন বাড়ান"
+          disabled={own >= 2}
+          onClick={() => set(own + 1)}
+        >
+          <Plus className="size-4" />
+        </Button>
+      </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        চাঁদ দেখার ভিত্তিতে তারিখ এক-দুই দিন আগে-পিছে হলে এখানে ঠিক করুন। আইয়ামে বীযের রোযার দিনও এ অনুযায়ী হিসাব হয়।
+      </p>
     </div>
   );
 }

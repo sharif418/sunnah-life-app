@@ -23,6 +23,8 @@ export interface LocalProfile {
   method: CalcMethodKey;
   madhhab: Madhhab;
   onboardingDone: boolean;
+  /** the member's own Hijri correction, −2..2 days (kept on this device) */
+  hijriAdjust?: number;
 }
 
 export type SyncState = "idle" | "syncing" | "offline" | "error";
