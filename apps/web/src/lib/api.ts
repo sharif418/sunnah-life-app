@@ -176,6 +176,23 @@ export const api = {
     req<{ review: WeeklyReview }>(route("/reviews"), { method: "POST", body: JSON.stringify(payload) }),
   assessments: (userId?: string) =>
     req<{ assessments: AssessmentDetail[] }>(route("/assessments", { userId })),
+  /** The signed-in member's OWN assessments, every status (W4i). */
+  myAssessments: () => req<{ assessments: AssessmentDetail[] }>(route("/assessments/me")),
+  assessmentConfirmRequest: (id: string) =>
+    req<{ ok: boolean; devCode?: string }>(`/api/assessments/${encodeURIComponent(id)}/confirm-request`, {
+      method: "POST",
+      body: "{}",
+    }),
+  assessmentConfirm: (id: string, code: string) =>
+    req<{ assessment: AssessmentDetail }>(`/api/assessments/${encodeURIComponent(id)}/confirm`, {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    }),
+  assessmentDecline: (id: string, reason?: string) =>
+    req<{ assessment: AssessmentDetail }>(`/api/assessments/${encodeURIComponent(id)}/decline`, {
+      method: "POST",
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
   assessmentTemplates: () => req<{ templates: AssessmentTemplate[] }>(route("/assessments/templates")),
   createAssessment: (payload: {
     assesseeId: string;

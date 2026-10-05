@@ -234,8 +234,14 @@ export class AssessmentsService {
       sections: [],
     });
 
+    // names only, outside the viewer's RLS scope: a plain member cannot see
+    // the assessor's User row, so their own result showed no assessor name
     const userKeys = [...new Set(rows.flatMap((r) => [r.assesseeId, r.assessorId]))];
-    const users = await tx.user.findMany({ where: { id: { in: userKeys } }, select: { id: true, name: true } });
+    const users = userKeys.length
+      ? await this.rls.system((stx) =>
+          stx.user.findMany({ where: { id: { in: userKeys } }, select: { id: true, name: true } })
+        )
+      : [];
     const names = new Map(users.map((u) => [u.id, u.name]));
 
     return rows.map((r) =>

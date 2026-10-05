@@ -62,6 +62,7 @@ import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { AssessmentConfirmDialog } from "@/components/dawah/assessment-confirm";
 
 type DawahKey = "overview" | "usrah" | "reviews";
 
@@ -231,7 +232,8 @@ export function DawahView() {
 
 function OverviewTab({ user }: { user: User }) {
   const overviewAsync = useAsync(() => api.dawahOverview());
-  const assessmentsAsync = useAsync(() => api.assessments());
+  // own results, every status — a pending one waits for the member's OTP
+  const assessmentsAsync = useAsync(() => api.myAssessments());
   const requirementsAsync = useAsync(() => api.dawahRequirements());
 
   if (overviewAsync.loading) return <SkeletonRows count={5} />;
@@ -537,6 +539,7 @@ function AssessmentHistory({
 }: {
   asyncState: { data: { assessments: AssessmentDetail[] } | null; loading: boolean; error: string | null; reload: () => void };
 }) {
+  const [confirming, setConfirming] = React.useState<AssessmentDetail | null>(null);
   if (asyncState.loading) return <SkeletonRows count={2} />;
   if (asyncState.error) return <ErrorState message={asyncState.error} onRetry={asyncState.reload} />;
   const list = asyncState.data?.assessments ?? [];
@@ -554,14 +557,20 @@ function AssessmentHistory({
         <Card key={a.id} className="rounded-xl p-3.5 shadow-card">
           <div className="flex items-center gap-2">
             <p className="min-w-0 flex-1 truncate text-sm font-bold">{a.template.titleBn}</p>
-            <span
-              className={cn(
-                "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                a.result === "passed" ? "bg-primary-soft text-primary" : "bg-gold-soft text-warning"
-              )}
-            >
-              {a.result === "passed" ? "উত্তীর্ণ" : "এখনো নয়"}
-            </span>
+            {a.status === "declined" ? (
+              <span className="shrink-0 rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
+                আপত্তি জানানো হয়েছে
+              </span>
+            ) : (
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold",
+                  a.result === "passed" ? "bg-primary-soft text-primary" : "bg-gold-soft text-warning"
+                )}
+              >
+                {a.result === "passed" ? "উত্তীর্ণ" : "এখনো নয়"}
+              </span>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
             <span>{toBn(a.createdAt.slice(0, 10))}</span>
@@ -575,8 +584,26 @@ function AssessmentHistory({
           {a.overallComment ? (
             <p className="mt-2 rounded-lg bg-muted px-3 py-2 text-xs leading-relaxed">“{a.overallComment}”</p>
           ) : null}
+          {a.status === "pending_confirmation" ? (
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 rounded-lg border border-gold/50 bg-gold-soft px-3 py-2">
+              <p className="min-w-0 flex-1 text-xs leading-relaxed">
+                ফলাফলটি আপনার নিশ্চিত করার অপেক্ষায় — নিশ্চিত হলে তবেই চূড়ান্ত হবে।
+              </p>
+              <Button size="sm" onClick={() => setConfirming(a)}>
+                দেখে নিশ্চিত করুন
+              </Button>
+            </div>
+          ) : null}
         </Card>
       ))}
+      <AssessmentConfirmDialog
+        assessment={confirming}
+        onClose={() => setConfirming(null)}
+        onDone={() => {
+          setConfirming(null);
+          asyncState.reload();
+        }}
+      />
     </div>
   );
 }

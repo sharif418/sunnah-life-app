@@ -263,6 +263,11 @@ export interface AssessmentSummary {
   assesseeSignedAt: string | null;
   participantCategory: number;
   scorePct: number | null;
+  /** W4i: final only after the assessee's own OTP confirmation */
+  status?: "pending_confirmation" | "confirmed" | "declined";
+  confirmedAt?: string | null;
+  declinedAt?: string | null;
+  decisionNote?: string | null;
 }
 
 export interface DawahOverview {
