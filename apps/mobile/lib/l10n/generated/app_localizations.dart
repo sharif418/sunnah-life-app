@@ -4881,6 +4881,144 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'লক্ষ্যগুলো আনা যায়নি — ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন'**
   String get goals_load_failed;
+
+  /// No description provided for @exercise_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'শরীরচর্চা'**
+  String get exercise_title;
+
+  /// No description provided for @exercise_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের শরীরচর্চা'**
+  String get exercise_today;
+
+  /// No description provided for @exercise_min.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট'**
+  String get exercise_min;
+
+  /// No description provided for @exercise_goal_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের লক্ষ্য পূরণ হয়েছে — আলহামদুলিল্লাহ'**
+  String get exercise_goal_done;
+
+  /// No description provided for @exercise_more.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য পূরণে আর'**
+  String get exercise_more;
+
+  /// No description provided for @exercise_add.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেশন যোগ করুন'**
+  String get exercise_add;
+
+  /// No description provided for @exercise_add_button.
+  ///
+  /// In bn, this message translates to:
+  /// **'ডায়েরিতে যোগ করুন'**
+  String get exercise_add_button;
+
+  /// No description provided for @exercise_saved.
+  ///
+  /// In bn, this message translates to:
+  /// **'ডায়েরিতে যোগ হয়েছে'**
+  String get exercise_saved;
+
+  /// No description provided for @exercise_less.
+  ///
+  /// In bn, this message translates to:
+  /// **'৫ মিনিট কমান'**
+  String get exercise_less;
+
+  /// No description provided for @exercise_more_btn.
+  ///
+  /// In bn, this message translates to:
+  /// **'৫ মিনিট বাড়ান'**
+  String get exercise_more_btn;
+
+  /// No description provided for @exercise_sessions_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের সেশন'**
+  String get exercise_sessions_today;
+
+  /// No description provided for @exercise_undo.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেশনটি বাদ দিন'**
+  String get exercise_undo;
+
+  /// No description provided for @exercise_week.
+  ///
+  /// In bn, this message translates to:
+  /// **'গত ৭ দিন'**
+  String get exercise_week;
+
+  /// No description provided for @exercise_week_total.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই ৭ দিনে মোট'**
+  String get exercise_week_total;
+
+  /// No description provided for @exercise_week_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'বিশ্ব স্বাস্থ্য সংস্থার পরামর্শ: সপ্তাহে অন্তত ১৫০ মিনিট মাঝারি শরীরচর্চা।'**
+  String get exercise_week_note;
+
+  /// No description provided for @exercise_hadith.
+  ///
+  /// In bn, this message translates to:
+  /// **'“শক্তিশালী মুমিন আল্লাহর কাছে দুর্বল মুমিনের চেয়ে উত্তম ও প্রিয়।” — সহীহ মুসলিম ২৬৬৪'**
+  String get exercise_hadith;
+
+  /// No description provided for @exercise_type_walk.
+  ///
+  /// In bn, this message translates to:
+  /// **'হাঁটা'**
+  String get exercise_type_walk;
+
+  /// No description provided for @exercise_type_run.
+  ///
+  /// In bn, this message translates to:
+  /// **'দৌড়'**
+  String get exercise_type_run;
+
+  /// No description provided for @exercise_type_bike.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাইকেল'**
+  String get exercise_type_bike;
+
+  /// No description provided for @exercise_type_workout.
+  ///
+  /// In bn, this message translates to:
+  /// **'ব্যায়াম'**
+  String get exercise_type_workout;
+
+  /// No description provided for @exercise_type_sport.
+  ///
+  /// In bn, this message translates to:
+  /// **'খেলাধুলা'**
+  String get exercise_type_sport;
+
+  /// No description provided for @exercise_type_swim.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাঁতার'**
+  String get exercise_type_swim;
+
+  /// No description provided for @exercise_type_other.
+  ///
+  /// In bn, this message translates to:
+  /// **'অন্যান্য'**
+  String get exercise_type_other;
 }
 
 class _AppLocalizationsDelegate

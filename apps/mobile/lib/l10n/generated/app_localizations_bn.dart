@@ -2482,4 +2482,75 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get goals_load_failed =>
       'লক্ষ্যগুলো আনা যায়নি — ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন';
+
+  @override
+  String get exercise_title => 'শরীরচর্চা';
+
+  @override
+  String get exercise_today => 'আজকের শরীরচর্চা';
+
+  @override
+  String get exercise_min => 'মিনিট';
+
+  @override
+  String get exercise_goal_done => 'আজকের লক্ষ্য পূরণ হয়েছে — আলহামদুলিল্লাহ';
+
+  @override
+  String get exercise_more => 'লক্ষ্য পূরণে আর';
+
+  @override
+  String get exercise_add => 'সেশন যোগ করুন';
+
+  @override
+  String get exercise_add_button => 'ডায়েরিতে যোগ করুন';
+
+  @override
+  String get exercise_saved => 'ডায়েরিতে যোগ হয়েছে';
+
+  @override
+  String get exercise_less => '৫ মিনিট কমান';
+
+  @override
+  String get exercise_more_btn => '৫ মিনিট বাড়ান';
+
+  @override
+  String get exercise_sessions_today => 'আজকের সেশন';
+
+  @override
+  String get exercise_undo => 'সেশনটি বাদ দিন';
+
+  @override
+  String get exercise_week => 'গত ৭ দিন';
+
+  @override
+  String get exercise_week_total => 'এই ৭ দিনে মোট';
+
+  @override
+  String get exercise_week_note =>
+      'বিশ্ব স্বাস্থ্য সংস্থার পরামর্শ: সপ্তাহে অন্তত ১৫০ মিনিট মাঝারি শরীরচর্চা।';
+
+  @override
+  String get exercise_hadith =>
+      '“শক্তিশালী মুমিন আল্লাহর কাছে দুর্বল মুমিনের চেয়ে উত্তম ও প্রিয়।” — সহীহ মুসলিম ২৬৬৪';
+
+  @override
+  String get exercise_type_walk => 'হাঁটা';
+
+  @override
+  String get exercise_type_run => 'দৌড়';
+
+  @override
+  String get exercise_type_bike => 'সাইকেল';
+
+  @override
+  String get exercise_type_workout => 'ব্যায়াম';
+
+  @override
+  String get exercise_type_sport => 'খেলাধুলা';
+
+  @override
+  String get exercise_type_swim => 'সাঁতার';
+
+  @override
+  String get exercise_type_other => 'অন্যান্য';
 }

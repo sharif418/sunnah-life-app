@@ -118,6 +118,13 @@ void main() {
     // The quick-action chips exist.
     expect(find.text('মাসের গ্রিড'), findsOneWidget);
     expect(find.text('অভ্যাস গড়ার চ্যালেঞ্জ'), findsOneWidget);
+    expect(find.text('শরীরচর্চা'), findsOneWidget);
+    // the row scrolls sideways — the later chips are a swipe away
+    await tester.dragUntilVisible(
+      find.text('ইমান ও তাকওয়া সেলফ-টেস্ট'),
+      find.text('মাসের গ্রিড'),
+      const Offset(-200, 0),
+    );
     expect(find.text('ইমান ও তাকওয়া সেলফ-টেস্ট'), findsOneWidget);
   });
 }

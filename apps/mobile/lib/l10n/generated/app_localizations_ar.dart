@@ -2450,4 +2450,75 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get goals_load_failed =>
       'تعذّر تحميل أهدافك — تحقّق من الاتصال وحاول مجددًا';
+
+  @override
+  String get exercise_title => 'الرياضة';
+
+  @override
+  String get exercise_today => 'رياضة اليوم';
+
+  @override
+  String get exercise_min => 'دقيقة';
+
+  @override
+  String get exercise_goal_done => 'تحقق هدف اليوم — الحمد لله';
+
+  @override
+  String get exercise_more => 'المتبقي:';
+
+  @override
+  String get exercise_add => 'سجّل جلسة';
+
+  @override
+  String get exercise_add_button => 'أضف إلى اليومية';
+
+  @override
+  String get exercise_saved => 'أضيفت إلى اليومية';
+
+  @override
+  String get exercise_less => 'أنقص ٥ دقائق';
+
+  @override
+  String get exercise_more_btn => 'زد ٥ دقائق';
+
+  @override
+  String get exercise_sessions_today => 'جلسات اليوم';
+
+  @override
+  String get exercise_undo => 'احذف الجلسة';
+
+  @override
+  String get exercise_week => 'آخر ٧ أيام';
+
+  @override
+  String get exercise_week_total => 'مجموع ٧ أيام';
+
+  @override
+  String get exercise_week_note =>
+      'توصية منظمة الصحة العالمية: ١٥٠ دقيقة على الأقل أسبوعيًا.';
+
+  @override
+  String get exercise_hadith =>
+      '«المؤمن القوي خير وأحب إلى الله من المؤمن الضعيف» — صحيح مسلم ٢٦٦٤';
+
+  @override
+  String get exercise_type_walk => 'مشي';
+
+  @override
+  String get exercise_type_run => 'جري';
+
+  @override
+  String get exercise_type_bike => 'دراجة';
+
+  @override
+  String get exercise_type_workout => 'تمارين';
+
+  @override
+  String get exercise_type_sport => 'رياضة جماعية';
+
+  @override
+  String get exercise_type_swim => 'سباحة';
+
+  @override
+  String get exercise_type_other => 'أخرى';
 }

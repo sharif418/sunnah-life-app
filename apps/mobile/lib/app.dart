@@ -21,6 +21,7 @@ import 'design/design_tokens.dart';
 import 'core/bell_schedule.dart';
 import 'core/referral.dart';
 import 'features/amal/goals_screen.dart';
+import 'features/amal/exercise_screen.dart';
 import 'features/amal/habit_screen.dart';
 import 'features/amal/month_screen.dart';
 import 'features/amal/self_test_screen.dart';
@@ -246,6 +247,12 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'habit',
                     pageBuilder: (c, s) =>
                         slFadePage(child: const HabitBuilderScreen()),
+                  ),
+                  // AMOL-14: the exercise log (feeds exercise_minutes)
+                  GoRoute(
+                    path: 'exercise',
+                    pageBuilder: (c, s) =>
+                        slFadePage(child: const ExerciseScreen()),
                   ),
                   GoRoute(
                     path: 'self-test',

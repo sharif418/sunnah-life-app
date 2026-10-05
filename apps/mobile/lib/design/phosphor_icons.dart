@@ -33,6 +33,40 @@ class PhosphorIconsRegular {
   const PhosphorIconsRegular._();
 
   static const IconData alarm = IconData(0xe006, fontFamily: 'PhosphorRegular');
+  // AMOL-14 exercise log — code points from @phosphor-icons/web 2.1.1
+  // (verified present in the vendored regular font)
+  static const IconData personSimpleWalk = IconData(
+    0xe73a,
+    fontFamily: 'PhosphorRegular',
+  );
+  static const IconData personSimpleRun = IconData(
+    0xe730,
+    fontFamily: 'PhosphorRegular',
+  );
+  static const IconData personSimpleBike = IconData(
+    0xe734,
+    fontFamily: 'PhosphorRegular',
+  );
+  static const IconData personSimpleSwim = IconData(
+    0xe736,
+    fontFamily: 'PhosphorRegular',
+  );
+  static const IconData barbell = IconData(
+    0xe0b6,
+    fontFamily: 'PhosphorRegular',
+  );
+  static const IconData soccerBall = IconData(
+    0xe716,
+    fontFamily: 'PhosphorRegular',
+  );
+  static const IconData heartbeat = IconData(
+    0xe2ac,
+    fontFamily: 'PhosphorRegular',
+  );
+  static const IconData dotsThreeOutline = IconData(
+    0xe204,
+    fontFamily: 'PhosphorRegular',
+  );
   static const IconData appleLogo = IconData(
     0xe516,
     fontFamily: 'PhosphorRegular',
