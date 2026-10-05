@@ -2479,4 +2479,75 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get goals_load_failed =>
       'Couldn\'t load your goals — check the connection and try again';
+
+  @override
+  String get exercise_title => 'Exercise';
+
+  @override
+  String get exercise_today => 'Today\'s exercise';
+
+  @override
+  String get exercise_min => 'min';
+
+  @override
+  String get exercise_goal_done => 'Today\'s goal reached — alhamdulillah';
+
+  @override
+  String get exercise_more => 'To go:';
+
+  @override
+  String get exercise_add => 'Log a session';
+
+  @override
+  String get exercise_add_button => 'Add to the diary';
+
+  @override
+  String get exercise_saved => 'added to the diary';
+
+  @override
+  String get exercise_less => '5 minutes less';
+
+  @override
+  String get exercise_more_btn => '5 minutes more';
+
+  @override
+  String get exercise_sessions_today => 'Today\'s sessions';
+
+  @override
+  String get exercise_undo => 'Remove this session';
+
+  @override
+  String get exercise_week => 'Last 7 days';
+
+  @override
+  String get exercise_week_total => 'These 7 days';
+
+  @override
+  String get exercise_week_note =>
+      'WHO advice: at least 150 minutes of moderate activity a week.';
+
+  @override
+  String get exercise_hadith =>
+      '“The strong believer is better and more beloved to Allah than the weak believer.” — Sahih Muslim 2664';
+
+  @override
+  String get exercise_type_walk => 'Walking';
+
+  @override
+  String get exercise_type_run => 'Running';
+
+  @override
+  String get exercise_type_bike => 'Cycling';
+
+  @override
+  String get exercise_type_workout => 'Workout';
+
+  @override
+  String get exercise_type_sport => 'Sport';
+
+  @override
+  String get exercise_type_swim => 'Swimming';
+
+  @override
+  String get exercise_type_other => 'Other';
 }
