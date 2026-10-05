@@ -24,6 +24,11 @@ model User {
   id            String    @id @default(cuid())
   phone         String?   @unique
   email         String?
+  // Set only when an identity provider vouched for `email` (Google/Apple
+  // sign-in). An address typed into the profile or imported by an admin
+  // stays unverified and is NEVER used to link a social sign-in to the
+  // account (security review 2026-10-05: account takeover / cross-gender).
+  emailVerifiedAt DateTime?
   // Social sign-in (Task B5): which IdP last linked the account + the
   // provider-stable subject id. Uniqueness (per provider) is enforced by the
   // partial unique indexes in migrations/*_social_auth — see the migration

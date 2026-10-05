@@ -32,6 +32,7 @@ const APPLE_BUNDLE_AUD = "bd.asunnah.sunnahLife";
 
 const DAEE = "01000000004"; // রাফিউল ইসলাম — DS-000004 (referral code for tests)
 const THROWAWAY_PHONE = "01711112222"; // fresh phone user for the link test
+const SQUATTER_PHONE = "01711113333"; // types someone else's email (takeover test)
 
 let app: INestApplication;
 let http: () => ReturnType<typeof request>;
@@ -258,10 +259,13 @@ describe("POST /api/auth/social — happy paths", () => {
     const phoneUserId = verifyRes.body.user.id as string;
     createdUserIds.add(phoneUserId);
 
-    // Give that phone account a verified email (the state a full admin would
-    // set, or a future email-onboarding step).
+    // Give that phone account a VERIFIED email (a provider vouched for it
+    // earlier — only such an email links; see the takeover test below).
     await rls.system((tx) =>
-      tx.user.update({ where: { id: phoneUserId }, data: { email: "tanvir@example.com" } })
+      tx.user.update({
+        where: { id: phoneUserId },
+        data: { email: "tanvir@example.com", emailVerifiedAt: new Date() },
+      })
     );
 
     const token = await signToken(
@@ -279,6 +283,63 @@ describe("POST /api/auth/social — happy paths", () => {
     const row = await rls.system((tx) => tx.user.findUnique({ where: { id: phoneUserId } }));
     expect(row?.socialProvider).toBe("google");
     expect(row?.socialSub).toBe("google-phone-link");
+  });
+
+  it("an UNVERIFIED email typed into a profile never captures the owner's Google sign-in", async () => {
+    // A brother types a sister's address into his own profile …
+    const otpRes = await http().post("/api/auth/otp/request").send({ phone: SQUATTER_PHONE }).expect(200);
+    const verifyRes = await http()
+      .post("/api/auth/otp/verify")
+      .send({ phone: SQUATTER_PHONE, code: otpRes.body.devCode, gender: "M", name: "স্কোয়াটার" })
+      .expect(200);
+    const squatterId = verifyRes.body.user.id as string;
+    createdUserIds.add(squatterId);
+    await http()
+      .patch("/api/me")
+      .set("Authorization", `Bearer ${verifyRes.body.accessToken}`)
+      .send({ email: "Sister.Owner@example.com" })
+      .expect(200);
+    const typed = await rls.system((tx) => tx.user.findUnique({ where: { id: squatterId } }));
+    expect(typed?.email).toBe("sister.owner@example.com");
+    expect(typed?.emailVerifiedAt).toBeNull();
+
+    // … then the real owner signs in with Google.
+    const token = await signToken(
+      googleKey,
+      "RS256",
+      googleClaims({ sub: "google-sister-owner", email: "sister.owner@example.com", name: "বোন" })
+    );
+    const res = await social("google", token, { gender: "F" }).expect(200);
+    track(res.body);
+    expect(res.body.user.id).not.toBe(squatterId); // her own account
+    expect(res.body.user.gender).toBe("F");
+    expect(res.body.user.email).toBe("sister.owner@example.com");
+
+    // the unproven claim is released; his account gained nothing
+    const after = await rls.system((tx) => tx.user.findUnique({ where: { id: squatterId } }));
+    expect(after?.email).toBeNull();
+    expect(after?.socialSub).toBeNull();
+    const owner = await rls.system((tx) => tx.user.findUnique({ where: { id: res.body.user.id } }));
+    expect(owner?.emailVerifiedAt).not.toBeNull();
+  });
+
+  it("changing the email in the profile drops its verification; another account's email → 409", async () => {
+    const token = await signToken(
+      googleKey,
+      "RS256",
+      googleClaims({ sub: "google-email-change", email: "changer@example.com" })
+    );
+    const res = await social("google", token, { gender: "M" }).expect(200);
+    const id = track(res.body);
+    const auth = `Bearer ${res.body.accessToken}`;
+    await http().patch("/api/me").set("Authorization", auth).send({ email: "sister.owner@example.com" }).expect(409);
+    await http().patch("/api/me").set("Authorization", auth).send({ email: "Changer@Example.com" }).expect(200);
+    let row = await rls.system((tx) => tx.user.findUnique({ where: { id } }));
+    expect(row?.emailVerifiedAt).not.toBeNull(); // same address → still verified
+    await http().patch("/api/me").set("Authorization", auth).send({ email: "new@example.com" }).expect(200);
+    row = await rls.system((tx) => tx.user.findUnique({ where: { id } }));
+    expect(row?.email).toBe("new@example.com");
+    expect(row?.emailVerifiedAt).toBeNull();
   });
 
   it("apple: creates with email; second auth WITHOUT email links by sub (Apple first-auth-only email)", async () => {
