@@ -10,6 +10,7 @@ import { translate } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { PrayerHero } from "@/components/home/prayer-hero";
 import { QiblaCard } from "@/components/home/qibla-card";
+import { ForbiddenTimesCard, WaqtAlertsToggle } from "@/components/home/forbidden-card";
 import { AmalSummaryCard } from "@/components/home/amal-summary-card";
 import { QuickLinks } from "@/components/home/quick-links";
 import { LocationSheet } from "@/components/home/city-sheet";
@@ -30,6 +31,8 @@ export function HomeView() {
     <div className="space-y-4 sm:space-y-6">
       {!hasLocation && <LocationPrompt />}
       <PrayerHero />
+      <ForbiddenTimesCard />
+      <WaqtAlertsToggle />
       <QiblaCard />
       <AmalSummaryCard />
       <QuickLinks />
