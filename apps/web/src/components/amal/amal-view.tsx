@@ -70,6 +70,7 @@ import {
 } from "./amal-controls";
 import { AmalMonthView } from "./amal-month";
 import { GoalsView } from "./goals";
+import { LatestReviewCard } from "./latest-review";
 import { DIARY_COVER, DIARY_INSTRUCTIONS, PAPER_KEYS, PAPER_LAYOUT } from "@/lib/diary-layout";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -382,6 +383,9 @@ export function AmalView() {
           </button>
         </CardContent>
       </Card>
+
+      {/* the head's latest comment to me (signed in) */}
+      {user ? <LatestReviewCard /> : null}
 
       {/* locked-day banner */}
       {locked && (
