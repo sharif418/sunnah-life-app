@@ -12,6 +12,7 @@
 
 import * as React from "react";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 import { useApp } from "@/lib/store";
 import {
   addDays,
@@ -393,6 +394,23 @@ export function AmalView() {
                 পরের দিন ইশরাকের পর দিন বন্ধ হয় — সম্পাদনার জন্য উসরা প্রধানের অনুমতি দরকার।
               </p>
             </div>
+            {user?.usrahId ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="ms-auto h-9 shrink-0 rounded-full border-alert/40 bg-card text-alert hover:bg-alert-soft"
+                onClick={async () => {
+                  try {
+                    await api.amalUnlockRequest(selectedDate);
+                    toast.success("উসরা প্রধানকে অনুরোধ পাঠানো হয়েছে");
+                  } catch (e) {
+                    toast.error(e instanceof Error ? e.message : "পাঠানো যায়নি");
+                  }
+                }}
+              >
+                আনলক চাই
+              </Button>
+            ) : null}
           </CardContent>
         </Card>
       )}

@@ -453,13 +453,9 @@ class MonthHeatmap extends ConsumerWidget {
       return;
     }
     try {
-      await ref
-          .read(apiProvider)
-          .amalUnlock(
-            user.id,
-            day,
-            reason: context.t('amal_unlock_reason'),
-          );
+      // a request to the usrah head (only heads may unlock; the old direct
+      // /unlock call answered a member with 403)
+      await ref.read(apiProvider).amalUnlockRequest(day);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.t('amal_unlock_requested'))),

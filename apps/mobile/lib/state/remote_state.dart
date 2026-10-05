@@ -205,7 +205,14 @@ final foundationAnnouncementsProvider = FutureProvider<List<Announcement>>((ref)
 
 /// Kinds of Reminder rows that are MESSAGES to the member (something
 /// happened) rather than self-set reminders (live / prayer / detox).
-const kInboxKinds = {'review', 'goal', 'assessment', 'broadcast', 'masala'};
+const kInboxKinds = {
+  'review',
+  'goal',
+  'assessment',
+  'broadcast',
+  'masala',
+  'unlock_request', // a member asks the head to open a locked day
+};
 
 /// The member's personal inbox — GET /api/reminders filtered to messages
 /// whose time has come, newest first. Null for guests and offline.

@@ -195,6 +195,9 @@ export const api = {
       method: "POST",
       body: JSON.stringify(reason ? { reason } : {}),
     }),
+  /** Ask my usrah head to open a locked diary day. */
+  amalUnlockRequest: (date: string) =>
+    req<{ ok: boolean }>("/api/amal/unlock-request", { method: "POST", body: JSON.stringify({ date }) }),
   /** The signed-in member's OWN assessments, every status (W4i). */
   myAssessments: () => req<{ assessments: AssessmentDetail[] }>(route("/assessments/me")),
   assessmentConfirmRequest: (id: string) =>

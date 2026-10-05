@@ -4,6 +4,7 @@ import path from "path";
 import { ApiError } from "../common/api-error";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
+import { PushService } from "../push/push.service";
 import { Prisma } from "../common/prisma-client";
 import {
   todayForUser,
@@ -29,7 +30,8 @@ type EntryRow = {
 export class AmalService {
   constructor(
     private readonly rls: RlsService,
-    private readonly guard: GuardService
+    private readonly guard: GuardService,
+    private readonly push: PushService
   ) {}
 
   /**
@@ -280,6 +282,47 @@ export class AmalService {
       reason: cleanReason,
     });
 
+    return { ok: true };
+  }
+
+  /**
+   * POST /api/amal/unlock-request — a member asks their usrah head to open a
+   * locked diary day. The day itself is opened by the head (POST
+   * /api/amal/unlock, or the admin panel's member page); this only tells
+   * them, in their inbox and as a push. One message per member and day.
+   * (The app's "আনলক চাই" called /unlock directly, which only heads may —
+   * a member got 403 and the head never heard.)
+   */
+  async requestUnlock(viewer: User | null, date: string) {
+    const user = this.guard.requireUser(viewer);
+    if (!date || !isValidDateKey(date)) throw new ApiError(400, "তারিখ ঠিকভাবে দিন (YYYY-MM-DD)");
+    if (date >= todayForUser(user)) throw new ApiError(400, "আজকের বা সামনের দিন লক হয় না");
+    if (!user.usrahId) throw new ApiError(400, "উসরায় যুক্ত হলে উসরা প্রধানকে অনুরোধ পাঠানো যাবে");
+
+    const headId = await this.rls.system(async (tx) => {
+      const usrah = await tx.usrah.findUnique({ where: { id: user.usrahId! }, select: { headUserId: true } });
+      return usrah?.headUserId ?? null;
+    });
+    if (!headId || headId === user.id) throw new ApiError(400, "আপনার উসরায় এখনো কোনো উসরা প্রধান নেই");
+
+    const title = "ডায়েরির দিন খোলার অনুরোধ";
+    const body = `${user.name} ${date} তারিখের ডায়েরি খুলে দিতে অনুরোধ করেছেন — অ্যাডমিন প্যানেলে সদস্যের পাতা থেকে খুলুন।`;
+    const created = await this.rls.system(async (tx) => {
+      const existing = await tx.reminder.findFirst({
+        where: { userId: headId, kind: "unlock_request", body, read: false },
+        select: { id: true },
+      });
+      if (existing) return false;
+      await tx.reminder.create({
+        data: { userId: headId, kind: "unlock_request", title, body, link: "dawah" },
+      });
+      return true;
+    });
+    if (created) {
+      await this.push
+        .send([headId], { title, body: `${user.name} — ${date}`, deepLink: "/dawah" }, { actor: user })
+        .catch(() => undefined);
+    }
     return { ok: true };
   }
 

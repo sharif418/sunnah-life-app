@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { formatTime, toBn } from "@/lib/calendars";
 
 /** The reminder kinds that are messages for the member (mobile kInboxKinds). */
-const INBOX_KINDS = new Set(["review", "goal", "assessment", "broadcast", "masala"]);
+const INBOX_KINDS = new Set(["review", "goal", "assessment", "broadcast", "masala", "unlock_request"]);
 
 const LOCALES: Record<Lang, string> = { bn: "bn-BD", en: "en-GB", ar: "ar" };
 

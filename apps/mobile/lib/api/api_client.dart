@@ -488,6 +488,10 @@ class ApiClient {
     return AmalUpsertResult.fromJson(j);
   }
 
+  /// POST /api/amal/unlock-request — ask my usrah head to open a locked day.
+  Future<void> amalUnlockRequest(String date) =>
+      _req('POST', '/api/amal/unlock-request', body: {'date': date});
+
   Future<void> amalUnlock(String userId, String date, {String? reason}) => _req(
     'POST',
     '/api/amal/unlock',
