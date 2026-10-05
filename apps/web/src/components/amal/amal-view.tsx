@@ -42,6 +42,7 @@ import {
   Info,
   ChevronDown,
   Flame,
+  HeartPulse,
 } from "lucide-react";
 import type {
   AmalDefinition,
@@ -72,6 +73,7 @@ import {
 import { AmalMonthView } from "./amal-month";
 import { GoalsView } from "./goals";
 import { HabitView } from "./habit";
+import { ExerciseView } from "./exercise";
 import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { LatestReviewCard } from "./latest-review";
 import { DIARY_COVER, DIARY_INSTRUCTIONS, PAPER_KEYS, PAPER_LAYOUT } from "@/lib/diary-layout";
@@ -247,6 +249,11 @@ export function AmalView() {
     return <HabitView defs={defs} entries={allEntries} category={category} today={today} onBack={back} />;
   }
 
+  // ── exercise log sub-view (AMOL-14) ────────────────────────────────────────
+  if (view === "exercise") {
+    return <ExerciseView entries={allEntries} today={today} onBack={back} />;
+  }
+
   // ── goals sub-view (signed-in members) ─────────────────────────────────────
   if (view === "goals" && user && defs && defs.length > 0) {
     return <GoalsView defs={defs} onBack={back} />;
@@ -321,6 +328,10 @@ export function AmalView() {
         <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "habit")}>
           <Flame className="size-4" />
           <span className="hidden min-[380px]:inline">অভ্যাস</span>
+        </Button>
+        <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "exercise")}>
+          <HeartPulse className="size-4" />
+          <span className="hidden min-[380px]:inline">শরীরচর্চা</span>
         </Button>
         {user ? (
           <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "goals")}>
