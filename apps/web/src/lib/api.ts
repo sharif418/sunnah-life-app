@@ -36,6 +36,8 @@ import type {
   Usrah,
   UsrahMember,
   Announcement,
+  GoalQueueItem,
+  PersonalGoal,
   WeeklyReview,
   ReminderItem,
   LiveProgramItem,
@@ -176,6 +178,19 @@ export const api = {
     req<{ review: WeeklyReview }>(route("/reviews"), { method: "POST", body: JSON.stringify(payload) }),
   assessments: (userId?: string) =>
     req<{ assessments: AssessmentDetail[] }>(route("/assessments", { userId })),
+  // personal goals (W4c)
+  goals: () => req<{ goals: PersonalGoal[] }>(route("/goals")),
+  proposeGoal: (payload: { amalKey: string; title: string; startDate: string; target?: string; note?: string }) =>
+    req<{ goal: PersonalGoal }>(route("/goals"), { method: "POST", body: JSON.stringify(payload) }),
+  deleteGoal: (id: string) => req<{ ok: boolean }>(route("/goals", { id }), { method: "DELETE" }),
+  usrahGoals: () => req<{ queue: GoalQueueItem[] }>(route("/usrah/goals")),
+  approveGoal: (id: string) =>
+    req<{ goal: PersonalGoal }>(`/api/goals/${encodeURIComponent(id)}/approve`, { method: "POST", body: "{}" }),
+  rejectGoal: (id: string, reason?: string) =>
+    req<{ goal: PersonalGoal }>(`/api/goals/${encodeURIComponent(id)}/reject`, {
+      method: "POST",
+      body: JSON.stringify(reason ? { reason } : {}),
+    }),
   /** The signed-in member's OWN assessments, every status (W4i). */
   myAssessments: () => req<{ assessments: AssessmentDetail[] }>(route("/assessments/me")),
   assessmentConfirmRequest: (id: string) =>

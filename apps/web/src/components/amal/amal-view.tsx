@@ -73,6 +73,7 @@ import {
   TriStateChips,
 } from "./amal-controls";
 import { AmalMonthView } from "./amal-month";
+import { GoalsView } from "./goals";
 
 const CATEGORY_ICONS: Record<AmalCategory, React.ElementType> = {
   salah: Landmark,
@@ -236,6 +237,11 @@ export function AmalView() {
 
   const entryOf = (key: string): AmalEntry | undefined => amalCache[`${selectedDate}#${key}`];
 
+  // ── goals sub-view (signed-in members) ─────────────────────────────────────
+  if (view === "goals" && user && defs && defs.length > 0) {
+    return <GoalsView defs={defs} onBack={back} />;
+  }
+
   // ── month sub-view ─────────────────────────────────────────────────────────
   if (monthView && defs && defs.length > 0) {
     return (
@@ -302,6 +308,12 @@ export function AmalView() {
           <CalendarDays className="size-4" />
           <span className="hidden min-[380px]:inline">মাসিক ছক</span>
         </Button>
+        {user ? (
+          <Button variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 rounded-full" onClick={() => nav("amal", "goals")}>
+            <Flag className="size-4" />
+            <span className="hidden min-[380px]:inline">আমার লক্ষ্য</span>
+          </Button>
+        ) : null}
       </div>
 
       {/* week strip */}

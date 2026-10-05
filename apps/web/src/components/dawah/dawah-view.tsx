@@ -63,6 +63,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { AssessmentConfirmDialog } from "@/components/dawah/assessment-confirm";
+import { GoalQueueSection } from "@/components/amal/goals";
 
 type DawahKey = "overview" | "usrah" | "reviews";
 
@@ -647,7 +648,9 @@ function UsrahTab({
     );
 
   return (
-    <div>
+    <div className="space-y-4">
+      {/* the head's approval queue first: it is the work waiting */}
+      {supervisor ? <GoalQueueSection /> : null}
       <Card className="rounded-xl p-4 shadow-card">
         <div className="flex items-center gap-2">
           <Users className="size-5 shrink-0 text-primary" />

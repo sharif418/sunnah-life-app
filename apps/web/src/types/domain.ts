@@ -584,3 +584,28 @@ export interface AppConfig {
   groups: { titleBn: string; url: string; descBn?: string }[];
   audioBase: string;
 }
+
+// ── Personal goals (W4c) ─────────────────────────────────────────────────────
+
+export type GoalStatus = "proposed" | "approved" | "rejected" | "completed" | "withdrawn";
+
+export interface PersonalGoal {
+  id: string;
+  userId: string;
+  amalKey: string;
+  title: string;
+  note: string | null;
+  target: string | null;
+  startDate: string; // YYYY-MM-DD
+  active: boolean;
+  status: GoalStatus;
+  decidedById: string | null;
+  decidedAt: string | null;
+  reason: string | null;
+  createdAt: string;
+}
+
+/** A goal in the usrah head's approval queue, with the member's name. */
+export interface GoalQueueItem extends PersonalGoal {
+  userName: string;
+}
