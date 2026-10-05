@@ -644,3 +644,16 @@ export interface MyMasala {
   answeredAt: string | null;
   createdAt: string;
 }
+
+/** My request to join an usrah (W4d). */
+export interface UsrahJoinRequestItem {
+  id: string;
+  userId: string;
+  message: string | null;
+  status: "pending" | "approved" | "rejected";
+  handledById: string | null;
+  handledAt: string | null;
+  usrahId: string | null;
+  reason: string | null;
+  createdAt: string;
+}

@@ -36,6 +36,7 @@ import type {
   Usrah,
   UsrahMember,
   Announcement,
+  UsrahJoinRequestItem,
   MyMasala,
   SupportMessage,
   SupportThread,
@@ -249,6 +250,13 @@ export const api = {
     req<{ ok: boolean }>(route("/reminders"), { method: "PATCH", body: JSON.stringify({ id }) }),
   live: () => req<{ programs: LiveProgramItem[] }>(route("/live")),
   notifyLive: (id: string) => req<{ ok: boolean }>(route("/live"), { method: "POST", body: JSON.stringify({ id }) }),
+  // usrah join request (W4d)
+  joinRequestStatus: () => req<{ request: UsrahJoinRequestItem | null }>(route("/usrah/join-request")),
+  joinRequestCreate: (message?: string) =>
+    req<{ request: UsrahJoinRequestItem }>(route("/usrah/join-request"), {
+      method: "POST",
+      body: JSON.stringify(message ? { message } : {}),
+    }),
   /** My মাসআলা questions and their answers (signed in). */
   myMasala: () => req<{ questions: MyMasala[] }>(route("/masala/mine")),
   // live support (W4d)

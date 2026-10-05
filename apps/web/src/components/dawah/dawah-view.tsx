@@ -64,6 +64,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { AssessmentConfirmDialog } from "@/components/dawah/assessment-confirm";
 import { GoalQueueSection } from "@/components/amal/goals";
+import { UsrahJoinCard } from "@/components/dawah/usrah-join";
 
 type DawahKey = "overview" | "usrah" | "reviews";
 
@@ -633,19 +634,9 @@ function UsrahTab({
 
   const { usrah, announcements } = asyncBundle.data;
 
-  if (!usrah)
-    return (
-      <EmptyState
-        icon={Users}
-        title="আপনি এখনো কোনো উসরায় যুক্ত নন"
-        hint="আপনার এলাকার উসরা প্রধান বা দায়ীর সাথে যোগাযোগ করুন — তারা আপনাকে একটি উসরা সার্কেলে যুক্ত করবেন।"
-        action={
-          <Button variant="outline" className="h-11 rounded-xl" onClick={() => nav("more", "contact")}>
-            যোগাযোগ করুন
-          </Button>
-        }
-      />
-    );
+  // not in an usrah yet: ask the tarbiyah office to place me (the old
+  // "যোগাযোগ করুন" button pointed at a view that does not exist)
+  if (!usrah) return <UsrahJoinCard onJoined={asyncBundle.reload} />;
 
   return (
     <div className="space-y-4">

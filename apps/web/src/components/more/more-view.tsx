@@ -14,6 +14,8 @@ import { MasalaView } from "@/components/more/masala";
 import { ContactsView } from "@/components/more/contacts";
 import { AboutView } from "@/components/more/about";
 import { SupportView } from "@/components/more/support";
+import { SubShell } from "@/components/more/bits";
+import { UsrahJoinCard } from "@/components/dawah/usrah-join";
 
 export function MoreView() {
   const view = useApp((s) => s.view);
@@ -37,6 +39,12 @@ export function MoreView() {
       return <AboutView />;
     case "support":
       return <SupportView />;
+    case "join":
+      return (
+        <SubShell title="উসরায় যোগ দিন">
+          <UsrahJoinCard />
+        </SubShell>
+      );
     default:
       return <MoreMenu />;
   }

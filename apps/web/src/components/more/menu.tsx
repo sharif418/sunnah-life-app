@@ -10,6 +10,7 @@ import { useApp } from "@/lib/store";
 import { translate } from "@/lib/i18n";
 import { ROLE_LABELS_BN, LEVEL_LABELS_BN } from "@/types/domain";
 import {
+  Users,
   Headset,
   ChevronLeft,
   AlarmClock,
@@ -84,6 +85,24 @@ export function MoreMenu() {
           <ChevronLeft className="size-5 text-muted-foreground shrink-0 flip-rtl" />
         </CardContent>
       </Card>
+
+      {/* signed in but not in an usrah: the way in (plain members have no
+          Dawah tab on the web) */}
+      {user && !user.usrahId ? (
+        <button
+          onClick={() => nav("more", "join")}
+          className="tap-target mt-4 flex w-full items-center gap-3 rounded-xl border border-primary/30 bg-primary-soft p-4 text-start shadow-card"
+        >
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Users className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">উসরায় যোগ দিন</span>
+            <span className="block text-[11.5px] text-muted-foreground">তারবিয়াতের ছোট দলে যুক্ত হতে অনুরোধ করুন</span>
+          </span>
+          <ChevronLeft className="size-5 shrink-0 text-muted-foreground flip-rtl" />
+        </button>
+      ) : null}
 
       {/* ফিচার গ্রিড */}
       <div className="mt-4 grid grid-cols-2 gap-3">
