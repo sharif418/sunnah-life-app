@@ -1,54 +1,15 @@
 "use client";
 
-// Two things the app has and the web did not (mobile parity):
-//   • নামাজ পড়া নিষেধ — today's three forbidden windows (sunrise, zawal,
-//     sunset) as one compact card; the one in force now is marked.
-//   • a browser alert when a waqt begins, for members who keep the site open
-//     on an office laptop (Notification API; only while the tab is open —
-//     the app's alarms work when it is closed).
+// A browser alert when a waqt begins, for members who keep the site open on
+// an office laptop (Notification API; only while the tab is open — the app's
+// alarms work when it is closed). The forbidden times moved into the home
+// schedule card (prayer-card.tsx) in the 2026-10-07 redesign.
 
 import * as React from "react";
-import { Ban, Bell, BellOff } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 import { useNow, usePrayerDay } from "@/components/home/prayer-hooks";
-import { forbiddenWindows } from "@/lib/prayer-times";
-import { formatTimeBn } from "@/lib/calendars";
 import { PRAYER_LABELS_BN } from "@/types/domain";
 import { cn } from "@/lib/utils";
-
-const SHORT: Record<string, string> = { sunrise: "সূর্যোদয়", zawal: "যাওয়াল", sunset: "সূর্যাস্ত" };
-
-export function ForbiddenTimesCard() {
-  const now = useNow(30_000);
-  const { times } = usePrayerDay(now);
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  const windows = forbiddenWindows(times);
-  return (
-    <section
-      aria-label="নামাজ পড়া নিষেধ"
-      className="rounded-xl border border-alert/25 bg-alert-soft px-4 py-3 text-alert"
-    >
-      <h2 className="flex items-center gap-2 text-sm font-bold">
-        <Ban className="size-4" aria-hidden /> নামাজ পড়া নিষেধ
-      </h2>
-      <ul className="mt-1.5 space-y-1 ps-6 text-sm">
-        {windows.map((w) => {
-          const active = nowMin >= w.from && nowMin <= w.to;
-          return (
-            <li key={w.key} className={cn("flex items-center gap-2", active && "font-bold")}>
-              <span className="min-w-0 flex-1">
-                {SHORT[w.key] ?? w.labelBn}
-                {active ? <span className="ms-2 rounded-full bg-alert px-2 py-0.5 text-[11px] text-white">এখন</span> : null}
-              </span>
-              <span className="shrink-0 tabular-nums">
-                {formatTimeBn(w.from)} — {formatTimeBn(w.to)}
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    </section>
-  );
-}
 
 const PREF_KEY = "sl-waqt-alerts";
 
