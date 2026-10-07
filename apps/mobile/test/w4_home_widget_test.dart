@@ -13,6 +13,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:sunnah_life/core/day_card.dart';
 import 'package:sunnah_life/api/fallback_catalog.dart' show fallbackDefinitions;
 import 'package:sunnah_life/core/diary_layout.dart';
 import 'package:sunnah_life/core/amal_engine.dart' show isAmalDay;
@@ -74,61 +75,61 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets(
-    'countdown ring hero renders and the waqt state flows every second',
-    (tester) async {
-      final db = makeDb();
-      final container = await bootHome(tester, db, extra: quietRemote());
-
-      // The hero card + its painted ring + the countdown text + the
-      // in-page-schedule affordance all exist.
-      final hero = find.byKey(const ValueKey('home_ring_hero'));
-      expect(hero, findsOneWidget);
-      // The RING is the hero's only painter-driven CustomPaint (the W4f
-      // khatam texture paints through foregroundPainter, not painter).
-      expect(
-        find.descendant(
-          of: hero,
-          matching: find.byWidgetPredicate(
-            (w) => w is CustomPaint && w.painter != null,
-          ),
-        ),
-        findsOneWidget,
-      );
-      final countdown = find.byKey(const ValueKey('home_countdown_text'));
-      expect(countdown, findsOneWidget);
-      expect(find.byKey(const ValueKey('home_to_schedule')), findsOneWidget);
-      // the schedule sits below the fold now (built — the page caches it so
-      // the hero's in-page link always has a target)
-      expect(
-        find.text(S.tr(Lang.bn, 'prayer_schedule'), skipOffstage: false),
-        findsOneWidget,
-      );
-
-      // The tick: pumping two seconds fires the 1s ticker twice and the
-      // provider re-emits NEW state each fire (a fresh PrayerNow carrying
-      // the advanced nowMinutes — the ring fraction + HH:MM:SS both derive
-      // from it). NB: DateTime.now() is NOT faked by the test binding (only
-      // timers are), so the rendered string is compared against the latest
-      // state's own countdownText instead of differing across a fake second.
-      final s0 = container.read(prayerProvider)!;
-      await tester.pump(const Duration(seconds: 2));
-      final s1 = container.read(prayerProvider)!;
-      expect(identical(s0, s1), isFalse); // per-second re-emission
-      expect(s1.nowMinutes, greaterThanOrEqualTo(s0.nowMinutes));
-      expect(
-        (tester.widget(countdown) as Text).data,
-        s1.countdownText(bengali: true),
-      );
-
-      container.dispose();
-      await db.close();
-    },
-  );
-
-  testWidgets('most-used section: hidden for a fresh guest', (
+  testWidgets('the prayer card renders and its time left follows the clock', (
     tester,
   ) async {
+    final db = makeDb();
+    final container = await bootHome(tester, db, extra: quietRemote());
+
+    // The card, its painted sky, the time left and the in-page link to
+    // the schedule all exist.
+    final card = find.byKey(const ValueKey('home_sun_card'));
+    expect(card, findsOneWidget);
+    expect(
+      find.descendant(
+        of: card,
+        matching: find.byWidgetPredicate(
+          (w) => w is CustomPaint && w.painter != null,
+        ),
+      ),
+      findsWidgets,
+    );
+    final left = find.byKey(const ValueKey('home_waqt_left'));
+    expect(left, findsOneWidget);
+    expect(find.byKey(const ValueKey('home_to_schedule')), findsOneWidget);
+    expect(find.byKey(const ValueKey('home_today_strip')), findsOneWidget);
+    // the schedule sits below the fold (built — the page caches it so the
+    // card's in-page link always has a target)
+    expect(
+      find.text(S.tr(Lang.bn, 'prayer_schedule'), skipOffstage: false),
+      findsOneWidget,
+    );
+
+    // The tick: pumping two seconds fires the 1s ticker twice and the
+    // provider re-emits a fresh PrayerNow; the time left is derived from
+    // the LATEST state (DateTime.now() is not faked, so compare against
+    // the state's own arithmetic rather than a fixed string).
+    final s0 = container.read(prayerProvider)!;
+    await tester.pump(const Duration(seconds: 2));
+    final s1 = container.read(prayerProvider)!;
+    expect(identical(s0, s1), isFalse); // per-second re-emission
+    expect(s1.nowMinutes, greaterThanOrEqualTo(s0.nowMinutes));
+    final m = computeDayCard(s1.times, s1.nowMinutes).minutesLeft;
+    final h = m ~/ 60, mm = m % 60;
+    final expected = [
+      if (h > 0) '${toBn(h)} ${S.tr(Lang.bn, 'sun_hours')}',
+      '${toBn(mm)} ${S.tr(Lang.bn, 'sun_minutes')}',
+    ].join(' ');
+    expect(
+      (tester.widget(left) as Text).data,
+      '$expected ${S.tr(Lang.bn, 'sun_left')}',
+    );
+
+    container.dispose();
+    await db.close();
+  });
+
+  testWidgets('most-used section: hidden for a fresh guest', (tester) async {
     final db = makeDb();
     final container = await bootHome(tester, db, extra: quietRemote());
 

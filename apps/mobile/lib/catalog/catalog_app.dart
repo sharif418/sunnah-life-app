@@ -21,6 +21,7 @@ import '../design/design_tokens.dart';
 import '../design/phosphor_icons.dart';
 import '../features/amal/amal_widgets.dart';
 import '../features/home/home_sections.dart';
+import '../features/home/sun_arc_card.dart';
 import '../features/shared/widgets.dart';
 import '../l10n/app_strings.dart';
 import '../models/domain.dart';
@@ -220,7 +221,7 @@ class _CatalogStateState extends State<_CatalogState> {
                 ],
               ),
               _CatalogSection(
-                title: 'CountdownRingHero (C-W4b — ওয়াক্ত রিং)',
+                title: 'SunArcPrayerCard (2026-10-07 — নামাজ কার্ড)',
                 children: [_RingHeroDemo()],
               ),
               _CatalogSection(
@@ -460,7 +461,8 @@ class _RingHeroDemo extends StatelessWidget {
     );
     final nowMinutes = now.hour * 60.0 + now.minute + now.second / 60.0;
     final (nextKey, minsToNext) = PrayerEngine.nextPrayer(times, nowMinutes);
-    return CountdownRingHero(
+    return SunArcPrayerCard(
+      friday: now.weekday == DateTime.friday,
       prayer: PrayerNow(
         dateKey: dateKey(now),
         times: times,
@@ -471,7 +473,6 @@ class _RingHeroDemo extends StatelessWidget {
         forbiddenLabel: null,
         postPrayerKey: null,
       ),
-      lang: Lang.bn,
       bn: true,
       onShowSchedule: () {},
     );

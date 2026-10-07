@@ -218,6 +218,7 @@ class _KitGalleryScreenState extends State<KitGalleryScreen> {
                             'আজকের ওয়াক্ত',
                             style: TextStyle(
                               fontFamily: kAppFontFamily,
+                              fontFamilyFallback: kAppFontFallback,
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: SLColors.lightPrimaryForeground,

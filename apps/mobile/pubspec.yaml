@@ -101,17 +101,22 @@ flutter:
   # them explicitly through test/golden_fonts.dart (warmAppFonts); without
   # it every committed golden rendered tofu and the pixel layer proved
   # nothing.
-  # Noto Sans Bengali (2026-10-03: the Bengali face Android itself uses —
-  # the most familiar to Bangladeshi readers; standard digits). Static
-  # instances cut from the OFL variable font (wdth 100): Regular w400,
-  # Medium w500, SemiBold w600, Bold w700. Licence: NotoSansBengali-OFL.txt.
+  # SolaimanLipi (2026-10-07, the Foundation's choice): the Bengali face of
+  # bdnews24 and most Bangladeshi news and government text — familiar to
+  # every reader, with plain digits. Ekushey's v2.002, SIL OFL 1.1
+  # (SolaimanLipi-OFL.txt); Regular w400 + Bold w700 (w500/w600 resolve to
+  # the nearest of the two).
+  - family: SolaimanLipi
+    fonts:
+      - asset: assets/google_fonts/SolaimanLipi-Regular.ttf
+      - asset: assets/google_fonts/SolaimanLipi-Bold.ttf
+        weight: 700
+  # Noto Sans Bengali stays as the per-glyph FALLBACK only (kAppFontFallback):
+  # SolaimanLipi has no glyph for a few symbols the UI uses (… • − ✓ ≥).
+  # Regular + Bold static instances, OFL (NotoSansBengali-OFL.txt).
   - family: NotoSansBengali
     fonts:
       - asset: assets/google_fonts/NotoSansBengali-Regular.ttf
-      - asset: assets/google_fonts/NotoSansBengali-Medium.ttf
-        weight: 500
-      - asset: assets/google_fonts/NotoSansBengali-SemiBold.ttf
-        weight: 600
       - asset: assets/google_fonts/NotoSansBengali-Bold.ttf
         weight: 700
   - family: Amiri

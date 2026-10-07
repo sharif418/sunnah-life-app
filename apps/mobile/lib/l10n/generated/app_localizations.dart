@@ -5019,6 +5019,126 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'অন্যান্য'**
   String get exercise_type_other;
+
+  /// No description provided for @sun_now_running.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন চলছে'**
+  String get sun_now_running;
+
+  /// No description provided for @sun_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন'**
+  String get sun_now;
+
+  /// No description provided for @sun_next.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরবর্তী'**
+  String get sun_next;
+
+  /// No description provided for @sun_after_sunrise.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূর্যোদয়ের পর'**
+  String get sun_after_sunrise;
+
+  /// No description provided for @sun_wait_dhuhr.
+  ///
+  /// In bn, this message translates to:
+  /// **'যোহরের অপেক্ষা'**
+  String get sun_wait_dhuhr;
+
+  /// No description provided for @sun_wait_jumuah.
+  ///
+  /// In bn, this message translates to:
+  /// **'জুমার অপেক্ষা'**
+  String get sun_wait_jumuah;
+
+  /// No description provided for @sun_running.
+  ///
+  /// In bn, this message translates to:
+  /// **'চলমান'**
+  String get sun_running;
+
+  /// No description provided for @sun_ishraq_duha_time.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইশরাক ও চাশতের সময়'**
+  String get sun_ishraq_duha_time;
+
+  /// No description provided for @sun_hours.
+  ///
+  /// In bn, this message translates to:
+  /// **'ঘণ্টা'**
+  String get sun_hours;
+
+  /// No description provided for @sun_minutes.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট'**
+  String get sun_minutes;
+
+  /// No description provided for @sun_left.
+  ///
+  /// In bn, this message translates to:
+  /// **'বাকি'**
+  String get sun_left;
+
+  /// No description provided for @sun_noon.
+  ///
+  /// In bn, this message translates to:
+  /// **'মধ্যাহ্ন'**
+  String get sun_noon;
+
+  /// No description provided for @sun_forbidden_now.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন নামাজ পড়া নিষেধ'**
+  String get sun_forbidden_now;
+
+  /// No description provided for @sun_until_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'%t পর্যন্ত'**
+  String get sun_until_fmt;
+
+  /// No description provided for @jumuah.
+  ///
+  /// In bn, this message translates to:
+  /// **'জুমা'**
+  String get jumuah;
+
+  /// No description provided for @sched_from_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'%t থেকে'**
+  String get sched_from_fmt;
+
+  /// No description provided for @sched_ramadan.
+  ///
+  /// In bn, this message translates to:
+  /// **'রমজান'**
+  String get sched_ramadan;
+
+  /// No description provided for @sched_sehri_end.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাহরির শেষ'**
+  String get sched_sehri_end;
+
+  /// No description provided for @sched_iftar.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইফতার'**
+  String get sched_iftar;
+
+  /// No description provided for @hijri_suffix.
+  ///
+  /// In bn, this message translates to:
+  /// **'হিজরি'**
+  String get hijri_suffix;
 }
 
 class _AppLocalizationsDelegate

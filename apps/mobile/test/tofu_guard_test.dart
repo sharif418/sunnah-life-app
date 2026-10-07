@@ -43,6 +43,7 @@ double advanceOf(String family, String sample) {
 /// Every family the app renders, with three base letters its scripts must
 /// carry (Bengali consonants; Arabic base letters for du'a + Qur'an).
 const List<(String, List<String>)> _samplesByFamily = [
+  ('SolaimanLipi', ['অ', 'ম', 'ক']),
   ('NotoSansBengali', ['অ', 'ম', 'ক']),
   ('Amiri', ['ب', 'م', 'ل']),
   ('AmiriQuran', ['ب', 'ل', 'م']),
