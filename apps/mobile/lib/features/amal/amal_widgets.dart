@@ -644,7 +644,7 @@ class TilawatBeginnerCard extends StatelessWidget {
             runSpacing: SLSpacing.s8,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              FilledButton.icon(
+              FilledButton(
                 key: const ValueKey('tilawat_begin_add5'),
                 onPressed: enabled
                     ? () {
@@ -652,8 +652,8 @@ class TilawatBeginnerCard extends StatelessWidget {
                         onChanged((value + 5).clamp(0, 999));
                       }
                     : null,
-                icon: const Icon(PhosphorIconsRegular.plus, size: 18),
-                label: Text('+${_n(5)} ${context.t('tilawat_begin_minutes')}'),
+                // the label carries the "+": no plus icon before it ("+ +৫")
+                child: Text('+${_n(5)} ${context.t('tilawat_begin_minutes')}'),
               ),
               QuantityInput(
                 value: value,
@@ -791,17 +791,22 @@ class CompletionRing extends StatelessWidget {
     required this.label,
     this.size = 56,
     this.bengali = true,
+    this.width,
   });
   final int pct;
   final String label;
   final double size;
   final bool bengali;
 
+  /// The cell width; defaults to the ring plus a little air. Pass
+  /// double.infinity to fill an Expanded slot.
+  final double? width;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SizedBox(
-      width: size + 24,
+      width: width ?? size + 24,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -829,12 +834,15 @@ class CompletionRing extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
+          // two centred lines before "…" ("যিকর ও দোয়া" lost its last word)
           Text(
             label,
-            maxLines: 1,
+            maxLines: 2,
+            textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,
+              height: 1.3,
             ),
           ),
         ],

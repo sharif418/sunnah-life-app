@@ -193,23 +193,33 @@ class _DhikrItemRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(SLSpacing.s12),
         decoration: BoxDecoration(
+          // the cream page ground, so each dhikr is its own tile on the
+          // white card (surfaceContainerLow IS the card colour)
           color: done
-              ? theme.colorScheme.primaryContainer.withValues(alpha: 0.4)
-              : theme.colorScheme.surfaceContainerLow,
+              ? theme.colorScheme.primaryContainer
+              : theme.colorScheme.surface,
           borderRadius: SLRadius.brMd,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            SizedBox(
+              width: double.infinity,
+              child: Text(
+                item.arabic,
+                style: SLType.dua(color: theme.colorScheme.onSurface),
+                textDirection: TextDirection.rtl,
+                textAlign: TextAlign.right,
+              ),
+            ),
+            const SizedBox(height: SLSpacing.s8),
             Text(
-              item.arabic,
-              style: SLType.dua(color: theme.colorScheme.onSurface),
-              textDirection: TextDirection.rtl,
-              textAlign: TextAlign.right,
+              item.translitBn,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: SLSpacing.s4),
-            Text(item.translitBn, style: theme.textTheme.bodySmall),
-            const SizedBox(height: 2),
             Text(item.translationBn, style: theme.textTheme.bodyMedium),
             const SizedBox(height: SLSpacing.s8),
             Row(
@@ -223,22 +233,44 @@ class _DhikrItemRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(width: SLSpacing.s8),
-                Text(
-                  '${bengali ? toBn(count) : count} / ${bengali ? toBn(item.count) : item.count}',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
+                const SizedBox(width: SLSpacing.s12),
+                // the count as a pill: the whole tile is the tap target, the
+                // pill says so (a hand while counting, a tick when done)
+                Container(
+                  constraints: const BoxConstraints(minHeight: 36),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: SLSpacing.s12,
                   ),
-                ),
-                const SizedBox(width: SLSpacing.s4),
-                Icon(
-                  done
-                      ? PhosphorIconsFill.checkCircle
-                      : PhosphorIconsRegular.handTap,
-                  size: 18,
-                  color: done
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
+                  decoration: BoxDecoration(
+                    color: done
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.primaryContainer,
+                    borderRadius: SLRadius.brPill,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        done
+                            ? PhosphorIconsBold.check
+                            : PhosphorIconsRegular.handTap,
+                        size: 18,
+                        color: done
+                            ? theme.colorScheme.onPrimary
+                            : theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: SLSpacing.s4),
+                      Text(
+                        '${bengali ? toBn(count) : count} / ${bengali ? toBn(item.count) : item.count}',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: done
+                              ? theme.colorScheme.onPrimary
+                              : theme.colorScheme.primary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),

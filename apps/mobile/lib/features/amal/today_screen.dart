@@ -199,7 +199,8 @@ class _TodayView extends ConsumerWidget {
         ),
         const SizedBox(height: SLSpacing.s12),
 
-        // ── shortcuts: one swipeable row, never four stacked lines ────────
+        // ── shortcuts: one swipeable row, never four stacked lines; short
+        // chip names so more of them show before the swipe ────────────────
         SizedBox(
           height: 48,
           child: ListView(
@@ -207,7 +208,7 @@ class _TodayView extends ConsumerWidget {
             children: [
               for (final (icon, label, path) in [
                 (PhosphorIconsRegular.squaresFour, 'amal_month', '/amal/month'),
-                (PhosphorIconsFill.fire, 'amal_habit_builder', '/amal/habit'),
+                (PhosphorIconsFill.fire, 'chip_habit', '/amal/habit'),
                 (
                   PhosphorIconsRegular.personSimpleRun,
                   'exercise_title',
@@ -215,15 +216,15 @@ class _TodayView extends ConsumerWidget {
                 ),
                 (
                   PhosphorIconsRegular.question,
-                  'amal_self_test',
+                  'chip_self_test',
                   '/amal/self-test',
                 ),
-                (PhosphorIconsRegular.flagBanner, 'goals_title', '/amal/goals'),
+                (PhosphorIconsRegular.flagBanner, 'chip_goals', '/amal/goals'),
                 // AMOL-15: the usrah's question board, for usrah members
                 if (ref.watch(authProvider).userOrNull?.usrahId != null)
                   (
                     PhosphorIconsRegular.chats,
-                    'usrah_q_title',
+                    'chip_usrah_q',
                     '/amal/questions',
                   ),
               ])
@@ -435,6 +436,7 @@ class _DiaryGroupHeader extends StatelessWidget {
               ),
             ),
           ),
+          const SizedBox(width: SLSpacing.s8),
           if (complete)
             Icon(
               PhosphorIconsFill.checkCircle,

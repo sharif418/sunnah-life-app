@@ -116,23 +116,31 @@ class QuizzesScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                if (q.live) ...[
-                  const SizedBox(width: SLSpacing.s8),
-                  _GoldChip(context.t('quiz_live_eligible')),
-                ],
               ],
             ),
             if (q.descBn?.isNotEmpty ?? false) ...[
               const SizedBox(height: SLSpacing.s4),
               Text(
                 q.descBn!,
-                maxLines: 2,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
-            const SizedBox(height: SLSpacing.s4),
-            Text(meta, style: theme.textTheme.bodySmall),
+            const SizedBox(height: SLSpacing.s8),
+            // the live-eligible pill rides the meta line (beside the title
+            // it squeezed the name into two lines on a small phone)
+            Wrap(
+              spacing: SLSpacing.s8,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(meta, style: theme.textTheme.bodySmall),
+                if (q.live) _GoldChip(context.t('quiz_live_eligible')),
+              ],
+            ),
             if (best != null && last != null) ...[
               const SizedBox(height: SLSpacing.s8),
               Row(
@@ -186,11 +194,14 @@ class _GoldChip extends StatelessWidget {
         color: theme.colorScheme.tertiary.withValues(alpha: 0.15),
         borderRadius: SLRadius.brPill,
       ),
+      // the gold TEXT ink (the gold fill colour as text was 2.3:1)
       child: Text(
         label,
         style: theme.textTheme.bodySmall?.copyWith(
-          color: theme.colorScheme.tertiary,
-          fontWeight: FontWeight.w600,
+          color: theme.brightness == Brightness.dark
+              ? SLColors.darkGoldText
+              : SLColors.lightGoldText,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

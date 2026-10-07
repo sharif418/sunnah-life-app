@@ -65,9 +65,8 @@ class CoursesScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: SLSpacing.s24),
                 EmptyState(
-                  message:
-                      '${context.t('courses_empty_title')}\n'
-                      '${context.t('courses_empty_hint')}',
+                  title: context.t('courses_empty_title'),
+                  message: context.t('courses_empty_hint'),
                   icon: PhosphorIconsRegular.graduationCap,
                 ),
               ],

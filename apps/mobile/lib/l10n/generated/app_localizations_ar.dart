@@ -2602,4 +2602,62 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get guest_nudge_sub => 'ما يمنحك الحساب';
+
+  @override
+  String get article_cat_dawah => 'الدعوة';
+
+  @override
+  String get article_cat_sunnah => 'السنة';
+
+  @override
+  String get article_cat_tarbiyah => 'التربية';
+
+  @override
+  String get article_read_min => 'دقائق قراءة';
+
+  @override
+  String get article_read => 'اقرأ';
+
+  @override
+  String get chip_habit => 'العادة';
+
+  @override
+  String get chip_self_test => 'اختبار ذاتي';
+
+  @override
+  String get chip_goals => 'الأهداف';
+
+  @override
+  String get chip_usrah_q => 'سؤال وجواب';
+
+  @override
+  String get exercise_week_empty =>
+      'لم يُسجَّل شيء هذا الأسبوع — أضف تمرين اليوم في الأعلى';
+
+  @override
+  String get self_test_quizzes => 'اختبر نفسك';
+
+  @override
+  String get live_none_all =>
+      'لا توجد برامج مباشرة الآن. ستظهر البرامج الجديدة هنا.';
+
+  @override
+  String get about_faq_sub => 'إجابات الأسئلة الشائعة';
+
+  @override
+  String get autosilent_grant_first => 'امنح الإذن أعلاه أولاً';
+
+  @override
+  String get dawah_assess_empty =>
+      'لا توجد تقييمات بعد. ستظهر النتائج هنا بعد تقييمك.';
+
+  @override
+  String get dawah_req_fallback_note =>
+      'تعذّر تحميل القائمة الأحدث — يُعرض الملخص';
+
+  @override
+  String get habit_mark_today => 'أنجزته اليوم';
+
+  @override
+  String get search_try => 'جرّب البحث عن';
 }

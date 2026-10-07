@@ -160,7 +160,13 @@ class _DetoxScreenState extends State<DetoxScreen> with WidgetsBindingObserver {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: Text(context.t('more_detox')),
+        // a long title scales down on a small phone with large text
+        // instead of losing its last word to "…"
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(context.t('more_detox')),
+        ),
         actions: [
           IconButton(
             tooltip: context.t('detox_recheck'),

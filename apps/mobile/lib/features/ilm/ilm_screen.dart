@@ -160,7 +160,8 @@ class _IlmScreenState extends State<IlmScreen> {
                   crossAxisCount: 2,
                   mainAxisSpacing: SLSpacing.s12,
                   crossAxisSpacing: SLSpacing.s12,
-                  mainAxisExtent: MediaQuery.textScalerOf(context).scale(104),
+                  // room for a two-line name, so no tile has to shrink to fit
+                  mainAxisExtent: MediaQuery.textScalerOf(context).scale(124),
                 ),
                 itemCount: entries.length,
                 itemBuilder: (context, i) {
@@ -228,7 +229,8 @@ class _IlmScreenState extends State<IlmScreen> {
                               child: Text(
                                 context.t('badge_new'),
                                 style: theme.textTheme.bodySmall?.copyWith(
-                                  color: theme.colorScheme.onPrimary,
+                                  // dark ink on gold (white was 2.6:1)
+                                  color: theme.colorScheme.onTertiary,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
                                 ),

@@ -411,26 +411,49 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 132,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                // a week of zeros drew 90px of white over flat stubs — say
+                // it in a line instead
+                if (weekTotal == 0)
+                  Row(
+                    key: const ValueKey('exercise_week_empty'),
                     children: [
-                      for (final day in week)
-                        Expanded(
-                          child: _DayBar(
-                            label: context.t(
-                              'weekday_short_${parseKey(day).weekday % 7}',
-                            ),
-                            value: _n(minutesOn(day)),
-                            fraction: minutesOn(day) / weekMax,
-                            reached: minutesOn(day) >= kExerciseDailyTarget,
-                            today: day == today,
+                      Icon(
+                        PhosphorIconsRegular.personSimpleRun,
+                        size: 22,
+                        color: cs.primary,
+                      ),
+                      const SizedBox(width: SLSpacing.s12),
+                      Expanded(
+                        child: Text(
+                          context.t('exercise_week_empty'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
+                      ),
                     ],
+                  )
+                else
+                  SizedBox(
+                    height: 132,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        for (final day in week)
+                          Expanded(
+                            child: _DayBar(
+                              label: context.t(
+                                'weekday_short_${parseKey(day).weekday % 7}',
+                              ),
+                              value: _n(minutesOn(day)),
+                              fraction: minutesOn(day) / weekMax,
+                              reached: minutesOn(day) >= kExerciseDailyTarget,
+                              today: day == today,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(height: SLSpacing.s12),
                 Text(
                   '${context.t('exercise_week_total')}: ${_n(weekTotal)} / '

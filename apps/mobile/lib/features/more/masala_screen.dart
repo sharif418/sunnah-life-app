@@ -144,6 +144,9 @@ class _MasalaScreenState extends ConsumerState<MasalaScreen> {
                   ),
                   const SizedBox(height: SLSpacing.s16),
                   FilledButton.icon(
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                     onPressed: _sending ? null : _send,
                     icon: _sending
                         ? const SizedBox(
@@ -155,12 +158,13 @@ class _MasalaScreenState extends ConsumerState<MasalaScreen> {
                     label: Text(context.t('send')),
                   ),
                   const SizedBox(height: SLSpacing.s8),
-                  Center(
-                    child: Text(
-                      context.t('masala_offline'),
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant),
-                    ),
+                  // centred on every line (a Center around a wrapping Text
+                  // left-aligned its second line)
+                  Text(
+                    context.t('masala_offline'),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: SLSpacing.s24),
                   _MyQuestions(future: _mine),

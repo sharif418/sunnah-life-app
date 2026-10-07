@@ -202,10 +202,11 @@ void main() {
       ]);
       final container = await boot(tester, api: api);
 
-      // the field + the initial gentle hint (query too short) — the hint
-      // string shows TWICE on purpose: TextField.hintText + the EmptyState
+      // the field (its hint) + ready searches while the query is short
       expect(find.byType(TextField), findsOneWidget);
-      expect(find.text(S.tr(Lang.bn, 'search_hint')), findsNWidgets(2));
+      expect(find.text(S.tr(Lang.bn, 'search_hint')), findsOneWidget);
+      expect(find.text(S.tr(Lang.bn, 'search_try')), findsOneWidget);
+      expect(find.byType(ActionChip), findsWidgets);
 
       // type → debounce fires → the API is queried with the trimmed q
       await tester.enterText(find.byType(TextField), ' জ্ঞান ');

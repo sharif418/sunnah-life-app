@@ -265,8 +265,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ListTile(
                   leading: const Icon(PhosphorIconsRegular.calendarBlank),
                   title: Text(context.t('hijri_adjust')),
-                  subtitle: Text(
-                      '${profile.hijriAdjust >= 0 ? '+' : ''}${profile.hijriAdjust}'),
+                  // − value + : the value sits between its buttons, in
+                  // Bengali digits (a lone "+0" under the label read as
+                  // detached)
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -276,6 +277,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onPressed: () => notifier.update(
                             hijriAdjust:
                                 (profile.hijriAdjust - 1).clamp(-2, 2)),
+                      ),
+                      SizedBox(
+                        width: 28,
+                        child: Text(
+                          () {
+                            final v = profile.hijriAdjust;
+                            final sign = v > 0 ? '+' : (v < 0 ? '−' : '');
+                            final n = v.abs();
+                            return '$sign${context.isBn ? toBn(n) : '$n'}';
+                          }(),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                       ),
                       IconButton(
                         tooltip: context.t('hijri_increase'),
@@ -352,7 +367,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('🌸'),
+                  // a lock, not an emoji: this note is about who sees her data
+                  Icon(
+                    PhosphorIconsRegular.lockSimple,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: SLSpacing.s8),
                   Expanded(
                     child: Column(

@@ -82,7 +82,8 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                         message: context.t('empty_generic'),
                         icon: PhosphorIconsRegular.magnifyingGlass,
                       )
-                    : ListView.builder(
+                    : ListView.separated(
+                        separatorBuilder: (_, _) => const SizedBox(height: SLSpacing.s8),
                         padding: const EdgeInsets.all(SLSpacing.s16),
                         itemCount: visible.length,
                         itemBuilder: (context, i) {

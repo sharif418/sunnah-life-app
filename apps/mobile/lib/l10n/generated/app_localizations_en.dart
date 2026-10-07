@@ -2631,4 +2631,62 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get guest_nudge_sub => 'What an account gives you';
+
+  @override
+  String get article_cat_dawah => 'Dawah';
+
+  @override
+  String get article_cat_sunnah => 'Sunnah';
+
+  @override
+  String get article_cat_tarbiyah => 'Tarbiyah';
+
+  @override
+  String get article_read_min => 'min read';
+
+  @override
+  String get article_read => 'Read';
+
+  @override
+  String get chip_habit => 'Habit';
+
+  @override
+  String get chip_self_test => 'Self-test';
+
+  @override
+  String get chip_goals => 'Goals';
+
+  @override
+  String get chip_usrah_q => 'Q&A';
+
+  @override
+  String get exercise_week_empty =>
+      'Nothing logged this week yet — add today\'s exercise above';
+
+  @override
+  String get self_test_quizzes => 'Test yourself';
+
+  @override
+  String get live_none_all =>
+      'No live programs right now. New ones will appear here.';
+
+  @override
+  String get about_faq_sub => 'Answers to common questions';
+
+  @override
+  String get autosilent_grant_first => 'Give the permission above first';
+
+  @override
+  String get dawah_assess_empty =>
+      'No assessments yet. Results appear here once you are assessed.';
+
+  @override
+  String get dawah_req_fallback_note =>
+      'Couldn\'t load the latest checklist — showing the summary';
+
+  @override
+  String get habit_mark_today => 'Done today';
+
+  @override
+  String get search_try => 'Try searching';
 }

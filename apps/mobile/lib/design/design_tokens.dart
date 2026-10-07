@@ -335,6 +335,10 @@ ThemeData buildSunnahLightTheme() {
     onSecondary: SLColors.lightSecondaryForeground,
     surface: SLColors.lightBackground,
     onSurface: SLColors.lightForeground,
+    // unset, onSurfaceVariant falls back to onSurface (#222): every
+    // "muted" caption, hint and secondary line rendered as dark as the
+    // title. The token's muted ink: 5.7:1 on the card, 5.3:1 on cream.
+    onSurfaceVariant: SLColors.lightMutedForeground,
     surfaceContainerLowest: SLColors.lightCard,
     surfaceContainerLow: SLColors.lightCard,
     surfaceContainer: SLColors.lightCard,
@@ -371,6 +375,7 @@ ThemeData buildSunnahDarkTheme() {
     onSecondary: SLColors.darkSecondaryForeground,
     surface: SLColors.darkBackground,
     onSurface: SLColors.darkForeground,
+    onSurfaceVariant: SLColors.darkMutedForeground,
     surfaceContainerLowest: SLColors.darkCard,
     surfaceContainerLow: SLColors.darkCard,
     surfaceContainer: SLColors.darkCard,
@@ -413,6 +418,9 @@ extension _ThemeTweaks on ThemeData {
     final primary = brightness == Brightness.light
         ? SLColors.lightPrimary
         : SLColors.darkPrimary;
+    final inputRim = brightness == Brightness.light
+        ? const Color(0xFF9A907C)
+        : const Color(0xFF6B7A72);
     // M3 snackbars sit on the scheme's inverseSurface, which this
     // ColorScheme doesn't control — pin an explicit inverse pair so the
     // content color is always readable (14.2:1 light / 16.1:1 dark).
@@ -470,14 +478,28 @@ extension _ThemeTweaks on ThemeData {
           WidgetStateColor.resolveWith(
             (states) => states.contains(WidgetState.disabled)
                 ? onSurface
+                : states.contains(WidgetState.selected)
+                ? (brightness == Brightness.light
+                      ? SLColors.primaryDeep
+                      : SLColors.darkForeground)
                 : onSurfaceVariant,
           ),
         ),
         shape: RoundedRectangleBorder(borderRadius: SLRadius.brPill),
-        side: BorderSide(
-          color: brightness == Brightness.light
-              ? SLColors.lightBorder
-              : SLColors.darkBorder,
+        // selected = the soft green with a green rim and green ink (the
+        // label colour is resolved in labelStyle above)
+        selectedColor: brightness == Brightness.light
+            ? SLColors.lightPrimarySoft
+            : SLColors.darkPrimarySoft,
+        checkmarkColor: primary,
+        side: WidgetStateBorderSide.resolveWith(
+          (states) => BorderSide(
+            color: states.contains(WidgetState.selected)
+                ? primary
+                : brightness == Brightness.light
+                ? SLColors.lightBorder
+                : SLColors.darkBorder,
+          ),
         ),
       ),
       // ActionChip reads chipTheme (no separate actionChipTheme on this
@@ -557,6 +579,20 @@ extension _ThemeTweaks on ThemeData {
             : SLColors.darkCard,
         border: OutlineInputBorder(
           borderRadius: SLRadius.brMd,
+          borderSide: BorderSide(color: inputRim),
+        ),
+        // The M3 default rim is near-black — it framed every field like a
+        // form from another app. inputRim: 3.2:1 light / 3.7:1 dark.
+        enabledBorder: OutlineInputBorder(
+          borderRadius: SLRadius.brMd,
+          borderSide: BorderSide(color: inputRim),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: SLRadius.brMd,
+          borderSide: BorderSide(color: primary, width: 2),
+        ),
+        disabledBorder: OutlineInputBorder(
+          borderRadius: SLRadius.brMd,
           borderSide: BorderSide(
             color: brightness == Brightness.light
                 ? SLColors.lightBorder
@@ -564,7 +600,7 @@ extension _ThemeTweaks on ThemeData {
           ),
         ),
         contentPadding: const EdgeInsets.symmetric(
-          horizontal: SLSpacing.s4,
+          horizontal: SLSpacing.s16,
           vertical: SLSpacing.s12,
         ),
         // Family on every decoration text slot (label/floating/hint/helper/
@@ -578,7 +614,9 @@ extension _ThemeTweaks on ThemeData {
         // so the state color survives).
         labelStyle: _appFontStyle(16),
         floatingLabelStyle: _appFontStyle(16, FontWeight.w600),
-        hintStyle: _appFontStyle(16),
+        // hints are never state-coloured, so an explicit muted ink is safe
+        // (a hint as dark as typed text read as a pre-filled field)
+        hintStyle: _appFontStyle(16, null, onSurfaceVariant),
         helperStyle: _appFontStyle(12),
         errorStyle: _appFontStyle(12),
         prefixStyle: _appFontStyle(16),

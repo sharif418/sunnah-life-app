@@ -143,13 +143,49 @@ class _FallbackBody extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
           children: [
-            Text(
-              context.t('dawah_req_load_failed'),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+            // the live checklist failed, the overview's copy is shown: say
+            // so in a calm strip with a retry (a bare "couldn't load" line
+            // above valid-looking data read as a contradiction)
+            Container(
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                SLSpacing.s12,
+                SLSpacing.s4,
+                SLSpacing.s4,
+                SLSpacing.s4,
+              ),
+              decoration: BoxDecoration(
+                color: theme.brightness == Brightness.dark
+                    ? SLColors.darkGoldSoft
+                    : SLColors.goldSoftLight,
+                borderRadius: SLRadius.brMd,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    PhosphorIconsRegular.cloudSlash,
+                    size: 18,
+                    color: theme.brightness == Brightness.dark
+                        ? SLColors.darkGoldText
+                        : SLColors.lightGoldText,
+                  ),
+                  const SizedBox(width: SLSpacing.s8),
+                  Expanded(
+                    child: Text(
+                      context.t('dawah_req_fallback_note'),
+                      style: theme.textTheme.bodySmall,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      ref.invalidate(dawahRequirementsProvider);
+                      ref.invalidate(dawahProvider);
+                    },
+                    child: Text(context.t('retry')),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: SLSpacing.s8),
+            const SizedBox(height: SLSpacing.s12),
             _LevelRow(level: overview.level, nextLevel: overview.nextLevel),
             const SizedBox(height: SLSpacing.s12),
             AppCard(
@@ -207,7 +243,9 @@ class _LevelRow extends StatelessWidget {
     Widget cell(String label, String value) => Container(
       padding: const EdgeInsets.all(SLSpacing.s12),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerLow,
+        // the cream ground: surfaceContainerLow is the card's own white, so
+        // the cells had no edge at all
+        color: theme.colorScheme.surface,
         borderRadius: SLRadius.brMd,
       ),
       child: Column(

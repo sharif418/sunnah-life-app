@@ -149,7 +149,8 @@ class MoreScreen extends ConsumerWidget {
                     onTap: () => context.push('/more/mosques'),
                   ),
                   _MoreRow(
-                    icon: PhosphorIconsRegular.question,
+                    // a speech bubble: the FAQ row below keeps the "?"
+                    icon: PhosphorIconsRegular.chatCircle,
                     title: context.t('more_masala'),
                     onTap: () => context.push('/more/masala'),
                   ),
@@ -159,7 +160,7 @@ class MoreScreen extends ConsumerWidget {
                     onTap: () => context.push('/more/live'),
                   ),
                   _MoreRow(
-                    icon: PhosphorIconsRegular.minusCircle,
+                    icon: PhosphorIconsRegular.bellSlash,
                     title: context.t('more_autosilent'),
                     onTap: () => context.push('/more/autosilent'),
                   ),

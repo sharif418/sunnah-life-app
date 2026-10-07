@@ -601,11 +601,11 @@ class _IlmSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
-                shape: BoxShape.circle,
+                borderRadius: SLRadius.brMd,
               ),
               child: Icon(icon, size: 22, color: theme.colorScheme.primary),
             ),
@@ -648,30 +648,35 @@ class _IlmSection extends ConsumerWidget {
           icon: PhosphorIconsRegular.graduationCap,
           action: _SeeAllButton('/ilm'),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: card(
-                icon: PhosphorIconsFill.graduationCap,
-                title: context.t('ilm_courses'),
-                desc: context.t('ilm_courses_desc'),
-                count: courseCount,
-                countUnit: context.t('ilm_courses'),
-                route: '/ilm/courses',
+        // equal heights, tops aligned (one card has a count line, the
+        // other may not)
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: card(
+                  icon: PhosphorIconsFill.graduationCap,
+                  title: context.t('ilm_courses'),
+                  desc: context.t('ilm_courses_desc'),
+                  count: courseCount,
+                  countUnit: context.t('ilm_courses'),
+                  route: '/ilm/courses',
+                ),
               ),
-            ),
-            const SizedBox(width: SLSpacing.s8),
-            Expanded(
-              child: card(
-                icon: PhosphorIconsFill.chartPieSlice,
-                title: context.t('ilm_quizzes'),
-                desc: context.t('ilm_quizzes_desc'),
-                count: quizCount,
-                countUnit: context.t('ilm_quizzes'),
-                route: '/ilm/quizzes',
+              const SizedBox(width: SLSpacing.s8),
+              Expanded(
+                child: card(
+                  icon: PhosphorIconsFill.chartPieSlice,
+                  title: context.t('ilm_quizzes'),
+                  desc: context.t('ilm_quizzes_desc'),
+                  count: quizCount,
+                  countUnit: context.t('ilm_quizzes'),
+                  route: '/ilm/quizzes',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );

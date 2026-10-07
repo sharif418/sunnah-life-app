@@ -88,6 +88,18 @@ class LiveScreen extends ConsumerWidget {
             );
           }
 
+          // nothing at all: one calm state, not three bare "none" rows
+          if (programs.isEmpty) {
+            return ListView(
+              children: [
+                const SizedBox(height: SLSpacing.s32),
+                EmptyState(
+                  icon: PhosphorIconsRegular.broadcast,
+                  message: context.t('live_none_all'),
+                ),
+              ],
+            );
+          }
           return ListView(
             padding: const EdgeInsets.all(SLSpacing.s16),
             children: [

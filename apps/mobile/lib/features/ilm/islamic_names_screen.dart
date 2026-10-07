@@ -3,7 +3,6 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
@@ -23,7 +22,6 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bn = context.isBn;
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
@@ -101,34 +99,33 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                             const SizedBox(height: SLSpacing.s8),
                         itemBuilder: (context, i) {
                           final n = visible[i];
+                          // the list position meant nothing and, at large
+                          // text, ran into the meaning — name + meaning only
                           return AppCard(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: SLSpacing.s12,
-                                vertical: SLSpacing.s8),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(n.name,
-                                          style: theme.textTheme.bodyLarge
-                                              ?.copyWith(
-                                                  fontWeight:
-                                                      FontWeight.w700)),
-                                      Text(n.meaningBn,
-                                          style:
-                                              theme.textTheme.bodySmall),
-                                    ],
+                              horizontal: SLSpacing.s16,
+                              vertical: SLSpacing.s12,
+                            ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    n.name,
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                ),
-                                Text(
-                                  bn ? toBn(i + 1) : '${i + 1}',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.outline),
-                                ),
-                              ],
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    n.meaningBn,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         },
