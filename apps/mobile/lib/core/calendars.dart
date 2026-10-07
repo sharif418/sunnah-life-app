@@ -47,6 +47,10 @@ const List<String> weekdaysShortBn = [
 
 String weekdayBn(DateTime d) => weekdaysBn[d.weekday % 7];
 
+/// "বুধবার" / "Wednesday".
+String weekdayName(DateTime d, {bool bengali = true}) =>
+    bengali ? weekdaysBn[d.weekday % 7] : _weekdaysEn[d.weekday - 1];
+
 // ── Bangla calendar (বঙ্গাব্দ) ───────────────────────────────────────────────
 
 const List<String> banglaMonthsBn = [
@@ -243,12 +247,14 @@ String timePeriodBnFromMinutes(int minutesFromMidnight) {
 
 /// Minutes-from-midnight → "ভোর ৩:৪৩" (Bengali) or "3:43 AM" (en/ar).
 String formatTimeBn(double minutes, {bool bengali = true}) {
-  final m = ((minutes % 1440) + 1440) % 1440;
+  // round the WHOLE time first: rounding only the minute part turned
+  // 11:59.7 into "১১:৬০" (the web had the same bug, fixed earlier)
+  final m = ((minutes.round() % 1440) + 1440) % 1440;
   final h24 = m ~/ 60;
-  final mm = (m % 60).round().toString().padLeft(2, '0');
+  final mm = (m % 60).toString().padLeft(2, '0');
   final h12 = h24 % 12 == 0 ? 12 : h24 % 12;
   if (bengali) {
-    return '${timePeriodBnFromMinutes(m.round())} ${toBn(h12)}:${toBn(mm)}';
+    return '${timePeriodBnFromMinutes(m)} ${toBn(h12)}:${toBn(mm)}';
   }
   final ampm = h24 < 12 ? 'AM' : 'PM';
   return '$h12:$mm $ampm';

@@ -1,13 +1,27 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_Bengali, Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AppProviders } from "@/components/providers";
 
-// Noto Sans Bengali — the Bengali face Android itself uses (the most
-// familiar to Bangladeshi readers; standard digits). Same family as mobile.
+// SolaimanLipi (2026-10-07, the Foundation's choice) — the Bengali face of
+// bdnews24 and most Bangladeshi news and government text; plain digits.
+// Ekushey's v2.002 under the SIL OFL 1.1 (fonts/SolaimanLipi-OFL.txt), the
+// same files as the app. Noto Sans Bengali below stays as the per-glyph
+// fallback for the few symbols SolaimanLipi lacks (… • − ✓).
+const solaiman = localFont({
+  src: [
+    { path: "./fonts/SolaimanLipi-Regular.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/SolaimanLipi-Bold.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-solaiman",
+  display: "swap",
+});
+
+// the per-glyph fallback (see above)
 const notoBengali = Noto_Sans_Bengali({
   subsets: ["bengali", "latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400", "700"],
   variable: "--font-noto-bengali",
   display: "swap",
 });
@@ -40,7 +54,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="bn" suppressHydrationWarning>
-      <body className={`${notoBengali.variable} ${inter.variable} antialiased`}>
+      <body className={`${solaiman.variable} ${notoBengali.variable} ${inter.variable} antialiased`}>
         <AppProviders>{children}</AppProviders>
       </body>
     </html>

@@ -53,15 +53,5 @@ export function usePrayerDay(now: Date) {
   return { cfg, times, next };
 }
 
-/** "০১:২৩:৪৫" — Bengali tabular countdown from a duration in ms. */
-export function formatCountdownBn(ms: number): string {
-  const total = Math.max(0, Math.floor(ms / 1000));
-  const h = Math.floor(total / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const s = total % 60;
-  const p = (n: number) => String(n).padStart(2, "0");
-  return toBn(`${p(h)}:${p(m)}:${p(s)}`);
-}
-
 /** The six timeline rows (৫ ওয়াক্ত + সূর্যোদয়) in display order. */
 export const SCHEDULE_ROWS: PrayerKey[] = ["fajr", "sunrise", "dhuhr", "asr", "maghrib", "isha"];

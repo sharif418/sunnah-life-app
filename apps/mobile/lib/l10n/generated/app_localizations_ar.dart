@@ -2521,4 +2521,64 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get exercise_type_other => 'أخرى';
+
+  @override
+  String get sun_now_running => 'الآن';
+
+  @override
+  String get sun_now => 'الآن';
+
+  @override
+  String get sun_next => 'التالية';
+
+  @override
+  String get sun_after_sunrise => 'بعد الشروق';
+
+  @override
+  String get sun_wait_dhuhr => 'حتى الظهر';
+
+  @override
+  String get sun_wait_jumuah => 'حتى الجمعة';
+
+  @override
+  String get sun_running => 'جارٍ';
+
+  @override
+  String get sun_ishraq_duha_time => 'وقت الإشراق والضحى';
+
+  @override
+  String get sun_hours => 'ساعة';
+
+  @override
+  String get sun_minutes => 'دقيقة';
+
+  @override
+  String get sun_left => 'متبقية';
+
+  @override
+  String get sun_noon => 'الزوال';
+
+  @override
+  String get sun_forbidden_now => 'الصلاة مكروهة الآن';
+
+  @override
+  String get sun_until_fmt => 'حتى %t';
+
+  @override
+  String get jumuah => 'الجمعة';
+
+  @override
+  String get sched_from_fmt => 'من %t';
+
+  @override
+  String get sched_ramadan => 'رمضان';
+
+  @override
+  String get sched_sehri_end => 'نهاية السحور';
+
+  @override
+  String get sched_iftar => 'الإفطار';
+
+  @override
+  String get hijri_suffix => 'هـ';
 }

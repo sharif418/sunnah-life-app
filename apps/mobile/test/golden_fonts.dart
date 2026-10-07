@@ -15,7 +15,8 @@
 //
 // Loading rule (both live here now):
 //  * ICON families: PhosphorRegular / PhosphorFill / PhosphorBold (vendored).
-//  * TEXT families: NotoSansBengali (Regular w400 + Medium w500 + SemiBold w600 + Bold w700 —
+//  * TEXT families: SolaimanLipi (Regular w400 + Bold w700) with NotoSansBengali
+//    (Regular + Bold) as its per-glyph fallback —
 //    FontLoader style-matches by each TTF's intrinsic OS/2 weight), Amiri
 //    and AmiriQuran (du'a / Uthmani Qur'an).
 //
@@ -34,10 +35,13 @@ const List<(String, String)> _phosphorFonts = [
 const List<(String, List<String>)> _textFonts = [
   // One FontLoader per FAMILY; every weight's TTF is added to it (the engine
   // picks w400/w600/w700 from the intrinsic OS/2 weight of each file).
+  ('SolaimanLipi', [
+    'assets/google_fonts/SolaimanLipi-Regular.ttf',
+    'assets/google_fonts/SolaimanLipi-Bold.ttf',
+  ]),
+  // the per-glyph fallback (kAppFontFallback)
   ('NotoSansBengali', [
     'assets/google_fonts/NotoSansBengali-Regular.ttf',
-    'assets/google_fonts/NotoSansBengali-Medium.ttf',
-    'assets/google_fonts/NotoSansBengali-SemiBold.ttf',
     'assets/google_fonts/NotoSansBengali-Bold.ttf',
   ]),
   ('Amiri', ['assets/google_fonts/Amiri-Regular.ttf']),

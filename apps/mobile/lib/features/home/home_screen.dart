@@ -13,7 +13,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bn_digits.dart';
 import '../../core/bell_schedule.dart';
-import '../../core/calendars.dart' show formatTimeBn;
+import '../../core/calendars.dart' show hijriDate;
 import '../../core/cities.dart';
 import '../../core/amal_engine.dart' show currentStreak, isAmalDay;
 import '../../core/date_keys.dart';
@@ -42,6 +42,8 @@ import '../../core/external_urls.dart' show livePlaybackUrl, openExternalApp;
 import '../shared/when_bn.dart';
 import 'guest_nudge.dart';
 import 'home_sections.dart';
+import 'schedule_card.dart';
+import 'sun_arc_card.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -229,7 +231,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final prayer = ref.watch(prayerProvider);
     final profile = ref.watch(profileProvider);
-    final lang = context.lang;
     final bn = context.isBn;
 
     if (prayer == null) {
@@ -248,12 +249,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     final city = findCity(profile.city);
+    final today = parseKey(prayer.dateKey);
+    final friday = today.weekday == DateTime.friday;
+    final ramadan =
+        hijriDate(
+          DateTime.now(),
+          adjustDays: ref.watch(effectiveHijriAdjustProvider),
+        ).monthIndex ==
+        8;
 
     return Scaffold(
       body: SafeArea(
         bottom: false,
         // the shared header, hiding while scrolling down (BNAV-01)
         child: ScrollAwareHeader(
+          showDate: true,
           body: ListView(
             // the schedule now sits below the muhasaba card + quick access; a
             // lazily-built list would leave it unbuilt and the hero's
@@ -269,15 +279,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               kContactFabClearance,
             ),
             children: [
-              // ── Countdown ring hero (C-W4b) ──
-              // Same gradient family as the old countdown card, now a RING:
-              // the gold arc = REMAINING of the current waqt interval, the
-              // HH:MM:SS + arc tick every second (prayerProvider's per-second
-              // state), and the affordance row flies to the schedule below.
-              CountdownRingHero(
+              // ── the prayer card: the sun on its arc, the running waqt and
+              // the time left, today's five from the diary (2026-10-07) ──
+              SunArcPrayerCard(
                 prayer: prayer,
-                lang: lang,
                 bn: bn,
+                friday: friday,
                 onShowSchedule: _showSchedule,
                 todayPrayers: [
                   for (final key in const [
@@ -288,7 +295,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     PrayerKey.isha,
                   ])
                     HeroPrayerStatus(
-                      label: context.t('waqt_${key.name}'),
+                      label: waqtLabel(context, key, friday: friday),
                       value: switch (ref
                           .watch(amalProvider)
                           .entry(prayer.dateKey, 'salat_${key.name}')
@@ -315,20 +322,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 context.t('prayer_schedule'),
                 icon: PhosphorIconsRegular.clock,
               ),
-              _Schedule(
+              PrayerScheduleCard(
                 prayer: prayer,
                 bells: _bells,
                 bn: bn,
+                friday: friday,
+                ramadan: ramadan,
                 onBell: _openBellTiming,
                 onBellLongPress: _toggleBell, // quick toggle for those who know
               ),
 
               // ── the weekly guest sign-up nudge (hidden for members) ──
               const GuestNudgeCard(),
-
-              // ── Forbidden times (one compact card, title inside) ──
-              const SizedBox(height: SLSpacing.s12),
-              _ForbiddenTimes(prayer: prayer, bn: bn),
 
               // ── Post-prayer prompt ──
               if (prayer.postPrayerKey != null)
@@ -1090,278 +1095,6 @@ class _PostPrayerPrompt extends ConsumerWidget {
             ],
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ── Forbidden times ───────────────────────────────────────────────────────────
-
-class _ForbiddenTimes extends StatelessWidget {
-  const _ForbiddenTimes({required this.prayer, required this.bn});
-  final PrayerNow prayer;
-  final bool bn;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = prayer.times;
-    final windows = [
-      (context.t('forbidden_short_sunrise'), t.sunrise - 15, t.sunrise + 20),
-      (context.t('forbidden_short_zawal'), t.dhuhr - 10, t.dhuhr + 5),
-      (context.t('forbidden_short_sunset'), t.sunset - 15, t.sunset + 5),
-    ];
-    final theme = Theme.of(context);
-    // Spec §2.1 — a calm caution, not an alarm: light alert-tinted surface
-    // (#FCE4E4) with #C0392B text/icons and only a hairline border in the
-    // same hue. Never a saturated red fill.
-    final dark = theme.brightness == Brightness.dark;
-    final alertBg = dark ? SLColors.darkAlertSoft : SLColors.alertSoftLight;
-    final alertFg = dark ? SLColors.darkAlert : SLColors.lightDestructive;
-    return Container(
-      key: const ValueKey('home_forbidden_card'),
-      padding: const EdgeInsets.fromLTRB(
-        SLSpacing.s12,
-        SLSpacing.s8,
-        SLSpacing.s12,
-        SLSpacing.s8,
-      ),
-      decoration: BoxDecoration(
-        color: alertBg,
-        borderRadius: SLRadius.brMd,
-        border: Border.all(color: alertFg.withValues(alpha: 0.25), width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Icon(PhosphorIconsRegular.prohibit, color: alertFg, size: 18),
-              const SizedBox(width: SLSpacing.s8),
-              Expanded(
-                child: Text(
-                  context.t('prayer_forbidden_title'),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: alertFg,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          for (final (label, from, to) in windows)
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 30),
-              child: Row(
-                children: [
-                  const SizedBox(width: 26),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        color: alertFg,
-                      ),
-                    ),
-                  ),
-                  // W4f overflow sweep — at 360dp/1.3× the time range no
-                  // longer fits next to the label; it shrinks to fit
-                  // instead of spilling (the times are the point).
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        '${formatTimeBn(from, bengali: bn)} — ${formatTimeBn(to, bengali: bn)}',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: alertFg,
-                          fontWeight: FontWeight.w600,
-                          fontFeatures: const [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Schedule ────────────────────────────────────────────────────────────────
-
-class _Schedule extends StatelessWidget {
-  const _Schedule({
-    required this.prayer,
-    required this.bells,
-    required this.bn,
-    required this.onBell,
-    required this.onBellLongPress,
-  });
-  final PrayerNow prayer;
-  final Set<String> bells;
-  final bool bn;
-  final void Function(PrayerKey key) onBell;
-  final void Function(PrayerKey key) onBellLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (var i = 0; i < scheduleOrder.length; i++)
-            _row(
-              context,
-              theme,
-              scheduleOrder[i],
-              isLast: i == scheduleOrder.length - 1,
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _row(
-    BuildContext context,
-    ThemeData theme,
-    PrayerKey key, {
-    required bool isLast,
-  }) {
-    final mins = prayer.times.byKey(key);
-    final isCurrent = key == prayer.currentWaqt;
-    final isNext = key == prayer.nextKey;
-    final label = _prayerLabel(key, context.lang);
-    final bellOn = bells.contains(key.name);
-    return Container(
-      key: ValueKey('schedule_row_${key.name}'),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isCurrent
-              ? theme.colorScheme.primaryContainer
-              : Colors.transparent,
-          borderRadius: !isLast ? SLRadius.brMd : null,
-        ),
-        child: ListTile(
-          dense: true,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: SLSpacing.s12,
-            vertical: 0,
-          ),
-          minVerticalPadding: 6,
-          title: Wrap(
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: SLSpacing.s8,
-            children: [
-              Text(
-                label,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: isCurrent ? FontWeight.w700 : FontWeight.w400,
-                  color: isCurrent ? theme.colorScheme.primary : null,
-                ),
-              ),
-              if (isCurrent || isNext)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 1,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isCurrent
-                        ? theme.colorScheme.surface
-                        : theme.colorScheme.surfaceContainerHighest,
-                    borderRadius: SLRadius.brPill,
-                  ),
-                  child: Text(
-                    context.t(isCurrent ? 'notif_now' : 'notif_next'),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      fontSize: 12,
-                      color: isCurrent
-                          ? theme.colorScheme.primary
-                          : theme.colorScheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-          // W5: the corrected midday label 'দুপুর' is wider than the old
-          // 'সকাল' — at 360dp @1.3× text scale the time + bell needed ~6px
-          // more than the tile had, and ListTile hard-asserts when the
-          // trailing consumes the ENTIRE tile width (an exact == compare,
-          // so anything that can fill the free space exactly — a Flexible
-          // alone, or a wrapping Padding whose own size adds up to the
-          // tile — trips it). The ConstrainedBox keeps the trailing a
-          // SIZED widget strictly narrower than the smallest supported
-          // tile (360dp viewport → 304px tile; cap 296), and the
-          // Flexible/FittedBox shrinks the time the few percent it needs
-          // at large text scales; default scales render full size.
-          trailing: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 296),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      formatTimeBn(mins, bengali: bn),
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: SLSpacing.s4),
-                _BellButton(
-                  on: bellOn,
-                  onToggle: () => onBell(key),
-                  onLongPress: () => onBellLongPress(key),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BellButton extends StatelessWidget {
-  const _BellButton({
-    required this.on,
-    required this.onToggle,
-    this.onLongPress,
-  });
-  final bool on;
-  final VoidCallback onToggle;
-  final VoidCallback? onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Semantics(
-      button: true,
-      toggled: on,
-      label: on
-          ? context.t('prayer_bell_disable')
-          : context.t('prayer_bell_enable'),
-      child: InkWell(
-        onTap: onToggle,
-        onLongPress: onLongPress,
-        customBorder: const CircleBorder(),
-        child: SizedBox(
-          width: SLSpacing.minTapTarget,
-          height: SLSpacing.minTapTarget,
-          child: Icon(
-            on ? PhosphorIconsFill.bell : PhosphorIconsRegular.bell,
-            size: 20,
-            color: on
-                ? theme.colorScheme.primary
-                : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-          ),
-        ),
       ),
     );
   }

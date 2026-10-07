@@ -137,18 +137,18 @@ void main() {
     await tester.pumpAndSettle(const Duration(seconds: 5));
 
     // Deterministic font guard: every Bengali string in the sheet must
-    // resolve to the theme's Noto Sans Bengali family — a style falling back to
+    // resolve to the theme's SolaimanLipi family — a style falling back to
     // the test default font would render tofu (labelLarge/titleSmall are NOT
     // part of the app text theme, so the sheet derives from body* styles).
     final nowLabel = S.tr(Lang.bn, 'sync_now');
     final buttonLabel = tester.widget<Text>(
       find.descendant(of: find.byType(FilledButton), matching: find.text(nowLabel)),
     );
-    expect(buttonLabel.style?.fontFamily, contains('NotoSansBengali'),
+    expect(buttonLabel.style?.fontFamily, contains('SolaimanLipi'),
         reason: 'the button label must not fall back to the default font');
     final failedLabel = S.tr(Lang.bn, 'sync_failed_entries');
     final failedHeader = tester.widget<Text>(find.textContaining(failedLabel));
-    expect(failedHeader.style?.fontFamily, contains('NotoSansBengali'));
+    expect(failedHeader.style?.fontFamily, contains('SolaimanLipi'));
 
     await expectLater(
       find.byType(MaterialApp),

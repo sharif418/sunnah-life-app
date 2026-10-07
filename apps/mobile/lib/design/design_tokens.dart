@@ -7,7 +7,12 @@ import 'package:flutter/material.dart';
 /// `flutter test` does NOT load pubspec-declared families — golden tests
 /// warm them explicitly through test/golden_fonts.dart (warmAppFonts),
 /// and test/tofu_guard_test.dart fails if the glyphs ever go missing.
-const String kAppFontFamily = 'NotoSansBengali';
+const String kAppFontFamily = 'SolaimanLipi';
+
+/// Per-glyph fallback for the few symbols SolaimanLipi lacks (… • − ✓ ≥):
+/// the bundled Noto Sans Bengali, never a platform font (tofu on some
+/// phones). Every style that names [kAppFontFamily] carries it.
+const List<String> kAppFontFallback = ['NotoSansBengali'];
 
 /// Uthmani Qur'an family (pubspec-declared, bundled TTF).
 const String kQuranFontFamily = 'AmiriQuran';
@@ -177,6 +182,7 @@ class SLElevation {
 TextStyle _appFontStyle(double size, [FontWeight? weight, Color? color]) =>
     TextStyle(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       fontSize: size,
       fontWeight: weight,
       height: 1.45,
@@ -185,7 +191,7 @@ TextStyle _appFontStyle(double size, [FontWeight? weight, Color? color]) =>
 
 class SLType {
   // The scale matches the approved prototype (2026-10-04). Noto Sans
-  // Bengali has a tall x-height: at the old 18/20 the diary rows and card
+  // Bengali (the face then) has a tall x-height: at the old 18/20 the diary rows and card
   // titles read a size too big and every screen looked crowded next to the
   // prototype. Body text stays at the 15-16 floor for older eyes.
   static const double caption = 13;
@@ -198,34 +204,40 @@ class SLType {
   // The six token-scale styles the app's own chrome renders with.
   static const TextStyle _displayStyle = TextStyle(
     fontFamily: kAppFontFamily,
+    fontFamilyFallback: kAppFontFallback,
     fontSize: 28,
     height: 1.35,
     fontWeight: FontWeight.w700,
   );
   static const TextStyle _headingLargeStyle = TextStyle(
     fontFamily: kAppFontFamily,
+    fontFamilyFallback: kAppFontFallback,
     fontSize: 24,
     height: 1.4,
     fontWeight: FontWeight.w700,
   );
   static const TextStyle _headingStyle = TextStyle(
     fontFamily: kAppFontFamily,
+    fontFamilyFallback: kAppFontFallback,
     fontSize: 17,
     height: 1.45,
     fontWeight: FontWeight.w600,
   );
   static const TextStyle _bodyLargeStyle = TextStyle(
     fontFamily: kAppFontFamily,
+    fontFamilyFallback: kAppFontFallback,
     fontSize: 16,
     height: 1.55,
   );
   static const TextStyle _bodyStyle = TextStyle(
     fontFamily: kAppFontFamily,
+    fontFamilyFallback: kAppFontFallback,
     fontSize: 15,
     height: 1.55,
   );
   static const TextStyle _captionStyle = TextStyle(
     fontFamily: kAppFontFamily,
+    fontFamilyFallback: kAppFontFallback,
     fontSize: 13,
     height: 1.45,
   );
@@ -248,38 +260,47 @@ class SLType {
     // M3 roles — family + Bengali line-height, default metrics otherwise.
     displayLarge: base.displayLarge?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.35,
     ),
     displayMedium: base.displayMedium?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.35,
     ),
     headlineLarge: base.headlineLarge?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.4,
     ),
     headlineSmall: base.headlineSmall?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.45,
     ),
     titleLarge: base.titleLarge?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.45,
     ),
     titleSmall: base.titleSmall?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.5,
     ),
     labelLarge: base.labelLarge?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.45,
     ),
     labelMedium: base.labelMedium?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.45,
     ),
     labelSmall: base.labelSmall?.copyWith(
       fontFamily: kAppFontFamily,
+      fontFamilyFallback: kAppFontFallback,
       height: 1.45,
     ),
   );
