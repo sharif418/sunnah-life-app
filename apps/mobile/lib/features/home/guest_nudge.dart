@@ -34,7 +34,9 @@ final guestNudgeDueProvider = FutureProvider<bool>((ref) async {
     final prefs = await SharedPreferences.getInstance();
     final at = prefs.getInt(_kDismissedAtKey);
     if (at == null) return true;
-    final since = DateTime.now().difference(DateTime.fromMillisecondsSinceEpoch(at));
+    final since = DateTime.now().difference(
+      DateTime.fromMillisecondsSinceEpoch(at),
+    );
     return since >= kGuestNudgeEvery;
   } catch (_) {
     return true;
@@ -51,34 +53,95 @@ class GuestNudgeCard extends ConsumerWidget {
     }
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
+    final dark = theme.brightness == Brightness.dark;
+    // Its own block with air above (it used to sit flush under the schedule
+    // card): a soft green-tinted panel, a shield badge, the three gains as
+    // icon rows, then the one action.
     return Padding(
-      padding: const EdgeInsets.only(bottom: SLSpacing.s16),
-      child: AppCard(
+      padding: const EdgeInsets.only(top: SLSpacing.s24),
+      child: Container(
         key: const ValueKey('guest_nudge'),
+        padding: const EdgeInsets.all(SLSpacing.s16),
+        decoration: BoxDecoration(
+          color: dark
+              ? Color.alphaBlend(cs.primary.withValues(alpha: 0.16), cs.surface)
+              : cs.primaryContainer,
+          borderRadius: SLRadius.brLg,
+          border: Border.all(color: cs.primary.withValues(alpha: 0.28)),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              context.t('guest_nudge_title'),
-              style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: cs.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    PhosphorIconsRegular.shieldCheck,
+                    size: 24,
+                    color: cs.onPrimary,
+                  ),
+                ),
+                const SizedBox(width: SLSpacing.s12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.t('guest_nudge_title'),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          height: 1.3,
+                        ),
+                      ),
+                      Text(
+                        context.t('guest_nudge_sub'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: SLSpacing.s8),
+            const SizedBox(height: SLSpacing.s12),
             for (final (icon, key) in const [
               (PhosphorIconsRegular.cloudCheck, 'guest_nudge_backup'),
               (PhosphorIconsRegular.usersThree, 'guest_nudge_usrah'),
               (PhosphorIconsRegular.trendUp, 'guest_nudge_journey'),
             ])
               Padding(
-                padding: const EdgeInsets.only(bottom: SLSpacing.s4),
+                padding: const EdgeInsets.only(bottom: SLSpacing.s8),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 3),
-                      child: Icon(icon, size: 20, color: cs.primary),
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: dark ? cs.primaryContainer : cs.surface,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, size: 18, color: cs.primary),
                     ),
-                    const SizedBox(width: SLSpacing.s8),
-                    Expanded(child: Text(context.t(key), style: theme.textTheme.bodyMedium)),
+                    const SizedBox(width: SLSpacing.s12),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          context.t(key),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -86,15 +149,20 @@ class GuestNudgeCard extends ConsumerWidget {
             Row(
               children: [
                 Expanded(
-                  child: FilledButton(
+                  child: FilledButton.icon(
                     key: const ValueKey('guest_nudge_signup'),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                    ),
                     onPressed: () => context.push('/auth'),
-                    child: Text(context.t('guest_nudge_cta')),
+                    icon: const Icon(PhosphorIconsRegular.userPlus, size: 18),
+                    label: Text(context.t('guest_nudge_cta')),
                   ),
                 ),
                 const SizedBox(width: SLSpacing.s8),
                 TextButton(
                   key: const ValueKey('guest_nudge_later'),
+                  style: TextButton.styleFrom(minimumSize: const Size(64, 48)),
                   onPressed: () async {
                     try {
                       final prefs = await SharedPreferences.getInstance();

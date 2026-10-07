@@ -839,5 +839,12 @@
   "sched_ramadan": "রমজান",
   "sched_sehri_end": "সাহরির শেষ",
   "sched_iftar": "ইফতার",
-  "hijri_suffix": "হিজরি"
+  "hijri_suffix": "হিজরি",
+  "most_used_days_fmt": "৩০ দিনে %n দিন",
+  "most_used_done": "আজ হয়েছে",
+  "live_today": "আজ",
+  "live_tomorrow": "আগামীকাল",
+  "live_in_days_fmt": "%n দিন পর",
+  "live_badge": "লাইভ",
+  "guest_nudge_sub": "অ্যাকাউন্ট খুললে যা পাবেন"
 }

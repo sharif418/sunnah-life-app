@@ -2581,4 +2581,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hijri_suffix => 'هـ';
+
+  @override
+  String get most_used_days_fmt => '%n من ٣٠ يومًا';
+
+  @override
+  String get most_used_done => 'تمّ اليوم';
+
+  @override
+  String get live_today => 'اليوم';
+
+  @override
+  String get live_tomorrow => 'غدًا';
+
+  @override
+  String get live_in_days_fmt => 'بعد %n أيام';
+
+  @override
+  String get live_badge => 'مباشر';
+
+  @override
+  String get guest_nudge_sub => 'ما يمنحك الحساب';
 }
