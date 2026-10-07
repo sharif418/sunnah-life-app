@@ -1,17 +1,19 @@
 "use client";
 
-// হোম (বাড়ি) — নামাজ ড্যাশবোর্ড: তারিখ-ঘড়ি হিরো, পরবর্তী ওয়াক্ত কাউন্টডাউন,
-// সময়সূচি, কিবলা, আজকের আমল সারসংক্ষেপ, সর্বাধিক ব্যবহৃত আমল, দ্রুত শর্টকাট, ইলম।
+// হোম (বাড়ি) — the app's order since the 2026-10-07 redesign: the date row,
+// the prayer card (sun arc), today's muhasaba, quick links, the one-card
+// schedule (+ the browser alert switch), qibla, most-used amal, ilm.
 // সবকিছু গেস্ট-বান্ধব — সাইন-ইন ছাড়াই কাজ করে।
 
 import * as React from "react";
 import { useApp } from "@/lib/store";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { translate } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { PrayerHero } from "@/components/home/prayer-hero";
+import { HomeDateRow, ScheduleCard, SunArcCard } from "@/components/home/prayer-card";
 import { QiblaCard } from "@/components/home/qibla-card";
 import { HomeLiveCard } from "@/components/home/live-card";
-import { ForbiddenTimesCard, WaqtAlertsToggle } from "@/components/home/forbidden-card";
+import { WaqtAlertsToggle } from "@/components/home/forbidden-card";
 import { AmalSummaryCard } from "@/components/home/amal-summary-card";
 import { QuickLinks } from "@/components/home/quick-links";
 import { IlmPreview, MostUsedSection } from "@/components/home/home-extras";
@@ -29,17 +31,47 @@ export function HomeView() {
       s.profile.lng !== 0
   );
 
+  // one column on phones (the app's order); two on a wide screen, the
+  // prayer column on the left — the sun's arc would flatten across a full
+  // desktop width
+  const wide = useMediaQuery("(min-width: 1024px)");
+
+  if (wide) {
+    return (
+      <div className="space-y-6">
+        {!hasLocation && <LocationPrompt />}
+        <div className="grid grid-cols-2 items-start gap-6">
+          <div className="space-y-6">
+            <HomeDateRow />
+            <HomeLiveCard />
+            <SunArcCard />
+            <ScheduleCard />
+            <WaqtAlertsToggle />
+          </div>
+          <div className="space-y-6">
+            <AmalSummaryCard />
+            <QuickLinks />
+            <QiblaCard />
+            <MostUsedSection />
+            <IlmPreview />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {!hasLocation && <LocationPrompt />}
+      <HomeDateRow />
       <HomeLiveCard />
-      <PrayerHero />
-      <ForbiddenTimesCard />
+      <SunArcCard />
+      <AmalSummaryCard />
+      <QuickLinks />
+      <ScheduleCard />
       <WaqtAlertsToggle />
       <QiblaCard />
-      <AmalSummaryCard />
       <MostUsedSection />
-      <QuickLinks />
       <IlmPreview />
     </div>
   );

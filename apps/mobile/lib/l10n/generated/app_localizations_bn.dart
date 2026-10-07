@@ -2553,4 +2553,64 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get exercise_type_other => 'অন্যান্য';
+
+  @override
+  String get sun_now_running => 'এখন চলছে';
+
+  @override
+  String get sun_now => 'এখন';
+
+  @override
+  String get sun_next => 'পরবর্তী';
+
+  @override
+  String get sun_after_sunrise => 'সূর্যোদয়ের পর';
+
+  @override
+  String get sun_wait_dhuhr => 'যোহরের অপেক্ষা';
+
+  @override
+  String get sun_wait_jumuah => 'জুমার অপেক্ষা';
+
+  @override
+  String get sun_running => 'চলমান';
+
+  @override
+  String get sun_ishraq_duha_time => 'ইশরাক ও চাশতের সময়';
+
+  @override
+  String get sun_hours => 'ঘণ্টা';
+
+  @override
+  String get sun_minutes => 'মিনিট';
+
+  @override
+  String get sun_left => 'বাকি';
+
+  @override
+  String get sun_noon => 'মধ্যাহ্ন';
+
+  @override
+  String get sun_forbidden_now => 'এখন নামাজ পড়া নিষেধ';
+
+  @override
+  String get sun_until_fmt => '%t পর্যন্ত';
+
+  @override
+  String get jumuah => 'জুমা';
+
+  @override
+  String get sched_from_fmt => '%t থেকে';
+
+  @override
+  String get sched_ramadan => 'রমজান';
+
+  @override
+  String get sched_sehri_end => 'সাহরির শেষ';
+
+  @override
+  String get sched_iftar => 'ইফতার';
+
+  @override
+  String get hijri_suffix => 'হিজরি';
 }

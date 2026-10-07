@@ -574,6 +574,7 @@ class BootstrapGate extends ConsumerWidget {
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontFamily: kAppFontFamily,
+                          fontFamilyFallback: kAppFontFallback,
                           color: Colors.white,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -584,7 +585,7 @@ class BootstrapGate extends ConsumerWidget {
                         onPressed: () => ref.invalidate(bootstrapProvider),
                         child: const Text(
                           'আবার চেষ্টা করুন',
-                          style: TextStyle(fontFamily: kAppFontFamily),
+                          style: TextStyle(fontFamily: kAppFontFamily, fontFamilyFallback: kAppFontFallback),
                         ),
                       ),
                     ],
@@ -628,6 +629,7 @@ class _SplashLogo extends StatelessWidget {
           S.tr(Lang.bn, 'app_title'),
           style: const TextStyle(
             fontFamily: kAppFontFamily,
+            fontFamilyFallback: kAppFontFallback,
             fontSize: 24,
             fontWeight: FontWeight.w700,
             color: SLColors.lightPrimaryForeground,

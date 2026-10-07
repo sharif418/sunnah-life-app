@@ -472,6 +472,10 @@ class PhosphorIconsRegular {
 class PhosphorIconsFill {
   const PhosphorIconsFill._();
 
+  // the home prayer card's sun and moon (2026-10-07)
+  static const IconData moon = IconData(0xe330, fontFamily: 'PhosphorFill');
+  static const IconData sun = IconData(0xe472, fontFamily: 'PhosphorFill');
+
   static const IconData bell = IconData(0xe0ce, fontFamily: 'PhosphorFill');
   static const IconData bookOpen = IconData(0xe0e6, fontFamily: 'PhosphorFill');
   static const IconData bookOpenText = IconData(
@@ -532,6 +536,9 @@ class PhosphorIconsFill {
 /// Phosphor Bold weight (assets/fonts/phosphor-bold.ttf).
 class PhosphorIconsBold {
   const PhosphorIconsBold._();
+
+  // ticks on the home card's today strip
+  static const IconData check = IconData(0xe182, fontFamily: 'PhosphorBold');
 
   static const IconData caretDown = IconData(
     0xe136,

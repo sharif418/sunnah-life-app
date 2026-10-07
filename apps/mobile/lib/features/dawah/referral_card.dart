@@ -1,5 +1,5 @@
 /// W4e — the branded referral share card: a fixed 1080×1350 design (deep
-/// green + cream + gold, bundled Noto Sans Bengali only) that the Da'wah
+/// green + cream + gold, bundled SolaimanLipi only) that the Da'wah
 /// overview renders to a PNG via `RepaintBoundary.toImage` and shares
 /// through SystemChannel.shareFile (ACTION_SEND image/* + FileProvider).
 ///
@@ -136,7 +136,7 @@ class _LogoMark extends StatelessWidget {
   }
 }
 
-/// Every text on the card renders through the bundled Noto Sans Bengali family
+/// Every text on the card renders through the bundled SolaimanLipi family
 /// (tofu rule) with explicit token colors — no theme, no fallback family.
 class _CardText extends StatelessWidget {
   const _CardText({
@@ -166,6 +166,7 @@ class _CardText extends StatelessWidget {
       overflow: maxLines == null ? TextOverflow.visible : TextOverflow.ellipsis,
       style: TextStyle(
         fontFamily: kAppFontFamily,
+        fontFamilyFallback: kAppFontFallback,
         fontSize: fontSize,
         fontWeight: fontWeight,
         height: height,

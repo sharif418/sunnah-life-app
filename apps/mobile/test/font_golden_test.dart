@@ -46,6 +46,7 @@ import 'golden_fonts.dart';
 /// Families that carry real bundled glyphs. Everything else = platform
 /// fallback = tofu on a bundle-only device.
 const Set<String> _bundledFamilies = {
+  'SolaimanLipi',
   'NotoSansBengali',
   'Amiri',
   'AmiriQuran',

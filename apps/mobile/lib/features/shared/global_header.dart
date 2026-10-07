@@ -1,9 +1,11 @@
 /// Global chrome (C-W4a): the shared header for the five MAIN tab screens.
 /// Row 1 (NAV-01): the Sunnah Life brand mark + name, then the action
 /// cluster — notification bell, reminder clock, profile, sync badge.
-/// Row 2 (NAV-02): the tappable city (city picker) and the triple calendar
-/// date bar (Gregorian + Bangla + Hijri with the effective ±4 adjustment
-/// from C-W3g); it wraps to two lines on narrow phones.
+/// Row 2 (NAV-02) — on the HOME tab only since the 2026-10-07 redesign
+/// ([showDate]): the Hijri date first and large (with the effective ±4
+/// adjustment from C-W3g), the weekday · Gregorian · Bangla dates quietly
+/// beneath it, and the tappable city beside them. The other tabs keep just
+/// the brand and the actions, so their content starts higher.
 ///
 /// The date-bar logic moved here VERBATIM from home_screen.dart (it was
 /// home-only before) — the home screen now consumes this header instead of
@@ -31,7 +33,10 @@ import 'reminders_sheet.dart';
 import 'widgets.dart';
 
 class GlobalHeader extends ConsumerWidget {
-  const GlobalHeader({super.key});
+  const GlobalHeader({super.key, this.showDate = false});
+
+  /// The date + city row (home only).
+  final bool showDate;
 
   /// Same city-pick path the profile screen uses — a pick updates the
   /// profile (lat/lng/tz), so prayer times, the header and the bells all
@@ -112,68 +117,115 @@ class GlobalHeader extends ConsumerWidget {
               const SyncBadge(),
             ],
           ),
-          // the prototype's order: the city as a small outlined pill (tap to
-          // change), then the three calendars on one quiet line
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              InkWell(
-                key: const ValueKey('header_city'),
-                borderRadius: SLRadius.brPill,
-                onTap: () => _pickCity(context, ref),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    minHeight: SLSpacing.minTapTarget,
-                  ),
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    widthFactor: 1,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
+          if (showDate)
+            Padding(
+              padding: const EdgeInsets.only(
+                top: SLSpacing.s4,
+                bottom: SLSpacing.s8,
+                right: SLSpacing.s12,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // the Hijri date leads, the city beside it
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Row(
+                          key: const ValueKey('header_hijri'),
+                          children: [
+                            const Icon(
+                              PhosphorIconsRegular.moon,
+                              size: 18,
+                              color: SLColors.gold,
+                            ),
+                            const SizedBox(width: SLSpacing.s8),
+                            Flexible(
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Text(
+                                  '${hijri.formatted} ${context.t('hijri_suffix')}',
+                                  maxLines: 1,
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surface,
+                      const SizedBox(width: SLSpacing.s8),
+                      InkWell(
+                        key: const ValueKey('header_city'),
                         borderRadius: SLRadius.brPill,
-                        border: Border.all(color: theme.colorScheme.outline),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            PhosphorIconsRegular.mapPin,
-                            size: 16,
-                            color: theme.colorScheme.primary,
+                        onTap: () => _pickCity(context, ref),
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minHeight: SLSpacing.minTapTarget,
+                            maxWidth: 150,
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            city?.nameBn ?? profile.city,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w600,
+                          child: Align(
+                            widthFactor: 1,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerLowest,
+                                borderRadius: SLRadius.brPill,
+                                border: Border.all(
+                                  color: theme.colorScheme.outline,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    PhosphorIconsRegular.mapPin,
+                                    size: 16,
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Flexible(
+                                    child: Text(
+                                      city?.nameBn ?? profile.city,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                  Icon(
+                                    PhosphorIconsBold.caretDown,
+                                    size: 12,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 4),
-                          Icon(
-                            PhosphorIconsBold.caretDown,
-                            size: 12,
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ],
+                        ),
                       ),
+                    ],
+                  ),
+                  // weekday · Gregorian · Bangla, the full width beneath
+                  Text(
+                    '${weekdayName(now, bengali: bn)} · '
+                    '${bn ? toBn(now.day) : now.day} ${S.tr(lang, 'month_${now.month}')} '
+                    '${bn ? toBn(now.year) : now.year} · ${bnDate.formatted}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
-                ),
+                ],
               ),
-              Text(
-                '${bn ? toBn(now.day) : now.day} ${S.tr(lang, 'month_${now.month}')} '
-                '${bn ? toBn(now.year) : now.year} · ${bnDate.formatted} · ${hijri.formatted}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -242,8 +294,15 @@ class _HeaderAction extends StatelessWidget {
 /// stay pinned (আমল, দাওয়াত — a fifth of a small screen) or scroll away for
 /// good (হোম, ইলম, আরও).
 class ScrollAwareHeader extends StatefulWidget {
-  const ScrollAwareHeader({super.key, required this.body});
+  const ScrollAwareHeader({
+    super.key,
+    required this.body,
+    this.showDate = false,
+  });
   final Widget body;
+
+  /// Home passes true: the header carries the date + city row.
+  final bool showDate;
 
   @override
   State<ScrollAwareHeader> createState() => _ScrollAwareHeaderState();
@@ -279,7 +338,7 @@ class _ScrollAwareHeaderState extends State<ScrollAwareHeader> {
             curve: Curves.easeOutCubic,
             alignment: Alignment.bottomCenter,
             heightFactor: _visible ? 1 : 0,
-            child: const GlobalHeader(),
+            child: GlobalHeader(showDate: widget.showDate),
           ),
         ),
         Expanded(
