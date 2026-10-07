@@ -160,7 +160,7 @@ class MoreScreen extends ConsumerWidget {
                     onTap: () => context.push('/more/live'),
                   ),
                   _MoreRow(
-                    icon: PhosphorIconsRegular.minusCircle,
+                    icon: PhosphorIconsRegular.bellSlash,
                     title: context.t('more_autosilent'),
                     onTap: () => context.push('/more/autosilent'),
                   ),
