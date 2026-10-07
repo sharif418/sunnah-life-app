@@ -46,15 +46,27 @@ class DirectionalIcon extends StatelessWidget {
 }
 
 class AppCard extends StatelessWidget {
-  const AppCard({super.key, required this.child, this.padding, this.onTap});
+  const AppCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.onTap,
+    this.clip = false,
+  });
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
+
+  /// Clip the content to the rounded shape — for cards whose children paint
+  /// edge-to-edge backgrounds (a tinted footer strip would otherwise show
+  /// square corners past the rounded rim).
+  final bool clip;
 
   @override
   Widget build(BuildContext context) {
     return Card(
       margin: EdgeInsets.zero,
+      clipBehavior: clip ? Clip.antiAlias : Clip.none,
       child: InkWell(
         onTap: onTap,
         borderRadius: SLRadius.brLg,
@@ -120,11 +132,15 @@ class EmptyState extends StatelessWidget {
     this.icon,
     this.actionLabel,
     this.onAction,
+    this.title,
   });
   final String message;
   final IconData? icon;
 
-  /// Optional CTA (e.g. "নতুন জিজ্ঞাসা করুন") — rendered as a tonal button
+  /// Optional bold line above the (muted) message.
+  final String? title;
+
+  /// Optional CTA (e.g. "নতুন জিজ্ঞাসা করুন") — rendered as the filled primary button
   /// below the message only when BOTH label and callback are present.
   final String? actionLabel;
   final VoidCallback? onAction;
@@ -139,7 +155,17 @@ class EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             EmptyIllustration(icon: icon),
-            const SizedBox(height: SLSpacing.s12),
+            const SizedBox(height: SLSpacing.s16),
+            if (title != null) ...[
+              Text(
+                title!,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: SLSpacing.s4),
+            ],
             Text(
               message,
               textAlign: TextAlign.center,
@@ -149,7 +175,7 @@ class EmptyState extends StatelessWidget {
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: SLSpacing.s12),
-              FilledButton.tonal(
+              FilledButton(
                 onPressed: onAction,
                 child: Text(actionLabel!),
               ),
@@ -189,7 +215,9 @@ class ErrorState extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: SLSpacing.s12),
-              OutlinedButton.icon(
+              // the one way forward, so the filled primary (an outline
+              // on cream barely read as a button)
+              FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(PhosphorIconsRegular.arrowClockwise),
                 label: Text(context.t('retry')),

@@ -6,6 +6,8 @@
 /// offers "আনলক চাই".
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -110,36 +112,34 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
                   IconButton(
                     tooltip: context.t('month_next'),
                     onPressed: () => _shiftMonth(1),
-                    icon: const DirectionalIcon(PhosphorIconsRegular.caretRight),
+                    icon: const DirectionalIcon(
+                      PhosphorIconsRegular.caretRight,
+                    ),
                   ),
                 ],
               ),
               const SizedBox(height: SLSpacing.s8),
-              Row(
+              // the streak, then the category rings (a side-scroller beside
+              // the badge cut the 4th ring and the labels at large text)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: StreakBadge(days: streak, bengali: bn),
+              ),
+              const SizedBox(height: SLSpacing.s12),
+              // seven categories: they wrap into centred rows rather than
+              // squeezing into one line or scrolling off the edge
+              Wrap(
+                alignment: WrapAlignment.center,
+                spacing: SLSpacing.s4,
+                runSpacing: SLSpacing.s12,
                 children: [
-                  StreakBadge(days: streak, bengali: bn),
-                  const SizedBox(width: SLSpacing.s12),
-                  Expanded(
-                    child: SizedBox(
-                      height: 86,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          for (final cat in byCat.keys)
-                            Padding(
-                              padding: const EdgeInsetsDirectional.only(
-                                end: SLSpacing.s12,
-                              ),
-                              child: CompletionRing(
-                                pct: byCat[cat] ?? 0,
-                                label: context.t(cat.labelKey),
-                                bengali: bn,
-                              ),
-                            ),
-                        ],
-                      ),
+                  for (final cat in byCat.keys)
+                    CompletionRing(
+                      pct: byCat[cat] ?? 0,
+                      label: context.t(cat.labelKey),
+                      bengali: bn,
+                      width: 84,
                     ),
-                  ),
                 ],
               ),
               const SizedBox(height: SLSpacing.s16),
@@ -155,9 +155,8 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
               const SizedBox(height: SLSpacing.s20),
               Text(
                 context.t('month_paper_grid'),
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(context).textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: SLSpacing.s8),
               MonthHeatmap(
@@ -250,7 +249,14 @@ class MonthHeatmap extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final rows = defs.length;
-    final gridHeight = rows * cellStride + headerHeight + 4;
+    // Each row is tall enough for a TWO-line label at the reader's text
+    // size: long diary items ("কমপক্ষে ১টি ঈমানি মুযাকারা…") used to be cut
+    // to one line with "…".
+    final rowH = math.max(
+      cellStride,
+      MediaQuery.textScalerOf(context).scale(11.5) * 1.15 * 2 + 4,
+    );
+    final gridHeight = rows * rowH + headerHeight + 4;
 
     Widget dayColumn(String day) {
       final isToday = day == today;
@@ -277,17 +283,22 @@ class MonthHeatmap extends ConsumerWidget {
               ),
             ),
             for (final def in defs)
-              HeatmapCell(
-                points: cellPoints(
-                  _entryFor(day, def.key)?.value,
-                  def,
-                  profile.category,
+              SizedBox(
+                height: rowH,
+                child: Center(
+                  child: HeatmapCell(
+                    points: cellPoints(
+                      _entryFor(day, def.key)?.value,
+                      def,
+                      profile.category,
+                    ),
+                    locked: locked,
+                    isToday: isToday,
+                    semanticsLabel:
+                        '${bengali ? toBn(int.parse(day.substring(8))) : day.substring(8)} · ${def.titleBn}',
+                    onTap: () => _openDay(context, ref, day),
+                  ),
                 ),
-                locked: locked,
-                isToday: isToday,
-                semanticsLabel:
-                    '${bengali ? toBn(int.parse(day.substring(8))) : day.substring(8)} · ${def.titleBn}',
-                onTap: () => _openDay(context, ref, day),
               ),
             const SizedBox(height: 4),
           ],
@@ -308,7 +319,7 @@ class MonthHeatmap extends ConsumerWidget {
                 const SizedBox(height: headerHeight),
                 for (final def in defs)
                   SizedBox(
-                    height: cellStride,
+                    height: rowH,
                     child: Padding(
                       padding: const EdgeInsetsDirectional.only(end: 6),
                       child: Align(
@@ -317,10 +328,11 @@ class MonthHeatmap extends ConsumerWidget {
                           bengali || def.titleBn.isNotEmpty
                               ? def.titleBn
                               : def.titleEn,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 12,
+                            fontSize: 11.5,
+                            height: 1.15,
                           ),
                         ),
                       ),
@@ -391,7 +403,10 @@ class MonthHeatmap extends ConsumerWidget {
                 ),
                 if (locked)
                   Chip(
-                    avatar: const Icon(PhosphorIconsRegular.lockSimple, size: 14),
+                    avatar: const Icon(
+                      PhosphorIconsRegular.lockSimple,
+                      size: 14,
+                    ),
                     label: Text(context.t('amal_locked')),
                     visualDensity: VisualDensity.compact,
                   ),
@@ -541,7 +556,9 @@ class _MonthCalendar extends ConsumerWidget {
       bengali: bengali,
     );
     String n(int v) => bengali ? toBn(v) : '$v';
-    final weekdays = [for (var i = 0; i < 7; i++) context.t('weekday_short_$i')];
+    final weekdays = [
+      for (var i = 0; i < 7; i++) context.t('weekday_short_$i'),
+    ];
 
     return Column(
       key: const ValueKey('month_calendar'),
@@ -576,11 +593,17 @@ class _MonthCalendar extends ConsumerWidget {
                 final future = day.compareTo(today) > 0;
                 final share = future ? 0.0 : _share(day);
                 final (Color bg, Color fg) = future
-                    ? (Colors.transparent, cs.onSurfaceVariant.withValues(alpha: 0.6))
+                    ? (
+                        Colors.transparent,
+                        cs.onSurfaceVariant.withValues(alpha: 0.6),
+                      )
                     : share >= 0.8
                     ? (cs.primary, cs.onPrimary)
                     : share > 0
-                    ? (cs.tertiary.withValues(alpha: 0.35 + share * 0.5), cs.onSurface)
+                    ? (
+                        cs.tertiary.withValues(alpha: 0.35 + share * 0.5),
+                        cs.onSurface,
+                      )
                     : (cs.outline, cs.onSurface);
                 return InkWell(
                   key: ValueKey('month_day_$day'),
@@ -599,7 +622,9 @@ class _MonthCalendar extends ConsumerWidget {
                       n(int.parse(day.substring(8))),
                       style: theme.textTheme.bodyMedium?.copyWith(
                         color: fg,
-                        fontWeight: day == today ? FontWeight.w800 : FontWeight.w600,
+                        fontWeight: day == today
+                            ? FontWeight.w800
+                            : FontWeight.w600,
                       ),
                     ),
                   ),
@@ -619,7 +644,10 @@ class _MonthCalendar extends ConsumerWidget {
               Container(
                 width: 14,
                 height: 14,
-                decoration: BoxDecoration(color: c, borderRadius: SLRadius.brSm),
+                decoration: BoxDecoration(
+                  color: c,
+                  borderRadius: SLRadius.brSm,
+                ),
               ),
               const SizedBox(width: 4),
               Text(context.t(key), style: theme.textTheme.bodySmall),

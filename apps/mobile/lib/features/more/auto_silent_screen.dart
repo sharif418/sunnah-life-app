@@ -200,8 +200,9 @@ class _AutoSilentScreenState extends ConsumerState<AutoSilentScreen>
               children: [
                 Row(
                   children: [
+                    // a muted bell (the minus-circle read as "remove")
                     Icon(
-                      PhosphorIconsFill.minusCircle,
+                      PhosphorIconsRegular.bellSlash,
                       color: theme.colorScheme.primary,
                     ),
                     const SizedBox(width: SLSpacing.s12),
@@ -248,7 +249,7 @@ class _AutoSilentScreenState extends ConsumerState<AutoSilentScreen>
                     label: Text(context.t('autosilent_grant')),
                     onPressed: _requestAccess,
                   ),
-                  const SizedBox(height: SLSpacing.s4),
+                  const SizedBox(height: SLSpacing.s8),
                   Text(
                     context.t('autosilent_return_hint'),
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -261,23 +262,32 @@ class _AutoSilentScreenState extends ConsumerState<AutoSilentScreen>
           ),
           const SizedBox(height: SLSpacing.s16),
 
-          // ── Master switch ──
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: Text(
-              context.t('autosilent_master'),
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+          // ── Master switch — in a card like the detox reminder ──
+          AppCard(
+            padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s4),
+            child: SwitchListTile(
+              title: Text(
+                context.t('autosilent_master'),
+                style: theme.textTheme.titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              subtitle: !granted
+                  ? Text(
+                      context.t(
+                        _enabled
+                            ? 'autosilent_not_granted'
+                            : 'autosilent_grant_first',
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: _enabled
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.onSurfaceVariant,
+                      ),
+                    )
+                  : null,
+              value: _enabled,
+              onChanged: _toggleMaster,
             ),
-            subtitle: _enabled && !granted
-                ? Text(
-                    context.t('autosilent_not_granted'),
-                    style: theme.textTheme.bodySmall
-                        ?.copyWith(color: theme.colorScheme.error),
-                  )
-                : null,
-            value: _enabled,
-            onChanged: _toggleMaster,
           ),
           const SizedBox(height: SLSpacing.s8),
 

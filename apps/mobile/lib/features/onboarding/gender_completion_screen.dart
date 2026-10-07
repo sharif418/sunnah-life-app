@@ -142,7 +142,11 @@ class _GenderCompletionScreenState
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('🌸'),
+                  Icon(
+                    PhosphorIconsRegular.lockSimple,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: SLSpacing.s8),
                   Expanded(
                     child: Text(
@@ -201,7 +205,9 @@ class _ChoiceTile extends StatelessWidget {
         onTap: onTap,
         borderRadius: SLRadius.brMd,
         child: Container(
-          constraints: const BoxConstraints(minHeight: SLSpacing.minTapTarget + 8),
+          constraints: const BoxConstraints(
+            minHeight: SLSpacing.minTapTarget + 8,
+          ),
           padding: const EdgeInsets.symmetric(
             horizontal: SLSpacing.s12,
             vertical: SLSpacing.s12,
@@ -215,31 +221,39 @@ class _ChoiceTile extends StatelessWidget {
               width: selected ? 2 : 1,
             ),
           ),
-          child: Row(
+          // icon above a centred name: "ভাই (পুরুষ)" side by side with an
+          // icon broke onto two lines on a small phone
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                Icon(
-                  icon,
-                  color: selected
-                      ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: SLSpacing.s12),
-              ],
-              Expanded(
-                child: Text(
-                  title,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (icon != null)
+                    Icon(
+                      icon,
+                      color: selected
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurfaceVariant,
+                    ),
+                  if (selected) ...[
+                    const SizedBox(width: SLSpacing.s4),
+                    Icon(
+                      PhosphorIconsFill.checkCircle,
+                      color: theme.colorScheme.primary,
+                      size: 18,
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: SLSpacing.s4),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-              if (selected)
-                Icon(
-                  PhosphorIconsFill.checkCircle,
-                  color: theme.colorScheme.primary,
-                  size: 20,
-                ),
             ],
           ),
         ),

@@ -125,9 +125,49 @@ class _IlmSearchScreenState extends ConsumerState<IlmSearchScreen> {
         onRetry: () => _run(_query),
       );
     } else if (shortQuery) {
-      body = EmptyState(
-        message: context.t('search_hint'),
-        icon: PhosphorIconsRegular.magnifyingGlass,
+      // a few ready searches instead of an empty page that only repeated
+      // the hint (tapping one fills the field and searches)
+      const topics = [
+        'সকালের যিকির',
+        'ঘুমের দোয়া',
+        'খাওয়ার দোয়া',
+        'তাহাজ্জুদ',
+        'আর-রহমান',
+        'সুন্নাহ',
+        'ধৈর্য',
+        'মুহাসাবা',
+      ];
+      body = ListView(
+        padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s16),
+        children: [
+          SectionHeader(
+            context.t('search_try'),
+            icon: PhosphorIconsRegular.sparkle,
+          ),
+          Wrap(
+            spacing: SLSpacing.s8,
+            runSpacing: SLSpacing.s8,
+            children: [
+              for (final t in topics)
+                ActionChip(
+                  avatar: const Icon(
+                    PhosphorIconsRegular.magnifyingGlass,
+                    size: 16,
+                  ),
+                  label: Text(t),
+                  onPressed: () {
+                    _field.text = t;
+                    _field.selection = TextSelection.collapsed(
+                      offset: t.length,
+                    );
+                    _debounce?.cancel();
+                    setState(() => _query = t);
+                    _run(t);
+                  },
+                ),
+            ],
+          ),
+        ],
       );
     } else if (_rows.isEmpty) {
       body = EmptyState(

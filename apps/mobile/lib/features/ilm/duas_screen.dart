@@ -100,7 +100,8 @@ class _DuasScreenState extends State<DuasScreen> {
                         message: context.t('empty_generic'),
                         icon: PhosphorIconsRegular.hand,
                       )
-                    : ListView.builder(
+                    : ListView.separated(
+                        separatorBuilder: (_, _) => const SizedBox(height: SLSpacing.s8),
                         padding: const EdgeInsets.all(SLSpacing.s16),
                         itemCount: visible.length,
                         itemBuilder: (context, i) {
@@ -116,19 +117,26 @@ class _DuasScreenState extends State<DuasScreen> {
                                   ),
                                 ),
                                 const SizedBox(height: SLSpacing.s8),
-                                Text(
-                                  d.arabic,
-                                  style: SLType.dua(
-                                    color: theme.colorScheme.onSurface,
+                                // full width: a short dua used to sit on
+                                // the LEFT (the column is start-aligned)
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    d.arabic,
+                                    style: SLType.dua(
+                                      color: theme.colorScheme.onSurface,
+                                    ),
+                                    textDirection: TextDirection.rtl,
+                                    textAlign: TextAlign.right,
                                   ),
-                                  textDirection: TextDirection.rtl,
-                                  textAlign: TextAlign.right,
                                 ),
                                 if (d.translitBn?.isNotEmpty ?? false) ...[
-                                  const SizedBox(height: SLSpacing.s4),
+                                  const SizedBox(height: SLSpacing.s8),
                                   Text(
                                     d.translitBn!,
-                                    style: theme.textTheme.bodySmall,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
                                   ),
                                 ],
                                 const SizedBox(height: SLSpacing.s4),

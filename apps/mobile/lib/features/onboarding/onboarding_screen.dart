@@ -107,8 +107,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         Text(
                           context.t('onb_org'),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: SLColors.lightPrimaryForeground
-                                .withValues(alpha: 0.75),
+                            color: SLColors.lightPrimaryForeground.withValues(
+                              alpha: 0.75,
+                            ),
                           ),
                         ),
                       ],
@@ -135,7 +136,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 Text(
                   '${context.isBn ? toBn(_step + 1) : _step + 1} / ${context.isBn ? toBn(3) : 3} — ${context.t('onb_setup')}',
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: SLColors.lightPrimaryForeground.withValues(alpha: 0.7),
+                    color: SLColors.lightPrimaryForeground.withValues(
+                      alpha: 0.7,
+                    ),
                   ),
                 ),
               ],
@@ -268,13 +271,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         Container(
           padding: const EdgeInsets.all(SLSpacing.s12),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.tertiary.withValues(alpha: 0.12),
+            color: Theme.of(context).colorScheme.tertiary
+                .withValues(alpha: 0.12),
             borderRadius: SLRadius.brMd,
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('🌸'),
+              // a lock, not an emoji: this note is about who can see her data
+              Icon(
+                PhosphorIconsRegular.lockSimple,
+                size: 18,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: SLSpacing.s8),
               Expanded(
                 child: Text(

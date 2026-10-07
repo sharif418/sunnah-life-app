@@ -84,28 +84,67 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
               ],
             );
           }
-          return ListView.builder(
+          return ListView.separated(
+            separatorBuilder: (_, _) => const SizedBox(height: SLSpacing.s12),
             padding: const EdgeInsets.all(SLSpacing.s16),
             itemCount: items.length,
             itemBuilder: (context, i) {
               final a = items[i];
+              final cat = a.category ?? '';
+              final catKey = 'article_cat_$cat';
+              final catLabel = context.t(catKey) == catKey
+                  ? cat
+                  : context.t(catKey);
               return AppCard(
                 onTap: () => setState(() => _openId = a.id),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (a.category?.isNotEmpty ?? false)
-                      Text(
-                        a.category!,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                    Row(
+                      children: [
+                        // the category as a Bengali pill (it used to print
+                        // the raw slug: "tarbiyah")
+                        if (cat.isNotEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: SLSpacing.s8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.primaryContainer,
+                              borderRadius: SLRadius.brPill,
+                            ),
+                            child: Text(
+                              catLabel,
+                              style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.primary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        const Spacer(),
+                        if (a.readMinutes != null) ...[
+                          Icon(
+                            PhosphorIconsRegular.clock,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            '${bn ? toBn(a.readMinutes!) : a.readMinutes} ${context.t('article_read_min')}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: SLSpacing.s8),
                     Text(
                       a.titleBn,
                       style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
+                        height: 1.35,
                       ),
                     ),
                     const SizedBox(height: SLSpacing.s4),
@@ -113,16 +152,28 @@ class _ArticlesScreenState extends State<ArticlesScreen> {
                       a.excerptBn,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyMedium,
-                    ),
-                    if (a.readMinutes != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: SLSpacing.s4),
-                        child: Text(
-                          '${bn ? toBn(a.readMinutes!) : a.readMinutes} মিনিট পড়া',
-                          style: theme.textTheme.bodySmall,
-                        ),
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
+                    ),
+                    const SizedBox(height: SLSpacing.s8),
+                    Row(
+                      children: [
+                        Text(
+                          context.t('article_read'),
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.primary,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(width: 2),
+                        DirectionalIcon(
+                          PhosphorIconsBold.caretRight,
+                          size: 14,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               );

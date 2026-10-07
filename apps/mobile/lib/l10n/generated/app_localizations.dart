@@ -637,7 +637,7 @@ abstract class AppLocalizations {
   /// No description provided for @amal_self_test.
   ///
   /// In bn, this message translates to:
-  /// **'ইমান ও তাকওয়া সেলফ-টেস্ট'**
+  /// **'ঈমান ও তাকওয়া সেলফ-টেস্ট'**
   String get amal_self_test;
 
   /// No description provided for @amal_no_defs.
@@ -1309,7 +1309,7 @@ abstract class AppLocalizations {
   /// No description provided for @hijri_adjust.
   ///
   /// In bn, this message translates to:
-  /// **'হিজরি সমন্বয় (দিন)'**
+  /// **'হিজরি তারিখ সমন্বয়'**
   String get hijri_adjust;
 
   /// No description provided for @prayer_please_login.
@@ -1603,13 +1603,13 @@ abstract class AppLocalizations {
   /// No description provided for @level_farze_ain_1.
   ///
   /// In bn, this message translates to:
-  /// **'ফরযে আইন — ক্যাটাগরি ১'**
+  /// **'ফরযে আইন — ক্যাটাগরি ১'**
   String get level_farze_ain_1;
 
   /// No description provided for @level_farze_ain_2.
   ///
   /// In bn, this message translates to:
-  /// **'ফরযে আইন — ক্যাটাগরি ২'**
+  /// **'ফরযে আইন — ক্যাটাগরি ২'**
   String get level_farze_ain_2;
 
   /// No description provided for @madhhab_hanafi.
@@ -3853,7 +3853,7 @@ abstract class AppLocalizations {
   /// No description provided for @search_hint.
   ///
   /// In bn, this message translates to:
-  /// **'দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…'**
+  /// **'দোয়া, আযকার, নাম খুঁজুন…'**
   String get search_hint;
 
   /// No description provided for @search_no_results.
@@ -5181,6 +5181,114 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'অ্যাকাউন্ট খুললে যা পাবেন'**
   String get guest_nudge_sub;
+
+  /// No description provided for @article_cat_dawah.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াহ'**
+  String get article_cat_dawah;
+
+  /// No description provided for @article_cat_sunnah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সুন্নাহ'**
+  String get article_cat_sunnah;
+
+  /// No description provided for @article_cat_tarbiyah.
+  ///
+  /// In bn, this message translates to:
+  /// **'তারবিয়াহ'**
+  String get article_cat_tarbiyah;
+
+  /// No description provided for @article_read_min.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট পড়া'**
+  String get article_read_min;
+
+  /// No description provided for @article_read.
+  ///
+  /// In bn, this message translates to:
+  /// **'পড়ুন'**
+  String get article_read;
+
+  /// No description provided for @chip_habit.
+  ///
+  /// In bn, this message translates to:
+  /// **'অভ্যাস চ্যালেঞ্জ'**
+  String get chip_habit;
+
+  /// No description provided for @chip_self_test.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেলফ-টেস্ট'**
+  String get chip_self_test;
+
+  /// No description provided for @chip_goals.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য'**
+  String get chip_goals;
+
+  /// No description provided for @chip_usrah_q.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রশ্নোত্তর'**
+  String get chip_usrah_q;
+
+  /// No description provided for @exercise_week_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই সপ্তাহে এখনো কিছু লেখা হয়নি — উপরে আজকের শরীরচর্চা যোগ করুন'**
+  String get exercise_week_empty;
+
+  /// No description provided for @self_test_quizzes.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজেকে যাচাই করুন'**
+  String get self_test_quizzes;
+
+  /// No description provided for @live_none_all.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন কোনো লাইভ প্রোগ্রাম নেই। নতুন প্রোগ্রাম ঘোষণা হলে এখানে দেখা যাবে, ইনশাআল্লাহ।'**
+  String get live_none_all;
+
+  /// No description provided for @about_faq_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজ, আমল ও অ্যাপ নিয়ে সাধারণ প্রশ্নের উত্তর'**
+  String get about_faq_sub;
+
+  /// No description provided for @autosilent_grant_first.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগে উপরের অনুমতিটি দিন'**
+  String get autosilent_grant_first;
+
+  /// No description provided for @dawah_assess_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো মূল্যায়ন হয়নি। দায়িত্বশীল আপনার মূল্যায়ন করলে ফল এখানে দেখা যাবে।'**
+  String get dawah_assess_empty;
+
+  /// No description provided for @dawah_req_fallback_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ চেকলিস্ট আনা যায়নি — আগের সারসংক্ষেপ দেখানো হচ্ছে'**
+  String get dawah_req_fallback_note;
+
+  /// No description provided for @habit_mark_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ করেছি'**
+  String get habit_mark_today;
+
+  /// No description provided for @search_try.
+  ///
+  /// In bn, this message translates to:
+  /// **'যা খুঁজতে পারেন'**
+  String get search_try;
 }
 
 class _AppLocalizationsDelegate
