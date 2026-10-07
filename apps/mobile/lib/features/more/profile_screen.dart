@@ -94,14 +94,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     label: Text(context.t('onb_signin')),
                     onPressed: () => context.push('/auth'),
                   ),
-                ] else ...[
-                  const SizedBox(height: SLSpacing.s12),
-                  OutlinedButton.icon(
-                    icon: const Icon(PhosphorIconsRegular.signOut),
-                    label: Text(context.t('auth_signout')),
-                    onPressed: () => ref.read(authProvider.notifier).signOut(),
-                  ),
                 ],
+                // (sign-out moved to the foot, beside account deletion —
+                // the account actions live together, away from the top)
               ],
             ),
           ),
@@ -399,6 +394,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // but unmistakable (opens a sheet that says what goes and stays)
           if (user != null) ...[
             const SizedBox(height: SLSpacing.s24),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                key: const ValueKey('profile_sign_out'),
+                icon: const Icon(PhosphorIconsRegular.signOut),
+                label: Text(context.t('auth_signout')),
+                onPressed: () => ref.read(authProvider.notifier).signOut(),
+              ),
+            ),
+            const SizedBox(height: SLSpacing.s8),
             Center(
               child: TextButton.icon(
                 key: const ValueKey('profile_delete_account'),
@@ -409,16 +414,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
           ],
-          const SizedBox(height: SLSpacing.s24),
-          Center(
-            child: Text(
-              _version.isEmpty
-                  ? context.t('version')
-                  : '${context.t('version')} ${context.isBn ? _version : _version}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant),
+          if (_version.isNotEmpty) ...[
+            const SizedBox(height: SLSpacing.s24),
+            Center(
+              child: Text(
+                '${context.t('version')} ${context.isBn ? toBn(_version) : _version}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

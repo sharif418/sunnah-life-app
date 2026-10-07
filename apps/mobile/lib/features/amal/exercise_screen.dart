@@ -345,18 +345,45 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
                   ],
                 ),
                 const SizedBox(height: SLSpacing.s8),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: SLSpacing.s8,
-                  children: [
-                    for (final m in const [10, 15, 20, 30, 45, 60])
-                      ChoiceChip(
-                        label: Text(_n(m)),
-                        selected: _minutes == m,
-                        showCheckmark: false,
-                        onSelected: (_) => setState(() => _minutes = m),
+                // six across when they fit, else three by two — never the
+                // ragged 4 + 2 a centred Wrap made on a small phone
+                LayoutBuilder(
+                  builder: (context, box) {
+                    const presets = [10, 15, 20, 30, 45, 60];
+                    final perRow =
+                        box.maxWidth >=
+                            6 * MediaQuery.textScalerOf(context).scale(56)
+                        ? 6
+                        : 3;
+                    Widget chip(int m) => ChoiceChip(
+                      label: SizedBox(
+                        width: double.infinity,
+                        child: Text(_n(m), textAlign: TextAlign.center),
                       ),
-                  ],
+                      selected: _minutes == m,
+                      showCheckmark: false,
+                      onSelected: (_) => setState(() => _minutes = m),
+                    );
+                    return Column(
+                      children: [
+                        for (var i = 0; i < presets.length; i += perRow)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: i == 0 ? 0 : SLSpacing.s8,
+                            ),
+                            child: Row(
+                              children: [
+                                for (final (j, m)
+                                    in presets.skip(i).take(perRow).indexed) ...[
+                                  if (j > 0) const SizedBox(width: SLSpacing.s8),
+                                  Expanded(child: chip(m)),
+                                ],
+                              ],
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: SLSpacing.s16),
                 SizedBox(

@@ -2689,4 +2689,52 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get search_try => 'Try searching';
+
+  @override
+  String get prayer_prompt_sub =>
+      'In congregation, alone or qaza — one tap saves it to today\'s diary';
+
+  @override
+  String get prayer_prompt_saved =>
+      'Saved to the diary — tap another to change';
+
+  @override
+  String get faq_group_salat => 'Prayer';
+
+  @override
+  String get faq_group_amal => 'Deeds & diary';
+
+  @override
+  String get faq_group_dawah => 'Dawah & tarbiyah';
+
+  @override
+  String get faq_group_ilm => 'Learning & questions';
+
+  @override
+  String get faq_group_app => 'Using the app';
+
+  @override
+  String get faq_group_other => 'Other';
+
+  @override
+  String get faq_more_title => 'Still have a question?';
+
+  @override
+  String get faq_more_body =>
+      'Ask the scholars about a religious matter; write to support about the app.';
+
+  @override
+  String get faq_ask_masala => 'Ask a scholar';
+
+  @override
+  String get faq_ask_support => 'Support';
+
+  @override
+  String get ilm_group_learn => 'Learn and test';
+
+  @override
+  String get ilm_group_quran => 'Qur\'an, dhikr and duas';
+
+  @override
+  String get ilm_group_know => 'Know';
 }

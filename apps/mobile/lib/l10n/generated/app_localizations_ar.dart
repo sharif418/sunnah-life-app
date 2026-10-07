@@ -2660,4 +2660,51 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get search_try => 'جرّب البحث عن';
+
+  @override
+  String get prayer_prompt_sub =>
+      'جماعة أم منفردًا أم قضاءً — نقرة واحدة تحفظها في يومية اليوم';
+
+  @override
+  String get prayer_prompt_saved => 'حُفظ في اليومية — اضغط غيره للتغيير';
+
+  @override
+  String get faq_group_salat => 'الصلاة';
+
+  @override
+  String get faq_group_amal => 'الأعمال والمحاسبة';
+
+  @override
+  String get faq_group_dawah => 'الدعوة والتربية';
+
+  @override
+  String get faq_group_ilm => 'العلم والأسئلة';
+
+  @override
+  String get faq_group_app => 'استخدام التطبيق';
+
+  @override
+  String get faq_group_other => 'أخرى';
+
+  @override
+  String get faq_more_title => 'لديك سؤال آخر؟';
+
+  @override
+  String get faq_more_body =>
+      'اسأل العلماء عن المسائل الشرعية، واكتب للدعم عن التطبيق.';
+
+  @override
+  String get faq_ask_masala => 'مسألة';
+
+  @override
+  String get faq_ask_support => 'الدعم';
+
+  @override
+  String get ilm_group_learn => 'تعلّم واختبر';
+
+  @override
+  String get ilm_group_quran => 'القرآن والأذكار والأدعية';
+
+  @override
+  String get ilm_group_know => 'اعرف';
 }

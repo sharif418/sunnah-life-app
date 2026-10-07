@@ -35,7 +35,8 @@ import '../../state/remote_state.dart'
         liveProvider;
 import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
-import '../amal/amal_widgets.dart' show StreakBadge;
+import '../amal/amal_widgets.dart'
+    show StreakBadge, TriStateChips, TriStateLabels;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
 import '../shared/live_program_card.dart';
@@ -336,7 +337,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // ── Post-prayer prompt ──
               if (prayer.postPrayerKey != null)
-                _PostPrayerPrompt(prayer: prayer, bn: bn),
+                PostPrayerPrompt(prayer: prayer, bn: bn),
 
               // ── Exact alarm permission ──
               if (_exactAlarmsGranted == false) ...[
@@ -895,8 +896,8 @@ class _LivePreviewSection extends ConsumerWidget {
 
 // ── Post-prayer prompt (20 min after the waqt begins) ───────────────────────
 
-class _PostPrayerPrompt extends ConsumerWidget {
-  const _PostPrayerPrompt({required this.prayer, required this.bn});
+class PostPrayerPrompt extends ConsumerWidget {
+  const PostPrayerPrompt({super.key, required this.prayer, required this.bn});
   final PrayerNow prayer;
   final bool bn;
 
@@ -910,36 +911,6 @@ class _PostPrayerPrompt extends ConsumerWidget {
       amalProvider.select((s) => s.entry(today, 'salat_${key.name}')),
     );
     final value = entry?.value;
-
-    Widget option(String v, String text, IconData icon, Color color) {
-      final selected = value == v;
-      return Expanded(
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(end: 6),
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: selected ? color : null,
-              foregroundColor: selected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.primary,
-              minimumSize: const Size.fromHeight(SLSpacing.minTapTarget + 4),
-            ),
-            onPressed: selected
-                ? null
-                : () => ref
-                      .read(amalProvider.notifier)
-                      .write(
-                        'salat_${key.name}',
-                        today,
-                        v,
-                        'auto:prayer:${key.name}',
-                      ),
-            icon: Icon(icon, size: 18),
-            label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-        ),
-      );
-    }
 
     return Container(
       margin: const EdgeInsets.only(top: SLSpacing.s12),
@@ -970,31 +941,39 @@ class _PostPrayerPrompt extends ConsumerWidget {
           ),
           const SizedBox(height: SLSpacing.s4),
           Text(
-            context.t('prayer_post_salat'),
-            style: theme.textTheme.bodySmall,
+            context.t(
+              value is String && value.isNotEmpty
+                  ? 'prayer_prompt_saved'
+                  : 'prayer_prompt_sub',
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: SLSpacing.s12),
-          Row(
-            children: [
-              option(
-                'jamaat',
-                context.t('amal_jamaat'),
-                PhosphorIconsRegular.usersThree,
-                theme.colorScheme.primary,
-              ),
-              option(
-                'alone',
-                context.t('amal_alone'),
-                PhosphorIconsRegular.user,
-                theme.colorScheme.secondary,
-              ),
-              option(
-                'qaza',
-                context.t('amal_qaza'),
-                PhosphorIconsRegular.clock,
-                theme.colorScheme.error,
-              ),
-            ],
+          // The diary's own জামাতে / একা / কাযা chips: every label always
+          // readable (the old buttons drew primary text on a primary fill —
+          // two of three were blank — and the chosen one went grey and
+          // clipped to "জা…"). Tapping the chosen one again clears it.
+          TriStateChips(
+            key: const ValueKey('home_post_prayer_chips'),
+            value: value is String && value.isNotEmpty ? value : null,
+            idleColor: theme.brightness == Brightness.dark
+                ? SLColors.darkCard
+                : SLColors.lightCard,
+            labels: TriStateLabels(
+              jamaat: context.t('amal_jamaat'),
+              alone: context.t('amal_alone'),
+              qaza: context.t('amal_qaza'),
+            ),
+            onChanged: (v) => ref
+                .read(amalProvider.notifier)
+                .write(
+                  'salat_${key.name}',
+                  today,
+                  v ?? '',
+                  'auto:prayer:${key.name}',
+                ),
           ),
         ],
       ),

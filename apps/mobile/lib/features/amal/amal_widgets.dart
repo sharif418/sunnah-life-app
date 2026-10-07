@@ -25,11 +25,16 @@ class TriStateChips extends StatelessWidget {
     required this.onChanged,
     required this.labels,
     this.enabled = true,
+    this.idleColor,
   });
   final String? value; // jamaat | alone | qaza
   final ValueChanged<String?> onChanged;
   final TriStateLabels labels;
   final bool enabled;
+
+  /// The unselected fill; defaults to surfaceContainerHighest. On a tinted
+  /// panel pass the card colour so the three choices stand out.
+  final Color? idleColor;
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +60,7 @@ class TriStateChips extends StatelessWidget {
             child: Material(
               color: selected
                   ? active
-                  : theme.colorScheme.surfaceContainerHighest,
+                  : idleColor ?? theme.colorScheme.surfaceContainerHighest,
               borderRadius: SLRadius.brMd,
               child: InkWell(
                 onTap: enabled

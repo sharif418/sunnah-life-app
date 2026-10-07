@@ -18,6 +18,7 @@ import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/design/design_tokens.dart';
 import 'package:sunnah_life/design/phosphor_icons.dart';
 import 'package:sunnah_life/features/home/guest_nudge.dart';
+import 'package:sunnah_life/features/home/home_screen.dart';
 import 'package:sunnah_life/features/home/home_sections.dart';
 import 'package:sunnah_life/features/home/schedule_card.dart';
 import 'package:sunnah_life/features/shared/live_program_card.dart';
@@ -159,6 +160,22 @@ void main() {
                           onBellLongPress: (_) {},
                         ),
                         const GuestNudgeCard(),
+                        PostPrayerPrompt(
+                          prayer: () {
+                            final n = nowAt('2026-10-07', 16 * 60.0);
+                            return PrayerNow(
+                              dateKey: n.dateKey,
+                              times: n.times,
+                              nowMinutes: n.nowMinutes,
+                              currentWaqt: n.currentWaqt,
+                              nextKey: n.nextKey,
+                              minutesToNext: n.minutesToNext,
+                              forbiddenLabel: n.forbiddenLabel,
+                              postPrayerKey: PrayerKey.asr,
+                            );
+                          }(),
+                          bn: true,
+                        ),
                         SectionHeader(
                           S.tr(Lang.bn, 'most_used'),
                           icon: PhosphorIconsFill.fire,
