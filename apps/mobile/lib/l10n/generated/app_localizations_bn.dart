@@ -2692,4 +2692,52 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get search_try => 'যা খুঁজতে পারেন';
+
+  @override
+  String get prayer_prompt_sub =>
+      'জামাতে, একা না কাযা — এক চাপে আজকের ডায়েরিতে লেখা হবে';
+
+  @override
+  String get prayer_prompt_saved =>
+      'ডায়েরিতে লেখা হয়েছে — বদলাতে চাইলে অন্যটি চাপুন';
+
+  @override
+  String get faq_group_salat => 'নামাজ';
+
+  @override
+  String get faq_group_amal => 'আমল ও মুহাসাবা';
+
+  @override
+  String get faq_group_dawah => 'দাওয়াহ ও তারবিয়াহ';
+
+  @override
+  String get faq_group_ilm => 'ইলম ও প্রশ্ন';
+
+  @override
+  String get faq_group_app => 'অ্যাপ ব্যবহার';
+
+  @override
+  String get faq_group_other => 'অন্যান্য';
+
+  @override
+  String get faq_more_title => 'আরও প্রশ্ন আছে?';
+
+  @override
+  String get faq_more_body =>
+      'দ্বীনি মাসআলা হলে আলেমদের জিজ্ঞাসা করুন; অ্যাপের সমস্যা হলে সাপোর্টে লিখুন।';
+
+  @override
+  String get faq_ask_masala => 'মাসআলা';
+
+  @override
+  String get faq_ask_support => 'সাপোর্ট';
+
+  @override
+  String get ilm_group_learn => 'শিখুন ও যাচাই করুন';
+
+  @override
+  String get ilm_group_quran => 'কুরআন, যিকির ও দোয়া';
+
+  @override
+  String get ilm_group_know => 'জানুন';
 }

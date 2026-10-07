@@ -95,6 +95,117 @@ class _IlmScreenState extends State<IlmScreen> {
       ),
     ];
 
+    _IlmEntry e(String route) => entries.firstWhere((x) => x.route == route);
+    final groups = <(String, IconData, List<_IlmEntry>)>[
+      (
+        context.t('ilm_group_learn'),
+        PhosphorIconsRegular.graduationCap,
+        [
+          e('/ilm/courses'),
+          e('/ilm/quizzes'),
+          e('/ilm/live-quiz'),
+          e('/ilm/articles'),
+        ],
+      ),
+      (
+        context.t('ilm_group_quran'),
+        PhosphorIconsRegular.bookOpen,
+        [e('/ilm/quran'), e('/ilm/adhkar'), e('/ilm/duas'), e('/ilm/sunnahs')],
+      ),
+      (
+        context.t('ilm_group_know'),
+        PhosphorIconsRegular.sparkle,
+        [e('/ilm/names99'), e('/ilm/islamic-names'), e('/ilm/iman-branches')],
+      ),
+    ];
+
+    Future<void> open(_IlmEntry e) async {
+      if (e.route == '/ilm/sunnahs') {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('sunnahs_seen', true);
+        setState(() => _sunnahsNew = false);
+      }
+      if (!context.mounted) return;
+      context.push(e.route);
+    }
+
+    Widget badge() => Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.tertiary,
+        borderRadius: SLRadius.brPill,
+      ),
+      child: Text(
+        context.t('badge_new'),
+        style: theme.textTheme.bodySmall?.copyWith(
+          // dark ink on gold (white was 2.6:1)
+          color: theme.colorScheme.onTertiary,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+
+    Widget icon(IconData i) => Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        color: theme.colorScheme.primaryContainer,
+        borderRadius: SLRadius.brMd,
+      ),
+      child: Icon(i, size: 24, color: theme.colorScheme.primary),
+    );
+
+    Widget tile(_IlmEntry e, {bool wide = false}) => AppCard(
+      key: ValueKey('ilm_tile_${e.route}'),
+      onTap: () => open(e),
+      padding: const EdgeInsets.all(SLSpacing.s12),
+      child: wide
+          ? Row(
+              children: [
+                icon(e.icon),
+                const SizedBox(width: SLSpacing.s12),
+                Expanded(
+                  child: Text(
+                    e.title,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (e.badge) badge(),
+                const SizedBox(width: SLSpacing.s4),
+                DirectionalIcon(
+                  PhosphorIconsRegular.caretRight,
+                  size: 18,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
+              ],
+            )
+          : Stack(
+              children: [
+                Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      icon(e.icon),
+                      const SizedBox(height: SLSpacing.s8),
+                      Text(
+                        e.title,
+                        textAlign: TextAlign.center,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (e.badge)
+                  PositionedDirectional(top: 0, end: 0, child: badge()),
+              ],
+            ),
+    );
+
     return Scaffold(
       body: SafeArea(
         bottom: false,
@@ -150,98 +261,30 @@ class _IlmScreenState extends State<IlmScreen> {
                   ),
                 ),
               ),
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                // a fixed, text-scaled height (not an aspect ratio): the
-                // square-ish 1.3 cells were ~140px tall on a wide phone and
-                // the screen read as eleven empty boxes
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: SLSpacing.s12,
-                  crossAxisSpacing: SLSpacing.s12,
-                  // room for a two-line name, so no tile has to shrink to fit
-                  mainAxisExtent: MediaQuery.textScalerOf(context).scale(124),
-                ),
-                itemCount: entries.length,
-                itemBuilder: (context, i) {
-                  final e = entries[i];
-                  return AppCard(
-                    onTap: () async {
-                      if (e.route == '/ilm/sunnahs') {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setBool('sunnahs_seen', true);
-                        setState(() => _sunnahsNew = false);
-                      }
-                      if (!context.mounted) return;
-                      context.push(e.route);
-                    },
-                    child: Stack(
-                      children: [
-                        Center(
-                          // W4f overflow sweep — the fixed aspect-ratio cell
-                          // can't grow with 1.3× text (longest labels wrap
-                          // to three lines); the tile shrinks to fit instead
-                          // of spilling (identity at normal sizes).
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
+              // three groups, two tiles a row; a group's odd last tile
+              // runs full width (a lone "আর্টিকেল" used to sit in an empty
+              // row at the bottom)
+              for (final (gi, group) in groups.indexed) ...[
+                SectionHeader(group.$1, icon: group.$2),
+                for (var i = 0; i < group.$3.length; i += 2)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: SLSpacing.s12),
+                    child: i + 1 < group.$3.length
+                        ? IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                                Container(
-                                  width: 44,
-                                  height: 44,
-                                  decoration: BoxDecoration(
-                                    color: theme.colorScheme.primaryContainer,
-                                    borderRadius: SLRadius.brMd,
-                                  ),
-                                  child: Icon(
-                                    e.icon,
-                                    size: 24,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(height: SLSpacing.s8),
-                                Text(
-                                  e.title,
-                                  textAlign: TextAlign.center,
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                                Expanded(child: tile(group.$3[i])),
+                                const SizedBox(width: SLSpacing.s12),
+                                Expanded(child: tile(group.$3[i + 1])),
                               ],
                             ),
-                          ),
-                        ),
-                        if (e.badge)
-                          PositionedDirectional(
-                            top: 0,
-                            end: 0,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: theme.colorScheme.tertiary,
-                                borderRadius: SLRadius.brPill,
-                              ),
-                              child: Text(
-                                context.t('badge_new'),
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  // dark ink on gold (white was 2.6:1)
-                                  color: theme.colorScheme.onTertiary,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                          )
+                        : tile(group.$3[i], wide: true),
+                  ),
+                if (gi < groups.length - 1)
+                  const SizedBox(height: SLSpacing.s4),
+              ],
             ],
           ),
         ),

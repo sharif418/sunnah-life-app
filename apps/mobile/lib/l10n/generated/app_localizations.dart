@@ -5289,6 +5289,96 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'যা খুঁজতে পারেন'**
   String get search_try;
+
+  /// No description provided for @prayer_prompt_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'জামাতে, একা না কাযা — এক চাপে আজকের ডায়েরিতে লেখা হবে'**
+  String get prayer_prompt_sub;
+
+  /// No description provided for @prayer_prompt_saved.
+  ///
+  /// In bn, this message translates to:
+  /// **'ডায়েরিতে লেখা হয়েছে — বদলাতে চাইলে অন্যটি চাপুন'**
+  String get prayer_prompt_saved;
+
+  /// No description provided for @faq_group_salat.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজ'**
+  String get faq_group_salat;
+
+  /// No description provided for @faq_group_amal.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল ও মুহাসাবা'**
+  String get faq_group_amal;
+
+  /// No description provided for @faq_group_dawah.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াহ ও তারবিয়াহ'**
+  String get faq_group_dawah;
+
+  /// No description provided for @faq_group_ilm.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইলম ও প্রশ্ন'**
+  String get faq_group_ilm;
+
+  /// No description provided for @faq_group_app.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাপ ব্যবহার'**
+  String get faq_group_app;
+
+  /// No description provided for @faq_group_other.
+  ///
+  /// In bn, this message translates to:
+  /// **'অন্যান্য'**
+  String get faq_group_other;
+
+  /// No description provided for @faq_more_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও প্রশ্ন আছে?'**
+  String get faq_more_title;
+
+  /// No description provided for @faq_more_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'দ্বীনি মাসআলা হলে আলেমদের জিজ্ঞাসা করুন; অ্যাপের সমস্যা হলে সাপোর্টে লিখুন।'**
+  String get faq_more_body;
+
+  /// No description provided for @faq_ask_masala.
+  ///
+  /// In bn, this message translates to:
+  /// **'মাসআলা'**
+  String get faq_ask_masala;
+
+  /// No description provided for @faq_ask_support.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাপোর্ট'**
+  String get faq_ask_support;
+
+  /// No description provided for @ilm_group_learn.
+  ///
+  /// In bn, this message translates to:
+  /// **'শিখুন ও যাচাই করুন'**
+  String get ilm_group_learn;
+
+  /// No description provided for @ilm_group_quran.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুরআন, যিকির ও দোয়া'**
+  String get ilm_group_quran;
+
+  /// No description provided for @ilm_group_know.
+  ///
+  /// In bn, this message translates to:
+  /// **'জানুন'**
+  String get ilm_group_know;
 }
 
 class _AppLocalizationsDelegate
