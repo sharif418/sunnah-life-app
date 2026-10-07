@@ -168,9 +168,9 @@ void main() {
     final quickLog = find.text(S.tr(Lang.bn, 'most_used_log_today'));
     await scrollTo(tester, quickLog);
     expect(find.text('ফজর নামাজ'), findsOneWidget);
-    // The days chip: 2 days in Bengali digits.
+    // The usage line: 2 days in Bengali digits.
     expect(
-      find.text('${toBn(2)} ${S.tr(Lang.bn, 'most_used_days')}'),
+      find.text(S.tr(Lang.bn, 'most_used_days_fmt').replaceAll('%n', toBn(2))),
       findsOneWidget,
     );
     // Tristate def → quickLogValue = 'jamaat' → the button exists.
@@ -184,6 +184,12 @@ void main() {
     expect(entry, isNotNull);
     expect(entry!.value, 'jamaat');
     expect(entry.source, 'quick:home');
+    // logged with full points: the button gives way to the done mark
+    expect(quickLog, findsNothing);
+    expect(
+      find.byKey(const ValueKey('most_used_done_salat_fajr')),
+      findsOneWidget,
+    );
 
     container.dispose();
     await db.close();
@@ -324,14 +330,17 @@ void main() {
     );
 
     await scrollTo(tester, find.byKey(const ValueKey('home_live_preview')));
-    // The NEXT upcoming program (not the past one) + chip + time + hint.
+    // The NEXT upcoming program (not the past one) + chip + date tile +
+    // host + remind-me.
     expect(find.text('সাপ্তাহিক তাফসির সেশন'), findsOneWidget);
     expect(find.text('পুরনো পর্ব'), findsNothing);
     expect(find.byKey(const ValueKey('home_live_chip')), findsOneWidget);
     expect(find.text(S.tr(Lang.bn, 'live_next')), findsOneWidget);
-    // local time, Bengali (the old raw '2026-10-01 20:00' was the UTC clock)
-    expect(find.textContaining('অক্টোবর ·'), findsOneWidget);
-    expect(find.text(S.tr(Lang.bn, 'live_join_hint')), findsOneWidget);
+    // local date in the tile, Bengali (the old raw '2026-10-01 20:00' was
+    // the UTC clock)
+    expect(find.text(S.tr(Lang.bn, 'month_10')), findsOneWidget);
+    expect(find.text('মাওলানা অমুক'), findsOneWidget);
+    expect(find.byKey(const ValueKey('live_remind_live-1')), findsOneWidget);
 
     container.dispose();
     await db.close();

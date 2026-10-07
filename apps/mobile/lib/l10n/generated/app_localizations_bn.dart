@@ -2613,4 +2613,25 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get hijri_suffix => 'হিজরি';
+
+  @override
+  String get most_used_days_fmt => '৩০ দিনে %n দিন';
+
+  @override
+  String get most_used_done => 'আজ হয়েছে';
+
+  @override
+  String get live_today => 'আজ';
+
+  @override
+  String get live_tomorrow => 'আগামীকাল';
+
+  @override
+  String get live_in_days_fmt => '%n দিন পর';
+
+  @override
+  String get live_badge => 'লাইভ';
+
+  @override
+  String get guest_nudge_sub => 'অ্যাকাউন্ট খুললে যা পাবেন';
 }

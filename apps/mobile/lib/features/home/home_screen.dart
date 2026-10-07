@@ -38,8 +38,7 @@ import '../../l10n/app_strings.dart';
 import '../amal/amal_widgets.dart' show StreakBadge;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
-import '../../core/external_urls.dart' show livePlaybackUrl, openExternalApp;
-import '../shared/when_bn.dart';
+import '../shared/live_program_card.dart';
 import 'guest_nudge.dart';
 import 'home_sections.dart';
 import 'schedule_card.dart';
@@ -432,24 +431,14 @@ class _MostUsedSection extends ConsumerWidget {
             ),
           )
         else
-          SizedBox(
-            height: 176,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: ranked.length,
-              separatorBuilder: (_, _) => const SizedBox(width: SLSpacing.s8),
-              itemBuilder: (context, i) {
-                final item = ranked[i];
-                return MostUsedCard(
-                  item: item,
-                  currentValue: amal.entry(today, item.def.key)?.value,
-                  lang: lang,
-                  onQuickLog: (value) => ref
-                      .read(amalProvider.notifier)
-                      .write(item.def.key, today, value, 'quick:home'),
-                );
-              },
-            ),
+          MostUsedList(
+            items: ranked,
+            valueOf: (key) => amal.entry(today, key)?.value,
+            lang: lang,
+            category: profile.category,
+            onQuickLog: (def, value) => ref
+                .read(amalProvider.notifier)
+                .write(def.key, today, value, 'quick:home'),
           ),
       ],
     );
@@ -862,7 +851,6 @@ class _LivePreviewSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     // Live is PUBLIC data; the section stays hidden while loading/offline
     // and when nothing is live or upcoming (home degrades like the other
     // sections do for guests — the full list lives at /more/live).
@@ -875,7 +863,6 @@ class _LivePreviewSection extends ConsumerWidget {
     final p = pick('live') ?? pick('upcoming');
     if (p == null) return const SizedBox.shrink();
     final isLive = p.status == 'live';
-    final watchUrl = isLive ? livePlaybackUrl(youtubeId: p.youtubeId) : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -885,106 +872,16 @@ class _LivePreviewSection extends ConsumerWidget {
           icon: PhosphorIconsRegular.broadcast,
           action: _SeeAllButton('/more/live'),
         ),
-        AppCard(
+        LiveProgramCard(
           key: const ValueKey('home_live_preview'),
+          program: p,
+          statusLabel: context.t(isLive ? 'live_now' : 'live_next'),
+          chipKey: const ValueKey('home_live_chip'),
+          watchKey: const ValueKey('home_live_watch'),
           onTap: () => context.push('/more/live'),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isLive
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isLive
-                      ? PhosphorIconsFill.broadcast
-                      : PhosphorIconsRegular.broadcast,
-                  size: 22,
-                  color: isLive
-                      ? theme.colorScheme.onError
-                      : theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: SLSpacing.s12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          key: const ValueKey('home_live_chip'),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: SLSpacing.s8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isLive
-                                ? theme.colorScheme.error
-                                : SLColors.gold.withValues(alpha: 0.18),
-                            borderRadius: SLRadius.brPill,
-                          ),
-                          child: Text(
-                            context.t(isLive ? 'live_now' : 'live_next'),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isLive
-                                  ? theme.colorScheme.onError
-                                  : theme.brightness == Brightness.dark
-                                  ? SLColors.darkGoldText
-                                  : SLColors.lightGoldText,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: SLSpacing.s4),
-                    Text(
-                      p.titleBn,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: SLSpacing.s4),
-                    if (!isLive)
-                      Text(
-                        whenBn(context, p.startsAt),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    if (watchUrl != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: SLSpacing.s8),
-                        child: FilledButton.icon(
-                          key: const ValueKey('home_live_watch'),
-                          icon: const Icon(
-                            PhosphorIconsFill.broadcast,
-                            size: 18,
-                          ),
-                          label: Text(context.t('live_watch_now')),
-                          onPressed: () => openExternalApp(watchUrl),
-                        ),
-                      )
-                    else
-                      Text(
-                        context.t('live_join_hint'),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          onRemind: () =>
+              requestLiveReminder(context, ref.read(apiProvider), p.id),
+          onJoinQuiz: () => context.push('/ilm/live-quiz'),
         ),
       ],
     );

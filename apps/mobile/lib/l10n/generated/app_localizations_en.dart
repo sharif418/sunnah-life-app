@@ -2610,4 +2610,25 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hijri_suffix => 'AH';
+
+  @override
+  String get most_used_days_fmt => '%n of 30 days';
+
+  @override
+  String get most_used_done => 'Done today';
+
+  @override
+  String get live_today => 'Today';
+
+  @override
+  String get live_tomorrow => 'Tomorrow';
+
+  @override
+  String get live_in_days_fmt => 'in %n days';
+
+  @override
+  String get live_badge => 'LIVE';
+
+  @override
+  String get guest_nudge_sub => 'What an account gives you';
 }

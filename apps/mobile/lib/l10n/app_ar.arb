@@ -839,5 +839,12 @@
   "sched_ramadan": "رمضان",
   "sched_sehri_end": "نهاية السحور",
   "sched_iftar": "الإفطار",
-  "hijri_suffix": "هـ"
+  "hijri_suffix": "هـ",
+  "most_used_days_fmt": "%n من ٣٠ يومًا",
+  "most_used_done": "تمّ اليوم",
+  "live_today": "اليوم",
+  "live_tomorrow": "غدًا",
+  "live_in_days_fmt": "بعد %n أيام",
+  "live_badge": "مباشر",
+  "guest_nudge_sub": "ما يمنحك الحساب"
 }

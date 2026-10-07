@@ -116,7 +116,10 @@ class _CatalogStateState extends State<_CatalogState> {
                       _P(
                         'ActionChip',
                         child: ActionChip(
-                          avatar: Icon(PhosphorIconsRegular.squaresFour, size: 18),
+                          avatar: Icon(
+                            PhosphorIconsRegular.squaresFour,
+                            size: 18,
+                          ),
                           label: Text('মাসের গ্রিড'),
                           onPressed: () {},
                         ),
@@ -225,7 +228,7 @@ class _CatalogStateState extends State<_CatalogState> {
                 children: [_RingHeroDemo()],
               ),
               _CatalogSection(
-                title: 'MostUsedCard (C-W4b — সর্বাধিক ব্যবহৃত)',
+                title: 'MostUsedList (সর্বাধিক ব্যবহৃত)',
                 children: [_MostUsedDemo()],
               ),
               _CatalogSection(
@@ -486,45 +489,47 @@ class _MostUsedDemo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 176,
-      child: Row(
-        children: [
-          MostUsedCard(
-            item: MostUsedAmal(
-              def: AmalDefinition(
-                key: 'salat_fajr',
-                titleBn: 'ফজর নামাজ',
-                titleEn: 'Fajr',
-                category: AmalCategory.salah,
-                inputType: AmalInputType.tristate,
-                cadence: 'daily',
-              ),
-              daysUsed: 12,
-            ),
-            currentValue: null,
-            lang: Lang.bn,
-            onQuickLog: (_) {},
+    final values = <String, Object?>{'tilawat': 3, 'adhkar_morning': true};
+    return MostUsedList(
+      items: [
+        MostUsedAmal(
+          def: AmalDefinition(
+            key: 'salat_fajr',
+            titleBn: 'ফজর নামাজ',
+            titleEn: 'Fajr',
+            category: AmalCategory.salah,
+            inputType: AmalInputType.tristate,
+            cadence: 'daily',
           ),
-          const SizedBox(width: SLSpacing.s8),
-          MostUsedCard(
-            item: MostUsedAmal(
-              def: AmalDefinition(
-                key: 'tilawat',
-                titleBn: 'কুরআন তিলাওয়াত',
-                titleEn: 'Quran reading',
-                category: AmalCategory.quran,
-                inputType: AmalInputType.count,
-                cadence: 'daily',
-              ),
-              daysUsed: 7,
-            ),
-            currentValue: 3,
-            lang: Lang.bn,
-            onQuickLog: (_) {},
+          daysUsed: 12,
+        ),
+        MostUsedAmal(
+          def: AmalDefinition(
+            key: 'tilawat',
+            titleBn: 'কুরআন তিলাওয়াত',
+            titleEn: 'Quran reading',
+            category: AmalCategory.quran,
+            inputType: AmalInputType.count,
+            cadence: 'daily',
           ),
-        ],
-      ),
+          daysUsed: 7,
+        ),
+        MostUsedAmal(
+          def: AmalDefinition(
+            key: 'adhkar_morning',
+            titleBn: 'সকালের যিকির',
+            titleEn: 'Morning adhkar',
+            category: AmalCategory.dhikr,
+            inputType: AmalInputType.boolean,
+            cadence: 'daily',
+          ),
+          daysUsed: 5,
+        ),
+      ],
+      valueOf: (k) => values[k],
+      lang: Lang.bn,
+      category: UserCategory.general,
+      onQuickLog: (_, _) {},
     );
   }
 }

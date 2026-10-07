@@ -839,5 +839,12 @@
   "sched_ramadan": "Ramadan",
   "sched_sehri_end": "Sehri ends",
   "sched_iftar": "Iftar",
-  "hijri_suffix": "AH"
+  "hijri_suffix": "AH",
+  "most_used_days_fmt": "%n of 30 days",
+  "most_used_done": "Done today",
+  "live_today": "Today",
+  "live_tomorrow": "Tomorrow",
+  "live_in_days_fmt": "in %n days",
+  "live_badge": "LIVE",
+  "guest_nudge_sub": "What an account gives you"
 }

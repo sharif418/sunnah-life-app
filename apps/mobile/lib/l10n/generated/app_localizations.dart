@@ -5139,6 +5139,48 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'হিজরি'**
   String get hijri_suffix;
+
+  /// No description provided for @most_used_days_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'৩০ দিনে %n দিন'**
+  String get most_used_days_fmt;
+
+  /// No description provided for @most_used_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ হয়েছে'**
+  String get most_used_done;
+
+  /// No description provided for @live_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ'**
+  String get live_today;
+
+  /// No description provided for @live_tomorrow.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগামীকাল'**
+  String get live_tomorrow;
+
+  /// No description provided for @live_in_days_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n দিন পর'**
+  String get live_in_days_fmt;
+
+  /// No description provided for @live_badge.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ'**
+  String get live_badge;
+
+  /// No description provided for @guest_nudge_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাকাউন্ট খুললে যা পাবেন'**
+  String get guest_nudge_sub;
 }
 
 class _AppLocalizationsDelegate
