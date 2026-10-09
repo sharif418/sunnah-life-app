@@ -2932,4 +2932,21 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ilm_desc_articles => 'مقالات في التربية والدعوة والسنة';
+
+  @override
+  String get sync_waiting_short => 'بالانتظار';
+
+  @override
+  String get sync_badge_waiting_a11y =>
+      '%n إدخالات ستُرفع عند الاتصال — التفاصيل';
+
+  @override
+  String get sync_badge_failed_a11y => '%n إدخالات لم تُحفظ — التفاصيل';
+
+  @override
+  String get sync_sheet_explain =>
+      'تُحفظ الإدخالات على الهاتف أولاً ثم تُرفع تلقائياً عند الاتصال.';
+
+  @override
+  String get sync_all_saved => 'كل شيء محفوظ على الخادم';
 }

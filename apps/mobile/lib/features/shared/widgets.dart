@@ -175,10 +175,7 @@ class EmptyState extends StatelessWidget {
             ),
             if (actionLabel != null && onAction != null) ...[
               const SizedBox(height: SLSpacing.s12),
-              FilledButton(
-                onPressed: onAction,
-                child: Text(actionLabel!),
-              ),
+              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
             ],
           ],
         ),
@@ -354,11 +351,12 @@ class SyncBadge extends ConsumerWidget {
     }
     final theme = Theme.of(context);
     final hasDead = sync.dead > 0;
-    final hasPending = sync.pending > 0;
-    // Quiet when there is nothing to say: the badge appears only while
-    // something is syncing, waiting to upload or has failed (a permanent
-    // grey tick next to the profile read as an unexplained control).
-    if (!sync.syncing && !hasDead && !hasPending) {
+    // Quiet unless the member should know: entries that could not be saved
+    // (red), or entries waiting because the last upload did not go through
+    // (offline). An ordinary upload after a tick takes a moment and used to
+    // flash a spinner and a bare number by the profile — read as a fault.
+    final hasPending = sync.pending > 0 && sync.stalled;
+    if (!hasDead && !hasPending) {
       return const SizedBox.shrink();
     }
 
@@ -383,29 +381,37 @@ class SyncBadge extends ConsumerWidget {
       );
     }
 
-    return InkWell(
-      borderRadius: BorderRadius.circular(SLRadius.sm),
-      onTap: () => showSyncSheet(context),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: SLSpacing.s4,
-          vertical: SLSpacing.s4,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            indicator,
-            if (!sync.syncing && (hasDead || hasPending)) ...[
-              const SizedBox(width: 4),
-              Text(
-                '${toBn(hasDead ? sync.dead : sync.pending)}'
-                '${hasDead ? ' ${context.t('sync_failed_short')}' : ''}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: hasDead ? theme.colorScheme.error : null,
-                ),
-              ),
-            ],
-          ],
+    final count = hasDead ? sync.dead : sync.pending;
+    return Semantics(
+      button: true,
+      label: context
+          .t(hasDead ? 'sync_badge_failed_a11y' : 'sync_badge_waiting_a11y')
+          .replaceAll('%n', toBn(count)),
+      excludeSemantics: true,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(SLRadius.sm),
+        onTap: () => showSyncSheet(context),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                indicator,
+                if (!sync.syncing) ...[
+                  const SizedBox(width: 4),
+                  Text(
+                    '${toBn(count)} '
+                    '${context.t(hasDead ? 'sync_failed_short' : 'sync_waiting_short')}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: hasDead ? theme.colorScheme.error : null,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -431,14 +437,16 @@ class SearchHitFrame extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
           child: Row(
             children: [
-              Icon(PhosphorIconsRegular.magnifyingGlass, size: 14, color: cs.primary),
+              Icon(
+                PhosphorIconsRegular.magnifyingGlass,
+                size: 14,
+                color: cs.primary,
+              ),
               const SizedBox(width: 4),
               Text(
                 context.t('search_hit_label'),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: cs.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: cs.primary, fontWeight: FontWeight.w700),
               ),
             ],
           ),

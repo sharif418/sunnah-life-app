@@ -162,6 +162,7 @@ class SyncState {
     this.lastSyncedAt,
     this.lastMessage,
     this.messageKey,
+    this.stalled = false,
   });
 
   /// Alive outbox rows waiting to be pushed.
@@ -181,6 +182,11 @@ class SyncState {
   /// language gets its own string.
   final String? messageKey;
 
+  /// The last upload did not go through (offline, server unreachable) —
+  /// only then is a pending count worth showing; a normal upload takes a
+  /// moment and needs no badge.
+  final bool stalled;
+
   static const _unset = Object();
 
   SyncState copyWith({
@@ -191,21 +197,28 @@ class SyncState {
     bool clearSyncedAt = false,
     Object? lastMessage = _unset,
     Object? messageKey = _unset,
-  }) =>
-      SyncState(
-        pending: pending ?? this.pending,
-        dead: dead ?? this.dead,
-        syncing: syncing ?? this.syncing,
-        lastSyncedAt: clearSyncedAt ? null : (lastSyncedAt ?? this.lastSyncedAt),
-        lastMessage: lastMessage == _unset ? this.lastMessage : lastMessage as String?,
-        messageKey: messageKey == _unset ? this.messageKey : messageKey as String?,
-      );
+    bool? stalled,
+  }) => SyncState(
+    pending: pending ?? this.pending,
+    dead: dead ?? this.dead,
+    syncing: syncing ?? this.syncing,
+    lastSyncedAt: clearSyncedAt ? null : (lastSyncedAt ?? this.lastSyncedAt),
+    lastMessage: lastMessage == _unset
+        ? this.lastMessage
+        : lastMessage as String?,
+    messageKey: messageKey == _unset ? this.messageKey : messageKey as String?,
+    stalled: stalled ?? this.stalled,
+  );
 }
 
 class SyncNotifier extends Notifier<SyncState> {
   Timer? _periodic;
 
   static const _pullCursorKey = 'sync_pull_cursor';
+
+  /// Set once the failed uploads kept by older versions were given another
+  /// try (they were mostly not failures — see [_reviveOldDeadRowsOnce]).
+  static const _revivedKey = 'sync_dead_revived_v2';
 
   @override
   SyncState build() {
@@ -249,8 +262,27 @@ class SyncNotifier extends Notifier<SyncState> {
   /// Manual "sync now" (sync sheet): push first, then pull. Sequential —
   /// the pull then sees everything the push just landed server-side.
   Future<void> syncNow() async {
+    await _reviveOldDeadRowsOnce();
     await flush();
     await pull();
+  }
+
+  /// Before 2026-10-09 two harmless cases were kept as failed uploads: a
+  /// cleared prayer ("" — the server now accepts the clear) and an entry the
+  /// server already had (the guest diary imported at sign-in, re-sent by the
+  /// queue — now accepted as unchanged). Retry those rows once, so the badge
+  /// does not show them for ever; a real problem (a locked day) fails again.
+  Future<void> _reviveOldDeadRowsOnce() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_revivedKey) ?? false) return;
+      final db = ref.read(dbProvider);
+      for (final row in await db.deadRows()) {
+        await db.retryDeadRow(row.id);
+      }
+      await prefs.setBool(_revivedKey, true);
+      await _refreshCount();
+    } catch (_) {}
   }
 
   /// Flush the outbox to POST /api/amal/entries. Guests stay local-only.
@@ -273,6 +305,7 @@ class SyncNotifier extends Notifier<SyncState> {
       if (ops.isEmpty) {
         state = state.copyWith(
           syncing: false,
+          stalled: false,
           lastSyncedAt: DateTime.now(),
         );
         return;
@@ -291,9 +324,13 @@ class SyncNotifier extends Notifier<SyncState> {
         );
         if (decision.converge && row != null) {
           // LWW loss with the server's value: converge locally through the
-          // SAME merge path a pull uses, then the row below goes dead — it
-          // must never re-POST.
-          await db.mergeServerEntries([convergedEntryFor(row.$2, rej)]);
+          // SAME merge path a pull uses. That RESOLVES the row — it leaves
+          // the queue like an accepted one (it used to stay as a failed
+          // upload, so every ordinary two-device edit showed in red).
+          final converged = convergedEntryFor(row.$2, rej);
+          await db.mergeServerEntries([converged]);
+          await db.markSynced([converged]);
+          continue;
         }
         await db.recordRejection(
           amalKey: rej.amalKey,
@@ -307,6 +344,7 @@ class SyncNotifier extends Notifier<SyncState> {
         pending: await db.pendingSyncCount(),
         dead: await db.deadCount(),
         syncing: false,
+        stalled: false,
         lastSyncedAt: DateTime.now(),
         lastMessage: result.rejected.isEmpty
             ? null
@@ -316,6 +354,7 @@ class SyncNotifier extends Notifier<SyncState> {
     } on ApiException catch (e) {
       state = state.copyWith(
         syncing: false,
+        stalled: true,
         lastMessage: e.message,
         messageKey: null,
       );
@@ -323,6 +362,7 @@ class SyncNotifier extends Notifier<SyncState> {
       debugPrint('sync flush error: $e\n$st');
       state = state.copyWith(
         syncing: false,
+        stalled: true,
         lastMessage: null,
         messageKey: 'sync_error_unexpected',
       );
@@ -361,10 +401,7 @@ class SyncNotifier extends Notifier<SyncState> {
       // Success: only stamps the time. Messages are owned by the PUSH
       // outcome — a successful pull must not hide a failed flush (the
       // next fully-successful flush clears them).
-      state = state.copyWith(
-        syncing: false,
-        lastSyncedAt: DateTime.now(),
-      );
+      state = state.copyWith(syncing: false, lastSyncedAt: DateTime.now());
     } on ApiException catch (e) {
       state = state.copyWith(
         syncing: false,

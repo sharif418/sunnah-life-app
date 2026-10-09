@@ -2970,4 +2970,21 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get ilm_desc_articles => 'তারবিয়াহ, দাওয়াহ ও সুন্নাহ নিয়ে লেখা';
+
+  @override
+  String get sync_waiting_short => 'অপেক্ষায়';
+
+  @override
+  String get sync_badge_waiting_a11y =>
+      '%n টি আমল ইন্টারনেট পেলে জমা হবে — বিস্তারিত দেখুন';
+
+  @override
+  String get sync_badge_failed_a11y => '%n টি আমল জমা হয়নি — বিস্তারিত দেখুন';
+
+  @override
+  String get sync_sheet_explain =>
+      'আমল প্রথমে ফোনে লেখা হয়, তারপর ইন্টারনেট পেলে নিজে থেকেই সার্ভারে জমা হয় — তাই উসরা প্রধান দেখতে পান, ফোন বদলালেও হারায় না।';
+
+  @override
+  String get sync_all_saved => 'সব আমল সার্ভারে জমা আছে';
 }
