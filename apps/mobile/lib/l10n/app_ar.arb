@@ -933,5 +933,14 @@
   "quiz_keep_playing": "متابعة",
   "quiz_leave": "مغادرة",
   "quiz_review_title": "إجاباتك الخاطئة (%n) — راجعها",
-  "quiz_result_offline": "غير متصل — تعذّر إرسال النتيجة"
+  "quiz_result_offline": "غير متصل — تعذّر إرسال النتيجة",
+  "ilm_continue": "تابع",
+  "ilm_course_progress_fmt": "أُنجز %d من %t",
+  "live_quiz_you_right": "إجابتك صحيحة",
+  "live_quiz_you_wrong": "إجابتك غير صحيحة",
+  "live_quiz_you_skipped": "لم تُجب عن هذا السؤال",
+  "sunnah_mark_done": "عملت بها اليوم",
+  "sunnah_done_today": "تمت اليوم",
+  "sunnah_today_count": "عملت اليوم بـ %n من السنن — الحمد لله",
+  "sunnah_today_hint": "علّم السنن التي عملت بها اليوم"
 }

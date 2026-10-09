@@ -1,10 +1,17 @@
 /// সুন্নাহ ও বিস্মৃত সুন্নাহ — category-filtered list with references.
 library;
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
+import '../../core/date_keys.dart';
+import '../../core/bn_digits.dart';
+import '../../services/platform_channels.dart' show SystemChannel;
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -23,12 +30,92 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
   late final Future<List<SunnahItem>> _future = ContentPack.sunnahs();
   String _category = 'all';
 
+  /// Sunnahs the member marked as practised today (cleared at midnight) —
+  /// the list was read-only: nothing to DO with a sunnah once read.
+  Set<String> _doneToday = <String>{};
+  static const _doneKey = 'sunnah_done_v1';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDone();
+  }
+
+  Future<void> _loadDone() async {
+    try {
+      final p = await SharedPreferences.getInstance();
+      final raw = p.getString(_doneKey);
+      if (raw == null) return;
+      final j = jsonDecode(raw);
+      if (j is! Map || j['day'] != dateKey(DateTime.now())) return;
+      final ids = (j['ids'] as List? ?? const []).whereType<String>();
+      if (mounted) setState(() => _doneToday = ids.toSet());
+    } catch (_) {}
+  }
+
+  Future<void> _toggleDone(String id) async {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _doneToday = {..._doneToday};
+      if (!_doneToday.remove(id)) _doneToday.add(id);
+    });
+    try {
+      final p = await SharedPreferences.getInstance();
+      await p.setString(
+        _doneKey,
+        jsonEncode({
+          'day': dateKey(DateTime.now()),
+          'ids': _doneToday.toList(),
+        }),
+      );
+    } catch (_) {}
+  }
+
   static const _cats = <String, (String, IconData)>{
     'all': ('sunnah_cat_all', PhosphorIconsRegular.infinity),
     'daily': ('sunnah_cat_daily', PhosphorIconsRegular.sun),
     'forgotten': ('sunnah_cat_forgotten', PhosphorIconsRegular.sunHorizon),
     'salah': ('sunnah_cat_salah', PhosphorIconsRegular.mosque),
   };
+
+  /// "আজ Nটি সুন্নাহ পালন করেছেন" — or how to use the ticks.
+  Widget _todayStrip(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final n = _doneToday.length;
+    return Container(
+      key: const ValueKey('sunnah_today_strip'),
+      padding: const EdgeInsets.all(SLSpacing.s12),
+      decoration: BoxDecoration(
+        color: cs.primaryContainer,
+        borderRadius: SLRadius.brMd,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            n > 0
+                ? PhosphorIconsFill.checkCircle
+                : PhosphorIconsRegular.sparkle,
+            color: cs.primary,
+          ),
+          const SizedBox(width: SLSpacing.s8),
+          Expanded(
+            child: Text(
+              n > 0
+                  ? context
+                        .t('sunnah_today_count')
+                        .replaceAll('%n', context.isBn ? toBn(n) : '$n')
+                  : context.t('sunnah_today_hint'),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: n > 0 ? FontWeight.w700 : FontWeight.w400,
+                color: n > 0 ? cs.primary : cs.onSurface,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,12 +175,16 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                         icon: PhosphorIconsRegular.magnifyingGlass,
                       )
                     : ListView.separated(
-                        separatorBuilder: (_, _) => const SizedBox(height: SLSpacing.s8),
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: SLSpacing.s8),
                         padding: const EdgeInsets.all(SLSpacing.s16),
-                        itemCount: visible.length,
+                        itemCount: visible.length + 1,
                         itemBuilder: (context, i) {
-                          final s = visible[i];
+                          if (i == 0) return _todayStrip(context);
+                          final s = visible[i - 1];
+                          final done = _doneToday.contains(s.id);
                           return AppCard(
+                            key: ValueKey('sunnah_${s.id}'),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -134,6 +225,41 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                                           ),
                                     ),
                                   ),
+                                const SizedBox(height: SLSpacing.s8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: FilterChip(
+                                        key: ValueKey('sunnah_done_${s.id}'),
+                                        showCheckmark: true,
+                                        selected: done,
+                                        label: Text(
+                                          context.t(
+                                            done
+                                                ? 'sunnah_done_today'
+                                                : 'sunnah_mark_done',
+                                          ),
+                                        ),
+                                        onSelected: (_) => _toggleDone(s.id),
+                                      ),
+                                    ),
+                                    IconButton(
+                                      tooltip: context.t('share'),
+                                      onPressed: () => SystemChannel.shareText(
+                                        [
+                                          s.titleBn,
+                                          s.detailBn,
+                                          if (s.reference?.isNotEmpty ?? false)
+                                            '— ${s.reference}',
+                                        ].join('\n\n'),
+                                      ),
+                                      icon: const Icon(
+                                        PhosphorIconsRegular.shareNetwork,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ],
                             ),
                           );

@@ -218,6 +218,15 @@ class QuranRepository {
     });
   }
 
+  /// Surah names only — the small meta pack, without decoding the 5MB
+  /// text (for the Ilm hub's "continue reading" line).
+  static Future<List<SurahMeta>> metaOnly() async {
+    final loaded = _meta;
+    if (loaded != null) return loaded;
+    final raw = await _loadAsset('assets/content/quran-meta-bn.json');
+    return _decodeMetaPack(raw);
+  }
+
   static Future<void> _loadAll() async {
     final metaRaw = await _loadAsset('assets/content/quran-meta-bn.json');
     final uthmaniRaw = await _loadAsset('assets/content/quran-uthmani.json');

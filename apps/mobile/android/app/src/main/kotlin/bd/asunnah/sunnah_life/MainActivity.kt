@@ -15,7 +15,7 @@ import android.os.Process
 import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.content.FileProvider
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
@@ -41,7 +41,10 @@ private const val NOTIFICATION_CHANNEL_ID = "sunnah_life_prayers"
 /** Intent action of every auto-silent ringer alarm (C-W3e). */
 private const val AUTO_SILENT_ACTION = "bd.asunnah.sunnah_life.AUTO_SILENT"
 
-class MainActivity : FlutterActivity() {
+// AudioServiceActivity (a FlutterActivity) lets the Qur'an recitation run as
+// a media service — on with the screen off, controllable from the
+// notification and the lock screen.
+class MainActivity : AudioServiceActivity() {
     companion object {
         private const val PRAYER_CHANNEL = "sunnahlife/prayer"
         private const val WIDGET_CHANNEL = "sunnahlife/widget"
@@ -114,6 +117,18 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SYSTEM_CHANNEL)
             .setMethodCallHandler { call, result ->
                 when (call.method) {
+                    // the Qur'an reader keeps the screen on while open
+                    "keepScreenOn" -> {
+                        val on = call.argument<Boolean>("on") ?: false
+                        runOnUiThread {
+                            if (on) {
+                                window.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            } else {
+                                window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                            }
+                        }
+                        result.success(true)
+                    }
                     "shareText" -> {
                         val text = call.argument<String>("text") ?: ""
                         val intent = Intent(Intent.ACTION_SEND).apply {

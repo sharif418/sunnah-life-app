@@ -15,6 +15,11 @@
     <!-- FCM background delivery (notification messages while the app is
          not in the foreground). -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- Qur'an recitation keeps playing with the screen off or the app in
+         the background (just_audio_background → audio_service: a media
+         foreground service with a play/pause notification). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <!-- GPS location (C-W3c): city picker snap-to-nearest-district + mosques
          "near me". Coarse covers Android 12+ "approximate" grants; fine is
          requested for the near-me mosque distances. geolocator maps these to
@@ -156,6 +161,25 @@
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Qur'an recitation in the background (audio_service). -->
+        <service
+            android:name="com.ryanheise.audioservice.AudioService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true"
+            tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService" />
+            </intent-filter>
+        </service>
+        <receiver
+            android:name="com.ryanheise.audioservice.MediaButtonReceiver"
+            android:exported="true"
+            tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
             </intent-filter>
         </receiver>
 

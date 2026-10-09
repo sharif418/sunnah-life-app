@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 import 'package:workmanager/workmanager.dart';
 
 import 'app.dart';
@@ -19,7 +20,24 @@ Future<void> main() async {
     DeviceOrientation.portraitUp,
   ]);
   await _initBackgroundTasks();
+  await _initBackgroundAudio();
   runApp(const ProviderScope(child: BootstrapGate()));
+}
+
+/// Qur'an recitation as a media session: it keeps playing with the screen
+/// off or the app in the background, with play/pause/next in the
+/// notification and on the lock screen. Never blocks the start.
+Future<void> _initBackgroundAudio() async {
+  try {
+    await JustAudioBackground.init(
+      androidNotificationChannelId: 'bd.asunnah.sunnah_life.recitation',
+      androidNotificationChannelName: 'কুরআন তিলাওয়াত',
+      androidNotificationOngoing: true,
+      androidNotificationIcon: 'mipmap/ic_launcher',
+    );
+  } catch (e) {
+    debugPrint('background audio init failed: $e');
+  }
 }
 
 /// Daily WorkManager re-arm of the rolling bell window (C-W3b): keeps

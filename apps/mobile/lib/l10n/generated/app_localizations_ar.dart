@@ -2872,4 +2872,31 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quiz_result_offline => 'غير متصل — تعذّر إرسال النتيجة';
+
+  @override
+  String get ilm_continue => 'تابع';
+
+  @override
+  String get ilm_course_progress_fmt => 'أُنجز %d من %t';
+
+  @override
+  String get live_quiz_you_right => 'إجابتك صحيحة';
+
+  @override
+  String get live_quiz_you_wrong => 'إجابتك غير صحيحة';
+
+  @override
+  String get live_quiz_you_skipped => 'لم تُجب عن هذا السؤال';
+
+  @override
+  String get sunnah_mark_done => 'عملت بها اليوم';
+
+  @override
+  String get sunnah_done_today => 'تمت اليوم';
+
+  @override
+  String get sunnah_today_count => 'عملت اليوم بـ %n من السنن — الحمد لله';
+
+  @override
+  String get sunnah_today_hint => 'علّم السنن التي عملت بها اليوم';
 }
