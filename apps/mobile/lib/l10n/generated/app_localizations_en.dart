@@ -2998,4 +2998,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quick_qibla_desc => 'Find the prayer direction';
+
+  @override
+  String get method_ifb => 'Islamic Foundation Bangladesh';
 }

@@ -2961,4 +2961,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quick_qibla_desc => 'اتجاه القبلة';
+
+  @override
+  String get method_ifb => 'المؤسسة الإسلامية ببنغلاديش';
 }

@@ -3001,4 +3001,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quick_qibla_desc => 'নামাজের দিক খুঁজুন';
+
+  @override
+  String get method_ifb => 'ইসলামিক ফাউন্ডেশন বাংলাদেশ';
 }

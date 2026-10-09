@@ -5877,6 +5877,12 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'নামাজের দিক খুঁজুন'**
   String get quick_qibla_desc;
+
+  /// No description provided for @method_ifb.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইসলামিক ফাউন্ডেশন বাংলাদেশ'**
+  String get method_ifb;
 }
 
 class _AppLocalizationsDelegate
