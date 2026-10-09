@@ -182,6 +182,10 @@ export class AmalService {
           },
           now
         );
+        if (decision.ok && decision.unchanged) {
+          accepted.push(mapEntry(existing as unknown as EntryRow));
+          continue;
+        }
         if (!decision.ok) {
           rejected.push(
             decision.serverValue === undefined

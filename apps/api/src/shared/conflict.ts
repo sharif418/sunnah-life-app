@@ -44,7 +44,9 @@ function valueMatchesInputType(value: AmalValue, inputType: string | undefined):
     case "tri_state": // spec spelling
     case "tri-state":
     case "tristate": // content-pack / AmalInputType spelling
-      return value === "jamaat" || value === "alone" || value === "qaza";
+      // "" = cleared (the member un-ticked it) — the clear must reach the
+      // server, or the old জামাতে stays there while the phone shows nothing
+      return value === "jamaat" || value === "alone" || value === "qaza" || value === "";
     case "boolean":
       return typeof value === "boolean";
     case "count":
@@ -83,8 +85,12 @@ export interface ExistingEntry {
 }
 
 export type EntryDecision =
-  | { ok: true; amalKey: string; date: string; value: AmalValue; clientUpdatedAt: Date; source: string }
+  | { ok: true; amalKey: string; date: string; value: AmalValue; clientUpdatedAt: Date; source: string; unchanged?: false }
+  /** the server already holds exactly this value — accepted, nothing written */
+  | { ok: true; amalKey: string; date: string; unchanged: true }
   | { ok: false; amalKey: string; date: string; reason: string; serverValue?: AmalValue };
+
+const sameValue = (a: unknown, b: unknown) => b !== null && JSON.stringify(a ?? null) === JSON.stringify(b);
 
 /** Coerce a JSON value to a storable amal value (tristate/boolean/number/string). */
 export function normalizeValue(v: unknown): AmalValue | null {
@@ -114,6 +120,14 @@ export function decideEntry(
   }
   if (!defKeys.has(amalKey)) {
     return { ok: false, amalKey, date, reason: REJECT_REASONS.unknownAmal };
+  }
+  // An idempotent replay — the same value the server already holds (a guest
+  // diary imported at sign-in and then re-sent by the phone's queue, a retry
+  // after a lost response) — is accepted as it is, even on a day that has
+  // locked since: nothing changes. It used to come back "newer version" /
+  // "locked" and sat on the phone as a failed upload.
+  if (existing && e.value !== undefined && sameValue(existing.value, normalizeValue(e.value))) {
+    return { ok: true, amalKey, date, unchanged: true };
   }
   if (date > today) {
     return { ok: false, amalKey, date, reason: REJECT_REASONS.future };

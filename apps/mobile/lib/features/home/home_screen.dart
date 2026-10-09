@@ -360,7 +360,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               const SizedBox(height: SLSpacing.s24),
               Center(
                 child: Text(
-                  '${context.t('prayer_offline_chip')} · ${city?.nameEn ?? ''} ${bn ? toBn(profile.lat.toStringAsFixed(2)) : profile.lat.toStringAsFixed(2)}°, ${bn ? toBn(profile.lng.toStringAsFixed(2)) : profile.lng.toStringAsFixed(2)}°',
+                  '${context.t('prayer_offline_chip')} · ${(bn ? city?.nameBn : city?.nameEn) ?? ''} ${bn ? toBn(profile.lat.toStringAsFixed(2)) : profile.lat.toStringAsFixed(2)}°, ${bn ? toBn(profile.lng.toStringAsFixed(2)) : profile.lng.toStringAsFixed(2)}°',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,

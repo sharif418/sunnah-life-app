@@ -441,8 +441,12 @@ class _QuantityInputState extends State<QuantityInput> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // a real box for the digits: a collapsed field was only one
+                // line tall, and SolaimanLipi's bold digits overflow that —
+                // the "০" showed as a clipped "c" (worst at large text)
                 SizedBox(
-                  width: 40,
+                  width: 52,
+                  height: 44,
                   child: TextField(
                     enabled: widget.enabled,
                     focusNode: _focus,
@@ -451,8 +455,13 @@ class _QuantityInputState extends State<QuantityInput> {
                       decimal: true,
                     ),
                     textAlign: TextAlign.center,
+                    textAlignVertical: TextAlignVertical.center,
+                    expands: true,
+                    maxLines: null,
+                    minLines: null,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       fontWeight: FontWeight.w700,
+                      height: 1.3,
                     ),
                     onSubmitted: (raw) {
                       _commit(raw);
@@ -461,7 +470,8 @@ class _QuantityInputState extends State<QuantityInput> {
                     // not the theme's white filled field: the number and
                     // its unit read as one quiet pill
                     decoration: const InputDecoration(
-                      isCollapsed: true,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
                       filled: false,
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
@@ -839,10 +849,11 @@ class CompletionRing extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 4),
-          // two centred lines before "…" ("যিকর ও দোয়া" lost its last word)
+          // up to three centred lines before "…" ("যিকর ও দোয়া" lost its
+          // last word; at large text "সাপ্তাহিক ও মাসিক সুন্নাহ" needs three)
           Text(
             label,
-            maxLines: 2,
+            maxLines: 3,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.bodySmall?.copyWith(

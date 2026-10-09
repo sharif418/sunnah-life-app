@@ -43,7 +43,8 @@ class SyncSheet extends ConsumerWidget {
     final theme = Theme.of(context);
     final bn = context.isBn;
     final now = ref.watch(syncClockProvider)();
-    final deadRows = ref.watch(deadOutboxProvider).valueOrNull ?? const <OutboxRow>[];
+    final deadRows =
+        ref.watch(deadOutboxProvider).valueOrNull ?? const <OutboxRow>[];
     final defs = ref.watch(amalDefinitionsProvider).valueOrNull;
     String labelOf(String amalKey) =>
         defs?.where((d) => d.key == amalKey).firstOrNull?.titleBn ?? amalKey;
@@ -60,8 +61,16 @@ class SyncSheet extends ConsumerWidget {
           children: [
             Text(
               context.t('sync_sheet_title'),
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: SLSpacing.s4),
+            Text(
+              context.t('sync_sheet_explain'),
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: SLSpacing.s12),
 
@@ -80,7 +89,9 @@ class SyncSheet extends ConsumerWidget {
                 const SizedBox(width: SLSpacing.s8),
                 Expanded(
                   child: Text(
-                    '${toBn(sync.pending)} ${context.t('amal_sync_pending')}',
+                    sync.pending == 0 && sync.dead == 0
+                        ? context.t('sync_all_saved')
+                        : '${toBn(sync.pending)} ${context.t('amal_sync_pending')}',
                     style: theme.textTheme.bodyLarge,
                   ),
                 ),
@@ -136,8 +147,9 @@ class SyncSheet extends ConsumerWidget {
                   : const Icon(PhosphorIconsRegular.arrowsClockwise, size: 18),
               label: Text(
                 context.t('sync_now'),
-                style: theme.textTheme.bodyLarge
-                    ?.copyWith(fontWeight: FontWeight.w600),
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
 
@@ -173,7 +185,10 @@ class SyncSheet extends ConsumerWidget {
                     children: [
                       IconButton(
                         tooltip: context.t('retry'),
-                        icon: const Icon(PhosphorIconsRegular.arrowClockwise, size: 20),
+                        icon: const Icon(
+                          PhosphorIconsRegular.arrowClockwise,
+                          size: 20,
+                        ),
                         onPressed: () {
                           ref.read(syncProvider.notifier).retryDead(row.id);
                           ref.invalidate(deadOutboxProvider);
@@ -204,5 +219,4 @@ class SyncSheet extends ConsumerWidget {
 }
 
 /// Bengali date-key digits for the dead-row list ("২০২৫-০৬-১৫").
-String toBnDateKey(String key, bool bengali) =>
-    bengali ? toBn(key) : key;
+String toBnDateKey(String key, bool bengali) => bengali ? toBn(key) : key;

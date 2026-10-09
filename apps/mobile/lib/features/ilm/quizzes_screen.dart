@@ -171,7 +171,9 @@ class QuizzesScreen extends ConsumerWidget {
             const SizedBox(height: SLSpacing.s12),
             SizedBox(
               width: double.infinity,
-              child: FilledButton(
+              // tonal: one per card, so a column of solid green slabs
+              // made the cards look alike
+              child: FilledButton.tonal(
                 onPressed: () => context.push('/ilm/quizzes/${q.id}'),
                 child: Text(context.t('quiz_play')),
               ),

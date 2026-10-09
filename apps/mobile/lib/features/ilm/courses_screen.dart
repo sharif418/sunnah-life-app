@@ -71,6 +71,9 @@ class CoursesScreen extends ConsumerWidget {
                   title: context.t('courses_empty_title'),
                   message: context.t('courses_empty_hint'),
                   icon: PhosphorIconsRegular.graduationCap,
+                  // not a dead end: something to learn right now
+                  actionLabel: context.t('quiz_practice_go'),
+                  onAction: () => context.push('/ilm/quizzes'),
                 ),
               ],
             );

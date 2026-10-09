@@ -258,7 +258,7 @@ void main() {
   });
 
   group('flush — reject handling end-to-end (fake api + drift)', () {
-    test('accepted → synced; serverValue → converge + dead; other → retry',
+    test('accepted → synced; serverValue → converge + resolved; other → retry',
         () async {
       final db = _db();
       addTearDown(db.close);
@@ -304,19 +304,15 @@ void main() {
       final s = container.read(syncProvider);
       expect(s.syncing, isFalse);
       expect(s.pending, 1, reason: 'tilawat is still retrying');
-      expect(s.dead, 1, reason: 'salat_fajr converged → dead');
+      expect(s.dead, 0,
+          reason: 'salat_fajr converged — resolved, not a failed upload');
       expect(s.lastSyncedAt, isNotNull, reason: 'pull ran after the flush');
 
       // Convergence: the local entry now holds the SERVER's value.
       final fajr = await db.entry('salat_fajr', today);
       expect(fajr!.value, 'jamaat');
-      // …and the dead outbox row carries the reason.
-      final dead = await db.deadRows();
-      expect(dead, hasLength(1));
-      expect(dead.single.amalKey, 'salat_fajr');
-      expect(dead.single.attempts, 1);
-      expect(dead.single.lastError, 'নতুন সংস্করণ আছে');
-      expect(dead.single.deadAt, isNotNull);
+      // …and it left the queue (no red badge for an ordinary conflict).
+      expect(await db.deadRows(), isEmpty);
 
       // The accepted entry left the outbox…
       expect(await db.pendingSyncCount(), 1);
@@ -452,6 +448,40 @@ void main() {
       expect(s.syncing, isFalse);
       expect(s.lastMessage, 'অফলাইন');
       expect(s.messageKey, isNull);
+      expect(s.stalled, isTrue, reason: 'offline → the badge may show the waiting rows');
+    });
+
+    test('rows older versions kept as failed get ONE more try after the update',
+        () async {
+      final db = _db();
+      addTearDown(db.close);
+      final today = dateKey(DateTime.now());
+      await db.writeEntry(
+          amalKey: 'salat_fajr',
+          date: today,
+          value: '',
+          source: 'manual',
+          clientUpdatedAt: DateTime(2025, 6, 15, 10));
+      await db.recordRejection(
+          amalKey: 'salat_fajr', date: today, reason: 'মান ঠিক নয়', dead: true);
+      expect(await db.deadCount(), 1);
+
+      final api = _FakeApi(
+        upsertResult: AmalUpsertResult(
+          accepted: [_e('salat_fajr', today, '', '2025-06-15T10:00:00.000Z')],
+          rejected: const [],
+        ),
+      );
+      final container = _container(db, api);
+      addTearDown(container.dispose);
+      await _signIn(container);
+
+      expect(await db.deadCount(), 0);
+      expect(container.read(syncProvider).dead, 0);
+      expect(container.read(syncProvider).stalled, isFalse);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('sync_dead_revived_v2'), isTrue,
+          reason: 'only once — a real failure afterwards stays visible');
     });
   });
 

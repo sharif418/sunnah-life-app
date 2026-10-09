@@ -2966,4 +2966,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ilm_desc_articles => 'Writing on tarbiyah, dawah and sunnah';
+
+  @override
+  String get sync_waiting_short => 'waiting';
+
+  @override
+  String get sync_badge_waiting_a11y =>
+      '%n entries will upload when online — see details';
+
+  @override
+  String get sync_badge_failed_a11y =>
+      '%n entries could not be saved — see details';
+
+  @override
+  String get sync_sheet_explain =>
+      'Entries are saved on the phone first, then upload by themselves when online — so your usrah head sees them and nothing is lost if you change phones.';
+
+  @override
+  String get sync_all_saved => 'Everything is saved on the server';
+
+  @override
+  String get zakat_enter_prompt =>
+      'Enter your wealth above — the zakat appears here';
+
+  @override
+  String get zakat_hawl_note =>
+      'Zakat is due on wealth you have owned for a full lunar year.';
+
+  @override
+  String get quiz_practice_go => 'Take a practice quiz';
 }

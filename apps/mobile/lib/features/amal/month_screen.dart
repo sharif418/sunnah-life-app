@@ -128,19 +128,27 @@ class _MonthGridScreenState extends ConsumerState<MonthGridScreen> {
               const SizedBox(height: SLSpacing.s12),
               // seven categories: they wrap into centred rows rather than
               // squeezing into one line or scrolling off the edge
-              Wrap(
-                alignment: WrapAlignment.center,
-                spacing: SLSpacing.s4,
-                runSpacing: SLSpacing.s12,
-                children: [
-                  for (final cat in byCat.keys)
-                    CompletionRing(
-                      pct: byCat[cat] ?? 0,
-                      label: context.t(cat.labelKey),
-                      bengali: bn,
-                      width: 84,
-                    ),
-                ],
+              // (four to a row on every phone — 4 + 3, never 3 + 3 + 1
+              // with one ring left alone)
+              LayoutBuilder(
+                builder: (context, box) => Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: SLSpacing.s4,
+                  runSpacing: SLSpacing.s12,
+                  children: [
+                    for (final cat in byCat.keys)
+                      CompletionRing(
+                        pct: byCat[cat] ?? 0,
+                        label: context.t(cat.labelKey),
+                        bengali: bn,
+                        width: math.min(
+                          84,
+                          ((box.maxWidth - 3 * SLSpacing.s4) / 4)
+                              .floorToDouble(),
+                        ),
+                      ),
+                  ],
+                ),
               ),
               const SizedBox(height: SLSpacing.s16),
               _MonthCalendar(
@@ -248,15 +256,34 @@ class MonthHeatmap extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final rows = defs.length;
-    // Each row is tall enough for a TWO-line label at the reader's text
-    // size: long diary items ("কমপক্ষে ১টি ঈমানি মুযাকারা…") used to be cut
-    // to one line with "…".
-    final rowH = math.max(
-      cellStride,
-      MediaQuery.textScalerOf(context).scale(11.5) * 1.15 * 2 + 4,
+    // Each row is as tall as ITS label needs (up to three lines at the
+    // reader's text size) plus air between rows — a fixed two-line height
+    // cut long items with "…" and packed two-line labels edge to edge at
+    // large text, so a cell was easy to read against the wrong row.
+    final labelStyle = theme.textTheme.bodySmall?.copyWith(
+      fontSize: 11.5,
+      height: 1.2,
     );
-    final gridHeight = rows * rowH + headerHeight + 4;
+    String labelOf(AmalDefinition def) =>
+        bengali || def.titleEn.isEmpty ? def.titleBn : def.titleEn;
+    final scaler = MediaQuery.textScalerOf(context);
+    final direction = Directionality.of(context);
+    final rowHeights = [
+      for (final def in defs)
+        math.max(
+          cellStride + 4,
+          (TextPainter(
+                    text: TextSpan(text: labelOf(def), style: labelStyle),
+                    textDirection: direction,
+                    textScaler: scaler,
+                    maxLines: 3,
+                  )..layout(maxWidth: labelWidth - 6))
+                  .height +
+              10,
+        ),
+    ];
+    final gridHeight =
+        rowHeights.fold<double>(0, (a, b) => a + b) + headerHeight + 4;
 
     Widget dayColumn(String day) {
       final isToday = day == today;
@@ -282,9 +309,9 @@ class MonthHeatmap extends ConsumerWidget {
                 ),
               ),
             ),
-            for (final def in defs)
+            for (final (i, def) in defs.indexed)
               SizedBox(
-                height: rowH,
+                height: rowHeights[i],
                 child: Center(
                   child: HeatmapCell(
                     points: cellPoints(
@@ -317,23 +344,18 @@ class MonthHeatmap extends ConsumerWidget {
             child: Column(
               children: [
                 const SizedBox(height: headerHeight),
-                for (final def in defs)
+                for (final (i, def) in defs.indexed)
                   SizedBox(
-                    height: rowH,
+                    height: rowHeights[i],
                     child: Padding(
                       padding: const EdgeInsetsDirectional.only(end: 6),
                       child: Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: Text(
-                          bengali || def.titleBn.isNotEmpty
-                              ? def.titleBn
-                              : def.titleEn,
-                          maxLines: 2,
+                          labelOf(def),
+                          maxLines: 3,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontSize: 11.5,
-                            height: 1.15,
-                          ),
+                          style: labelStyle,
                         ),
                       ),
                     ),
@@ -342,9 +364,18 @@ class MonthHeatmap extends ConsumerWidget {
               ],
             ),
           ),
-          // Scrollable day columns
+          // Scrollable day columns — the far edge fades, so a half-cut
+          // column reads as "more this way", not as a broken grid
           Expanded(
-            child: ListView.builder(
+            child: ShaderMask(
+              shaderCallback: (rect) => LinearGradient(
+                begin: AlignmentDirectional.centerStart,
+                end: AlignmentDirectional.centerEnd,
+                colors: const [Colors.white, Colors.white, Colors.transparent],
+                stops: const [0, 0.88, 1],
+              ).createShader(rect, textDirection: direction),
+              blendMode: BlendMode.dstIn,
+              child: ListView.builder(
               // open on today (a few days of context to its left)
               controller: ScrollController(
                 initialScrollOffset: () {
@@ -355,6 +386,7 @@ class MonthHeatmap extends ConsumerWidget {
               scrollDirection: Axis.horizontal,
               itemCount: days.length,
               itemBuilder: (context, i) => dayColumn(days[i]),
+              ),
             ),
           ),
         ],

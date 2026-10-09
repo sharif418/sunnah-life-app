@@ -154,7 +154,10 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                     for (final c in _cats.keys)
                       Padding(
                         padding: const EdgeInsetsDirectional.only(end: 8),
+                        // the chip's fill says which is chosen — a check
+                        // mark was drawn on top of the icon
                         child: FilterChip(
+                          showCheckmark: false,
                           avatar: Icon(
                             _cats[c]!.$2,
                             size: 16,
@@ -199,12 +202,32 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                                             ),
                                       ),
                                     ),
-                                    Icon(
-                                      _cats[s.category]?.$2 ??
-                                          PhosphorIconsRegular.star,
-                                      size: 18,
-                                      color: theme.colorScheme.primary,
-                                    ),
+                                    // which kind, in words (a lone icon
+                                    // here looked like a button)
+                                    if (_cats[s.category] != null &&
+                                        _category == 'all') ...[
+                                      const SizedBox(width: SLSpacing.s8),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: SLSpacing.s8,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: theme
+                                              .colorScheme
+                                              .primaryContainer,
+                                          borderRadius: SLRadius.brPill,
+                                        ),
+                                        child: Text(
+                                          context.t(_cats[s.category]!.$1),
+                                          style: theme.textTheme.bodySmall
+                                              ?.copyWith(
+                                                color:
+                                                    theme.colorScheme.primary,
+                                              ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                                 const SizedBox(height: SLSpacing.s4),
@@ -226,23 +249,22 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                                     ),
                                   ),
                                 const SizedBox(height: SLSpacing.s8),
+                                // the card's one action: a clear green
+                                // button (the grey chip read as disabled),
+                                // filled once done — tap again to undo
                                 Row(
                                   children: [
-                                    Expanded(
-                                      child: FilterChip(
-                                        key: ValueKey('sunnah_done_${s.id}'),
-                                        showCheckmark: true,
-                                        selected: done,
-                                        label: Text(
-                                          context.t(
-                                            done
-                                                ? 'sunnah_done_today'
-                                                : 'sunnah_mark_done',
-                                          ),
-                                        ),
-                                        onSelected: (_) => _toggleDone(s.id),
+                                    _DoneButton(
+                                      key: ValueKey('sunnah_done_${s.id}'),
+                                      done: done,
+                                      label: context.t(
+                                        done
+                                            ? 'sunnah_done_today'
+                                            : 'sunnah_mark_done',
                                       ),
+                                      onPressed: () => _toggleDone(s.id),
                                     ),
+                                    const Spacer(),
                                     IconButton(
                                       tooltip: context.t('share'),
                                       onPressed: () => SystemChannel.shareText(
@@ -271,5 +293,55 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
         },
       ),
     );
+  }
+}
+
+class _DoneButton extends StatelessWidget {
+  const _DoneButton({
+    super.key,
+    required this.done,
+    required this.label,
+    required this.onPressed,
+  });
+  final bool done;
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final text = Text(
+      label,
+      style: theme.textTheme.bodyMedium?.copyWith(
+        fontWeight: FontWeight.w600,
+        color: done ? cs.onPrimaryContainer : cs.primary,
+      ),
+    );
+    const size = Size(0, SLSpacing.minTapTarget);
+    return done
+        ? FilledButton.tonalIcon(
+            onPressed: onPressed,
+            style: FilledButton.styleFrom(minimumSize: size),
+            icon: Icon(
+              PhosphorIconsFill.checkCircle,
+              size: 18,
+              color: cs.primary,
+            ),
+            label: text,
+          )
+        : OutlinedButton.icon(
+            onPressed: onPressed,
+            style: OutlinedButton.styleFrom(
+              minimumSize: size,
+              side: BorderSide(color: cs.primary),
+            ),
+            icon: Icon(
+              PhosphorIconsRegular.checkCircle,
+              size: 18,
+              color: cs.primary,
+            ),
+            label: text,
+          );
   }
 }

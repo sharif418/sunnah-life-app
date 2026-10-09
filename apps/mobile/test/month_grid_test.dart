@@ -43,13 +43,17 @@ Future<void> _pumpHeatmap(
       overrides: [dbProvider.overrideWithValue(db)],
       child: MaterialApp(
         theme: buildSunnahLightTheme(),
+        // scrolls like the month screen it lives in (rows are as tall as
+        // their labels — the grid is taller than one screen)
         home: Scaffold(
-          body: MonthHeatmap(
-            defs: fallbackDefinitions(),
-            entries: const [],
-            days: days.isEmpty ? monthDayKeys(today) : days,
-            today: today,
-            profile: _profile(),
+          body: SingleChildScrollView(
+            child: MonthHeatmap(
+              defs: fallbackDefinitions(),
+              entries: const [],
+              days: days.isEmpty ? monthDayKeys(today) : days,
+              today: today,
+              profile: _profile(),
+            ),
           ),
         ),
       ),

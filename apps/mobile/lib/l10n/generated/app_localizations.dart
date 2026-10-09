@@ -637,7 +637,7 @@ abstract class AppLocalizations {
   /// No description provided for @amal_self_test.
   ///
   /// In bn, this message translates to:
-  /// **'ঈমান ও তাকওয়া সেলফ-টেস্ট'**
+  /// **'ঈমান ও তাকওয়া আত্মযাচাই'**
   String get amal_self_test;
 
   /// No description provided for @amal_no_defs.
@@ -799,7 +799,7 @@ abstract class AppLocalizations {
   /// No description provided for @quran_reader.
   ///
   /// In bn, this message translates to:
-  /// **'কুরআন পড়ুন'**
+  /// **'আল-কুরআন'**
   String get quran_reader;
 
   /// No description provided for @quran_translation_toggle.
@@ -967,7 +967,7 @@ abstract class AppLocalizations {
   /// No description provided for @more_faq.
   ///
   /// In bn, this message translates to:
-  /// **'জিজ্ঞাসা (FAQ)'**
+  /// **'সাধারণ প্রশ্নোত্তর'**
   String get more_faq;
 
   /// No description provided for @more_about.
@@ -2197,13 +2197,13 @@ abstract class AppLocalizations {
   /// No description provided for @quiz_play.
   ///
   /// In bn, this message translates to:
-  /// **'কুইজ খেলুন'**
+  /// **'কুইজ শুরু করুন'**
   String get quiz_play;
 
   /// No description provided for @quiz_live_eligible.
   ///
   /// In bn, this message translates to:
-  /// **'লাইভ কুইজযোগ্য'**
+  /// **'লাইভ কুইজেও আছে'**
   String get quiz_live_eligible;
 
   /// No description provided for @quiz_best.
@@ -2587,7 +2587,7 @@ abstract class AppLocalizations {
   /// No description provided for @dawah_req_live_action.
   ///
   /// In bn, this message translates to:
-  /// **'লাইভ চেকলিস্ট'**
+  /// **'সব শর্ত দেখুন'**
   String get dawah_req_live_action;
 
   /// No description provided for @bell_minutes_title.
@@ -5221,7 +5221,7 @@ abstract class AppLocalizations {
   /// No description provided for @chip_self_test.
   ///
   /// In bn, this message translates to:
-  /// **'সেলফ-টেস্ট'**
+  /// **'আত্মযাচাই'**
   String get chip_self_test;
 
   /// No description provided for @chip_goals.
@@ -5823,6 +5823,54 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'তারবিয়াহ, দাওয়াহ ও সুন্নাহ নিয়ে লেখা'**
   String get ilm_desc_articles;
+
+  /// No description provided for @sync_waiting_short.
+  ///
+  /// In bn, this message translates to:
+  /// **'অপেক্ষায়'**
+  String get sync_waiting_short;
+
+  /// No description provided for @sync_badge_waiting_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n টি আমল ইন্টারনেট পেলে জমা হবে — বিস্তারিত দেখুন'**
+  String get sync_badge_waiting_a11y;
+
+  /// No description provided for @sync_badge_failed_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n টি আমল জমা হয়নি — বিস্তারিত দেখুন'**
+  String get sync_badge_failed_a11y;
+
+  /// No description provided for @sync_sheet_explain.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল প্রথমে ফোনে লেখা হয়, তারপর ইন্টারনেট পেলে নিজে থেকেই সার্ভারে জমা হয় — তাই উসরা প্রধান দেখতে পান, ফোন বদলালেও হারায় না।'**
+  String get sync_sheet_explain;
+
+  /// No description provided for @sync_all_saved.
+  ///
+  /// In bn, this message translates to:
+  /// **'সব আমল সার্ভারে জমা আছে'**
+  String get sync_all_saved;
+
+  /// No description provided for @zakat_enter_prompt.
+  ///
+  /// In bn, this message translates to:
+  /// **'উপরের ঘরে আপনার সম্পদের পরিমাণ লিখুন — যাকাত হিসাব এখানে দেখাবে'**
+  String get zakat_enter_prompt;
+
+  /// No description provided for @zakat_hawl_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'যাকাত ফরজ হয় সেই সম্পদে, যা পুরো এক চান্দ্রবছর আপনার মালিকানায় ছিল।'**
+  String get zakat_hawl_note;
+
+  /// No description provided for @quiz_practice_go.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুশীলনের কুইজ দিন'**
+  String get quiz_practice_go;
 }
 
 class _AppLocalizationsDelegate
