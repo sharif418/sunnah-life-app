@@ -2740,4 +2740,55 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get ilm_group_know => 'জানুন';
+
+  @override
+  String get adhkar_hint => 'চাপ দিয়ে গুনুন · ভুল হলে চেপে ধরে একটি কমান';
+
+  @override
+  String get adhkar_reset => 'আবার শুরু';
+
+  @override
+  String get adhkar_reset_title => 'এই সেটের গণনা মুছবেন?';
+
+  @override
+  String get adhkar_reset_body =>
+      'আজকের গণনা শূন্য থেকে শুরু হবে। ডায়েরির টিক থাকবে।';
+
+  @override
+  String get adhkar_done_of => 'সম্পন্ন';
+
+  @override
+  String get adhkar_minutes_fmt => 'প্রায় %n মিনিট';
+
+  @override
+  String get adhkar_ticked_today => 'আজ ডায়েরিতে টিক দেওয়া হয়েছে';
+
+  @override
+  String get adhkar_diary_ticked =>
+      'আলহামদুলিল্লাহ — আজকের ডায়েরিতে টিক দেওয়া হলো';
+
+  @override
+  String get dhikr_virtue => 'ফযীলত';
+
+  @override
+  String get adhkar_set_complete => 'এই সেট সম্পূর্ণ — মাশাআল্লাহ';
+
+  @override
+  String get article_back_to_list => 'আর্টিকেল তালিকায় ফিরুন';
+
+  @override
+  String get search_hit_label => 'খোঁজা ফল';
+
+  @override
+  String get live_quiz_no_usrah_hint =>
+      'লাইভ কুইজ হয় উসরার সদস্যদের নিয়ে। আপনি এখনো কোনো উসরায় যুক্ত নন — যুক্ত হতে আবেদন করুন। ততক্ষণ ইলম ট্যাবের অনুশীলনের কুইজ খেলতে পারেন।';
+
+  @override
+  String get adhkar_tab_morning => 'সকাল';
+
+  @override
+  String get adhkar_tab_evening => 'সন্ধ্যা';
+
+  @override
+  String get adhkar_tab_post_salat => 'নামাজের পর';
 }

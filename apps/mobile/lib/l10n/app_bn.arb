@@ -879,5 +879,21 @@
   "faq_ask_support": "সাপোর্ট",
   "ilm_group_learn": "শিখুন ও যাচাই করুন",
   "ilm_group_quran": "কুরআন, যিকির ও দোয়া",
-  "ilm_group_know": "জানুন"
+  "ilm_group_know": "জানুন",
+  "adhkar_hint": "চাপ দিয়ে গুনুন · ভুল হলে চেপে ধরে একটি কমান",
+  "adhkar_reset": "আবার শুরু",
+  "adhkar_reset_title": "এই সেটের গণনা মুছবেন?",
+  "adhkar_reset_body": "আজকের গণনা শূন্য থেকে শুরু হবে। ডায়েরির টিক থাকবে।",
+  "adhkar_done_of": "সম্পন্ন",
+  "adhkar_minutes_fmt": "প্রায় %n মিনিট",
+  "adhkar_ticked_today": "আজ ডায়েরিতে টিক দেওয়া হয়েছে",
+  "adhkar_diary_ticked": "আলহামদুলিল্লাহ — আজকের ডায়েরিতে টিক দেওয়া হলো",
+  "dhikr_virtue": "ফযীলত",
+  "adhkar_set_complete": "এই সেট সম্পূর্ণ — মাশাআল্লাহ",
+  "article_back_to_list": "আর্টিকেল তালিকায় ফিরুন",
+  "search_hit_label": "খোঁজা ফল",
+  "live_quiz_no_usrah_hint": "লাইভ কুইজ হয় উসরার সদস্যদের নিয়ে। আপনি এখনো কোনো উসরায় যুক্ত নন — যুক্ত হতে আবেদন করুন। ততক্ষণ ইলম ট্যাবের অনুশীলনের কুইজ খেলতে পারেন।",
+  "adhkar_tab_morning": "সকাল",
+  "adhkar_tab_evening": "সন্ধ্যা",
+  "adhkar_tab_post_salat": "নামাজের পর"
 }

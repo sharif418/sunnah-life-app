@@ -879,5 +879,21 @@
   "faq_ask_support": "Support",
   "ilm_group_learn": "Learn and test",
   "ilm_group_quran": "Qur'an, dhikr and duas",
-  "ilm_group_know": "Know"
+  "ilm_group_know": "Know",
+  "adhkar_hint": "Tap to count · press and hold to take one back",
+  "adhkar_reset": "Start over",
+  "adhkar_reset_title": "Clear this set's counts?",
+  "adhkar_reset_body": "Today's counts start from zero. The diary tick stays.",
+  "adhkar_done_of": "done",
+  "adhkar_minutes_fmt": "about %n min",
+  "adhkar_ticked_today": "Ticked in today's diary",
+  "adhkar_diary_ticked": "Alhamdulillah — ticked in today's diary",
+  "dhikr_virtue": "Virtue",
+  "adhkar_set_complete": "Set complete — masha'Allah",
+  "article_back_to_list": "Back to articles",
+  "search_hit_label": "Search result",
+  "live_quiz_no_usrah_hint": "Live quizzes are played within an usrah. You are not in one yet — ask to join. Meanwhile, play the practice quizzes in Ilm.",
+  "adhkar_tab_morning": "Morning",
+  "adhkar_tab_evening": "Evening",
+  "adhkar_tab_post_salat": "After salah"
 }

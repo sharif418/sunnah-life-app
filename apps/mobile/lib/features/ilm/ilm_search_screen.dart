@@ -20,15 +20,21 @@ import '../../state/providers.dart';
 import '../shared/widgets.dart';
 import 'search_offline.dart';
 
-/// Where a result row navigates — the pack's own screen (the existing
-/// routes; no item-level deep links exist in the ilm section yet).
-String searchRouteFor(SearchKind kind) => switch (kind) {
-  SearchKind.dua => '/ilm/duas',
-  SearchKind.dhikr => '/ilm/adhkar',
-  SearchKind.name99 => '/ilm/names99',
-  SearchKind.islamicName => '/ilm/islamic-names',
-  SearchKind.article => '/ilm/articles',
-};
+/// Where a result row navigates — the ITEM itself: an article opens in
+/// its reader, a dua/name is shown first and framed in its list, a dhikr
+/// set opens on its own period (it used to land at the top of the pack).
+String searchRouteFor(SearchKind kind, [String? id]) {
+  final q = id == null || id.isEmpty ? '' : Uri.encodeQueryComponent(id);
+  return switch (kind) {
+    SearchKind.dua => q.isEmpty ? '/ilm/duas' : '/ilm/duas?id=$q',
+    SearchKind.dhikr => q.isEmpty ? '/ilm/adhkar' : '/ilm/adhkar?set=$q',
+    SearchKind.name99 => q.isEmpty ? '/ilm/names99' : '/ilm/names99?id=$q',
+    SearchKind.islamicName =>
+      q.isEmpty ? '/ilm/islamic-names' : '/ilm/islamic-names?id=$q',
+    SearchKind.article =>
+      q.isEmpty ? '/ilm/articles' : '/ilm/articles/${Uri.encodeComponent(id!)}',
+  };
+}
 
 class IlmSearchScreen extends ConsumerStatefulWidget {
   const IlmSearchScreen({super.key});
@@ -186,7 +192,7 @@ class _IlmSearchScreenState extends ConsumerState<IlmSearchScreen> {
         itemBuilder: (context, i) {
           final hit = _rows[i];
           return AppCard(
-            onTap: () => context.push(searchRouteFor(hit.kind)),
+            onTap: () => context.push(searchRouteFor(hit.kind, hit.id)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

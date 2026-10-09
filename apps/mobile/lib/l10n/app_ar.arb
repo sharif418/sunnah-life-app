@@ -879,5 +879,21 @@
   "faq_ask_support": "الدعم",
   "ilm_group_learn": "تعلّم واختبر",
   "ilm_group_quran": "القرآن والأذكار والأدعية",
-  "ilm_group_know": "اعرف"
+  "ilm_group_know": "اعرف",
+  "adhkar_hint": "انقر للعدّ · اضغط مطولًا لإنقاص واحدة",
+  "adhkar_reset": "ابدأ من جديد",
+  "adhkar_reset_title": "مسح عدّ هذه المجموعة؟",
+  "adhkar_reset_body": "يبدأ عدّ اليوم من الصفر. تبقى علامة اليومية.",
+  "adhkar_done_of": "تم",
+  "adhkar_minutes_fmt": "نحو %n دقائق",
+  "adhkar_ticked_today": "سُجّل في يومية اليوم",
+  "adhkar_diary_ticked": "الحمد لله — سُجّل في يومية اليوم",
+  "dhikr_virtue": "الفضل",
+  "adhkar_set_complete": "اكتملت المجموعة — ما شاء الله",
+  "article_back_to_list": "العودة إلى المقالات",
+  "search_hit_label": "نتيجة البحث",
+  "live_quiz_no_usrah_hint": "تُلعب المسابقات المباشرة داخل الأسرة. لست في أسرة بعد — اطلب الانضمام، وإلى ذلك الحين العب مسابقات التدريب.",
+  "adhkar_tab_morning": "الصباح",
+  "adhkar_tab_evening": "المساء",
+  "adhkar_tab_post_salat": "بعد الصلاة"
 }

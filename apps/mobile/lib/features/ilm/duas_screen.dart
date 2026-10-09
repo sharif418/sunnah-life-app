@@ -9,16 +9,24 @@ import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
 class DuasScreen extends StatefulWidget {
-  const DuasScreen({super.key});
+  const DuasScreen({super.key, this.highlightId});
+
+  /// From a search result (`?id=`): that item is shown first, framed.
+  final String? highlightId;
 
   @override
   State<DuasScreen> createState() => _DuasScreenState();
 }
 
 class _DuasScreenState extends State<DuasScreen> {
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<(List<DuaCategory>, List<DuaItem>)> _future =
+      ContentPack.duas();
   String _query = '';
   String? _category;
-  (List<DuaCategory>, List<DuaItem>)? _loaded;
 
   @override
   Widget build(BuildContext context) {
@@ -29,16 +37,15 @@ class _DuasScreenState extends State<DuasScreen> {
         title: Text(context.t('ilm_duas')),
       ),
       body: FutureBuilder<(List<DuaCategory>, List<DuaItem>)>(
-        future: _loaded == null ? ContentPack.duas() : Future.value(_loaded),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 80, count: 5);
           }
           final (cats, items) =
               snap.data ?? (const <DuaCategory>[], const <DuaItem>[]);
-          _loaded = (cats, items);
           final q = _query.trim();
-          final visible = q.isEmpty
+          var visible = q.isEmpty
               ? (_category == null
                     ? items
                     : items.where((d) => d.category == _category).toList())
@@ -50,6 +57,14 @@ class _DuasScreenState extends State<DuasScreen> {
                           d.translitBn?.contains(q) == true,
                     )
                     .toList();
+          // a search result's item first (only while not searching here)
+          final hl = widget.highlightId;
+          if (hl != null && _query.trim().isEmpty) {
+            final hit = visible.where((x) => x.id == hl).firstOrNull;
+            if (hit != null) {
+              visible = [hit, ...visible.where((x) => !identical(x, hit))];
+            }
+          }
           return Column(
             children: [
               Padding(
@@ -61,13 +76,15 @@ class _DuasScreenState extends State<DuasScreen> {
                   onChanged: (v) => setState(() => _query = v),
                   decoration: InputDecoration(
                     hintText: context.t('search'),
-                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
+                    prefixIcon: const Icon(
+                      PhosphorIconsRegular.magnifyingGlass,
+                    ),
                     isDense: true,
                   ),
                 ),
               ),
               SizedBox(
-                height: 44,
+                height: MediaQuery.textScalerOf(context).scale(44),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(
@@ -77,7 +94,7 @@ class _DuasScreenState extends State<DuasScreen> {
                     Padding(
                       padding: const EdgeInsetsDirectional.only(end: 8),
                       child: FilterChip(
-                        label: Text(context.t('see_all')),
+                        label: Text(context.t('sunnah_cat_all')),
                         selected: _category == null,
                         onSelected: (_) => setState(() => _category = null),
                       ),
@@ -101,12 +118,13 @@ class _DuasScreenState extends State<DuasScreen> {
                         icon: PhosphorIconsRegular.hand,
                       )
                     : ListView.separated(
-                        separatorBuilder: (_, _) => const SizedBox(height: SLSpacing.s8),
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: SLSpacing.s8),
                         padding: const EdgeInsets.all(SLSpacing.s16),
                         itemCount: visible.length,
                         itemBuilder: (context, i) {
                           final d = visible[i];
-                          return AppCard(
+                          final card = AppCard(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -153,6 +171,10 @@ class _DuasScreenState extends State<DuasScreen> {
                                 ),
                               ],
                             ),
+                          );
+                          return SearchHitFrame(
+                            hit: i == 0 && widget.highlightId == d.id,
+                            child: card,
                           );
                         },
                       ),

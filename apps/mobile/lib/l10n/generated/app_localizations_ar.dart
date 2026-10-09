@@ -2707,4 +2707,54 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ilm_group_know => 'اعرف';
+
+  @override
+  String get adhkar_hint => 'انقر للعدّ · اضغط مطولًا لإنقاص واحدة';
+
+  @override
+  String get adhkar_reset => 'ابدأ من جديد';
+
+  @override
+  String get adhkar_reset_title => 'مسح عدّ هذه المجموعة؟';
+
+  @override
+  String get adhkar_reset_body =>
+      'يبدأ عدّ اليوم من الصفر. تبقى علامة اليومية.';
+
+  @override
+  String get adhkar_done_of => 'تم';
+
+  @override
+  String get adhkar_minutes_fmt => 'نحو %n دقائق';
+
+  @override
+  String get adhkar_ticked_today => 'سُجّل في يومية اليوم';
+
+  @override
+  String get adhkar_diary_ticked => 'الحمد لله — سُجّل في يومية اليوم';
+
+  @override
+  String get dhikr_virtue => 'الفضل';
+
+  @override
+  String get adhkar_set_complete => 'اكتملت المجموعة — ما شاء الله';
+
+  @override
+  String get article_back_to_list => 'العودة إلى المقالات';
+
+  @override
+  String get search_hit_label => 'نتيجة البحث';
+
+  @override
+  String get live_quiz_no_usrah_hint =>
+      'تُلعب المسابقات المباشرة داخل الأسرة. لست في أسرة بعد — اطلب الانضمام، وإلى ذلك الحين العب مسابقات التدريب.';
+
+  @override
+  String get adhkar_tab_morning => 'الصباح';
+
+  @override
+  String get adhkar_tab_evening => 'المساء';
+
+  @override
+  String get adhkar_tab_post_salat => 'بعد الصلاة';
 }

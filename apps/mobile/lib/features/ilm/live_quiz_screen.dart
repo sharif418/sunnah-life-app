@@ -24,6 +24,7 @@ import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
+import '../more/usrah_join_sheet.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -210,7 +211,11 @@ class _LiveQuizScreenState extends ConsumerState<LiveQuizScreen> {
             .setAuth({'token': res.token})
             .setTransports(['websocket', 'polling'])
             .disableAutoConnect()
-            .disableReconnection()
+            // a dropped connection (a lift, a weak signal) comes back by
+            // itself — it used to strand the player on "বিচ্ছিন্ন"
+            .enableReconnection()
+            .setReconnectionAttempts(8)
+            .setReconnectionDelay(1500)
             .build(),
       );
       _wire(socket);
@@ -400,6 +405,16 @@ class _LiveQuizScreenState extends ConsumerState<LiveQuizScreen> {
         hint: context.t('live_quiz_signin_hint'),
         actionLabel: context.t('onb_signin'),
         onAction: () => context.push('/auth'),
+      );
+    } else if (_socket == null && auth.user?.usrahId == null) {
+      // the room is per usrah: say so and offer the way in, instead of an
+      // "Enter" that ends in a 400
+      body = _Gate(
+        icon: PhosphorIconsRegular.usersThree,
+        title: context.t('live_quiz_for_usrah'),
+        hint: context.t('live_quiz_no_usrah_hint'),
+        actionLabel: context.t('more_usrah_join'),
+        onAction: () => showUsrahJoinSheet(context),
       );
     } else if (_socket == null) {
       body = ListView(

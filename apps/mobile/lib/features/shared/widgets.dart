@@ -411,3 +411,47 @@ class SyncBadge extends ConsumerWidget {
     );
   }
 }
+
+/// The item a search result opened: framed in green under a "খোঁজা ফল"
+/// label, shown first in its list.
+class SearchHitFrame extends StatelessWidget {
+  const SearchHitFrame({super.key, required this.hit, required this.child});
+  final bool hit;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!hit) return child;
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      key: const ValueKey('search_hit'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, right: 4, bottom: 4),
+          child: Row(
+            children: [
+              Icon(PhosphorIconsRegular.magnifyingGlass, size: 14, color: cs.primary),
+              const SizedBox(width: 4),
+              Text(
+                context.t('search_hit_label'),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+        DecoratedBox(
+          position: DecorationPosition.foreground,
+          decoration: BoxDecoration(
+            borderRadius: SLRadius.brLg,
+            border: Border.all(color: cs.primary, width: 2),
+          ),
+          child: child,
+        ),
+      ],
+    );
+  }
+}

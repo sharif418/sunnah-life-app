@@ -20,7 +20,11 @@ class SelfTestScreen extends ConsumerStatefulWidget {
 }
 
 class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
-  List<Quiz>? _quizzes;
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<List<Quiz>> _future = ContentPack.quizzes();
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +41,7 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
         ),
       ),
       body: FutureBuilder<List<Quiz>>(
-        future: _quizzes == null
-            ? ContentPack.quizzes()
-            : Future.value(_quizzes),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 80, count: 3);
