@@ -70,6 +70,15 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
         _num(_invest);
     final net = wealth - _num(_debts);
     final eligible = net >= nisab && nisab > 0;
+    // nothing typed yet: no verdict ("যাকাত ফরজ নয়" before a single number
+    // reads like a ruling about the reader)
+    final empty = [
+      _gold,
+      _silver,
+      _cash,
+      _invest,
+      _debts,
+    ].every((c) => c.text.trim().isEmpty);
     final zakat = eligible ? net * 0.025 : 0.0;
 
     String money(double v) {
@@ -77,7 +86,12 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
       return bn ? toBn(s) : s;
     }
 
-    Widget field(TextEditingController c, String label, IconData icon) {
+    Widget field(
+      TextEditingController c,
+      String label,
+      IconData icon, {
+      bool money = false,
+    }) {
       return TextField(
         controller: c,
         keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -88,6 +102,7 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: Icon(icon),
+          suffixText: money ? '৳' : null,
           isDense: true,
         ),
       );
@@ -122,17 +137,24 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 _cash,
                 context.t('zakat_cash'),
                 PhosphorIconsRegular.creditCard,
+                money: true,
               ),
               const SizedBox(height: SLSpacing.s8),
               field(
                 _invest,
                 context.t('zakat_investments'),
                 PhosphorIconsRegular.trendUp,
+                money: true,
               ),
               const SizedBox(height: SLSpacing.s8),
               // No Phosphor 2.1 equivalent (struck-through coin) — the
               // one Material glyph left in the zakat form.
-              field(_debts, context.t('zakat_debts'), Icons.money_off),
+              field(
+                _debts,
+                context.t('zakat_debts'),
+                Icons.money_off,
+                money: true,
+              ),
             ],
           ),
           const SizedBox(height: SLSpacing.s12),
@@ -171,35 +193,59 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 const SizedBox(height: SLSpacing.s4),
                 const Divider(),
                 const SizedBox(height: SLSpacing.s4),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(child: Text('${context.t('zakat_payable')}:')),
-                    const SizedBox(width: SLSpacing.s8),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: AlignmentDirectional.centerEnd,
-                        child: Text(
-                          eligible ? '৳${money(zakat)}' : '৳${money(0)}',
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: eligible
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurfaceVariant,
+                if (empty)
+                  Row(
+                    children: [
+                      Icon(
+                        PhosphorIconsRegular.info,
+                        size: 18,
+                        color: theme.colorScheme.primary,
+                      ),
+                      const SizedBox(width: SLSpacing.s8),
+                      Expanded(child: Text(context.t('zakat_enter_prompt'))),
+                    ],
+                  )
+                else ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(child: Text('${context.t('zakat_payable')}:')),
+                      const SizedBox(width: SLSpacing.s8),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: Text(
+                            eligible ? '৳${money(zakat)}' : '৳${money(0)}',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              color: eligible
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurfaceVariant,
+                            ),
                           ),
                         ),
                       ),
+                    ],
+                  ),
+                  const SizedBox(height: SLSpacing.s8),
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: Text(
+                      eligible
+                          ? '${context.t('zakat_percent_note')} (${context.t('zakat_net')} ৳${money(net)})'
+                          : context.t('zakat_below_nisab'),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
                 const SizedBox(height: SLSpacing.s8),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
                   child: Text(
-                    eligible
-                        ? '${context.t('zakat_percent_note')} (${context.t('zakat_net')} ৳${money(net)})'
-                        : context.t('zakat_below_nisab'),
+                    context.t('zakat_hawl_note'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),

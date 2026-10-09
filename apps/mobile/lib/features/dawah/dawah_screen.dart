@@ -1080,7 +1080,7 @@ class _RequirementLine extends StatelessWidget {
                 ? PhosphorIconsFill.checkCircle
                 : PhosphorIconsRegular.circle,
             size: 24,
-            color: req.done ? cs.primary : cs.outline,
+            color: req.done ? cs.primary : cs.onSurfaceVariant,
           ),
           const SizedBox(width: SLSpacing.s12),
           Expanded(

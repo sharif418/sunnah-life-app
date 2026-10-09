@@ -2984,4 +2984,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sync_all_saved => 'Everything is saved on the server';
+
+  @override
+  String get zakat_enter_prompt =>
+      'Enter your wealth above — the zakat appears here';
+
+  @override
+  String get zakat_hawl_note =>
+      'Zakat is due on wealth you have owned for a full lunar year.';
+
+  @override
+  String get quiz_practice_go => 'Take a practice quiz';
 }

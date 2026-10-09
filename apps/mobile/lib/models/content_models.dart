@@ -369,7 +369,7 @@ const List<Map<String, dynamic>> kFallbackFaq = [
 const List<Map<String, dynamic>> kFallbackQuizzes = [
   {
     'id': 'iman-self-test',
-    'titleBn': 'ঈমান সেলফ-টেস্ট',
+    'titleBn': 'ঈমান আত্মযাচাই',
     'descBn': 'ঈমানের মূল বিষয়গুলো কতটা জানেন যাচাই করুন',
     'category': 'iman',
     'minutes': 5,
@@ -419,7 +419,7 @@ const List<Map<String, dynamic>> kFallbackQuizzes = [
   },
   {
     'id': 'taqwa-self-test',
-    'titleBn': 'তাকওয়া সেলফ-টেস্ট',
+    'titleBn': 'তাকওয়া আত্মযাচাই',
     'descBn': 'দৈনন্দিন জীবনে তাকওয়ার অনুশীলন যাচাই করুন',
     'category': 'taqwa',
     'minutes': 5,

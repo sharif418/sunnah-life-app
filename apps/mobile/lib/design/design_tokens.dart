@@ -460,6 +460,9 @@ extension _ThemeTweaks on ThemeData {
       // carries the bundled Noto Sans Bengali family AND a token color — see
       // _appFontStyle for why color-less styles were invisible text.
       tabBarTheme: TabBarThemeData(
+        // the underline spans the whole tab (word-wide, it was a 20dp sliver
+        // under "সূরা" — hard to see which tab is open, worst in dark)
+        indicatorSize: TabBarIndicatorSize.tab,
         labelColor: onSurface,
         unselectedLabelColor: onSurfaceVariant,
         labelStyle: _appFontStyle(14, FontWeight.w600, onSurface),
@@ -488,9 +491,11 @@ extension _ThemeTweaks on ThemeData {
         shape: RoundedRectangleBorder(borderRadius: SLRadius.brPill),
         // selected = the soft green with a green rim and green ink (the
         // label colour is resolved in labelStyle above)
+        // (dark: a real green tint — the soft token is almost the card's own
+        // colour, so a selected chip differed only by its rim)
         selectedColor: brightness == Brightness.light
             ? SLColors.lightPrimarySoft
-            : SLColors.darkPrimarySoft,
+            : primary.withValues(alpha: 0.28),
         checkmarkColor: primary,
         side: WidgetStateBorderSide.resolveWith(
           (states) => BorderSide(
@@ -528,10 +533,39 @@ extension _ThemeTweaks on ThemeData {
           textStyle: _appFontStyle(14, FontWeight.w600, primary),
         ),
       ),
+      // the chosen segment filled green (it was a shade off its neighbours —
+      // beige on beige in light, invisible in dark; the tick was the only cue)
       segmentedButtonTheme: SegmentedButtonThemeData(
         style: ButtonStyle(
           textStyle: WidgetStatePropertyAll(_appFontStyle(14, null, onSurface)),
+          backgroundColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? (brightness == Brightness.light
+                      ? SLColors.lightPrimarySoft
+                      : primary.withValues(alpha: 0.28))
+                : Colors.transparent,
+          ),
+          foregroundColor: WidgetStateColor.resolveWith(
+            (states) => states.contains(WidgetState.selected)
+                ? (brightness == Brightness.light
+                      ? SLColors.primaryDeep
+                      : SLColors.darkForeground)
+                : onSurfaceVariant,
+          ),
+          side: WidgetStateBorderSide.resolveWith(
+            (states) => BorderSide(
+              color: brightness == Brightness.light
+                  ? SLColors.lightBorder
+                  : SLColors.darkBorder,
+            ),
+          ),
         ),
+      ),
+      // empty progress tracks visible in dark (they vanished into the card)
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        linearTrackColor: brightness == Brightness.light
+            ? SLColors.lightBorder
+            : SLColors.darkBorder,
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,

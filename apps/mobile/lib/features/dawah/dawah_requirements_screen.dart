@@ -199,16 +199,18 @@ class _FallbackBody extends ConsumerWidget {
                         r.done
                             ? PhosphorIconsFill.checkCircle
                             : PhosphorIconsRegular.circle,
+                        // still to do: a ring you can see (the outline
+                        // tone was ~1.3:1 — the one unmet item vanished)
                         color: r.done
                             ? theme.colorScheme.primary
-                            : theme.colorScheme.outline,
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                       title: Text(
                         r.label,
+                        // one weight for every condition — the unmet one
+                        // was the lightest, the opposite of what matters
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: r.done
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                       subtitle: Text(
@@ -385,7 +387,7 @@ class _CheckRow extends StatelessWidget {
               size: 20,
               color: row.met
                   ? theme.colorScheme.primary
-                  : theme.colorScheme.outline,
+                  : theme.colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: SLSpacing.s12),

@@ -266,7 +266,9 @@ class _DuaCardState extends State<DuaCard> {
               ),
             ],
           ),
-          const SizedBox(height: SLSpacing.s4),
+          // room above the Arabic (its tall marks nearly touched a wrapped
+          // title at large text)
+          const SizedBox(height: SLSpacing.s12),
           // full width: a short dua used to sit on the LEFT
           SizedBox(
             width: double.infinity,

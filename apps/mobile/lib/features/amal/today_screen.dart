@@ -200,10 +200,19 @@ class _TodayView extends ConsumerWidget {
         const SizedBox(height: SLSpacing.s12),
 
         // ── shortcuts: one swipeable row, never four stacked lines; short
-        // chip names so more of them show before the swipe ────────────────
+        // chip names so more of them show before the swipe; the far edge
+        // fades so the cut chip reads as "more this way" ─────────────────
         SizedBox(
           height: 48,
-          child: ListView(
+          child: ShaderMask(
+            shaderCallback: (rect) => const LinearGradient(
+              begin: AlignmentDirectional.centerStart,
+              end: AlignmentDirectional.centerEnd,
+              colors: [Colors.white, Colors.white, Colors.transparent],
+              stops: [0, 0.86, 1],
+            ).createShader(rect, textDirection: Directionality.of(context)),
+            blendMode: BlendMode.dstIn,
+            child: ListView(
             scrollDirection: Axis.horizontal,
             children: [
               for (final (icon, label, path) in [
@@ -237,6 +246,7 @@ class _TodayView extends ConsumerWidget {
                   ),
                 ),
             ],
+          ),
           ),
         ),
         const SizedBox(height: SLSpacing.s12),

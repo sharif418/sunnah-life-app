@@ -2949,4 +2949,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sync_all_saved => 'كل شيء محفوظ على الخادم';
+
+  @override
+  String get zakat_enter_prompt => 'أدخل أموالك أعلاه — تظهر الزكاة هنا';
+
+  @override
+  String get zakat_hawl_note => 'تجب الزكاة في المال الذي حال عليه الحول.';
+
+  @override
+  String get quiz_practice_go => 'اختبار تدريبي';
 }
