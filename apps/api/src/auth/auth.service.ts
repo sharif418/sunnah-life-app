@@ -19,7 +19,10 @@ const MAX_SENDS_PER_WINDOW = 3;
 const VERIFY_MAX_ATTEMPTS = 5;
 
 const ACCESS_TTL_SEC = () => Number(process.env.ACCESS_TOKEN_TTL_MIN || 15) * 60;
-const REFRESH_TTL_SEC = () => Number(process.env.REFRESH_TOKEN_TTL_DAYS || 7) * 86400;
+// 60 days, sliding: every refresh rotates the token and restarts the clock,
+// so a member who opens the app at least every two months never signs in
+// again (the phone app used to lose its session after 15 minutes).
+const REFRESH_TTL_SEC = () => Number(process.env.REFRESH_TOKEN_TTL_DAYS || 60) * 86400;
 /** Refresh tokens are signed with their own secret (falls back to JWT_SECRET). */
 const REFRESH_SECRET = () => process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET || "dev-only-secret-change-me-in-production";
 

@@ -67,6 +67,7 @@ dependencies:
   # https://sunnahlife.app/join/* + sunnahlife://join/* referral deep links
   # (cold start + warm stream, C-W3h).
   app_links: ^7.2.1
+  flutter_secure_storage: ^10.3.4
   # NOT phosphor_flutter: pub 2.1.0 (latest, incl. git HEAD) does not
   # compile under this Flutter pin — IconData became a final class and the
   # package subclasses it (flutter test hard-fails). The Phosphor fonts are
