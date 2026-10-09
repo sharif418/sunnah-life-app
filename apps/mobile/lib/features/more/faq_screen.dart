@@ -1,15 +1,16 @@
-/// জিজ্ঞাসা (FAQ) — expandable question list from the bundled asset
-/// (assets/content/faq.json, shape {items: [{q, a}]}; bn-first content —
-/// the questions/answers are Bengali on purpose).
+/// জিজ্ঞাসা (FAQ) — expandable question list from the FAQ pack (shape
+/// {items: [{q, a, group}]}; bn-first content — the questions/answers are
+/// Bengali on purpose). The pack is admin-managed: ContentPack serves the
+/// approved server copy (kept on the phone), the bundle until then.
 library;
 
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 import 'package:go_router/go_router.dart';
 
 import '../../design/design_tokens.dart';
+import '../../models/content_models.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -39,8 +40,9 @@ class FaqEntry {
 class FaqRepository {
   FaqRepository._();
 
-  static Future<String> Function(String path) _loadAsset =
-      rootBundle.loadString;
+  /// Tests only: read the asset directly (see the note above). Null in the
+  /// app → the pack comes through [ContentPack] (server copy / phone / bundle).
+  static Future<String> Function(String path)? _loadAsset;
 
   /// Completed cache — plain data, zone-free. Reopening the screen after a
   /// load resolves on the next microtask in whatever zone asks.
@@ -60,24 +62,31 @@ class FaqRepository {
 
   @visibleForTesting
   static void resetForTesting() {
-    _loadAsset = rootBundle.loadString;
+    _loadAsset = null;
     _cache = null;
     _loading = null;
   }
 
+  static List<FaqEntry> _entriesOf(Object? decoded) =>
+      decoded is Map<String, dynamic>
+      ? ((decoded['items'] as List?) ?? const [])
+            .whereType<Map>()
+            .map((e) => FaqEntry.fromJson(e.cast<String, dynamic>()))
+            .toList()
+      : const <FaqEntry>[];
+
   static Future<List<FaqEntry>> entries() {
+    final loader = _loadAsset;
+    // the app: ContentPack keeps (and refreshes) the decoded pack itself
+    if (loader == null) {
+      return ContentPack.document('faq.json').then(_entriesOf);
+    }
     final cached = _cache;
     if (cached != null) return Future.value(cached);
     return _loading ??= () async {
       try {
-        final raw = await _loadAsset('assets/content/faq.json');
-        final decoded = jsonDecode(raw);
-        final list = decoded is Map<String, dynamic>
-            ? ((decoded['items'] as List?) ?? const [])
-                  .whereType<Map>()
-                  .map((e) => FaqEntry.fromJson(e.cast<String, dynamic>()))
-                  .toList()
-            : const <FaqEntry>[];
+        final raw = await loader('assets/content/faq.json');
+        final list = _entriesOf(jsonDecode(raw));
         _cache = list;
         _loading = null;
         return list;
