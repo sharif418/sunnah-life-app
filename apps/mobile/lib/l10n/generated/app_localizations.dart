@@ -5871,6 +5871,12 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'অনুশীলনের কুইজ দিন'**
   String get quiz_practice_go;
+
+  /// No description provided for @quick_qibla_desc.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজের দিক খুঁজুন'**
+  String get quick_qibla_desc;
 }
 
 class _AppLocalizationsDelegate

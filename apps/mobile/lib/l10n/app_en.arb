@@ -961,5 +961,6 @@
   "sync_all_saved": "Everything is saved on the server",
   "zakat_enter_prompt": "Enter your wealth above — the zakat appears here",
   "zakat_hawl_note": "Zakat is due on wealth you have owned for a full lunar year.",
-  "quiz_practice_go": "Take a practice quiz"
+  "quiz_practice_go": "Take a practice quiz",
+  "quick_qibla_desc": "Find the prayer direction"
 }

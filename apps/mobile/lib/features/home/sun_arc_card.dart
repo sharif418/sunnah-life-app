@@ -732,13 +732,10 @@ class _StripCell extends StatelessWidget {
                   color: isNow ? cs.primary : cs.onSurface,
                 ),
               ),
-              Text(
-                time,
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: cs.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 4),
+              // (no start time here: the card above says the current and
+              // next waqt, the schedule below lists every time — a third
+              // set of times made the hero busy; the reader still hears it)
+              const SizedBox(height: 6),
               mark,
               const SizedBox(height: 2),
               Text(

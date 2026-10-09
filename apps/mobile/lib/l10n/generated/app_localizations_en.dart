@@ -2995,4 +2995,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quiz_practice_go => 'Take a practice quiz';
+
+  @override
+  String get quick_qibla_desc => 'Find the prayer direction';
 }

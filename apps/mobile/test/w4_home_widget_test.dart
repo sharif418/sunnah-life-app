@@ -96,10 +96,11 @@ void main() {
     );
     final left = find.byKey(const ValueKey('home_waqt_left'));
     expect(left, findsOneWidget);
-    expect(find.byKey(const ValueKey('home_to_schedule')), findsOneWidget);
+    // the hero ends at the five-waqt strip — no in-page "সময়সূচি দেখুন" link
+    // (the full schedule is its own card further down; 2026-10-09)
+    expect(find.byKey(const ValueKey('home_to_schedule')), findsNothing);
     expect(find.byKey(const ValueKey('home_today_strip')), findsOneWidget);
-    // the schedule sits below the fold (built — the page caches it so the
-    // card's in-page link always has a target)
+    // the schedule sits below the fold (built)
     expect(
       find.text(S.tr(Lang.bn, 'prayer_schedule'), skipOffstage: false),
       findsOneWidget,
@@ -242,14 +243,15 @@ void main() {
     await tester.pumpAndSettle();
 
     // The HOME-05 set renders (scrolled into view first — lazy list):
-    // সালাত পরবর্তী দোয়া, সকাল-সন্ধ্যার যিকির, কুরআন, মুহাসাবা চেকলিস্ট,
-    // আমল ট্র্যাকার, লাইভ.
+    // সালাত পরবর্তী দোয়া, সকাল-সন্ধ্যার যিকির, কুরআন, কিবলা কম্পাস (the
+    // diary already has the muhasaba card's button above), আমল ট্র্যাকার,
+    // লাইভ.
     await scrollTo(tester, find.text(S.tr(Lang.bn, 'quick_access')));
     for (final title in [
       S.tr(Lang.bn, 'quick_post_salah'),
       S.tr(Lang.bn, 'quick_adhkar'),
       S.tr(Lang.bn, 'ilm_quran'),
-      S.tr(Lang.bn, 'quick_muhasaba'),
+      S.tr(Lang.bn, 'more_qibla'),
       S.tr(Lang.bn, 'quick_tracker'),
       S.tr(Lang.bn, 'more_live'),
     ]) {

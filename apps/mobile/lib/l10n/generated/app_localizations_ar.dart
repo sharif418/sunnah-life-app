@@ -2958,4 +2958,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get quiz_practice_go => 'اختبار تدريبي';
+
+  @override
+  String get quick_qibla_desc => 'اتجاه القبلة';
 }
