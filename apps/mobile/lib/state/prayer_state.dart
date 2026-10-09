@@ -115,6 +115,7 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
       tz: profile.tz,
       method: profile.method,
       madhhab: profile.madhhab,
+      adjust: profile.prayerAdjust,
     );
     final nowMinutes = now.hour * 60.0 + now.minute + now.second / 60.0;
     final (nextKey, mins) = PrayerEngine.nextPrayer(times, nowMinutes);
@@ -156,6 +157,7 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
     tz: profile.tz,
     method: profile.method,
     madhhab: profile.madhhab,
+    adjust: profile.prayerAdjust,
   );
 
   /// (Re)arm the rolling 3-day bell window with the CURRENT profile.
@@ -172,6 +174,7 @@ class PrayerNotifier extends Notifier<PrayerNow?> {
           tz: profile.tz,
           method: profile.method,
           madhhab: profile.madhhab,
+          adjust: profile.prayerAdjust,
         ),
         city: profile.city,
       );

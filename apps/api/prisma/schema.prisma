@@ -57,7 +57,9 @@ model User {
   // IANA zone for every wall-clock computation this user triggers (prayer
   // pushes, week starts, diary day-lock). Phase C/W1a: was hard-coded UTC+6.
   tz            String    @default("Asia/Dhaka")
-  calcMethod    String    @default("karachi")
+  calcMethod    String    @default("ifb")
+  // the member's own mosque: minutes per waqt, e.g. {"fajr":2,"maghrib":5}
+  prayerAdjust  Json      @default("{}")
   lat           Float?
   lng           Float?
   city          String?

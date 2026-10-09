@@ -3062,4 +3062,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mosques_star_a11y => 'Add to or remove from my mosques';
+
+  @override
+  String get method_pick_hint =>
+      'How Fajr and Isha are calculated. In Bangladesh, Islamic Foundation matches the mosques.';
+
+  @override
+  String get method_recommended => 'Recommended';
+
+  @override
+  String get method_desc_ifb =>
+      'What Bangladesh\'s mosques follow — 18°/18° with precautionary minutes';
+
+  @override
+  String get method_desc_karachi =>
+      '18°/18° — like the Foundation but without the precaution (~1 min earlier)';
+
+  @override
+  String get method_desc_mwl => '18°/17° — used in Europe and elsewhere';
+
+  @override
+  String get method_desc_isna =>
+      '15°/15° — for North America; Fajr comes late in Bangladesh';
+
+  @override
+  String get method_desc_egypt => '19.5°/17.5° — Egypt and parts of Africa';
+
+  @override
+  String get method_desc_makkah =>
+      'For Saudi Arabia — Isha 90 min after Maghrib';
+
+  @override
+  String get method_desc_dubai => '18.2°/18.2° — for the UAE';
+
+  @override
+  String get adjust_title => 'Match your mosque';
+
+  @override
+  String get adjust_none => 'No adjustment';
+
+  @override
+  String get adjust_hint =>
+      'If your mosque\'s azan is a few minutes off the calculated time, match it here.';
+
+  @override
+  String get adjust_where =>
+      'Home, the diary, prayer bells and auto-silent all use these times.';
+
+  @override
+  String get adjust_calc_mine => 'Calculated %c · yours %m';
+
+  @override
+  String get adjust_calc_only => 'Calculated %c';
+
+  @override
+  String get adjust_earlier_warning =>
+      'Prayer is not valid before its time — take care moving a time earlier.';
+
+  @override
+  String get adjust_reset => 'Reset all';
+
+  @override
+  String get adjust_save => 'Save';
+
+  @override
+  String get adjust_minus_a11y => '%w one minute earlier';
+
+  @override
+  String get adjust_plus_a11y => '%w one minute later';
+
+  @override
+  String get adjust_on_home => 'With your mosque\'s adjustment';
 }

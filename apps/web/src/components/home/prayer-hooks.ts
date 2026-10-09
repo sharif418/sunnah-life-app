@@ -33,8 +33,9 @@ export function usePrayerConfig(): PrayerConfig {
       method: profile.method,
       madhhab: profile.madhhab,
       tzOffsetHours,
+      adjust: profile.prayerAdjust ?? {},
     };
-  }, [profile.city, profile.lat, profile.lng, profile.madhhab, profile.method]);
+  }, [profile.city, profile.lat, profile.lng, profile.madhhab, profile.method, profile.prayerAdjust]);
 }
 
 /** "y-m-d" দিন-কি → dateParts (computePrayerTimes-এর ইনপুট)। */

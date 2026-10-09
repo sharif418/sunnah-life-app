@@ -1132,7 +1132,7 @@ class $GuestProfilesTable extends GuestProfiles
     false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultValue: const Constant('karachi'),
+    defaultValue: const Constant('ifb'),
   );
   static const VerificationMeta _madhhabMeta = const VerificationMeta(
     'madhhab',
@@ -1182,6 +1182,18 @@ class $GuestProfilesTable extends GuestProfiles
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _prayerAdjustMeta = const VerificationMeta(
+    'prayerAdjust',
+  );
+  @override
+  late final GeneratedColumn<String> prayerAdjust = GeneratedColumn<String>(
+    'prayer_adjust',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
   static const VerificationMeta _onboardingDoneMeta = const VerificationMeta(
     'onboardingDone',
   );
@@ -1212,6 +1224,7 @@ class $GuestProfilesTable extends GuestProfiles
     category,
     themeMode,
     hijriAdjust,
+    prayerAdjust,
     onboardingDone,
   ];
   @override
@@ -1301,6 +1314,15 @@ class $GuestProfilesTable extends GuestProfiles
         ),
       );
     }
+    if (data.containsKey('prayer_adjust')) {
+      context.handle(
+        _prayerAdjustMeta,
+        prayerAdjust.isAcceptableOrUnknown(
+          data['prayer_adjust']!,
+          _prayerAdjustMeta,
+        ),
+      );
+    }
     if (data.containsKey('onboarding_done')) {
       context.handle(
         _onboardingDoneMeta,
@@ -1371,6 +1393,10 @@ class $GuestProfilesTable extends GuestProfiles
         DriftSqlType.int,
         data['${effectivePrefix}hijri_adjust'],
       )!,
+      prayerAdjust: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prayer_adjust'],
+      )!,
       onboardingDone: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}onboarding_done'],
@@ -1398,6 +1424,9 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
   final String category;
   final String themeMode;
   final int hijriAdjust;
+
+  /// The reader's ± minutes per farz waqt (PrayerAdjust JSON, "{}" = none).
+  final String prayerAdjust;
   final bool onboardingDone;
   const GuestProfile({
     required this.id,
@@ -1413,6 +1442,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
     required this.category,
     required this.themeMode,
     required this.hijriAdjust,
+    required this.prayerAdjust,
     required this.onboardingDone,
   });
   @override
@@ -1431,6 +1461,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
     map['category'] = Variable<String>(category);
     map['theme_mode'] = Variable<String>(themeMode);
     map['hijri_adjust'] = Variable<int>(hijriAdjust);
+    map['prayer_adjust'] = Variable<String>(prayerAdjust);
     map['onboarding_done'] = Variable<bool>(onboardingDone);
     return map;
   }
@@ -1450,6 +1481,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
       category: Value(category),
       themeMode: Value(themeMode),
       hijriAdjust: Value(hijriAdjust),
+      prayerAdjust: Value(prayerAdjust),
       onboardingDone: Value(onboardingDone),
     );
   }
@@ -1473,6 +1505,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
       category: serializer.fromJson<String>(json['category']),
       themeMode: serializer.fromJson<String>(json['themeMode']),
       hijriAdjust: serializer.fromJson<int>(json['hijriAdjust']),
+      prayerAdjust: serializer.fromJson<String>(json['prayerAdjust']),
       onboardingDone: serializer.fromJson<bool>(json['onboardingDone']),
     );
   }
@@ -1493,6 +1526,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
       'category': serializer.toJson<String>(category),
       'themeMode': serializer.toJson<String>(themeMode),
       'hijriAdjust': serializer.toJson<int>(hijriAdjust),
+      'prayerAdjust': serializer.toJson<String>(prayerAdjust),
       'onboardingDone': serializer.toJson<bool>(onboardingDone),
     };
   }
@@ -1511,6 +1545,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
     String? category,
     String? themeMode,
     int? hijriAdjust,
+    String? prayerAdjust,
     bool? onboardingDone,
   }) => GuestProfile(
     id: id ?? this.id,
@@ -1526,6 +1561,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
     category: category ?? this.category,
     themeMode: themeMode ?? this.themeMode,
     hijriAdjust: hijriAdjust ?? this.hijriAdjust,
+    prayerAdjust: prayerAdjust ?? this.prayerAdjust,
     onboardingDone: onboardingDone ?? this.onboardingDone,
   );
   GuestProfile copyWithCompanion(GuestProfilesCompanion data) {
@@ -1545,6 +1581,9 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
       hijriAdjust: data.hijriAdjust.present
           ? data.hijriAdjust.value
           : this.hijriAdjust,
+      prayerAdjust: data.prayerAdjust.present
+          ? data.prayerAdjust.value
+          : this.prayerAdjust,
       onboardingDone: data.onboardingDone.present
           ? data.onboardingDone.value
           : this.onboardingDone,
@@ -1567,6 +1606,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
           ..write('category: $category, ')
           ..write('themeMode: $themeMode, ')
           ..write('hijriAdjust: $hijriAdjust, ')
+          ..write('prayerAdjust: $prayerAdjust, ')
           ..write('onboardingDone: $onboardingDone')
           ..write(')'))
         .toString();
@@ -1587,6 +1627,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
     category,
     themeMode,
     hijriAdjust,
+    prayerAdjust,
     onboardingDone,
   );
   @override
@@ -1606,6 +1647,7 @@ class GuestProfile extends DataClass implements Insertable<GuestProfile> {
           other.category == this.category &&
           other.themeMode == this.themeMode &&
           other.hijriAdjust == this.hijriAdjust &&
+          other.prayerAdjust == this.prayerAdjust &&
           other.onboardingDone == this.onboardingDone);
 }
 
@@ -1623,6 +1665,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
   final Value<String> category;
   final Value<String> themeMode;
   final Value<int> hijriAdjust;
+  final Value<String> prayerAdjust;
   final Value<bool> onboardingDone;
   const GuestProfilesCompanion({
     this.id = const Value.absent(),
@@ -1638,6 +1681,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
     this.category = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.hijriAdjust = const Value.absent(),
+    this.prayerAdjust = const Value.absent(),
     this.onboardingDone = const Value.absent(),
   });
   GuestProfilesCompanion.insert({
@@ -1654,6 +1698,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
     this.category = const Value.absent(),
     this.themeMode = const Value.absent(),
     this.hijriAdjust = const Value.absent(),
+    this.prayerAdjust = const Value.absent(),
     this.onboardingDone = const Value.absent(),
   });
   static Insertable<GuestProfile> custom({
@@ -1670,6 +1715,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
     Expression<String>? category,
     Expression<String>? themeMode,
     Expression<int>? hijriAdjust,
+    Expression<String>? prayerAdjust,
     Expression<bool>? onboardingDone,
   }) {
     return RawValuesInsertable({
@@ -1686,6 +1732,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
       if (category != null) 'category': category,
       if (themeMode != null) 'theme_mode': themeMode,
       if (hijriAdjust != null) 'hijri_adjust': hijriAdjust,
+      if (prayerAdjust != null) 'prayer_adjust': prayerAdjust,
       if (onboardingDone != null) 'onboarding_done': onboardingDone,
     });
   }
@@ -1704,6 +1751,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
     Value<String>? category,
     Value<String>? themeMode,
     Value<int>? hijriAdjust,
+    Value<String>? prayerAdjust,
     Value<bool>? onboardingDone,
   }) {
     return GuestProfilesCompanion(
@@ -1720,6 +1768,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
       category: category ?? this.category,
       themeMode: themeMode ?? this.themeMode,
       hijriAdjust: hijriAdjust ?? this.hijriAdjust,
+      prayerAdjust: prayerAdjust ?? this.prayerAdjust,
       onboardingDone: onboardingDone ?? this.onboardingDone,
     );
   }
@@ -1766,6 +1815,9 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
     if (hijriAdjust.present) {
       map['hijri_adjust'] = Variable<int>(hijriAdjust.value);
     }
+    if (prayerAdjust.present) {
+      map['prayer_adjust'] = Variable<String>(prayerAdjust.value);
+    }
     if (onboardingDone.present) {
       map['onboarding_done'] = Variable<bool>(onboardingDone.value);
     }
@@ -1788,6 +1840,7 @@ class GuestProfilesCompanion extends UpdateCompanion<GuestProfile> {
           ..write('category: $category, ')
           ..write('themeMode: $themeMode, ')
           ..write('hijriAdjust: $hijriAdjust, ')
+          ..write('prayerAdjust: $prayerAdjust, ')
           ..write('onboardingDone: $onboardingDone')
           ..write(')'))
         .toString();
@@ -3775,6 +3828,7 @@ typedef $$GuestProfilesTableCreateCompanionBuilder =
       Value<String> category,
       Value<String> themeMode,
       Value<int> hijriAdjust,
+      Value<String> prayerAdjust,
       Value<bool> onboardingDone,
     });
 typedef $$GuestProfilesTableUpdateCompanionBuilder =
@@ -3792,6 +3846,7 @@ typedef $$GuestProfilesTableUpdateCompanionBuilder =
       Value<String> category,
       Value<String> themeMode,
       Value<int> hijriAdjust,
+      Value<String> prayerAdjust,
       Value<bool> onboardingDone,
     });
 
@@ -3866,6 +3921,11 @@ class $$GuestProfilesTableFilterComposer
 
   ColumnFilters<int> get hijriAdjust => $composableBuilder(
     column: $table.hijriAdjust,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prayerAdjust => $composableBuilder(
+    column: $table.prayerAdjust,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3949,6 +4009,11 @@ class $$GuestProfilesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get prayerAdjust => $composableBuilder(
+    column: $table.prayerAdjust,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get onboardingDone => $composableBuilder(
     column: $table.onboardingDone,
     builder: (column) => ColumnOrderings(column),
@@ -4005,6 +4070,11 @@ class $$GuestProfilesTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get prayerAdjust => $composableBuilder(
+    column: $table.prayerAdjust,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<bool> get onboardingDone => $composableBuilder(
     column: $table.onboardingDone,
     builder: (column) => column,
@@ -4055,6 +4125,7 @@ class $$GuestProfilesTableTableManager
                 Value<String> category = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
                 Value<int> hijriAdjust = const Value.absent(),
+                Value<String> prayerAdjust = const Value.absent(),
                 Value<bool> onboardingDone = const Value.absent(),
               }) => GuestProfilesCompanion(
                 id: id,
@@ -4070,6 +4141,7 @@ class $$GuestProfilesTableTableManager
                 category: category,
                 themeMode: themeMode,
                 hijriAdjust: hijriAdjust,
+                prayerAdjust: prayerAdjust,
                 onboardingDone: onboardingDone,
               ),
           createCompanionCallback:
@@ -4087,6 +4159,7 @@ class $$GuestProfilesTableTableManager
                 Value<String> category = const Value.absent(),
                 Value<String> themeMode = const Value.absent(),
                 Value<int> hijriAdjust = const Value.absent(),
+                Value<String> prayerAdjust = const Value.absent(),
                 Value<bool> onboardingDone = const Value.absent(),
               }) => GuestProfilesCompanion.insert(
                 id: id,
@@ -4102,6 +4175,7 @@ class $$GuestProfilesTableTableManager
                 category: category,
                 themeMode: themeMode,
                 hijriAdjust: hijriAdjust,
+                prayerAdjust: prayerAdjust,
                 onboardingDone: onboardingDone,
               ),
           withReferenceMapper: (p0) => p0

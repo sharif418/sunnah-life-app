@@ -107,7 +107,7 @@ export async function seedDemo(db: PrismaClient): Promise<DemoSeedResult> {
         lng: u.lng ?? null,
         language: "bn",
         madhhab: "hanafi",
-        calcMethod: "karachi",
+        calcMethod: "ifb",
         createdAt: d(240),
       },
     });

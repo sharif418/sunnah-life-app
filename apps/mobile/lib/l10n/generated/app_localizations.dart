@@ -1639,7 +1639,7 @@ abstract class AppLocalizations {
   /// No description provided for @method_isna.
   ///
   /// In bn, this message translates to:
-  /// **'ISNA (উত্তর আমেরিকা)'**
+  /// **'ইসনা (উত্তর আমেরিকা)'**
   String get method_isna;
 
   /// No description provided for @method_egypt.
@@ -5997,6 +5997,132 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আমার মসজিদে রাখুন বা সরান'**
   String get mosques_star_a11y;
+
+  /// No description provided for @method_pick_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফজর ও এশার হিসাব কোন নিয়মে হবে। বাংলাদেশে মসজিদের সময়ের সাথে মেলাতে ইসলামিক ফাউন্ডেশন বাছুন।'**
+  String get method_pick_hint;
+
+  /// No description provided for @method_recommended.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রস্তাবিত'**
+  String get method_recommended;
+
+  /// No description provided for @method_desc_ifb.
+  ///
+  /// In bn, this message translates to:
+  /// **'দেশের মসজিদগুলোর সময়সূচির ভিত্তি — ১৮°/১৮°, শুরুর সময়ে সতর্কতার মিনিটসহ'**
+  String get method_desc_ifb;
+
+  /// No description provided for @method_desc_karachi.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৮°/১৮° — ফাউন্ডেশনের মতোই, তবে সতর্কতার মিনিট ছাড়া (প্রায় ১ মিনিট আগে)'**
+  String get method_desc_karachi;
+
+  /// No description provided for @method_desc_mwl.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৮°/১৭° — ইউরোপসহ বিভিন্ন অঞ্চলে প্রচলিত'**
+  String get method_desc_mwl;
+
+  /// No description provided for @method_desc_isna.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৫°/১৫° — উত্তর আমেরিকার জন্য; বাংলাদেশে ফজর দেরিতে দেখায়'**
+  String get method_desc_isna;
+
+  /// No description provided for @method_desc_egypt.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৯.৫°/১৭.৫° — মিসর ও আফ্রিকার কিছু দেশে'**
+  String get method_desc_egypt;
+
+  /// No description provided for @method_desc_makkah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সৌদি আরবের জন্য — এশা মাগরিবের ৯০ মিনিট পরে'**
+  String get method_desc_makkah;
+
+  /// No description provided for @method_desc_dubai.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৮.২°/১৮.২° — সংযুক্ত আরব আমিরাতের জন্য'**
+  String get method_desc_dubai;
+
+  /// No description provided for @adjust_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজের মসজিদের সাথে মেলান'**
+  String get adjust_title;
+
+  /// No description provided for @adjust_none.
+  ///
+  /// In bn, this message translates to:
+  /// **'সমন্বয় নেই'**
+  String get adjust_none;
+
+  /// No description provided for @adjust_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার মসজিদের আযান হিসাবের সময়ের চেয়ে কয়েক মিনিট পরে বা আগে হলে, এখানে মিলিয়ে নিন।'**
+  String get adjust_hint;
+
+  /// No description provided for @adjust_where.
+  ///
+  /// In bn, this message translates to:
+  /// **'হোম, ডায়েরি, নামাজের বেল ও অটো-সাইলেন্ট — সব জায়গায় এই সময় লাগবে।'**
+  String get adjust_where;
+
+  /// No description provided for @adjust_calc_mine.
+  ///
+  /// In bn, this message translates to:
+  /// **'হিসাবে %c · আপনার %m'**
+  String get adjust_calc_mine;
+
+  /// No description provided for @adjust_calc_only.
+  ///
+  /// In bn, this message translates to:
+  /// **'হিসাবে %c'**
+  String get adjust_calc_only;
+
+  /// No description provided for @adjust_earlier_warning.
+  ///
+  /// In bn, this message translates to:
+  /// **'ওয়াক্ত শুরুর আগে নামাজ হয় না — সময় আগে সরালে সাবধান থাকুন।'**
+  String get adjust_earlier_warning;
+
+  /// No description provided for @adjust_reset.
+  ///
+  /// In bn, this message translates to:
+  /// **'সব শূন্য করুন'**
+  String get adjust_reset;
+
+  /// No description provided for @adjust_save.
+  ///
+  /// In bn, this message translates to:
+  /// **'সংরক্ষণ করুন'**
+  String get adjust_save;
+
+  /// No description provided for @adjust_minus_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%w এক মিনিট আগে'**
+  String get adjust_minus_a11y;
+
+  /// No description provided for @adjust_plus_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%w এক মিনিট পরে'**
+  String get adjust_plus_a11y;
+
+  /// No description provided for @adjust_on_home.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার মসজিদের সমন্বয়সহ'**
+  String get adjust_on_home;
 }
 
 class _AppLocalizationsDelegate

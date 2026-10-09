@@ -11,6 +11,7 @@ import '../db/api_cache.dart';
 import '../db/database.dart';
 import '../models/domain.dart';
 import '../core/cities.dart';
+import '../core/prayer_adjust.dart';
 import '../core/referral.dart';
 import 'referral_state.dart';
 
@@ -67,6 +68,7 @@ class ProfileState {
     required this.themeMode,
     required this.hijriAdjust,
     required this.onboardingDone,
+    this.prayerAdjust = const PrayerAdjust(),
   });
 
   final String name;
@@ -82,6 +84,9 @@ class ProfileState {
   final String themeMode; // light | dark | system
   final int hijriAdjust;
   final bool onboardingDone;
+
+  /// ± minutes per farz waqt, to match the reader's mosque.
+  final PrayerAdjust prayerAdjust;
 }
 
 class ProfileNotifier extends Notifier<ProfileState> {
@@ -96,7 +101,7 @@ class ProfileNotifier extends Notifier<ProfileState> {
       lat: kDhakaLat,
       lng: kDhakaLng,
       tz: kDhakaTz,
-      method: CalcMethod.karachi,
+      method: CalcMethod.ifb,
       madhhab: Madhhab.hanafi,
       category: UserCategory.general,
       themeMode: 'system',
@@ -121,6 +126,7 @@ class ProfileNotifier extends Notifier<ProfileState> {
       themeMode: row.themeMode,
       hijriAdjust: row.hijriAdjust,
       onboardingDone: row.onboardingDone,
+      prayerAdjust: PrayerAdjust.parse(row.prayerAdjust),
     );
   }
 
@@ -143,6 +149,7 @@ class ProfileNotifier extends Notifier<ProfileState> {
     String? themeMode,
     int? hijriAdjust,
     bool? onboardingDone,
+    PrayerAdjust? prayerAdjust,
   }) async {
     state = ProfileState(
       name: name ?? state.name,
@@ -158,6 +165,7 @@ class ProfileNotifier extends Notifier<ProfileState> {
       themeMode: themeMode ?? state.themeMode,
       hijriAdjust: hijriAdjust ?? state.hijriAdjust,
       onboardingDone: onboardingDone ?? state.onboardingDone,
+      prayerAdjust: prayerAdjust ?? state.prayerAdjust,
     );
     final cityEntry = findCity(state.city);
     await ref
@@ -177,6 +185,7 @@ class ProfileNotifier extends Notifier<ProfileState> {
             themeMode: Value(state.themeMode),
             hijriAdjust: Value(state.hijriAdjust),
             onboardingDone: Value(state.onboardingDone),
+            prayerAdjust: Value(state.prayerAdjust.encode()),
           ),
         );
     // Keep the server-side profile in sync when signed in (best effort).
@@ -194,6 +203,7 @@ class ProfileNotifier extends Notifier<ProfileState> {
           'calcMethod': ?method?.json,
           'madhhab': ?madhhab?.json,
           'category': ?category?.json,
+          'prayerAdjust': ?prayerAdjust?.toJson(),
         });
       } on ApiException {
         // offline — profile stays local, syncs on next successful call
@@ -281,6 +291,24 @@ class AuthNotifier extends Notifier<AuthState> {
     await store.saveUser(res.user);
   }
 
+  /// The account's ± minutes (their mosque) come to this phone; a guest's
+  /// own, set before signing in, go up to an account that had none.
+  Future<void> _adoptPrayerAdjust(User user) async {
+    final server = PrayerAdjust.parse(user.prayerAdjust);
+    final profile = ref.read(profileProvider.notifier);
+    if (!server.isEmpty) {
+      await profile.update(prayerAdjust: server);
+      return;
+    }
+    final local = ref.read(profileProvider).prayerAdjust;
+    if (local.isEmpty) return;
+    try {
+      await ref.read(apiProvider).updateMe({'prayerAdjust': local.toJson()});
+    } on ApiException {
+      // offline — the next change syncs it
+    }
+  }
+
   /// OTP verify. Guest amal entries ride along (server merges by
   /// latest clientUpdatedAt) — the same conflict rule as the outbox.
   Future<void> signIn({
@@ -318,6 +346,7 @@ class AuthNotifier extends Notifier<AuthState> {
           madhhab: res.user.madhhab,
           category: res.user.category,
         );
+    await _adoptPrayerAdjust(res.user);
   }
 
   /// Social sign-in (Google/Apple — Task B5): the id_token is verified
@@ -362,6 +391,7 @@ class AuthNotifier extends Notifier<AuthState> {
           madhhab: res.user.madhhab,
           category: res.user.category,
         );
+    await _adoptPrayerAdjust(res.user);
   }
 
   /// Replace the in-session user after a profile PATCH (gender completion).

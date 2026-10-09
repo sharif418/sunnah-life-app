@@ -7,7 +7,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { AmalEntry, Gender, Lang, CalcMethodKey, Madhhab, User } from "@/types/domain";
+import type { AmalEntry, Gender, Lang, CalcMethodKey, Madhhab, PrayerAdjust, User } from "@/types/domain";
 import { CITIES, DHAKA } from "@/lib/cities";
 import { API_BASE, apiUrl } from "@/lib/api-base";
 
@@ -25,6 +25,8 @@ export interface LocalProfile {
   onboardingDone: boolean;
   /** the member's own Hijri correction, −2..2 days (kept on this device) */
   hijriAdjust?: number;
+  /** minutes per waqt to match the member's own mosque (synced to the account) */
+  prayerAdjust?: PrayerAdjust;
 }
 
 export type SyncState = "idle" | "syncing" | "offline" | "error";
@@ -75,7 +77,7 @@ const DEFAULT_PROFILE: LocalProfile = {
   city: DHAKA.nameEn,
   lat: DHAKA.lat,
   lng: DHAKA.lng,
-  method: "karachi",
+  method: "ifb",
   madhhab: "hanafi",
   onboardingDone: false,
 };
@@ -141,6 +143,11 @@ export const useApp = create<AppState>()(
               lng: user.lng ?? get().profile.lng,
               method: user.calcMethod,
               madhhab: user.madhhab,
+              // the account's mosque adjustment wins once it has one
+              prayerAdjust:
+                user.prayerAdjust && Object.keys(user.prayerAdjust).length > 0
+                  ? user.prayerAdjust
+                  : get().profile.prayerAdjust,
               onboardingDone: true,
             },
           });
@@ -192,6 +199,15 @@ export const useApp = create<AppState>()(
     {
       name: "sunnahlife-app",
       storage: createJSONStorage(() => localStorage),
+      // v1 (2026-10-09): IFB became the default; Karachi was only ever the
+      // default before, so a stored "karachi" moves too (server migration does
+      // the same).
+      version: 1,
+      migrate: (persisted, version) => {
+        const st = persisted as { profile?: LocalProfile };
+        if (version < 1 && st?.profile?.method === "karachi") st.profile.method = "ifb";
+        return st as never;
+      },
       partialize: (s) => ({
         profile: s.profile,
         amalCache: s.amalCache,
@@ -256,9 +272,9 @@ if (typeof window !== "undefined") {
 }
 
 /** Convenience selectors */
-export function currentPrayerConfig(): { lat: number; lng: number; city: string; method: CalcMethodKey; madhhab: Madhhab; tzOffsetHours: number } {
+export function currentPrayerConfig(): { lat: number; lng: number; city: string; method: CalcMethodKey; madhhab: Madhhab; tzOffsetHours: number; adjust: PrayerAdjust } {
   const p = useApp.getState().profile;
   const city = CITIES.find((c) => c.nameEn === p.city);
   const tz = city?.tz ?? -new Date().getTimezoneOffset() / 60;
-  return { lat: p.lat, lng: p.lng, city: p.city, method: p.method, madhhab: p.madhhab, tzOffsetHours: tz };
+  return { lat: p.lat, lng: p.lng, city: p.city, method: p.method, madhhab: p.madhhab, tzOffsetHours: tz, adjust: p.prayerAdjust ?? {} };
 }

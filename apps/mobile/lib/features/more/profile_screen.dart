@@ -17,6 +17,7 @@ import '../../models/domain.dart';
 import '../../services/platform_channels.dart';
 import '../../state/providers.dart';
 import '../shared/city_picker.dart';
+import 'prayer_time_settings.dart';
 import 'delete_account_sheet.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
@@ -255,7 +256,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   title: Text(context.t('onb_method')),
                   subtitle: Text(context.t(profile.method.labelKey)),
                   trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
-                  onTap: () => _pickMethod(context),
+                  onTap: () => showMethodPicker(context, ref),
+                ),
+                // the reader's own minutes per waqt (their mosque's azan)
+                ListTile(
+                  key: const ValueKey('profile_prayer_adjust'),
+                  leading: const Icon(PhosphorIconsRegular.mosque),
+                  title: Text(context.t('adjust_title')),
+                  subtitle: Text(
+                    prayerAdjustSummary(context, profile.prayerAdjust),
+                  ),
+                  trailing: const Icon(PhosphorIconsRegular.pencilSimple, size: 18),
+                  onTap: () => showPrayerAdjustSheet(context),
                 ),
                 ListTile(
                   leading: const Icon(PhosphorIconsRegular.calendarBlank),
@@ -557,28 +569,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
     if (picked != null) {
       await ref.read(profileProvider.notifier).update(madhhab: picked);
-    }
-  }
-
-  Future<void> _pickMethod(BuildContext context) async {
-    final picked = await showModalBottomSheet<CalcMethod>(
-      context: context,
-      builder: (context) => SafeArea(
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            for (final m in CalcMethod.values)
-              ListTile(
-                title: Text(context.t(m.labelKey)),
-                selected: m == ref.read(profileProvider).method,
-                onTap: () => Navigator.pop(context, m),
-              ),
-          ],
-        ),
-      ),
-    );
-    if (picked != null) {
-      await ref.read(profileProvider.notifier).update(method: picked);
     }
   }
 

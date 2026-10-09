@@ -103,7 +103,10 @@ void main() {
         .entries)
       e.key: e.value as Object,
   };
+  // SL_RENDER_TAP may list several steps: 'text|tip:tooltip|text'
   final tapText = Platform.environment['SL_RENDER_TAP'];
+  // SL_RENDER_ADJUST='{"maghrib":5}' seeds the profile's ± minutes
+  final seededAdjust = Platform.environment['SL_RENDER_ADJUST'];
   final suffix = Platform.environment['SL_RENDER_SUFFIX'] ?? '';
 
   setUp(() {
@@ -133,6 +136,9 @@ void main() {
               GuestProfilesCompanion(
                 onboardingDone: const Value(true),
                 themeMode: Value(theme),
+                prayerAdjust: seededAdjust == null
+                    ? const Value.absent()
+                    : Value(seededAdjust),
               ),
             );
             final container = ProviderContainer(
@@ -192,8 +198,14 @@ void main() {
             } on FlutterError {
               await tester.pump(const Duration(seconds: 1));
             }
-            if (tapText != null && tapText.isNotEmpty) {
-              await tester.tap(find.text(tapText).first);
+            for (final step in (tapText ?? '').split('|')) {
+              if (step.isEmpty) continue;
+              final target = step.startsWith('tip:')
+                  ? find.byTooltip(step.substring(4))
+                  : find.text(step);
+              await tester.ensureVisible(target.first);
+              await tester.pumpAndSettle();
+              await tester.tap(target.first);
               try {
                 await tester.pumpAndSettle(
                   const Duration(milliseconds: 100),

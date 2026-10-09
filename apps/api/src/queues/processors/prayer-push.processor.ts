@@ -7,8 +7,8 @@ import { PushService } from "../../push/push.service";
 import { DEEP_LINKS } from "../../push/deep-links";
 import { DHAKA_LAT, DHAKA_LNG } from "../../shared/amal";
 import { todayInTz, tzOffsetHoursFor, wallTimeToEpoch } from "../../shared/tz";
-import { PRAYER_LABELS_BN, type PrayerKey } from "../../shared/domain";
-import { computePrayerTimes } from "../../shared/prayer-times";
+import { PRAYER_LABELS_BN, type CalcMethodKey, type PrayerKey } from "../../shared/domain";
+import { computePrayerTimes, parsePrayerAdjust } from "../../shared/prayer-times";
 import { addDays } from "../../shared/calendars";
 
 const FARZ: PrayerKey[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
@@ -75,7 +75,7 @@ export class PrayerPushProcessor extends WorkerHost {
     const users = await this.rls.system((tx) =>
       tx.user.findMany({
         where: { lat: { not: null }, lng: { not: null } },
-        select: { id: true, lat: true, lng: true, calcMethod: true, madhhab: true, tz: true },
+        select: { id: true, lat: true, lng: true, calcMethod: true, madhhab: true, tz: true, prayerAdjust: true },
       })
     );
 
@@ -94,8 +94,10 @@ export class PrayerPushProcessor extends WorkerHost {
           lat: u.lat ?? DHAKA_LAT,
           lng: u.lng ?? DHAKA_LNG,
           tzOffsetHours: tzOffsetHoursFor(tomorrow, tz),
-          method: u.calcMethod as "karachi",
+          method: u.calcMethod as CalcMethodKey,
           madhhab: u.madhhab as "hanafi",
+          // the member's own mosque — the push rings with its adhan
+          adjust: parsePrayerAdjust(u.prayerAdjust) ?? {},
         }
       );
 

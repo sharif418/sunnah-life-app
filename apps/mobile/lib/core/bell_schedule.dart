@@ -14,6 +14,7 @@ import 'dart:convert';
 import '../models/domain.dart';
 import 'date_keys.dart';
 import 'prayer_engine.dart';
+import 'prayer_adjust.dart';
 
 /// Rolling scheduling window: today + tomorrow + the day after. The daily
 /// WorkManager re-arm + the boot receiver keep at least this much pending,
@@ -112,6 +113,7 @@ class PrayerBellConfig {
     required this.tz,
     required this.method,
     required this.madhhab,
+    this.adjust = const PrayerAdjust(),
   });
 
   final double lat;
@@ -120,9 +122,13 @@ class PrayerBellConfig {
   final CalcMethod method;
   final Madhhab madhhab;
 
+  /// The reader's ± minutes (their mosque's azan) — moves the bells too.
+  final PrayerAdjust adjust;
+
   /// Reschedule trigger: two configs describe the same schedule iff their
   /// keys are equal (double + enum fields stringify losslessly here).
-  String get scheduleKey => '$lat|$lng|$tz|${method.json}|${madhhab.json}';
+  String get scheduleKey =>
+      '$lat|$lng|$tz|${method.json}|${madhhab.json}|${adjust.encode()}';
 }
 
 /// DateKeys of the rolling window ([today], [today]+1, [today]+2).
