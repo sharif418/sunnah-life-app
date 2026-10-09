@@ -2977,7 +2977,7 @@ abstract class AppLocalizations {
   /// No description provided for @contact_title.
   ///
   /// In bn, this message translates to:
-  /// **'যোগাযোগ'**
+  /// **'সাহায্য ও যোগাযোগ'**
   String get contact_title;
 
   /// No description provided for @contact_call.
@@ -6219,6 +6219,48 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'গুগল ম্যাপে কাছের মসজিদ খুঁজুন'**
   String get mosques_maps_search;
+
+  /// No description provided for @contact_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাপ নিয়ে প্রশ্ন বা সমস্যা — আমরা আছি।'**
+  String get contact_sub;
+
+  /// No description provided for @contact_support_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'সমস্যা লিখে পাঠান — উত্তর অ্যাপেই পাবেন'**
+  String get contact_support_sub;
+
+  /// No description provided for @contact_masala_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'দ্বীনি প্রশ্ন মুফতি সাহেবের কাছে'**
+  String get contact_masala_sub;
+
+  /// No description provided for @contact_orgs.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমাদের প্রতিষ্ঠান'**
+  String get contact_orgs;
+
+  /// No description provided for @contact_email_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%o-কে ইমেইল করুন'**
+  String get contact_email_a11y;
+
+  /// No description provided for @contact_call_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%o-কে কল করুন'**
+  String get contact_call_a11y;
+
+  /// No description provided for @contact_site_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%o-এর ওয়েবসাইট খুলুন'**
+  String get contact_site_a11y;
 }
 
 class _AppLocalizationsDelegate

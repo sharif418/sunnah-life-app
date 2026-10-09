@@ -1489,7 +1489,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminder_upcoming => 'Upcoming';
 
   @override
-  String get contact_title => 'Contact us';
+  String get contact_title => 'Help & contact';
 
   @override
   String get contact_call => 'Call';
@@ -3187,4 +3187,26 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mosques_maps_search => 'Find mosques near you in Google Maps';
+
+  @override
+  String get contact_sub =>
+      'A question or a problem with the app — we are here.';
+
+  @override
+  String get contact_support_sub => 'Write to us — the answer comes in the app';
+
+  @override
+  String get contact_masala_sub => 'A religious question for the mufti';
+
+  @override
+  String get contact_orgs => 'Our institutions';
+
+  @override
+  String get contact_email_a11y => 'Email %o';
+
+  @override
+  String get contact_call_a11y => 'Call %o';
+
+  @override
+  String get contact_site_a11y => 'Open the %o website';
 }

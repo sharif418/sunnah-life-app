@@ -1492,7 +1492,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get reminder_upcoming => 'আসছে';
 
   @override
-  String get contact_title => 'যোগাযোগ';
+  String get contact_title => 'সাহায্য ও যোগাযোগ';
 
   @override
   String get contact_call => 'কল করুন';
@@ -3190,4 +3190,25 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get mosques_maps_search => 'গুগল ম্যাপে কাছের মসজিদ খুঁজুন';
+
+  @override
+  String get contact_sub => 'অ্যাপ নিয়ে প্রশ্ন বা সমস্যা — আমরা আছি।';
+
+  @override
+  String get contact_support_sub => 'সমস্যা লিখে পাঠান — উত্তর অ্যাপেই পাবেন';
+
+  @override
+  String get contact_masala_sub => 'দ্বীনি প্রশ্ন মুফতি সাহেবের কাছে';
+
+  @override
+  String get contact_orgs => 'আমাদের প্রতিষ্ঠান';
+
+  @override
+  String get contact_email_a11y => '%o-কে ইমেইল করুন';
+
+  @override
+  String get contact_call_a11y => '%o-কে কল করুন';
+
+  @override
+  String get contact_site_a11y => '%o-এর ওয়েবসাইট খুলুন';
 }

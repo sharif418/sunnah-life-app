@@ -479,7 +479,7 @@
   "reminder_due": "এখন",
   "reminder_overdue": "মেয়াদ পেরিয়েছে",
   "reminder_upcoming": "আসছে",
-  "contact_title": "যোগাযোগ",
+  "contact_title": "সাহায্য ও যোগাযোগ",
   "contact_call": "কল করুন",
   "contact_website": "ওয়েবসাইট",
   "contact_call_failed": "কল করা যায়নি",
@@ -1019,5 +1019,12 @@
   "mosques_nearest": "সবচেয়ে কাছে",
   "mosques_more_nearby": "আশেপাশের আরও মসজিদ",
   "mosques_star_tip": "যে মসজিদে নিয়মিত যান, তার তারকা চাপুন — সবার উপরে থাকবে।",
-  "mosques_maps_search": "গুগল ম্যাপে কাছের মসজিদ খুঁজুন"
+  "mosques_maps_search": "গুগল ম্যাপে কাছের মসজিদ খুঁজুন",
+  "contact_sub": "অ্যাপ নিয়ে প্রশ্ন বা সমস্যা — আমরা আছি।",
+  "contact_support_sub": "সমস্যা লিখে পাঠান — উত্তর অ্যাপেই পাবেন",
+  "contact_masala_sub": "দ্বীনি প্রশ্ন মুফতি সাহেবের কাছে",
+  "contact_orgs": "আমাদের প্রতিষ্ঠান",
+  "contact_email_a11y": "%o-কে ইমেইল করুন",
+  "contact_call_a11y": "%o-কে কল করুন",
+  "contact_site_a11y": "%o-এর ওয়েবসাইট খুলুন"
 }
