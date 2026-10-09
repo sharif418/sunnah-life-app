@@ -1837,7 +1837,7 @@ abstract class AppLocalizations {
   /// No description provided for @quran_juz.
   ///
   /// In bn, this message translates to:
-  /// **'জুয়'**
+  /// **'পারা'**
   String get quran_juz;
 
   /// No description provided for @sunnah_cat_all.
@@ -5475,6 +5475,354 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'নামাজের পর'**
   String get adhkar_tab_post_salat;
+
+  /// No description provided for @quran_tab_surah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূরা'**
+  String get quran_tab_surah;
+
+  /// No description provided for @quran_tab_para.
+  ///
+  /// In bn, this message translates to:
+  /// **'পারা'**
+  String get quran_tab_para;
+
+  /// No description provided for @quran_tab_bookmarks.
+  ///
+  /// In bn, this message translates to:
+  /// **'বুকমার্ক'**
+  String get quran_tab_bookmarks;
+
+  /// No description provided for @quran_search_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূরার নাম, অর্থ বা নম্বর'**
+  String get quran_search_hint;
+
+  /// No description provided for @quran_continue.
+  ///
+  /// In bn, this message translates to:
+  /// **'চালিয়ে পড়ুন'**
+  String get quran_continue;
+
+  /// No description provided for @quran_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আয়াত'**
+  String get quran_ayah;
+
+  /// No description provided for @quran_para_starts_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'%s · আয়াত %a থেকে'**
+  String get quran_para_starts_fmt;
+
+  /// No description provided for @quran_bookmarks_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো বুকমার্ক নেই। আয়াতে চাপ দিয়ে বুকমার্ক করুন — এখানে জমা থাকবে।'**
+  String get quran_bookmarks_empty;
+
+  /// No description provided for @quran_bookmarked.
+  ///
+  /// In bn, this message translates to:
+  /// **'বুকমার্ক করা হলো'**
+  String get quran_bookmarked;
+
+  /// No description provided for @quran_bookmark_removed.
+  ///
+  /// In bn, this message translates to:
+  /// **'বুকমার্ক সরানো হলো'**
+  String get quran_bookmark_removed;
+
+  /// No description provided for @quran_bookmark_remove.
+  ///
+  /// In bn, this message translates to:
+  /// **'বুকমার্ক সরান'**
+  String get quran_bookmark_remove;
+
+  /// No description provided for @quran_text_size.
+  ///
+  /// In bn, this message translates to:
+  /// **'লেখার আকার'**
+  String get quran_text_size;
+
+  /// No description provided for @quran_arabic_size.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরবি'**
+  String get quran_arabic_size;
+
+  /// No description provided for @quran_translation_size.
+  ///
+  /// In bn, this message translates to:
+  /// **'অনুবাদ'**
+  String get quran_translation_size;
+
+  /// No description provided for @quran_play_from_here.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখান থেকে শুনুন'**
+  String get quran_play_from_here;
+
+  /// No description provided for @quran_play_surah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূরা শুনুন'**
+  String get quran_play_surah;
+
+  /// No description provided for @quran_prev_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগের আয়াত'**
+  String get quran_prev_ayah;
+
+  /// No description provided for @quran_next_ayah.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরের আয়াত'**
+  String get quran_next_ayah;
+
+  /// No description provided for @quran_pause.
+  ///
+  /// In bn, this message translates to:
+  /// **'বিরতি'**
+  String get quran_pause;
+
+  /// No description provided for @quran_resume_audio.
+  ///
+  /// In bn, this message translates to:
+  /// **'চালু করুন'**
+  String get quran_resume_audio;
+
+  /// No description provided for @quran_surah_end.
+  ///
+  /// In bn, this message translates to:
+  /// **'সূরা শেষ — সাদাকাল্লাহুল আযীম'**
+  String get quran_surah_end;
+
+  /// No description provided for @quran_next_surah.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরের সূরা'**
+  String get quran_next_surah;
+
+  /// No description provided for @dua_favourites.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রিয়'**
+  String get dua_favourites;
+
+  /// No description provided for @dua_favourite.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রিয় তালিকায় রাখুন'**
+  String get dua_favourite;
+
+  /// No description provided for @dua_favourites_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো প্রিয় দোয়া নেই। দোয়ার পাশে ♥ চাপ দিলে এখানে জমা থাকবে।'**
+  String get dua_favourites_empty;
+
+  /// No description provided for @name_prev.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগের নাম'**
+  String get name_prev;
+
+  /// No description provided for @name_next.
+  ///
+  /// In bn, this message translates to:
+  /// **'পরের নাম'**
+  String get name_next;
+
+  /// No description provided for @names_shortlist.
+  ///
+  /// In bn, this message translates to:
+  /// **'পছন্দের তালিকা'**
+  String get names_shortlist;
+
+  /// No description provided for @names_shortlist_add.
+  ///
+  /// In bn, this message translates to:
+  /// **'পছন্দের তালিকায় রাখুন'**
+  String get names_shortlist_add;
+
+  /// No description provided for @names_shortlisted.
+  ///
+  /// In bn, this message translates to:
+  /// **'পছন্দের তালিকায় আছে'**
+  String get names_shortlisted;
+
+  /// No description provided for @iman_check_cta_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজের ঈমান যাচাই করুন'**
+  String get iman_check_cta_title;
+
+  /// No description provided for @iman_check_cta_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'শাখাগুলো ধরে নিজেকে মিলিয়ে দেখুন — ফলাফল শুধু আপনার ফোনে থাকে'**
+  String get iman_check_cta_body;
+
+  /// No description provided for @quiz_leave_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুইজ ছেড়ে যাবেন?'**
+  String get quiz_leave_title;
+
+  /// No description provided for @quiz_leave_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন পর্যন্ত দেওয়া উত্তর হারিয়ে যাবে।'**
+  String get quiz_leave_body;
+
+  /// No description provided for @quiz_keep_playing.
+  ///
+  /// In bn, this message translates to:
+  /// **'চালিয়ে যাই'**
+  String get quiz_keep_playing;
+
+  /// No description provided for @quiz_leave.
+  ///
+  /// In bn, this message translates to:
+  /// **'ছেড়ে যাই'**
+  String get quiz_leave;
+
+  /// No description provided for @quiz_review_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'ভুল উত্তরগুলো (%nটি) — আবার দেখে নিন'**
+  String get quiz_review_title;
+
+  /// No description provided for @quiz_result_offline.
+  ///
+  /// In bn, this message translates to:
+  /// **'অফলাইন — স্কোর সার্ভারে পাঠানো যায়নি'**
+  String get quiz_result_offline;
+
+  /// No description provided for @ilm_continue.
+  ///
+  /// In bn, this message translates to:
+  /// **'চালিয়ে যান'**
+  String get ilm_continue;
+
+  /// No description provided for @ilm_course_progress_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'%t পাঠের %dটি শেষ — চালিয়ে যান'**
+  String get ilm_course_progress_fmt;
+
+  /// No description provided for @live_quiz_you_right.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার উত্তর সঠিক — মাশাআল্লাহ'**
+  String get live_quiz_you_right;
+
+  /// No description provided for @live_quiz_you_wrong.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার উত্তর ঠিক হয়নি'**
+  String get live_quiz_you_wrong;
+
+  /// No description provided for @live_quiz_you_skipped.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই প্রশ্নে আপনি উত্তর দেননি'**
+  String get live_quiz_you_skipped;
+
+  /// No description provided for @sunnah_mark_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ পালন করেছি'**
+  String get sunnah_mark_done;
+
+  /// No description provided for @sunnah_done_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ পালন হয়েছে'**
+  String get sunnah_done_today;
+
+  /// No description provided for @sunnah_today_count.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ %nটি সুন্নাহ পালন করেছেন — আলহামদুলিল্লাহ'**
+  String get sunnah_today_count;
+
+  /// No description provided for @sunnah_today_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ যে সুন্নাহগুলো পালন করলেন, টিক দিয়ে রাখুন'**
+  String get sunnah_today_hint;
+
+  /// No description provided for @ilm_desc_courses.
+  ///
+  /// In bn, this message translates to:
+  /// **'ধাপে ধাপে দ্বীন শিখুন — পাঠ ও অগ্রগতি'**
+  String get ilm_desc_courses;
+
+  /// No description provided for @ilm_desc_quizzes.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজের জ্ঞান যাচাই করুন, ভুল থেকে শিখুন'**
+  String get ilm_desc_quizzes;
+
+  /// No description provided for @ilm_desc_live_quiz.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরার সবার সাথে একসাথে কুইজ'**
+  String get ilm_desc_live_quiz;
+
+  /// No description provided for @ilm_desc_quran.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরবি, বাংলা অনুবাদ ও তিলাওয়াত'**
+  String get ilm_desc_quran;
+
+  /// No description provided for @ilm_desc_adhkar.
+  ///
+  /// In bn, this message translates to:
+  /// **'সকাল-সন্ধ্যা ও নামাজের পরের যিকির, গণনাসহ'**
+  String get ilm_desc_adhkar;
+
+  /// No description provided for @ilm_desc_duas.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতিদিনের মাসনূন দোয়া, সূত্রসহ'**
+  String get ilm_desc_duas;
+
+  /// No description provided for @ilm_desc_sunnahs.
+  ///
+  /// In bn, this message translates to:
+  /// **'দৈনন্দিন ও ভুলে যাওয়া সুন্নাহ'**
+  String get ilm_desc_sunnahs;
+
+  /// No description provided for @ilm_desc_names99.
+  ///
+  /// In bn, this message translates to:
+  /// **'অর্থ ও ফযীলতসহ'**
+  String get ilm_desc_names99;
+
+  /// No description provided for @ilm_desc_islamic_names.
+  ///
+  /// In bn, this message translates to:
+  /// **'শিশুর অর্থবহ নাম — ছেলে ও মেয়ে'**
+  String get ilm_desc_islamic_names;
+
+  /// No description provided for @ilm_desc_iman_branches.
+  ///
+  /// In bn, this message translates to:
+  /// **'৭০ শাখা — আর নিজের ঈমান যাচাই'**
+  String get ilm_desc_iman_branches;
+
+  /// No description provided for @ilm_desc_articles.
+  ///
+  /// In bn, this message translates to:
+  /// **'তারবিয়াহ, দাওয়াহ ও সুন্নাহ নিয়ে লেখা'**
+  String get ilm_desc_articles;
 }
 
 class _AppLocalizationsDelegate

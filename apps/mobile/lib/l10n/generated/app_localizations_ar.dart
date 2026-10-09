@@ -2757,4 +2757,179 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adhkar_tab_post_salat => 'بعد الصلاة';
+
+  @override
+  String get quran_tab_surah => 'السور';
+
+  @override
+  String get quran_tab_para => 'الأجزاء';
+
+  @override
+  String get quran_tab_bookmarks => 'العلامات';
+
+  @override
+  String get quran_search_hint => 'اسم السورة أو رقمها';
+
+  @override
+  String get quran_continue => 'تابع القراءة';
+
+  @override
+  String get quran_ayah => 'آية';
+
+  @override
+  String get quran_para_starts_fmt => '%s · من الآية %a';
+
+  @override
+  String get quran_bookmarks_empty => 'لا علامات بعد. انقر آية لحفظها.';
+
+  @override
+  String get quran_bookmarked => 'تم الحفظ';
+
+  @override
+  String get quran_bookmark_removed => 'أزيلت العلامة';
+
+  @override
+  String get quran_bookmark_remove => 'إزالة العلامة';
+
+  @override
+  String get quran_text_size => 'حجم الخط';
+
+  @override
+  String get quran_arabic_size => 'العربية';
+
+  @override
+  String get quran_translation_size => 'الترجمة';
+
+  @override
+  String get quran_play_from_here => 'استمع من هنا';
+
+  @override
+  String get quran_play_surah => 'استمع للسورة';
+
+  @override
+  String get quran_prev_ayah => 'الآية السابقة';
+
+  @override
+  String get quran_next_ayah => 'الآية التالية';
+
+  @override
+  String get quran_pause => 'إيقاف مؤقت';
+
+  @override
+  String get quran_resume_audio => 'استئناف';
+
+  @override
+  String get quran_surah_end => 'صدق الله العظيم';
+
+  @override
+  String get quran_next_surah => 'السورة التالية';
+
+  @override
+  String get dua_favourites => 'المفضلة';
+
+  @override
+  String get dua_favourite => 'أضف إلى المفضلة';
+
+  @override
+  String get dua_favourites_empty => 'لا أدعية مفضلة بعد. انقر ♥ بجانب الدعاء.';
+
+  @override
+  String get name_prev => 'السابق';
+
+  @override
+  String get name_next => 'التالي';
+
+  @override
+  String get names_shortlist => 'القائمة المختارة';
+
+  @override
+  String get names_shortlist_add => 'أضف إلى القائمة';
+
+  @override
+  String get names_shortlisted => 'في القائمة';
+
+  @override
+  String get iman_check_cta_title => 'افحص إيمانك';
+
+  @override
+  String get iman_check_cta_body =>
+      'قِس نفسك شعبة شعبة — تبقى النتيجة على هاتفك';
+
+  @override
+  String get quiz_leave_title => 'مغادرة المسابقة؟';
+
+  @override
+  String get quiz_leave_body => 'ستضيع إجاباتك حتى الآن.';
+
+  @override
+  String get quiz_keep_playing => 'متابعة';
+
+  @override
+  String get quiz_leave => 'مغادرة';
+
+  @override
+  String get quiz_review_title => 'إجاباتك الخاطئة (%n) — راجعها';
+
+  @override
+  String get quiz_result_offline => 'غير متصل — تعذّر إرسال النتيجة';
+
+  @override
+  String get ilm_continue => 'تابع';
+
+  @override
+  String get ilm_course_progress_fmt => 'أُنجز %d من %t';
+
+  @override
+  String get live_quiz_you_right => 'إجابتك صحيحة';
+
+  @override
+  String get live_quiz_you_wrong => 'إجابتك غير صحيحة';
+
+  @override
+  String get live_quiz_you_skipped => 'لم تُجب عن هذا السؤال';
+
+  @override
+  String get sunnah_mark_done => 'عملت بها اليوم';
+
+  @override
+  String get sunnah_done_today => 'تمت اليوم';
+
+  @override
+  String get sunnah_today_count => 'عملت اليوم بـ %n من السنن — الحمد لله';
+
+  @override
+  String get sunnah_today_hint => 'علّم السنن التي عملت بها اليوم';
+
+  @override
+  String get ilm_desc_courses => 'تعلّم خطوة بخطوة';
+
+  @override
+  String get ilm_desc_quizzes => 'اختبر نفسك وتعلّم من أخطائك';
+
+  @override
+  String get ilm_desc_live_quiz => 'مسابقة مع أسرتك';
+
+  @override
+  String get ilm_desc_quran => 'العربية والترجمة والتلاوة';
+
+  @override
+  String get ilm_desc_adhkar => 'أذكار الصباح والمساء وبعد الصلاة';
+
+  @override
+  String get ilm_desc_duas => 'أدعية يومية مع مصادرها';
+
+  @override
+  String get ilm_desc_sunnahs => 'سنن يومية ومنسية';
+
+  @override
+  String get ilm_desc_names99 => 'مع المعاني والفضائل';
+
+  @override
+  String get ilm_desc_islamic_names => 'أسماء ذات معنى للأولاد والبنات';
+
+  @override
+  String get ilm_desc_iman_branches => 'الشعب السبعون والفحص الذاتي';
+
+  @override
+  String get ilm_desc_articles => 'مقالات في التربية والدعوة والسنة';
 }

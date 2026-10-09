@@ -474,6 +474,7 @@ class PhosphorIconsFill {
 
   // the home prayer card's sun and moon (2026-10-07)
   static const IconData moon = IconData(0xe330, fontFamily: 'PhosphorFill');
+  static const IconData heart = IconData(0xe2a8, fontFamily: 'PhosphorFill');
   static const IconData sun = IconData(0xe472, fontFamily: 'PhosphorFill');
 
   static const IconData bell = IconData(0xe0ce, fontFamily: 'PhosphorFill');

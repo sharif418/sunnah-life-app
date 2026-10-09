@@ -455,3 +455,134 @@ class SearchHitFrame extends StatelessWidget {
     );
   }
 }
+
+/// A card of menu rows — the list style of the More tab, also used by the
+/// Ilm hub (2026-10-09: one pattern for "where do I go": a heading, then
+/// full-width rows; easier to read and to hit than a grid of small tiles,
+/// especially at large text sizes).
+class MenuGroupCard extends StatelessWidget {
+  const MenuGroupCard({super.key, required this.rows});
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                indent: SLSpacing.s16 + 40 + SLSpacing.s12,
+                endIndent: SLSpacing.s16,
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.6),
+              ),
+            rows[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One menu row: the icon in a soft square, the name, a one-line hint of
+/// what is inside, an optional "নতুন" badge, and a chevron. The WHOLE row
+/// is the tap target (60dp+); the name and hint wrap rather than cut.
+class MenuRow extends StatelessWidget {
+  const MenuRow({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.onTap,
+    this.subtitle,
+    this.badge,
+  });
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final String? badge;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    return InkWell(
+      onTap: onTap,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 64),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: SLSpacing.s16,
+            vertical: SLSpacing.s12,
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: SLRadius.brMd,
+                ),
+                child: Icon(icon, size: 22, color: cs.primary),
+              ),
+              const SizedBox(width: SLSpacing.s12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (subtitle?.isNotEmpty ?? false)
+                      Text(
+                        subtitle!,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (badge != null) ...[
+                const SizedBox(width: SLSpacing.s8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.tertiary,
+                    borderRadius: SLRadius.brPill,
+                  ),
+                  child: Text(
+                    badge!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onTertiary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+              const SizedBox(width: SLSpacing.s4),
+              DirectionalIcon(
+                PhosphorIconsRegular.caretRight,
+                color: cs.onSurfaceVariant,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

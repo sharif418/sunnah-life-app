@@ -173,6 +173,13 @@ body {
   background: transparent;
 }
 
+/* Arabic text (duas, dhikr, the 99 names) — a Naskh face where the system
+   has one, so the harakat read clearly for the reviewing scholar */
+.font-arabic {
+  font-family: "Noto Naskh Arabic", "Amiri", "Traditional Arabic", "Scheherazade New", "Geeza Pro", serif;
+  line-height: 2;
+}
+
 /* focus visibility (WCAG) */
 .focus-ring:focus-visible {
   outline: 2px solid var(--ring);

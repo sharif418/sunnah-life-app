@@ -2787,4 +2787,183 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adhkar_tab_post_salat => 'After salah';
+
+  @override
+  String get quran_tab_surah => 'Surah';
+
+  @override
+  String get quran_tab_para => 'Para';
+
+  @override
+  String get quran_tab_bookmarks => 'Bookmarks';
+
+  @override
+  String get quran_search_hint => 'Surah name, meaning or number';
+
+  @override
+  String get quran_continue => 'Continue reading';
+
+  @override
+  String get quran_ayah => 'Ayah';
+
+  @override
+  String get quran_para_starts_fmt => '%s · from ayah %a';
+
+  @override
+  String get quran_bookmarks_empty =>
+      'No bookmarks yet. Tap an ayah to bookmark it — it will be kept here.';
+
+  @override
+  String get quran_bookmarked => 'Bookmarked';
+
+  @override
+  String get quran_bookmark_removed => 'Bookmark removed';
+
+  @override
+  String get quran_bookmark_remove => 'Remove bookmark';
+
+  @override
+  String get quran_text_size => 'Text size';
+
+  @override
+  String get quran_arabic_size => 'Arabic';
+
+  @override
+  String get quran_translation_size => 'Translation';
+
+  @override
+  String get quran_play_from_here => 'Play from here';
+
+  @override
+  String get quran_play_surah => 'Play the surah';
+
+  @override
+  String get quran_prev_ayah => 'Previous ayah';
+
+  @override
+  String get quran_next_ayah => 'Next ayah';
+
+  @override
+  String get quran_pause => 'Pause';
+
+  @override
+  String get quran_resume_audio => 'Resume';
+
+  @override
+  String get quran_surah_end => 'End of the surah';
+
+  @override
+  String get quran_next_surah => 'Next surah';
+
+  @override
+  String get dua_favourites => 'Favourites';
+
+  @override
+  String get dua_favourite => 'Add to favourites';
+
+  @override
+  String get dua_favourites_empty =>
+      'No favourite duas yet. Tap ♥ beside a dua to keep it here.';
+
+  @override
+  String get name_prev => 'Previous';
+
+  @override
+  String get name_next => 'Next';
+
+  @override
+  String get names_shortlist => 'Shortlist';
+
+  @override
+  String get names_shortlist_add => 'Add to shortlist';
+
+  @override
+  String get names_shortlisted => 'In the shortlist';
+
+  @override
+  String get iman_check_cta_title => 'Check your own iman';
+
+  @override
+  String get iman_check_cta_body =>
+      'Measure yourself branch by branch — the result stays on your phone';
+
+  @override
+  String get quiz_leave_title => 'Leave the quiz?';
+
+  @override
+  String get quiz_leave_body => 'Your answers so far will be lost.';
+
+  @override
+  String get quiz_keep_playing => 'Keep playing';
+
+  @override
+  String get quiz_leave => 'Leave';
+
+  @override
+  String get quiz_review_title => 'Your %n wrong answers — review';
+
+  @override
+  String get quiz_result_offline => 'Offline — the score could not be sent';
+
+  @override
+  String get ilm_continue => 'Continue';
+
+  @override
+  String get ilm_course_progress_fmt => '%d of %t lessons done';
+
+  @override
+  String get live_quiz_you_right => 'Your answer is right';
+
+  @override
+  String get live_quiz_you_wrong => 'Your answer was not right';
+
+  @override
+  String get live_quiz_you_skipped => 'You did not answer this one';
+
+  @override
+  String get sunnah_mark_done => 'Practised today';
+
+  @override
+  String get sunnah_done_today => 'Done today';
+
+  @override
+  String get sunnah_today_count => '%n sunnahs practised today — alhamdulillah';
+
+  @override
+  String get sunnah_today_hint => 'Tick the sunnahs you practised today';
+
+  @override
+  String get ilm_desc_courses => 'Learn step by step — lessons and progress';
+
+  @override
+  String get ilm_desc_quizzes => 'Test yourself and learn from mistakes';
+
+  @override
+  String get ilm_desc_live_quiz => 'A quiz together with your usrah';
+
+  @override
+  String get ilm_desc_quran => 'Arabic, Bengali translation and recitation';
+
+  @override
+  String get ilm_desc_adhkar =>
+      'Morning, evening and after-salah dhikr with counters';
+
+  @override
+  String get ilm_desc_duas => 'Everyday sunnah duas with sources';
+
+  @override
+  String get ilm_desc_sunnahs =>
+      'Daily and forgotten sunnahs — tick what you practise';
+
+  @override
+  String get ilm_desc_names99 => 'With meanings and virtues';
+
+  @override
+  String get ilm_desc_islamic_names => 'Meaningful names for boys and girls';
+
+  @override
+  String get ilm_desc_iman_branches => 'The 70 branches — and a self-check';
+
+  @override
+  String get ilm_desc_articles => 'Writing on tarbiyah, dawah and sunnah';
 }

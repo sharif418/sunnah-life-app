@@ -569,7 +569,13 @@ class _StatusPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(connected ? PhosphorIconsRegular.wifiHigh : PhosphorIconsRegular.wifiSlash, size: 14, color: color),
+          Icon(
+            connected
+                ? PhosphorIconsRegular.wifiHigh
+                : PhosphorIconsRegular.wifiSlash,
+            size: 14,
+            color: color,
+          ),
           const SizedBox(width: 6),
           Text(
             label,
@@ -736,7 +742,10 @@ class _HostCard extends StatelessWidget {
                       child: state._phase == 'question'
                           ? FilledButton.icon(
                               onPressed: state._hostNext,
-                              icon: const Icon(PhosphorIconsRegular.lightning, size: 18),
+                              icon: const Icon(
+                                PhosphorIconsRegular.lightning,
+                                size: 18,
+                              ),
                               label: Text(context.t('live_quiz_reveal_now')),
                             )
                           : FilledButton.icon(
@@ -752,7 +761,10 @@ class _HostCard extends StatelessWidget {
                     Expanded(
                       child: OutlinedButton.icon(
                         onPressed: state._hostEnd,
-                        icon: const Icon(PhosphorIconsRegular.stopCircle, size: 18),
+                        icon: const Icon(
+                          PhosphorIconsRegular.stopCircle,
+                          size: 18,
+                        ),
                         label: Text(context.t('live_quiz_end')),
                       ),
                     ),
@@ -835,7 +847,10 @@ class _QuizPickRow extends StatelessWidget {
                 ),
               ),
               if (selected)
-                Icon(PhosphorIconsFill.checkCircle, color: theme.colorScheme.primary),
+                Icon(
+                  PhosphorIconsFill.checkCircle,
+                  color: theme.colorScheme.primary,
+                ),
             ],
           ),
         ),
@@ -1148,11 +1163,19 @@ class _RevealCard extends StatelessWidget {
               '${context.t('live_quiz_reveal_title')} — '
               '${context.t('quiz_question_of')} ${state._num(context, r.index + 1)}',
               style: theme.textTheme.bodySmall?.copyWith(
-                color: gold,
+                // the gold TEXT ink (the gold fill as text was ~2.3:1)
+                color: theme.brightness == Brightness.dark
+                    ? SLColors.darkGoldText
+                    : SLColors.lightGoldText,
                 fontWeight: FontWeight.w700,
               ),
             ),
           ),
+          // the player's own result first (it was never said)
+          if (!state._isHost) ...[
+            const SizedBox(height: SLSpacing.s12),
+            _MyResult(choice: state._myChoice, correct: r.answerIndex),
+          ],
           if (answerText != null) ...[
             const SizedBox(height: SLSpacing.s12),
             Text.rich(
@@ -1201,7 +1224,7 @@ class _RevealCard extends StatelessWidget {
                     borderRadius: SLRadius.brPill,
                   ),
                   child: Text(
-                    '${state._num(context, i + 1)}: '
+                    '${q != null && i < q.options.length ? q.options[i] : state._num(context, i + 1)}: '
                     '${state._num(context, r.tally[i])} '
                     '${context.t('live_quiz_people')}',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -1210,6 +1233,52 @@ class _RevealCard extends StatelessWidget {
                   ),
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "আপনার উত্তর সঠিক / ভুল / দেননি" on the reveal.
+class _MyResult extends StatelessWidget {
+  const _MyResult({required this.choice, required this.correct});
+  final int? choice;
+  final int correct;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final (IconData icon, Color color, String key) = choice == null
+        ? (
+            PhosphorIconsRegular.hourglass,
+            cs.onSurfaceVariant,
+            'live_quiz_you_skipped',
+          )
+        : choice == correct
+        ? (PhosphorIconsFill.checkCircle, cs.primary, 'live_quiz_you_right')
+        : (PhosphorIconsRegular.xCircle, cs.error, 'live_quiz_you_wrong');
+    return Container(
+      key: const ValueKey('live_quiz_my_result'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(SLSpacing.s12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: SLRadius.brMd,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: SLSpacing.s8),
+          Expanded(
+            child: Text(
+              context.t(key),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: color,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
         ],
       ),

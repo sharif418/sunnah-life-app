@@ -41,7 +41,25 @@ export class AllExceptionsFilter implements ExceptionFilter {
         const m = b.message;
         message = Array.isArray(m) ? String(m[0]) : String(m);
       }
-      res.status(status).json({ error: message });
+      // a validation report rides along (the content CMS lists every issue
+      // next to its item)
+      const issues = b && Array.isArray(b.issues) ? b.issues : undefined;
+      res.status(status).json(issues ? { error: message, issues } : { error: message });
+      return;
+    }
+
+    // the body parser's own refusals (too large, malformed JSON) carry their
+    // 4xx — say so instead of a server error
+    const parserErr = exception as { status?: unknown; type?: unknown; expose?: unknown } | null;
+    if (
+      parserErr &&
+      parserErr.expose === true &&
+      typeof parserErr.status === "number" &&
+      parserErr.status >= 400 &&
+      parserErr.status < 500
+    ) {
+      const message = parserErr.type === "entity.too.large" ? "পাঠানো তথ্য খুব বড়" : "পাঠানো তথ্য পড়া যায়নি";
+      res.status(parserErr.status).json({ error: message });
       return;
     }
 

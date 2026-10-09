@@ -899,7 +899,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get badge_new => 'নতুন';
 
   @override
-  String get quran_juz => 'জুয়';
+  String get quran_juz => 'পারা';
 
   @override
   String get sunnah_cat_all => 'সব';
@@ -2791,4 +2791,183 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get adhkar_tab_post_salat => 'নামাজের পর';
+
+  @override
+  String get quran_tab_surah => 'সূরা';
+
+  @override
+  String get quran_tab_para => 'পারা';
+
+  @override
+  String get quran_tab_bookmarks => 'বুকমার্ক';
+
+  @override
+  String get quran_search_hint => 'সূরার নাম, অর্থ বা নম্বর';
+
+  @override
+  String get quran_continue => 'চালিয়ে পড়ুন';
+
+  @override
+  String get quran_ayah => 'আয়াত';
+
+  @override
+  String get quran_para_starts_fmt => '%s · আয়াত %a থেকে';
+
+  @override
+  String get quran_bookmarks_empty =>
+      'এখনো কোনো বুকমার্ক নেই। আয়াতে চাপ দিয়ে বুকমার্ক করুন — এখানে জমা থাকবে।';
+
+  @override
+  String get quran_bookmarked => 'বুকমার্ক করা হলো';
+
+  @override
+  String get quran_bookmark_removed => 'বুকমার্ক সরানো হলো';
+
+  @override
+  String get quran_bookmark_remove => 'বুকমার্ক সরান';
+
+  @override
+  String get quran_text_size => 'লেখার আকার';
+
+  @override
+  String get quran_arabic_size => 'আরবি';
+
+  @override
+  String get quran_translation_size => 'অনুবাদ';
+
+  @override
+  String get quran_play_from_here => 'এখান থেকে শুনুন';
+
+  @override
+  String get quran_play_surah => 'সূরা শুনুন';
+
+  @override
+  String get quran_prev_ayah => 'আগের আয়াত';
+
+  @override
+  String get quran_next_ayah => 'পরের আয়াত';
+
+  @override
+  String get quran_pause => 'বিরতি';
+
+  @override
+  String get quran_resume_audio => 'চালু করুন';
+
+  @override
+  String get quran_surah_end => 'সূরা শেষ — সাদাকাল্লাহুল আযীম';
+
+  @override
+  String get quran_next_surah => 'পরের সূরা';
+
+  @override
+  String get dua_favourites => 'প্রিয়';
+
+  @override
+  String get dua_favourite => 'প্রিয় তালিকায় রাখুন';
+
+  @override
+  String get dua_favourites_empty =>
+      'এখনো কোনো প্রিয় দোয়া নেই। দোয়ার পাশে ♥ চাপ দিলে এখানে জমা থাকবে।';
+
+  @override
+  String get name_prev => 'আগের নাম';
+
+  @override
+  String get name_next => 'পরের নাম';
+
+  @override
+  String get names_shortlist => 'পছন্দের তালিকা';
+
+  @override
+  String get names_shortlist_add => 'পছন্দের তালিকায় রাখুন';
+
+  @override
+  String get names_shortlisted => 'পছন্দের তালিকায় আছে';
+
+  @override
+  String get iman_check_cta_title => 'নিজের ঈমান যাচাই করুন';
+
+  @override
+  String get iman_check_cta_body =>
+      'শাখাগুলো ধরে নিজেকে মিলিয়ে দেখুন — ফলাফল শুধু আপনার ফোনে থাকে';
+
+  @override
+  String get quiz_leave_title => 'কুইজ ছেড়ে যাবেন?';
+
+  @override
+  String get quiz_leave_body => 'এখন পর্যন্ত দেওয়া উত্তর হারিয়ে যাবে।';
+
+  @override
+  String get quiz_keep_playing => 'চালিয়ে যাই';
+
+  @override
+  String get quiz_leave => 'ছেড়ে যাই';
+
+  @override
+  String get quiz_review_title => 'ভুল উত্তরগুলো (%nটি) — আবার দেখে নিন';
+
+  @override
+  String get quiz_result_offline => 'অফলাইন — স্কোর সার্ভারে পাঠানো যায়নি';
+
+  @override
+  String get ilm_continue => 'চালিয়ে যান';
+
+  @override
+  String get ilm_course_progress_fmt => '%t পাঠের %dটি শেষ — চালিয়ে যান';
+
+  @override
+  String get live_quiz_you_right => 'আপনার উত্তর সঠিক — মাশাআল্লাহ';
+
+  @override
+  String get live_quiz_you_wrong => 'আপনার উত্তর ঠিক হয়নি';
+
+  @override
+  String get live_quiz_you_skipped => 'এই প্রশ্নে আপনি উত্তর দেননি';
+
+  @override
+  String get sunnah_mark_done => 'আজ পালন করেছি';
+
+  @override
+  String get sunnah_done_today => 'আজ পালন হয়েছে';
+
+  @override
+  String get sunnah_today_count =>
+      'আজ %nটি সুন্নাহ পালন করেছেন — আলহামদুলিল্লাহ';
+
+  @override
+  String get sunnah_today_hint =>
+      'আজ যে সুন্নাহগুলো পালন করলেন, টিক দিয়ে রাখুন';
+
+  @override
+  String get ilm_desc_courses => 'ধাপে ধাপে দ্বীন শিখুন — পাঠ ও অগ্রগতি';
+
+  @override
+  String get ilm_desc_quizzes => 'নিজের জ্ঞান যাচাই করুন, ভুল থেকে শিখুন';
+
+  @override
+  String get ilm_desc_live_quiz => 'উসরার সবার সাথে একসাথে কুইজ';
+
+  @override
+  String get ilm_desc_quran => 'আরবি, বাংলা অনুবাদ ও তিলাওয়াত';
+
+  @override
+  String get ilm_desc_adhkar => 'সকাল-সন্ধ্যা ও নামাজের পরের যিকির, গণনাসহ';
+
+  @override
+  String get ilm_desc_duas => 'প্রতিদিনের মাসনূন দোয়া, সূত্রসহ';
+
+  @override
+  String get ilm_desc_sunnahs => 'দৈনন্দিন ও ভুলে যাওয়া সুন্নাহ';
+
+  @override
+  String get ilm_desc_names99 => 'অর্থ ও ফযীলতসহ';
+
+  @override
+  String get ilm_desc_islamic_names => 'শিশুর অর্থবহ নাম — ছেলে ও মেয়ে';
+
+  @override
+  String get ilm_desc_iman_branches => '৭০ শাখা — আর নিজের ঈমান যাচাই';
+
+  @override
+  String get ilm_desc_articles => 'তারবিয়াহ, দাওয়াহ ও সুন্নাহ নিয়ে লেখা';
 }
