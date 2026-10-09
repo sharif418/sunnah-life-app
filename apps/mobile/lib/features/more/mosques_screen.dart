@@ -639,7 +639,9 @@ class _MosqueTile extends StatelessWidget {
                         ],
                       ],
                     ),
-                    maxLines: 2,
+                    // three lines: long mapped names ("Kalachadpur
+                    // Paschimpara Jame Masjid") at large text
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (place.isNotEmpty)
