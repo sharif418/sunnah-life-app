@@ -87,6 +87,10 @@ Future<bool> openExternalApp(String url) async {
 String mapsDirectionsUrl(double lat, double lng) =>
     'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng';
 
+/// A point in Google Maps (the map app opens on it). Pure — unit tested.
+String mapsPlaceUrl(double lat, double lng) =>
+    'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
+
 /// "Mosques near here" in Google Maps — finds the ones the bundled pack
 /// does not list. Pure — unit tested.
 String mapsNearbySearchUrl(String query, double lat, double lng) =>

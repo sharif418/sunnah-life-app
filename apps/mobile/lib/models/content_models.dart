@@ -234,20 +234,60 @@ class MosqueInfo {
     required this.addressBn,
     required this.lat,
     required this.lng,
+    this.nameEn,
+    this.area,
+    this.verified = false,
   });
   final String id;
+
+  /// Empty when the mosque is on the map without a name.
   final String nameBn;
   final String addressBn;
   final double lat;
   final double lng;
+  final String? nameEn;
+  final String? area;
 
+  /// From the Foundation's own list (the bundled pack is all verified).
+  final bool verified;
+
+  bool get named => nameBn.trim().isNotEmpty;
+
+  /// The bundled/admin pack (curated by the Foundation).
   factory MosqueInfo.fromJson(Map<String, dynamic> m) => MosqueInfo(
     id: m['id'] as String? ?? '',
     nameBn: m['nameBn'] as String? ?? '',
     addressBn: m['addressBn'] as String? ?? '',
     lat: (m['lat'] as num?)?.toDouble() ?? 0,
     lng: (m['lng'] as num?)?.toDouble() ?? 0,
+    nameEn: m['nameEn'] as String?,
+    area: m['area'] as String?,
+    verified: m['verified'] as bool? ?? true,
   );
+
+  /// GET /api/mosques/near (OpenStreetMap + the verified list).
+  factory MosqueInfo.fromApi(Map<String, dynamic> m) => MosqueInfo(
+    id: m['id'] as String? ?? '',
+    nameBn: m['name'] as String? ?? '',
+    addressBn: m['address'] as String? ?? '',
+    lat: (m['lat'] as num?)?.toDouble() ?? 0,
+    lng: (m['lng'] as num?)?.toDouble() ?? 0,
+    nameEn: m['nameEn'] as String?,
+    area: m['area'] as String?,
+    verified: m['verified'] as bool? ?? false,
+  );
+
+  /// For "আমার মসজিদ" kept on the phone (round-trips through [fromJson]).
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'nameBn': nameBn,
+    'addressBn': addressBn,
+    'lat': lat,
+    'lng': lng,
+    if (nameEn != null) 'nameEn': nameEn,
+    if (area != null) 'area': area,
+    'verified': verified,
+  };
 }
 
 class FaqItem {

@@ -17,6 +17,7 @@
 //
 // Text renders on Windows/macOS exactly as on the Linux CI except for
 // anti-aliasing, which is irrelevant for review.
+import 'dart:convert';
 import 'dart:io';
 import 'dart:ui' as ui;
 
@@ -92,14 +93,27 @@ void main() {
       Platform.environment['SL_RENDER_THEMES']?.split(',') ??
       const ['light', 'dark'];
 
+  // SL_RENDER_PREFS='{"key":"json string"}' seeds the phone's storage (e.g.
+  // a starred mosque); SL_RENDER_TAP='text' taps that text once the screen
+  // has settled (open a sheet, switch a tab) — both on demand only.
+  final seededPrefs = <String, Object>{
+    for (final e in ((Platform.environment['SL_RENDER_PREFS'] ?? '').isEmpty
+            ? <String, dynamic>{}
+            : jsonDecode(Platform.environment['SL_RENDER_PREFS']!) as Map<String, dynamic>)
+        .entries)
+      e.key: e.value as Object,
+  };
+  final tapText = Platform.environment['SL_RENDER_TAP'];
+  final suffix = Platform.environment['SL_RENDER_SUFFIX'] ?? '';
+
   setUp(() {
-    SharedPreferences.setMockInitialValues(<String, Object>{});
+    SharedPreferences.setMockInitialValues(seededPrefs);
   });
 
   for (final path in paths) {
     for (final theme in themes) {
       for (final (width, scale) in _viewports) {
-        final name = '${_slug(path)}_${theme}_${width.toInt()}w_${scale}x';
+        final name = '${_slug(path)}${suffix}_${theme}_${width.toInt()}w_${scale}x';
         testWidgets(
           name,
           (tester) async {
@@ -177,6 +191,18 @@ void main() {
               );
             } on FlutterError {
               await tester.pump(const Duration(seconds: 1));
+            }
+            if (tapText != null && tapText.isNotEmpty) {
+              await tester.tap(find.text(tapText).first);
+              try {
+                await tester.pumpAndSettle(
+                  const Duration(milliseconds: 100),
+                  EnginePhase.sendSemanticsUpdate,
+                  const Duration(seconds: 5),
+                );
+              } on FlutterError {
+                await tester.pump(const Duration(seconds: 1));
+              }
             }
 
             final element = find.byType(MaterialApp).evaluate().single;

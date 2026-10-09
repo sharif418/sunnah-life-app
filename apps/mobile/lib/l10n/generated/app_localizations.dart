@@ -4339,7 +4339,7 @@ abstract class AppLocalizations {
   /// No description provided for @mosque_search_more.
   ///
   /// In bn, this message translates to:
-  /// **'আশেপাশের আরও মসজিদ (Google Maps)'**
+  /// **'তালিকায় নেই? গুগল ম্যাপে খুঁজুন'**
   String get mosque_search_more;
 
   /// No description provided for @mosque_north.
@@ -5883,6 +5883,120 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'ইসলামিক ফাউন্ডেশন বাংলাদেশ'**
   String get method_ifb;
+
+  /// No description provided for @mosques_my.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার মসজিদ'**
+  String get mosques_my;
+
+  /// No description provided for @mosques_my_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'যে মসজিদে নিয়মিত যান, তার পাশের তারকা চিহ্নে চাপুন — এখানে থাকবে, দূরত্ব আর পথসহ।'**
+  String get mosques_my_empty;
+
+  /// No description provided for @mosques_nearby.
+  ///
+  /// In bn, this message translates to:
+  /// **'কাছের মসজিদ'**
+  String get mosques_nearby;
+
+  /// No description provided for @mosques_nearby_count.
+  ///
+  /// In bn, this message translates to:
+  /// **'৫ কিমির মধ্যে %nটি'**
+  String get mosques_nearby_count;
+
+  /// No description provided for @mosques_unnamed.
+  ///
+  /// In bn, this message translates to:
+  /// **'মসজিদ (নাম জানা নেই)'**
+  String get mosques_unnamed;
+
+  /// No description provided for @mosques_verified.
+  ///
+  /// In bn, this message translates to:
+  /// **'যাচাইকৃত'**
+  String get mosques_verified;
+
+  /// No description provided for @mosques_show_more.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও দেখুন (%n)'**
+  String get mosques_show_more;
+
+  /// No description provided for @mosques_offline.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইন্টারনেট নেই — আগের তালিকা দেখানো হচ্ছে'**
+  String get mosques_offline;
+
+  /// No description provided for @mosques_offline_curated.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইন্টারনেট নেই — ফাউন্ডেশনের তালিকা থেকে দেখানো হচ্ছে'**
+  String get mosques_offline_curated;
+
+  /// No description provided for @mosques_none.
+  ///
+  /// In bn, this message translates to:
+  /// **'৫ কিমির মধ্যে ম্যাপে কোনো মসজিদ পাওয়া যায়নি'**
+  String get mosques_none;
+
+  /// No description provided for @mosques_save.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার মসজিদে রাখুন'**
+  String get mosques_save;
+
+  /// No description provided for @mosques_unsave.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার মসজিদ থেকে সরান'**
+  String get mosques_unsave;
+
+  /// No description provided for @mosques_saved_snack.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার মসজিদে রাখা হয়েছে'**
+  String get mosques_saved_snack;
+
+  /// No description provided for @mosques_removed_snack.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার মসজিদ থেকে সরানো হয়েছে'**
+  String get mosques_removed_snack;
+
+  /// No description provided for @mosques_show_on_map.
+  ///
+  /// In bn, this message translates to:
+  /// **'ম্যাপে দেখুন'**
+  String get mosques_show_on_map;
+
+  /// No description provided for @mosques_attribution.
+  ///
+  /// In bn, this message translates to:
+  /// **'মসজিদের তথ্য: © OpenStreetMap অবদানকারী · যাচাইকৃত: আস-সুন্নাহ ফাউন্ডেশন'**
+  String get mosques_attribution;
+
+  /// No description provided for @mosques_city_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'শহরের কেন্দ্র থেকে মাপা — সঠিক দূরত্বের জন্য «আমার কাছাকাছি» চাপুন'**
+  String get mosques_city_hint;
+
+  /// No description provided for @mosques_privacy.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান কোথাও জমা রাখা হয় না'**
+  String get mosques_privacy;
+
+  /// No description provided for @mosques_star_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার মসজিদে রাখুন বা সরান'**
+  String get mosques_star_a11y;
 }
 
 class _AppLocalizationsDelegate

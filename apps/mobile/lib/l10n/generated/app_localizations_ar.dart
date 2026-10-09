@@ -2172,7 +2172,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mosque_directions_btn => 'الاتجاهات';
 
   @override
-  String get mosque_search_more => 'مساجد أخرى قريبة (خرائط Google)';
+  String get mosque_search_more => 'غير موجود؟ ابحث في خرائط جوجل';
 
   @override
   String get mosque_north => 'ش';
@@ -2964,4 +2964,61 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get method_ifb => 'المؤسسة الإسلامية ببنغلاديش';
+
+  @override
+  String get mosques_my => 'مساجدي';
+
+  @override
+  String get mosques_my_empty => 'اضغط النجمة بجانب مسجدك ليبقى هنا.';
+
+  @override
+  String get mosques_nearby => 'مساجد قريبة';
+
+  @override
+  String get mosques_nearby_count => '%n ضمن ٥ كم';
+
+  @override
+  String get mosques_unnamed => 'مسجد (بلا اسم)';
+
+  @override
+  String get mosques_verified => 'موثّق';
+
+  @override
+  String get mosques_show_more => 'المزيد (%n)';
+
+  @override
+  String get mosques_offline => 'دون اتصال — آخر قائمة';
+
+  @override
+  String get mosques_offline_curated => 'دون اتصال — قائمة المؤسسة';
+
+  @override
+  String get mosques_none => 'لا مساجد ضمن ٥ كم';
+
+  @override
+  String get mosques_save => 'أضف إلى مساجدي';
+
+  @override
+  String get mosques_unsave => 'إزالة';
+
+  @override
+  String get mosques_saved_snack => 'أضيف';
+
+  @override
+  String get mosques_removed_snack => 'أزيل';
+
+  @override
+  String get mosques_show_on_map => 'على الخريطة';
+
+  @override
+  String get mosques_attribution => 'البيانات: © مساهمو OpenStreetMap';
+
+  @override
+  String get mosques_city_hint => 'من مركز المدينة — اضغط «قربي»';
+
+  @override
+  String get mosques_privacy => 'لا يُخزَّن موقعك';
+
+  @override
+  String get mosques_star_a11y => 'إضافة أو إزالة';
 }
