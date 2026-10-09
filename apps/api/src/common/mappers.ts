@@ -1,7 +1,8 @@
 // Domain mappers — DB rows (Json columns already parsed) → src/types/domain shapes.
 import type { User } from "../shared/domain";
+import { parsePrayerAdjust } from "../shared/prayer-times";
 
-type UserRow = Omit<User, "levelStartedAt" | "createdAt" | "lastActiveAt" | "gender" | "role" | "category" | "language" | "madhhab" | "calcMethod"> & {
+type UserRow = Omit<User, "levelStartedAt" | "createdAt" | "lastActiveAt" | "gender" | "role" | "category" | "language" | "madhhab" | "calcMethod" | "prayerAdjust"> & {
   levelStartedAt: Date | null;
   createdAt: Date;
   lastActiveAt: Date;
@@ -12,6 +13,7 @@ type UserRow = Omit<User, "levelStartedAt" | "createdAt" | "lastActiveAt" | "gen
   madhhab: string;
   tz: string;
   calcMethod: string;
+  prayerAdjust?: unknown;
 };
 
 /**
@@ -41,6 +43,7 @@ export function toDomainUser(u: UserRow): User {
     madhhab: u.madhhab as User["madhhab"],
     tz: u.tz ?? "Asia/Dhaka",
     calcMethod: u.calcMethod as User["calcMethod"],
+    prayerAdjust: parsePrayerAdjust(u.prayerAdjust) ?? {},
     lat: u.lat ?? null,
     lng: u.lng ?? null,
     city: u.city ?? null,

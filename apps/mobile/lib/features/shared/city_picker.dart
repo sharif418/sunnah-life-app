@@ -85,7 +85,7 @@ class _CityPickerSheetState extends State<_CityPickerSheet> {
               '${context.t('gps_your_location')}: ${s.city.nameBn}'
               '${s.approximate ? ' (${context.t('gps_approx')})' : ''}',
           subtitle:
-              '±${num(s.accuracyM.round())} ${context.t('unit_m')}'
+              '~${num(s.accuracyM.round())} ${context.t('unit_m')}'
               '${s.approximate ? ' · ${context.t('gps_approx_note')}' : ''} · '
               '${context.t('gps_tap_confirm')}',
           onTap: () => Navigator.of(context).pop(s.city),

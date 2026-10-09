@@ -2185,7 +2185,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mosque_view_list => 'List';
 
   @override
-  String get mosque_view_map => 'Map';
+  String get mosque_view_map => 'Direction';
 
   @override
   String get mosque_directions_btn => 'Directions';
@@ -3062,4 +3062,129 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mosques_star_a11y => 'Add to or remove from my mosques';
+
+  @override
+  String get method_pick_hint =>
+      'How Fajr and Isha are calculated. In Bangladesh, Islamic Foundation matches the mosques.';
+
+  @override
+  String get method_recommended => 'Recommended';
+
+  @override
+  String get method_desc_ifb =>
+      'What Bangladesh\'s mosques follow — 18°/18° with precautionary minutes';
+
+  @override
+  String get method_desc_karachi =>
+      '18°/18° — like the Foundation but without the precaution (~1 min earlier)';
+
+  @override
+  String get method_desc_mwl => '18°/17° — used in Europe and elsewhere';
+
+  @override
+  String get method_desc_isna =>
+      '15°/15° — for North America; Fajr comes late in Bangladesh';
+
+  @override
+  String get method_desc_egypt => '19.5°/17.5° — Egypt and parts of Africa';
+
+  @override
+  String get method_desc_makkah =>
+      'For Saudi Arabia — Isha 90 min after Maghrib';
+
+  @override
+  String get method_desc_dubai => '18.2°/18.2° — for the UAE';
+
+  @override
+  String get adjust_title => 'Match your mosque';
+
+  @override
+  String get adjust_none => 'No adjustment';
+
+  @override
+  String get adjust_hint =>
+      'If your mosque\'s azan is a few minutes off the calculated time, match it here.';
+
+  @override
+  String get adjust_where =>
+      'Home, the diary, prayer bells and auto-silent all use these times.';
+
+  @override
+  String get adjust_calc_mine => 'Calculated %c · yours %m';
+
+  @override
+  String get adjust_calc_only => 'Calculated %c';
+
+  @override
+  String get adjust_earlier_warning =>
+      'Prayer is not valid before its time — take care moving a time earlier.';
+
+  @override
+  String get adjust_reset => 'Reset all';
+
+  @override
+  String get adjust_save => 'Save';
+
+  @override
+  String get adjust_minus_a11y => '%w one minute earlier';
+
+  @override
+  String get adjust_plus_a11y => '%w one minute later';
+
+  @override
+  String get adjust_on_home => 'With your mosque\'s adjustment';
+
+  @override
+  String get mosques_locating => 'Finding your location…';
+
+  @override
+  String get mosques_primer_title => 'See the mosques near you';
+
+  @override
+  String get mosques_primer_body =>
+      'How far, how many minutes on foot and which way are measured from where you are. Your location is never stored.';
+
+  @override
+  String get mosques_primer_btn => 'Use my location';
+
+  @override
+  String get mosques_primer_settings => 'Allow in Settings';
+
+  @override
+  String get mosques_primer_settings_hint =>
+      'Location permission is off — turn on Location in Settings, then come back.';
+
+  @override
+  String get mosques_primer_gps_off => 'Turn on location';
+
+  @override
+  String get mosques_primer_gps_off_hint =>
+      'The phone\'s location is off — turn it on, then come back.';
+
+  @override
+  String get mosques_city_section => 'Around the centre of %c';
+
+  @override
+  String get mosques_city_section_hint =>
+      'These may not be near you, so no distances are shown.';
+
+  @override
+  String get mosques_relocate => 'Find my location again';
+
+  @override
+  String get mosques_from_location_rough =>
+      'From your location (approximate, ~%m m)';
+
+  @override
+  String get mosques_nearest => 'Nearest';
+
+  @override
+  String get mosques_more_nearby => 'More mosques nearby';
+
+  @override
+  String get mosques_star_tip =>
+      'Tap the star on the mosque you go to — it stays at the top.';
+
+  @override
+  String get mosques_maps_search => 'Find mosques near you in Google Maps';
 }

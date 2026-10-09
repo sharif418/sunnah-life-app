@@ -4,6 +4,7 @@ import { ApiError } from "./api-error";
 import { RlsService } from "./rls.service";
 import type { User } from "../shared/domain";
 import { ROLE_RANK } from "../shared/domain";
+import { parsePrayerAdjust } from "../shared/prayer-times";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Gender & scope guard — the application-layer equivalent of the PostgreSQL
@@ -60,6 +61,7 @@ export class GuardService {
       language: row.language as User["language"],
       madhhab: row.madhhab as User["madhhab"],
       calcMethod: row.calcMethod as User["calcMethod"],
+      prayerAdjust: parsePrayerAdjust(row.prayerAdjust) ?? {},
       levelStartedAt: row.levelStartedAt?.toISOString() ?? null,
       createdAt: row.createdAt.toISOString(),
       lastActiveAt: row.lastActiveAt.toISOString(),

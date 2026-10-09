@@ -10,6 +10,8 @@ import 'package:sunnah_life/models/content_models.dart' show MosqueInfo;
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
+import 'package:sunnah_life/core/cities.dart';
+import 'package:sunnah_life/core/location_service.dart';
 
 /// The pinned instant (a Sunday — mon/thu fast + kahf stay hidden).
 final DateTime kGoldenNow = DateTime(2025, 6, 15, 14, 30);
@@ -221,16 +223,120 @@ class GoldenApi extends ApiClient {
       const NearbyMosques(
         attribution: '© OpenStreetMap contributors',
         mosques: [
-          MosqueInfo(id: 'osm:n5147515959', nameBn: 'Kalachadpur Paschimpara Jame Masjid', addressBn: '', lat: 23.810082, lng: 90.414707),
-          MosqueInfo(id: 'osm:n6795162870', nameBn: 'ডি ও এইচ এস বারিধারা মসজিদ', nameEn: 'DOHS Baridhara Mosque', addressBn: '', lat: 23.813368, lng: 90.410321),
-          MosqueInfo(id: 'osm:w295652387', nameBn: 'Baridhara Ahle-Hadith Jame Masjid', addressBn: '', lat: 23.806397, lng: 90.416562),
-          MosqueInfo(id: 'osm:w586530563', nameBn: 'Masjid Al-Aqsa', addressBn: '', area: 'Dhaka', lat: 23.814775, lng: 90.416614),
-          MosqueInfo(id: 'osm:w984929007', nameBn: 'বিপিসি মসজিদ', nameEn: 'BPC Mosque', addressBn: '', area: 'Dhaka', lat: 23.817095, lng: 90.41603),
-          MosqueInfo(id: 'osm:n13954873520', nameBn: 'Baitul Atik Mosque', addressBn: '', lat: 23.809979, lng: 90.422169),
-          MosqueInfo(id: 'osm:n13954874495', nameBn: '', addressBn: '', lat: 23.809651, lng: 90.42384),
-          MosqueInfo(id: 'osm:w498513213', nameBn: 'গুলশান সমিতি মসজিদ', nameEn: 'Gulshan Society Mosque', addressBn: '', area: 'Dhaka', lat: 23.800778, lng: 90.407823),
-          MosqueInfo(id: 'msj-gulshan-azad', nameBn: 'গুলশান আজাদ মসজিদ', addressBn: 'গুলশান-২ সার্কেল, ঢাকা', area: 'গুলশান', lat: 23.7925, lng: 90.4158, verified: true),
-          MosqueInfo(id: 'osm:n13954893634', nameBn: '', addressBn: '', lat: 23.810328, lng: 90.424842),
+          MosqueInfo(
+            id: 'osm:n5147515959',
+            nameBn: 'Kalachadpur Paschimpara Jame Masjid',
+            addressBn: '',
+            lat: 23.810082,
+            lng: 90.414707,
+          ),
+          MosqueInfo(
+            id: 'osm:n6795162870',
+            nameBn: 'ডি ও এইচ এস বারিধারা মসজিদ',
+            nameEn: 'DOHS Baridhara Mosque',
+            addressBn: '',
+            lat: 23.813368,
+            lng: 90.410321,
+          ),
+          MosqueInfo(
+            id: 'osm:w295652387',
+            nameBn: 'Baridhara Ahle-Hadith Jame Masjid',
+            addressBn: '',
+            lat: 23.806397,
+            lng: 90.416562,
+          ),
+          MosqueInfo(
+            id: 'osm:w586530563',
+            nameBn: 'Masjid Al-Aqsa',
+            addressBn: '',
+            area: 'Dhaka',
+            lat: 23.814775,
+            lng: 90.416614,
+          ),
+          MosqueInfo(
+            id: 'osm:w984929007',
+            nameBn: 'বিপিসি মসজিদ',
+            nameEn: 'BPC Mosque',
+            addressBn: '',
+            area: 'Dhaka',
+            lat: 23.817095,
+            lng: 90.41603,
+          ),
+          MosqueInfo(
+            id: 'osm:n13954873520',
+            nameBn: 'Baitul Atik Mosque',
+            addressBn: '',
+            lat: 23.809979,
+            lng: 90.422169,
+          ),
+          MosqueInfo(
+            id: 'osm:n13954874495',
+            nameBn: '',
+            addressBn: '',
+            lat: 23.809651,
+            lng: 90.42384,
+          ),
+          MosqueInfo(
+            id: 'osm:w498513213',
+            nameBn: 'গুলশান সমিতি মসজিদ',
+            nameEn: 'Gulshan Society Mosque',
+            addressBn: '',
+            area: 'Dhaka',
+            lat: 23.800778,
+            lng: 90.407823,
+          ),
+          MosqueInfo(
+            id: 'msj-gulshan-azad',
+            nameBn: 'গুলশান আজাদ মসজিদ',
+            addressBn: 'গুলশান-২ সার্কেল, ঢাকা',
+            area: 'গুলশান',
+            lat: 23.7925,
+            lng: 90.4158,
+            verified: true,
+          ),
+          MosqueInfo(
+            id: 'osm:n13954893634',
+            nameBn: '',
+            addressBn: '',
+            lat: 23.810328,
+            lng: 90.424842,
+          ),
         ],
       );
+}
+
+/// A phone whose location is (or becomes) available at the golden profile
+/// point — [granted] false starts it without permission; the first
+/// "use my location" tap grants it.
+class FakeLocation extends LocationService {
+  FakeLocation({this.granted = true});
+  bool granted;
+
+  static final snap = snapToNearestCity(
+    23.8103,
+    90.4125,
+    kCities,
+    accuracyM: 15,
+  );
+
+  @override
+  Future<LocationGate> currentGate() async =>
+      granted ? LocationGate.fetchPosition : LocationGate.requestPermission;
+
+  @override
+  Future<CitySnap?> lastKnownSnapIfGranted({
+    List<CityEntry> cities = kCities,
+    Duration maxAge = const Duration(minutes: 30),
+  }) async => granted ? snap : null;
+
+  @override
+  Future<CitySnap?> currentSnapIfGranted({
+    List<CityEntry> cities = kCities,
+  }) async => granted ? snap : null;
+
+  @override
+  Future<CitySnap> currentCitySnap({List<CityEntry> cities = kCities}) async {
+    granted = true;
+    return snap;
+  }
 }

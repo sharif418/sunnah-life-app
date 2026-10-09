@@ -30,6 +30,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sunnah_life/app.dart';
+import 'package:sunnah_life/core/location_service.dart';
 import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
@@ -97,14 +98,21 @@ void main() {
   // a starred mosque); SL_RENDER_TAP='text' taps that text once the screen
   // has settled (open a sheet, switch a tab) — both on demand only.
   final seededPrefs = <String, Object>{
-    for (final e in ((Platform.environment['SL_RENDER_PREFS'] ?? '').isEmpty
-            ? <String, dynamic>{}
-            : jsonDecode(Platform.environment['SL_RENDER_PREFS']!) as Map<String, dynamic>)
-        .entries)
+    for (final e
+        in ((Platform.environment['SL_RENDER_PREFS'] ?? '').isEmpty
+                ? <String, dynamic>{}
+                : jsonDecode(Platform.environment['SL_RENDER_PREFS']!)
+                      as Map<String, dynamic>)
+            .entries)
       e.key: e.value as Object,
   };
+  // SL_RENDER_TAP may list several steps: 'text|tip:tooltip|text'
   final tapText = Platform.environment['SL_RENDER_TAP'];
+  // SL_RENDER_ADJUST='{"maghrib":5}' seeds the profile's ± minutes
+  final seededAdjust = Platform.environment['SL_RENDER_ADJUST'];
   final suffix = Platform.environment['SL_RENDER_SUFFIX'] ?? '';
+  // SL_RENDER_GPS=1: the phone has location (else it has none)
+  final gps = Platform.environment['SL_RENDER_GPS'] == '1';
 
   setUp(() {
     SharedPreferences.setMockInitialValues(seededPrefs);
@@ -113,7 +121,8 @@ void main() {
   for (final path in paths) {
     for (final theme in themes) {
       for (final (width, scale) in _viewports) {
-        final name = '${_slug(path)}${suffix}_${theme}_${width.toInt()}w_${scale}x';
+        final name =
+            '${_slug(path)}${suffix}_${theme}_${width.toInt()}w_${scale}x';
         testWidgets(
           name,
           (tester) async {
@@ -133,6 +142,9 @@ void main() {
               GuestProfilesCompanion(
                 onboardingDone: const Value(true),
                 themeMode: Value(theme),
+                prayerAdjust: seededAdjust == null
+                    ? const Value.absent()
+                    : Value(seededAdjust),
               ),
             );
             final container = ProviderContainer(
@@ -142,6 +154,9 @@ void main() {
                 prayerProvider.overrideWith(GoldenPinnedPrayer.new),
                 headerNowProvider.overrideWithValue(kGoldenNow),
                 apiProvider.overrideWithValue(GoldenApi()),
+                locationServiceProvider.overrideWithValue(
+                  FakeLocation(granted: gps),
+                ),
               ],
             );
 
@@ -192,8 +207,14 @@ void main() {
             } on FlutterError {
               await tester.pump(const Duration(seconds: 1));
             }
-            if (tapText != null && tapText.isNotEmpty) {
-              await tester.tap(find.text(tapText).first);
+            for (final step in (tapText ?? '').split('|')) {
+              if (step.isEmpty) continue;
+              final target = step.startsWith('tip:')
+                  ? find.byTooltip(step.substring(4))
+                  : find.text(step);
+              await tester.ensureVisible(target.first);
+              await tester.pumpAndSettle();
+              await tester.tap(target.first);
               try {
                 await tester.pumpAndSettle(
                   const Duration(milliseconds: 100),

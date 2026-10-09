@@ -582,4 +582,30 @@ void main() {
           reason: 'dead rows are not pending');
     });
   });
+
+  group('profile schema v4 → v5 migration', () {
+    test('a v4 phone: Karachi (the old default) → IFB, no adjustment yet',
+        () async {
+      final dir = await Directory.systemTemp.createTemp('sl_v4');
+      addTearDown(() => dir.delete(recursive: true));
+      final file = File('${dir.path}/v4.sqlite');
+
+      // Build today's schema, then take it back to v4: drop the new column
+      // and store the old default method.
+      final fresh = AppDatabase.forTesting(NativeDatabase(file));
+      await fresh.guestProfile();
+      await fresh.close();
+      final raw = sql.sqlite3.open(file.path);
+      raw.execute('ALTER TABLE guest_profiles DROP COLUMN prayer_adjust');
+      raw.execute("UPDATE guest_profiles SET method = 'karachi'");
+      raw.execute('PRAGMA user_version = 4');
+      raw.close();
+
+      final db = AppDatabase.forTesting(NativeDatabase(file));
+      addTearDown(db.close);
+      final row = await db.guestProfile();
+      expect(row.method, 'ifb');
+      expect(row.prayerAdjust, '{}');
+    });
+  });
 }

@@ -28,6 +28,7 @@ import 'package:workmanager/workmanager.dart';
 import '../core/bn_digits.dart';
 import '../core/auto_silent.dart';
 import '../core/bell_schedule.dart';
+import '../core/prayer_adjust.dart';
 import '../core/date_keys.dart';
 import '../core/prayer_engine.dart';
 import '../db/database.dart';
@@ -155,6 +156,7 @@ class PrayerBellScheduler {
         tz: config.tz,
         method: config.method,
         madhhab: config.madhhab,
+        adjust: config.adjust,
       );
       if (offset == 0) todayTimes = times;
 
@@ -303,6 +305,7 @@ class PrayerBellScheduler {
           tz: config.tz,
           method: config.method,
           madhhab: config.madhhab,
+          adjust: config.adjust,
         );
 
     for (var offset = 0; offset < kRollingWindowDays; offset++) {
@@ -344,6 +347,7 @@ Future<void> refreshPrayerBellsFromDb() async {
         tz: row.tz,
         method: CalcMethodJson.fromJson(row.method),
         madhhab: MadhhabJson.fromJson(row.madhhab),
+        adjust: PrayerAdjust.parse(row.prayerAdjust),
       ),
       // Pass the city so the headless daily task also refreshes the widget
       // snapshot (C-W3f) — the Kotlin widget renders from it for days

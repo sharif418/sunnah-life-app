@@ -165,15 +165,20 @@ class User {
     this.department,
     this.language = 'bn',
     this.madhhab = Madhhab.hanafi,
-    this.calcMethod = CalcMethod.karachi,
+    this.calcMethod = CalcMethod.ifb,
     this.lat,
     this.lng,
     this.city,
+    this.prayerAdjust,
     required this.createdAt,
     required this.lastActiveAt,
   });
 
   final String id;
+
+  /// ± minutes per farz waqt as the server keeps it ({"fajr": 2, …}) —
+  /// read through PrayerAdjust.parse.
+  final Map<String, dynamic>? prayerAdjust;
   final String? phone;
   final String? email;
   final String name;
@@ -224,11 +229,12 @@ class User {
     language: j['language'] as String? ?? 'bn',
     madhhab: MadhhabJson.fromJson(j['madhhab'] as String? ?? 'hanafi'),
     calcMethod: CalcMethodJson.fromJson(
-      j['calcMethod'] as String? ?? 'karachi',
+      j['calcMethod'] as String? ?? 'ifb',
     ),
     lat: (j['lat'] as num?)?.toDouble(),
     lng: (j['lng'] as num?)?.toDouble(),
     city: j['city'] as String?,
+    prayerAdjust: (j['prayerAdjust'] as Map?)?.cast<String, dynamic>(),
     createdAt: j['createdAt'] as String? ?? '',
     lastActiveAt: j['lastActiveAt'] as String? ?? '',
   );
@@ -256,6 +262,7 @@ class User {
     'lat': lat,
     'lng': lng,
     'city': city,
+    'prayerAdjust': ?prayerAdjust,
     'createdAt': createdAt,
     'lastActiveAt': lastActiveAt,
   };

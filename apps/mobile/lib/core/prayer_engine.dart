@@ -7,6 +7,7 @@ library;
 import 'package:adhan_dart/adhan_dart.dart' as adhan;
 
 import '../models/domain.dart';
+import 'prayer_adjust.dart';
 
 class PrayerTimesBundle {
   const PrayerTimesBundle({
@@ -20,7 +21,8 @@ class PrayerTimesBundle {
     required this.sunset,
     required this.isha,
     required this.tahajjud,
-  });
+    double? noon,
+  }) : noon = noon ?? dhuhr;
 
   /// Minutes from local midnight (floats) — same shape as the web engine.
   final double fajr;
@@ -33,6 +35,10 @@ class PrayerTimesBundle {
   final double sunset;
   final double isha;
   final double tahajjud;
+
+  /// The sun's transit — Zawal's anchor. Equals [dhuhr] unless the reader
+  /// moved Dhuhr to their mosque's time (PrayerAdjust).
+  final double noon;
 
   double byKey(PrayerKey key) => switch (key) {
     PrayerKey.fajr => fajr,
@@ -140,8 +146,9 @@ class PrayerEngine {
     double lat = 23.8103,
     double lng = 90.4125,
     double tz = 6.0,
-    CalcMethod method = CalcMethod.karachi,
+    CalcMethod method = CalcMethod.ifb,
     Madhhab madhhab = Madhhab.hanafi,
+    PrayerAdjust adjust = const PrayerAdjust(),
   }) {
     final parts = dateKey.split('-').map(int.parse).toList();
     final date = DateTime(parts[0], parts[1], parts[2]);
@@ -179,18 +186,21 @@ class PrayerEngine {
     // to the minute or within one (same rule as src/lib/prayer-times.ts)
     double start(double m) =>
         method == CalcMethod.ifb ? (m - 1e-9).ceilToDouble() : m;
+    // then the reader's own minutes (their mosque's azan), start times only
+    double mine(PrayerKey k, double m) => start(m) + adjust.of(k);
 
     return PrayerTimesBundle(
-      fajr: start(fajr),
+      fajr: mine(PrayerKey.fajr, fajr),
       sunrise: sunrise,
       ishraq: ishraq,
       duha: duha,
-      dhuhr: start(dhuhr),
-      asr: start(asr),
-      maghrib: start(maghrib),
+      dhuhr: mine(PrayerKey.dhuhr, dhuhr),
+      asr: mine(PrayerKey.asr, asr),
+      maghrib: mine(PrayerKey.maghrib, maghrib),
       sunset: sunset,
-      isha: start(isha),
+      isha: mine(PrayerKey.isha, isha),
       tahajjud: tahajjud,
+      noon: start(dhuhr),
     );
   }
 
@@ -223,7 +233,7 @@ class PrayerEngine {
   static List<(String, double, double)> forbiddenWindows(PrayerTimesBundle t) {
     return [
       ('sunrise', t.sunrise - 15, t.sunrise + 20),
-      ('zawal', t.dhuhr - 10, t.dhuhr + 5),
+      ('zawal', t.noon - 10, t.noon + 5),
       ('sunset', t.sunset - 15, t.sunset + 5),
     ];
   }

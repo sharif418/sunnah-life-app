@@ -303,10 +303,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // ── দ্রুত প্রবেশ ──
               const _QuickAccessGrid(),
 
-              // ── Schedule (the hero's in-page destination) ──
+              // ── Schedule ──
+              // with the reader's own minutes in force, say so — the times
+              // then differ from a printed mosque calendar on purpose
               SectionHeader(
                 context.t('prayer_schedule'),
                 icon: PhosphorIconsRegular.clock,
+                action: ref.watch(
+                      profileProvider.select((p) => p.prayerAdjust.isEmpty),
+                    )
+                    ? null
+                    : InkWell(
+                        key: const ValueKey('home_adjust_note'),
+                        borderRadius: SLRadius.brPill,
+                        onTap: () => context.push('/more/profile'),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: SLSpacing.s8,
+                            vertical: SLSpacing.s8,
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                PhosphorIconsRegular.mosque,
+                                size: 14,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                context.t('adjust_on_home'),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.primary,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
               ),
               PrayerScheduleCard(
                 prayer: prayer,

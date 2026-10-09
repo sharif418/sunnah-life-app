@@ -13,6 +13,7 @@ import {
 } from "../shared/levels";
 import { LEVEL_LABELS_BN } from "../shared/domain";
 import type { Level, User } from "../shared/domain";
+import { parsePrayerAdjust } from "../shared/prayer-times";
 
 /** The live-checklist payload of GET /api/dawah/requirements. */
 export interface LevelRequirementsPayload {
@@ -137,6 +138,7 @@ export class LevelsService {
         language: updated.language as User["language"],
         madhhab: updated.madhhab as User["madhhab"],
         calcMethod: updated.calcMethod as User["calcMethod"],
+        prayerAdjust: parsePrayerAdjust(updated.prayerAdjust) ?? {},
         levelStartedAt: updated.levelStartedAt?.toISOString() ?? null,
         createdAt: updated.createdAt.toISOString(),
         lastActiveAt: updated.lastActiveAt.toISOString(),
