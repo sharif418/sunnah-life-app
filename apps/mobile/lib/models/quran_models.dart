@@ -21,6 +21,7 @@ class SurahMeta {
     required this.englishNameTranslation,
     required this.revelationType,
     required this.ayahCount,
+    this.meaningBn = '',
   });
   final int number;
   final String name; // Arabic
@@ -30,6 +31,17 @@ class SurahMeta {
   final String revelationType;
   final int ayahCount;
 
+  /// What the name means, in Bengali ("সূরা উদ্ঘাটনকারী — …").
+  final String meaningBn;
+
+  /// মাক্কী / মাদানী (the pack's revelationType is already Bengali; an
+  /// English value is translated).
+  String get revelationBn => switch (revelationType) {
+    'Meccan' => 'মাক্কী',
+    'Medinan' => 'মাদানী',
+    final v => v,
+  };
+
   factory SurahMeta.fromJson(Map<String, dynamic> m) => SurahMeta(
     number: (m['number'] as num?)?.toInt() ?? 0,
     name: m['name'] as String? ?? '',
@@ -38,7 +50,43 @@ class SurahMeta {
     englishNameTranslation: m['englishNameTranslation'] as String? ?? '',
     revelationType: m['revelationType'] as String? ?? 'Meccan',
     ayahCount: (m['ayahCount'] as num?)?.toInt() ?? 0,
+    meaningBn: m['meaningBn'] as String? ?? '',
   );
+}
+
+/// Loose matching for surah names: "fatiha" finds Al-Faatiha, "ইয়াসিন"
+/// finds ইয়া-সীন, "কাহাফ" finds আল-কাহফ — hyphens, spaces, the article,
+/// doubled Latin vowels and long/short Bengali vowel signs are folded.
+String normalizeSurahQuery(String s) {
+  var t = s.toLowerCase().trim();
+  t = t.replaceAll(RegExp(r"[\s\-'`ʿʾ’]"), '');
+  // Latin: doubled vowels, common transliteration variants
+  t = t
+      .replaceAll(RegExp(r'aa+'), 'a')
+      .replaceAll(RegExp(r'ee+|ii+'), 'i')
+      .replaceAll(RegExp(r'oo+|uu+'), 'u')
+      .replaceAll('y', 'i');
+  t = t.replaceFirst(RegExp(r'^(al|an|ar|as|at|ad|ash|az)(?=[a-z]{3,})'), '');
+  // Bengali: long → short vowel signs, য়/য, the article আল/আন…
+  t = t
+      .replaceAll('ী', 'ি')
+      .replaceAll('ূ', 'ু')
+      .replaceAll('ঈ', 'ই')
+      .replaceAll('ঊ', 'উ')
+      .replaceAll('য়', 'য')
+      .replaceAll('ইয', 'য');
+  t = t.replaceFirst(RegExp(r'^(আল|আন|আর|আস|আত|আদ|আয|আশ)'), '');
+  // a dropped inherent vowel: কাহাফ ≈ কাহফ
+  t = t.replaceAll('হা', 'হ');
+  return t;
+}
+
+/// Where each of the 30 paras (juz) begins: (para, surah, ayah).
+class JuzStart {
+  const JuzStart(this.juz, this.surah, this.ayah);
+  final int juz;
+  final int surah;
+  final int ayah;
 }
 
 class Ayah {
@@ -217,14 +265,40 @@ class QuranRepository {
     if (q.isEmpty) return surahs;
     final lower = q.toLowerCase();
     final n = parseBnDigits(q);
+    final nq = normalizeSurahQuery(q);
     return surahs
         .where(
           (s) =>
               s.nameBn.contains(q) ||
               s.englishName.toLowerCase().contains(lower) ||
-              (n != null && s.number == n),
+              (n != null && s.number == n) ||
+              (nq.length >= 2 &&
+                  (normalizeSurahQuery(s.nameBn).contains(nq) ||
+                      normalizeSurahQuery(s.englishName).contains(nq) ||
+                      normalizeSurahQuery(
+                        s.englishNameTranslation,
+                      ).contains(nq) ||
+                      s.meaningBn.contains(q))),
         )
         .toList();
+  }
+
+  /// The first ayah of each para (juz), read from the Uthmani pack's
+  /// per-ayah `juz` field — 30 entries in order.
+  static Future<List<JuzStart>> juzStarts() async {
+    await _ensureLoaded();
+    final starts = <int, JuzStart>{};
+    final surahs = _uthmaniBySurah.keys.toList()..sort();
+    for (final n in surahs) {
+      final ayahs = _uthmaniBySurah[n]!;
+      for (var i = 0; i < ayahs.length; i++) {
+        final j = (ayahs[i]['juz'] as num?)?.toInt();
+        if (j == null || starts.containsKey(j)) continue;
+        final a = (ayahs[i]['numberInSurah'] as num?)?.toInt() ?? i + 1;
+        starts[j] = JuzStart(j, n, a);
+      }
+    }
+    return (starts.values.toList()..sort((a, b) => a.juz.compareTo(b.juz)));
   }
 
   /// Full surah with Bengali translation merged, Bismillah stripped for ≠1,9.

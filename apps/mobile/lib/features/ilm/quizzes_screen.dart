@@ -1,6 +1,8 @@
 /// কুইজ — self-paced quiz list with attempt history + the player (B9).
 library;
 
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -74,7 +76,9 @@ class QuizzesScreen extends ConsumerWidget {
                 : _quizCard(
                     context,
                     quizzes[i - 1],
-                    attempts?.where((a) => a.quizId == quizzes[i - 1].id).toList(),
+                    attempts
+                        ?.where((a) => a.quizId == quizzes[i - 1].id)
+                        .toList(),
                   ),
           );
         },
@@ -226,6 +230,26 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
   bool _savedToServer = false;
   String? _saveNote;
 
+  /// Question index → the option the player chose (original index), for
+  /// the review of wrong answers at the end.
+  final Map<int, int> _picks = {};
+
+  /// Question index → the order its options are shown in (original
+  /// indices), shuffled per run: the answer was always in the same place
+  /// (and in two packs nearly always option ২ or ৩).
+  List<List<int>> _order = const [];
+  final _random = math.Random();
+
+  List<int> _orderFor(Quiz quiz, int qi) {
+    if (_order.length != quiz.questions.length) {
+      _order = [
+        for (final q in quiz.questions)
+          List<int>.generate(q.options.length, (i) => i)..shuffle(_random),
+      ];
+    }
+    return _order[qi];
+  }
+
   void _reset() {
     setState(() {
       _index = 0;
@@ -235,7 +259,32 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
       _submitted = false;
       _savedToServer = false;
       _saveNote = null;
+      _picks.clear();
+      _order = const [];
     });
+  }
+
+  /// Mid-quiz, back asks first (it silently threw the run away).
+  Future<bool> _confirmLeave() async {
+    if (_finished || (_index == 0 && _picked == null)) return true;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(context.t('quiz_leave_title')),
+        content: Text(context.t('quiz_leave_body')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(context.t('quiz_keep_playing')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(context.t('quiz_leave')),
+          ),
+        ],
+      ),
+    );
+    return ok == true;
   }
 
   void _backToList() {
@@ -250,6 +299,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
     if (_picked != null) return; // options lock after the first tap
     setState(() {
       _picked = i;
+      _picks[_index] = i;
       if (i == q.answerIndex) _score++;
     });
   }
@@ -276,7 +326,12 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
         });
         return;
       } catch (_) {
-        // Offline — treat the run like a guest's (local note only).
+        // Offline — the score could not be sent (not "sign in to save":
+        // this member IS signed in)
+        if (mounted) {
+          setState(() => _saveNote = context.t('quiz_result_offline'));
+        }
+        return;
       }
     }
     if (mounted) setState(() => _saveNote = guestNote);
@@ -289,55 +344,62 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
         ?.where((q) => q.id == widget.quizId)
         .firstOrNull;
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: const BackButton(),
-        title: Text(
-          quiz?.titleBn ?? context.t('ilm_quizzes'),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+    return PopScope(
+      canPop: _finished || (_index == 0 && _picked == null),
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (await _confirmLeave() && context.mounted) _backToList();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: const BackButton(),
+          title: Text(
+            quiz?.titleBn ?? context.t('ilm_quizzes'),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-      ),
-      body: async.when(
-        loading: () => const Skeleton(height: 96, count: 5),
-        error: (e, _) => ListView(
-          children: [
-            const SizedBox(height: SLSpacing.s24),
-            ErrorState(
-              message: e is ApiException
-                  ? e.message
-                  : context.t('quizzes_load_failed'),
-              onRetry: () => ref.invalidate(quizPackProvider),
-            ),
-          ],
+        body: async.when(
+          loading: () => const Skeleton(height: 96, count: 5),
+          error: (e, _) => ListView(
+            children: [
+              const SizedBox(height: SLSpacing.s24),
+              ErrorState(
+                message: e is ApiException
+                    ? e.message
+                    : context.t('quizzes_load_failed'),
+                onRetry: () => ref.invalidate(quizPackProvider),
+              ),
+            ],
+          ),
+          data: (quizzes) {
+            if (quiz == null) {
+              return ListView(
+                children: [
+                  const SizedBox(height: SLSpacing.s24),
+                  ErrorState(
+                    message: context.t('quizzes_load_failed'),
+                    onRetry: () => ref.invalidate(quizPackProvider),
+                  ),
+                ],
+              );
+            }
+            if (quiz.questions.isEmpty) {
+              return ListView(
+                children: [
+                  const SizedBox(height: SLSpacing.s24),
+                  EmptyState(
+                    message: context.t('quizzes_empty_title'),
+                    icon: PhosphorIconsRegular.question,
+                  ),
+                ],
+              );
+            }
+            return _finished
+                ? _buildResult(context, quiz)
+                : _buildQuestion(context, quiz);
+          },
         ),
-        data: (quizzes) {
-          if (quiz == null) {
-            return ListView(
-              children: [
-                const SizedBox(height: SLSpacing.s24),
-                ErrorState(
-                  message: context.t('quizzes_load_failed'),
-                  onRetry: () => ref.invalidate(quizPackProvider),
-                ),
-              ],
-            );
-          }
-          if (quiz.questions.isEmpty) {
-            return ListView(
-              children: [
-                const SizedBox(height: SLSpacing.s24),
-                EmptyState(
-                  message: context.t('quizzes_empty_title'),
-                  icon: PhosphorIconsRegular.question,
-                ),
-              ],
-            );
-          }
-          return _finished
-              ? _buildResult(context, quiz)
-              : _buildQuestion(context, quiz);
-        },
       ),
     );
   }
@@ -401,8 +463,8 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                 children: [
                   Text(q.questionBn, style: theme.textTheme.headlineMedium),
                   const SizedBox(height: SLSpacing.s16),
-                  for (var i = 0; i < q.options.length; i++)
-                    _optionRow(context, q, i),
+                  for (final (pos, i) in _orderFor(quiz, _index).indexed)
+                    _optionRow(context, q, i, pos),
                   if (answered && !correctPick) ...[
                     const SizedBox(height: SLSpacing.s8),
                     Text(
@@ -469,7 +531,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
     );
   }
 
-  Widget _optionRow(BuildContext context, QuizQuestion q, int i) {
+  Widget _optionRow(BuildContext context, QuizQuestion q, int i, int pos) {
     final theme = Theme.of(context);
     final answered = _picked != null;
     final isCorrect = answered && i == q.answerIndex;
@@ -499,7 +561,11 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
       rowFg = theme.colorScheme.error;
       circleBg = theme.colorScheme.error;
       circleFg = theme.colorScheme.onError;
-      trailing = Icon(PhosphorIconsRegular.xCircle, size: 22, color: theme.colorScheme.error);
+      trailing = Icon(
+        PhosphorIconsRegular.xCircle,
+        size: 22,
+        color: theme.colorScheme.error,
+      );
     } else {
       rowBg = theme.colorScheme.surfaceContainerLow;
       rowBorder = theme.colorScheme.outline;
@@ -542,7 +608,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                     ),
                     child: Center(
                       child: Text(
-                        _n(context, i + 1),
+                        _n(context, pos + 1),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: circleFg,
                           fontWeight: FontWeight.w700,
@@ -571,6 +637,104 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
         ),
       ),
     );
+  }
+
+  /// The questions answered wrongly: what was picked, what was right, and
+  /// why — learning from the mistakes, not just a number.
+  List<Widget> _review(BuildContext context, Quiz quiz) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final wrong = [
+      for (var i = 0; i < quiz.questions.length; i++)
+        if (_picks[i] != null && _picks[i] != quiz.questions[i].answerIndex) i,
+    ];
+    if (wrong.isEmpty) return const [];
+    return [
+      const SizedBox(height: SLSpacing.s24),
+      Align(
+        alignment: AlignmentDirectional.centerStart,
+        child: Text(
+          context
+              .t('quiz_review_title')
+              .replaceAll('%n', _n(context, wrong.length)),
+          key: const ValueKey('quiz_review'),
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+      const SizedBox(height: SLSpacing.s8),
+      for (final i in wrong)
+        Padding(
+          padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+          child: AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  quiz.questions[i].questionBn,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: SLSpacing.s8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      PhosphorIconsRegular.xCircle,
+                      size: 18,
+                      color: cs.error,
+                    ),
+                    const SizedBox(width: SLSpacing.s4),
+                    Expanded(
+                      child: Text(
+                        quiz.questions[i].options[_picks[i]!],
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.error,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(
+                      PhosphorIconsFill.checkCircle,
+                      size: 18,
+                      color: cs.primary,
+                    ),
+                    const SizedBox(width: SLSpacing.s4),
+                    Expanded(
+                      child: Text(
+                        quiz.questions[i].options[quiz
+                            .questions[i]
+                            .answerIndex],
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                if (quiz.questions[i].explanationBn?.isNotEmpty ?? false) ...[
+                  const SizedBox(height: SLSpacing.s8),
+                  Text(
+                    quiz.questions[i].explanationBn!,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      height: 1.6,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+    ];
   }
 
   Widget _buildResult(BuildContext context, Quiz quiz) {
@@ -659,6 +823,7 @@ class _QuizPlayerScreenState extends ConsumerState<QuizPlayerScreen> {
                   label: Text(context.t('quiz_play_again')),
                 ),
               ),
+              ..._review(context, quiz),
               const SizedBox(height: SLSpacing.s8),
               SizedBox(
                 width: double.infinity,
