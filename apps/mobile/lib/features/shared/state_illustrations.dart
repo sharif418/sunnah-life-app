@@ -177,14 +177,8 @@ class _OpenRingPainter extends CustomPainter {
       paint,
     );
 
-    // Gold sparks at the arc tips — where the loop would close.
-    for (final dir in const [-1.0, 1.0]) {
-      final tip = Offset(
-        center.dx + radius * math.cos(gapCenter + dir * gapHalf),
-        center.dy + radius * math.sin(gapCenter + dir * gapHalf),
-      );
-      _paintKhatam(canvas, tip.translate(0, -3), 3, gold);
-    }
+    // (the gold sparks at the arc tips read as two stray squares on a
+    // phone — the open ring alone says "not closed")
   }
 
   @override

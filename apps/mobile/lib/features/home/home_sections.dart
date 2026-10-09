@@ -1,19 +1,20 @@
 /// C-W4b home section components — the prayer status of the card's today
-/// strip, the most-used amal card and the quick-access tile (the prayer card
+/// strip, the most-used amal list and the quick-access tile (the prayer card
 /// itself lives in sun_arc_card.dart since the 2026-10-07 redesign). PUBLIC + context-free (labels come
 /// in via `S.tr(lang, key)` / plain strings) so the component catalog
 /// (catalog_app.dart) and the widget tests can mount them without a
 /// ProviderScope; home_screen.dart feeds them live provider data.
 library;
 
-
 import 'package:flutter/material.dart';
 
+import '../../core/amal_engine.dart' show amalPoints;
 import '../../core/bn_digits.dart';
 import '../../core/most_used.dart';
 import '../../design/design_tokens.dart';
 import '../../design/phosphor_icons.dart';
 import '../../l10n/app_strings.dart';
+import '../../models/domain.dart';
 import '../shared/widgets.dart';
 
 // ── Countdown ring hero ──────────────────────────────────────────────────────
@@ -36,27 +37,87 @@ class HeroPrayerStatus {
   final bool started;
 }
 
-// ── Most-used amal card ──────────────────────────────────────────────────────
+// ── Most-used amals ──────────────────────────────────────────────────────────
 
-/// One সর্বাধিক ব্যবহৃত card: amal title, the "N দিন" usage chip and the
-/// আজ লিখুন quick-log button (hidden for free-text amals — quickLogValue
-/// decides, never the card).
-class MostUsedCard extends StatelessWidget {
-  const MostUsedCard({
+/// The সর্বাধিক ব্যবহৃত list (2026-10-07): ONE card, a row per amal — its
+/// icon, the title, "গত ৩০ দিনে N দিন", and on the right either the আজ লিখুন
+/// quick-log button or a quiet "আজ হয়েছে" once today's entry earns full
+/// points. (The old side-scrolling 168-wide cards left half of each card
+/// empty and slid under the contact button.)
+class MostUsedList extends StatelessWidget {
+  const MostUsedList({
+    super.key,
+    required this.items,
+    required this.valueOf,
+    required this.lang,
+    required this.category,
+    required this.onQuickLog,
+  });
+
+  final List<MostUsedAmal> items;
+
+  /// Today's diary value for an amal key.
+  final Object? Function(String amalKey) valueOf;
+  final Lang lang;
+  final UserCategory category;
+
+  /// Receives the def and the quick-log VALUE computed by quickLogValue —
+  /// the write itself stays in the screen so this widget stays
+  /// catalog/test mountable.
+  final void Function(AmalDefinition def, Object value) onQuickLog;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (final (i, item) in items.indexed) ...[
+            if (i > 0)
+              Divider(
+                height: 1,
+                indent: SLSpacing.s16 + 40 + SLSpacing.s12,
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            MostUsedRow(
+              item: item,
+              currentValue: valueOf(item.def.key),
+              lang: lang,
+              category: category,
+              onQuickLog: (v) => onQuickLog(item.def, v),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+IconData amalCategoryIcon(AmalCategory c) => switch (c) {
+  AmalCategory.salah => PhosphorIconsRegular.mosque,
+  AmalCategory.quran => PhosphorIconsFill.bookOpenText,
+  AmalCategory.dhikr => PhosphorIconsRegular.handHeart,
+  AmalCategory.akhlaq => PhosphorIconsRegular.heart,
+  AmalCategory.dawat => PhosphorIconsRegular.megaphone,
+  AmalCategory.lifestyle => PhosphorIconsRegular.heartbeat,
+  AmalCategory.sunnah => PhosphorIconsRegular.starAndCrescent,
+  AmalCategory.personal => PhosphorIconsRegular.sparkle,
+};
+
+class MostUsedRow extends StatelessWidget {
+  const MostUsedRow({
     super.key,
     required this.item,
     required this.currentValue,
     required this.lang,
     required this.onQuickLog,
+    this.category = UserCategory.general,
   });
 
   final MostUsedAmal item;
   final Object? currentValue;
   final Lang lang;
-
-  /// Receives the quick-log VALUE computed by quickLogValue — the write
-  /// itself (amalProvider.write with source 'quick:home') stays in the
-  /// screen so this widget stays catalog/test mountable.
+  final UserCategory category;
   final void Function(Object value) onQuickLog;
 
   bool get bn => lang == Lang.bn;
@@ -64,77 +125,118 @@ class MostUsedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
     final def = item.def;
     final title = bn || def.titleBn.isNotEmpty ? def.titleBn : def.titleEn;
-    final quickValue = quickLogValue(def, currentValue);
+    final done =
+        currentValue != null && amalPoints(currentValue, def, category) >= 1;
+    final quickValue = done ? null : quickLogValue(def, currentValue);
+    final goldInk = theme.brightness == Brightness.dark
+        ? SLColors.darkGoldText
+        : SLColors.lightGoldText;
 
-    return AppCard(
+    return Padding(
       key: ValueKey('most_used_card_${def.key}'),
-      child: SizedBox(
-        width: 168,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: SLSpacing.s16,
+        vertical: SLSpacing.s12,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: cs.primaryContainer,
+              shape: BoxShape.circle,
             ),
-            const SizedBox(height: SLSpacing.s4),
-            Container(
-              key: ValueKey('most_used_days_${def.key}'),
-              padding: const EdgeInsets.symmetric(
-                horizontal: SLSpacing.s8,
-                vertical: 2,
-              ),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.tertiaryContainer,
-                borderRadius: SLRadius.brPill,
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    PhosphorIconsFill.fire,
-                    size: 14,
-                    color: SLColors.goldDeep,
+            child: Icon(
+              amalCategoryIcon(def.category),
+              size: 20,
+              color: cs.primary,
+            ),
+          ),
+          const SizedBox(width: SLSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
                   ),
-                  const SizedBox(width: 4),
-                  Flexible(
-                    child: Text(
-                      '${bn ? toBn(item.daysUsed) : '${item.daysUsed}'} '
-                      '${S.tr(lang, 'most_used_days')}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                ),
+                const SizedBox(height: 2),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Icon(
+                        PhosphorIconsFill.fire,
+                        size: 14,
+                        color: goldInk,
                       ),
                     ),
-                  ),
-                ],
-              ),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        S
+                            .tr(lang, 'most_used_days_fmt')
+                            .replaceAll(
+                              '%n',
+                              bn ? toBn(item.daysUsed) : '${item.daysUsed}',
+                            ),
+                        key: ValueKey('most_used_days_${def.key}'),
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
-            if (quickValue != null) ...[
-              const SizedBox(height: SLSpacing.s8),
-              SizedBox(
-                height: SLSpacing.minTapTarget,
-                child: FilledButton.tonal(
-                  key: ValueKey('most_used_log_${def.key}'),
-                  onPressed: () => onQuickLog(quickValue),
-                  child: Text(
-                    S.tr(lang, 'most_used_log_today'),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+          ),
+          const SizedBox(width: SLSpacing.s8),
+          if (done)
+            Semantics(
+              key: ValueKey('most_used_done_${def.key}'),
+              label: S.tr(lang, 'most_used_done'),
+              child: Tooltip(
+                message: S.tr(lang, 'most_used_done'),
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: cs.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    PhosphorIconsBold.check,
+                    size: 18,
+                    color: cs.onPrimary,
                   ),
                 ),
               ),
-            ],
-          ],
-        ),
+            )
+          else if (quickValue != null)
+            FilledButton.tonal(
+              key: ValueKey('most_used_log_${def.key}'),
+              style: FilledButton.styleFrom(
+                minimumSize: const Size(44, SLSpacing.minTapTarget),
+                padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s12),
+                visualDensity: VisualDensity.compact,
+              ),
+              onPressed: () => onQuickLog(quickValue),
+              child: Text(S.tr(lang, 'most_used_log_today')),
+            ),
+        ],
       ),
     );
   }

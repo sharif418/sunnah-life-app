@@ -10,13 +10,21 @@ import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
 class Names99Screen extends StatefulWidget {
-  const Names99Screen({super.key});
+  const Names99Screen({super.key, this.highlightId});
+
+  /// From a search result (`?id=`): that item is shown first, framed.
+  final String? highlightId;
 
   @override
   State<Names99Screen> createState() => _Names99ScreenState();
 }
 
 class _Names99ScreenState extends State<Names99Screen> {
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<List<NameOfAllah>> _future = ContentPack.names99();
   String _query = '';
 
   @override
@@ -29,7 +37,7 @@ class _Names99ScreenState extends State<Names99Screen> {
         title: Text(context.t('ilm_names99')),
       ),
       body: FutureBuilder<List<NameOfAllah>>(
-        future: ContentPack.names99(),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 72, count: 8);
@@ -40,6 +48,14 @@ class _Names99ScreenState extends State<Names99Screen> {
               message: context.t('empty_generic'),
               icon: PhosphorIconsRegular.sun,
             );
+          }
+          // a search result's item first (only while not searching here)
+          final hl = widget.highlightId;
+          if (hl != null && _query.trim().isEmpty) {
+            final hit = names.where((x) => '${x.id}' == hl).firstOrNull;
+            if (hit != null) {
+              names = [hit, ...names.where((x) => !identical(x, hit))];
+            }
           }
           final q = _query.trim();
           if (q.isNotEmpty) {
@@ -63,7 +79,9 @@ class _Names99ScreenState extends State<Names99Screen> {
                   onChanged: (v) => setState(() => _query = v),
                   decoration: InputDecoration(
                     hintText: context.t('search'),
-                    prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
+                    prefixIcon: const Icon(
+                      PhosphorIconsRegular.magnifyingGlass,
+                    ),
                     isDense: true,
                   ),
                 ),
@@ -74,56 +92,91 @@ class _Names99ScreenState extends State<Names99Screen> {
                         message: context.t('empty_generic'),
                         icon: PhosphorIconsRegular.magnifyingGlass,
                       )
-                    : ListView.builder(
+                    : ListView.separated(
+                        separatorBuilder: (_, _) =>
+                            const SizedBox(height: SLSpacing.s8),
                         padding: const EdgeInsets.all(SLSpacing.s16),
                         itemCount: names.length,
                         itemBuilder: (context, i) {
                           final n = names[i];
-                          return AppCard(
+                          // number chip · the name and its meaning · the
+                          // Arabic large on the right, where the eye reads it
+                          final card = AppCard(
                             padding: const EdgeInsets.symmetric(
                               horizontal: SLSpacing.s12,
-                              vertical: SLSpacing.s8,
+                              vertical: SLSpacing.s12,
                             ),
                             child: Row(
                               children: [
-                                SizedBox(
-                                  width: 36,
-                                  child: Text(
-                                    bn ? toBn(n.id) : '${n.id}',
-                                    style: theme.textTheme.bodySmall?.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: theme.colorScheme.primary,
+                                Container(
+                                  width: 34,
+                                  height: 34,
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: theme.colorScheme.primaryContainer,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: FittedBox(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(4),
+                                      child: Text(
+                                        bn ? toBn(n.id) : '${n.id}',
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w700,
+                                              color: theme.colorScheme.primary,
+                                            ),
+                                      ),
                                     ),
                                   ),
                                 ),
+                                const SizedBox(width: SLSpacing.s12),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        n.arabic,
-                                        style: SLType.dua(
-                                          color: theme.colorScheme.onSurface,
-                                        ),
-                                        textDirection: TextDirection.rtl,
-                                      ),
-                                      Text(
                                         n.translitBn,
-                                        style: theme.textTheme.bodyMedium
+                                        style: theme.textTheme.bodyLarge
                                             ?.copyWith(
-                                              fontWeight: FontWeight.w600,
+                                              fontWeight: FontWeight.w700,
                                             ),
                                       ),
+                                      const SizedBox(height: 2),
                                       Text(
                                         n.meaningBn,
-                                        style: theme.textTheme.bodySmall,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                              color: theme
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                            ),
                                       ),
                                     ],
                                   ),
                                 ),
+                                const SizedBox(width: SLSpacing.s12),
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth:
+                                        MediaQuery.sizeOf(context).width * 0.38,
+                                  ),
+                                  child: Text(
+                                    n.arabic,
+                                    style: SLType.dua(
+                                      color: theme.colorScheme.primary,
+                                    ).copyWith(fontSize: 26, height: 1.6),
+                                    textDirection: TextDirection.rtl,
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
                               ],
                             ),
+                          );
+                          return SearchHitFrame(
+                            hit: i == 0 && widget.highlightId == '${n.id}',
+                            child: card,
                           );
                         },
                       ),

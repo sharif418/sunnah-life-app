@@ -626,7 +626,7 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
-  testWidgets('madu tree — ellipsizes long names at 360 width @1.3× text', (
+  testWidgets('madu tree — long names wrap to 2 lines then ellipsize at 360 @1.3×', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 640);
@@ -671,12 +671,13 @@ void main() {
 
     // No overflow at the small viewport with large text…
     expect(tester.takeException(), isNull);
-    // …and every name Text is single-line ellipsized.
+    // …and every name Text gets two lines, then "…" (one line cut even
+    // ordinary full names on a small phone).
     for (final element in find.byType(Text).evaluate()) {
       final text = element.widget as Text;
       if (text.data == longName) {
         expect(text.overflow, TextOverflow.ellipsis);
-        expect(text.maxLines, 1);
+        expect(text.maxLines, 2);
       }
     }
     expect(find.text(longName), findsNWidgets(2));

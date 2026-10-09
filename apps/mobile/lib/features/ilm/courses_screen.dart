@@ -1,9 +1,12 @@
 /// কোর্স — catalog with per-course progress + the lesson player sheet (B9).
 library;
 
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../api/api_client.dart';
 import '../../core/bn_digits.dart';
@@ -65,9 +68,8 @@ class CoursesScreen extends ConsumerWidget {
               children: [
                 const SizedBox(height: SLSpacing.s24),
                 EmptyState(
-                  message:
-                      '${context.t('courses_empty_title')}\n'
-                      '${context.t('courses_empty_hint')}',
+                  title: context.t('courses_empty_title'),
+                  message: context.t('courses_empty_hint'),
                   icon: PhosphorIconsRegular.graduationCap,
                 ),
               ],
@@ -83,7 +85,10 @@ class CoursesScreen extends ConsumerWidget {
             for (final c in courses)
               if (enr(c) != null && !finished(c)) c,
           ];
-          final done = [for (final c in courses) if (finished(c)) c];
+          final done = [
+            for (final c in courses)
+              if (finished(c)) c,
+          ];
           final rest = [
             for (final c in courses)
               if (enr(c) == null) c,
@@ -101,10 +106,16 @@ class CoursesScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(SLSpacing.s16),
             children: [
               if (ongoing.isNotEmpty)
-                section('courses_ongoing', PhosphorIconsRegular.playCircle, ongoing),
+                section(
+                  'courses_ongoing',
+                  PhosphorIconsRegular.playCircle,
+                  ongoing,
+                ),
               if (rest.isNotEmpty)
                 section(
-                  ongoing.isEmpty && done.isEmpty ? 'courses_all' : 'courses_more',
+                  ongoing.isEmpty && done.isEmpty
+                      ? 'courses_all'
+                      : 'courses_more',
                   PhosphorIconsRegular.graduationCap,
                   rest,
                 ),
@@ -301,7 +312,10 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
-                          icon: const Icon(PhosphorIconsRegular.signIn, size: 18),
+                          icon: const Icon(
+                            PhosphorIconsRegular.signIn,
+                            size: 18,
+                          ),
                           label: Text(context.t('course_signin_to_enroll')),
                           onPressed: () => context.push('/auth'),
                         ),
@@ -345,10 +359,13 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     );
   }
 
-  /// Server progress always wins on load; local edits live only until the
-  /// next successful sync (offline edits stay until then).
+  /// Server progress on load — unless the phone holds edits the server has
+  /// not seen yet (offline ticks), or there is no server record (a guest):
+  /// then the phone's copy wins and, for a member, is sent up.
   void _applyData(CourseDetailResponse resp) {
-    _done = List<String>.of(resp.myEnrollment?.done ?? const <String>[]);
+    final server = resp.myEnrollment?.done;
+    _done = List<String>.of(server ?? const <String>[]);
+    _mergeLocal(server);
     if (!_autoOpened && widget.openLessonId != null) {
       final lesson = resp.course.lessons
           .where((l) => l.id == widget.openLessonId)
@@ -362,14 +379,31 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
     }
   }
 
+  Future<void> _mergeLocal(List<String>? server) async {
+    final local = await LocalCourseProgress.read(widget.courseId);
+    if (!mounted) return;
+    if (local != null && (local.dirty || server == null)) {
+      setState(() => _done = local.done);
+      if (local.dirty) await _persist(local.done);
+    } else if (server != null) {
+      await LocalCourseProgress.write(widget.courseId, server, dirty: false);
+    }
+  }
+
   Future<void> _persist(List<String> done) async {
-    if (!ref.read(authProvider).signedIn) return; // guest/offline: local only
+    // the phone's copy first: a guest's only record, a member's until the
+    // server has it (both used to vanish on leaving the screen)
+    await LocalCourseProgress.write(widget.courseId, done, dirty: true);
+    if (!ref.read(authProvider).signedIn) return;
     try {
       await ref.read(apiProvider).saveCourseProgress(widget.courseId, done);
+      await LocalCourseProgress.write(widget.courseId, done, dirty: false);
+      // the progress save enrols too (the API upserts the enrolment)
+      if (mounted) setState(() => _enrolledLocally = true);
       // Refresh the catalog's progress rows (invisible beneath this route).
       ref.invalidate(enrollmentsProvider);
     } catch (_) {
-      // Offline — keep the local state; the next save retries the sync.
+      // Offline — the phone keeps it (dirty); the next open sends it.
     }
   }
 
@@ -398,7 +432,9 @@ class _CourseDetailScreenState extends ConsumerState<CourseDetailScreen> {
   }
 
   void _openLessonSheet(CourseDetail course, CourseLesson lesson) {
-    final lessons = course.lessons;
+    // the order the list shows (the raw list is not sorted)
+    final lessons = [...course.lessons]
+      ..sort((a, b) => a.order.compareTo(b.order));
     final index = lessons.indexOf(lesson);
     final next = index >= 0 && index + 1 < lessons.length
         ? lessons[index + 1]
@@ -598,7 +634,9 @@ class _LessonSheetState extends State<_LessonSheet> {
                     const SizedBox(height: SLSpacing.s8),
                     FilledButton.icon(
                       onPressed: widget.onAdvance,
-                      icon: const DirectionalIcon(PhosphorIconsRegular.arrowRight),
+                      icon: const DirectionalIcon(
+                        PhosphorIconsRegular.arrowRight,
+                      ),
                       label: Text(context.t('lesson_next')),
                     ),
                   ],
@@ -609,5 +647,45 @@ class _LessonSheetState extends State<_LessonSheet> {
         ),
       ),
     );
+  }
+}
+
+/// Lesson progress kept on the phone, per course: `done` lesson ids and
+/// whether the server has yet to see them.
+class LocalCourseProgress {
+  LocalCourseProgress._();
+
+  static String _key(String courseId) => 'course_progress_v1_$courseId';
+
+  static Future<({List<String> done, bool dirty})?> read(
+    String courseId,
+  ) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_key(courseId));
+      if (raw == null) return null;
+      final j = jsonDecode(raw);
+      if (j is! Map) return null;
+      final done = (j['done'] as List? ?? const [])
+          .whereType<String>()
+          .toList();
+      return (done: done, dirty: j['dirty'] == true);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static Future<void> write(
+    String courseId,
+    List<String> done, {
+    required bool dirty,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _key(courseId),
+        jsonEncode({'done': done, 'dirty': dirty}),
+      );
+    } catch (_) {}
   }
 }

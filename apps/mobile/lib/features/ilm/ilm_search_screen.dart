@@ -20,15 +20,21 @@ import '../../state/providers.dart';
 import '../shared/widgets.dart';
 import 'search_offline.dart';
 
-/// Where a result row navigates — the pack's own screen (the existing
-/// routes; no item-level deep links exist in the ilm section yet).
-String searchRouteFor(SearchKind kind) => switch (kind) {
-  SearchKind.dua => '/ilm/duas',
-  SearchKind.dhikr => '/ilm/adhkar',
-  SearchKind.name99 => '/ilm/names99',
-  SearchKind.islamicName => '/ilm/islamic-names',
-  SearchKind.article => '/ilm/articles',
-};
+/// Where a result row navigates — the ITEM itself: an article opens in
+/// its reader, a dua/name is shown first and framed in its list, a dhikr
+/// set opens on its own period (it used to land at the top of the pack).
+String searchRouteFor(SearchKind kind, [String? id]) {
+  final q = id == null || id.isEmpty ? '' : Uri.encodeQueryComponent(id);
+  return switch (kind) {
+    SearchKind.dua => q.isEmpty ? '/ilm/duas' : '/ilm/duas?id=$q',
+    SearchKind.dhikr => q.isEmpty ? '/ilm/adhkar' : '/ilm/adhkar?set=$q',
+    SearchKind.name99 => q.isEmpty ? '/ilm/names99' : '/ilm/names99?id=$q',
+    SearchKind.islamicName =>
+      q.isEmpty ? '/ilm/islamic-names' : '/ilm/islamic-names?id=$q',
+    SearchKind.article =>
+      q.isEmpty ? '/ilm/articles' : '/ilm/articles/${Uri.encodeComponent(id!)}',
+  };
+}
 
 class IlmSearchScreen extends ConsumerStatefulWidget {
   const IlmSearchScreen({super.key});
@@ -125,9 +131,49 @@ class _IlmSearchScreenState extends ConsumerState<IlmSearchScreen> {
         onRetry: () => _run(_query),
       );
     } else if (shortQuery) {
-      body = EmptyState(
-        message: context.t('search_hint'),
-        icon: PhosphorIconsRegular.magnifyingGlass,
+      // a few ready searches instead of an empty page that only repeated
+      // the hint (tapping one fills the field and searches)
+      const topics = [
+        'সকালের যিকির',
+        'ঘুমের দোয়া',
+        'খাওয়ার দোয়া',
+        'তাহাজ্জুদ',
+        'আর-রহমান',
+        'সুন্নাহ',
+        'ধৈর্য',
+        'মুহাসাবা',
+      ];
+      body = ListView(
+        padding: const EdgeInsets.symmetric(horizontal: SLSpacing.s16),
+        children: [
+          SectionHeader(
+            context.t('search_try'),
+            icon: PhosphorIconsRegular.sparkle,
+          ),
+          Wrap(
+            spacing: SLSpacing.s8,
+            runSpacing: SLSpacing.s8,
+            children: [
+              for (final t in topics)
+                ActionChip(
+                  avatar: const Icon(
+                    PhosphorIconsRegular.magnifyingGlass,
+                    size: 16,
+                  ),
+                  label: Text(t),
+                  onPressed: () {
+                    _field.text = t;
+                    _field.selection = TextSelection.collapsed(
+                      offset: t.length,
+                    );
+                    _debounce?.cancel();
+                    setState(() => _query = t);
+                    _run(t);
+                  },
+                ),
+            ],
+          ),
+        ],
       );
     } else if (_rows.isEmpty) {
       body = EmptyState(
@@ -146,7 +192,7 @@ class _IlmSearchScreenState extends ConsumerState<IlmSearchScreen> {
         itemBuilder: (context, i) {
           final hit = _rows[i];
           return AppCard(
-            onTap: () => context.push(searchRouteFor(hit.kind)),
+            onTap: () => context.push(searchRouteFor(hit.kind, hit.id)),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

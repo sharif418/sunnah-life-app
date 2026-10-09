@@ -2581,4 +2581,180 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get hijri_suffix => 'هـ';
+
+  @override
+  String get most_used_days_fmt => '%n من ٣٠ يومًا';
+
+  @override
+  String get most_used_done => 'تمّ اليوم';
+
+  @override
+  String get live_today => 'اليوم';
+
+  @override
+  String get live_tomorrow => 'غدًا';
+
+  @override
+  String get live_in_days_fmt => 'بعد %n أيام';
+
+  @override
+  String get live_badge => 'مباشر';
+
+  @override
+  String get guest_nudge_sub => 'ما يمنحك الحساب';
+
+  @override
+  String get article_cat_dawah => 'الدعوة';
+
+  @override
+  String get article_cat_sunnah => 'السنة';
+
+  @override
+  String get article_cat_tarbiyah => 'التربية';
+
+  @override
+  String get article_read_min => 'دقائق قراءة';
+
+  @override
+  String get article_read => 'اقرأ';
+
+  @override
+  String get chip_habit => 'العادة';
+
+  @override
+  String get chip_self_test => 'اختبار ذاتي';
+
+  @override
+  String get chip_goals => 'الأهداف';
+
+  @override
+  String get chip_usrah_q => 'سؤال وجواب';
+
+  @override
+  String get exercise_week_empty =>
+      'لم يُسجَّل شيء هذا الأسبوع — أضف تمرين اليوم في الأعلى';
+
+  @override
+  String get self_test_quizzes => 'اختبر نفسك';
+
+  @override
+  String get live_none_all =>
+      'لا توجد برامج مباشرة الآن. ستظهر البرامج الجديدة هنا.';
+
+  @override
+  String get about_faq_sub => 'إجابات الأسئلة الشائعة';
+
+  @override
+  String get autosilent_grant_first => 'امنح الإذن أعلاه أولاً';
+
+  @override
+  String get dawah_assess_empty =>
+      'لا توجد تقييمات بعد. ستظهر النتائج هنا بعد تقييمك.';
+
+  @override
+  String get dawah_req_fallback_note =>
+      'تعذّر تحميل القائمة الأحدث — يُعرض الملخص';
+
+  @override
+  String get habit_mark_today => 'أنجزته اليوم';
+
+  @override
+  String get search_try => 'جرّب البحث عن';
+
+  @override
+  String get prayer_prompt_sub =>
+      'جماعة أم منفردًا أم قضاءً — نقرة واحدة تحفظها في يومية اليوم';
+
+  @override
+  String get prayer_prompt_saved => 'حُفظ في اليومية — اضغط غيره للتغيير';
+
+  @override
+  String get faq_group_salat => 'الصلاة';
+
+  @override
+  String get faq_group_amal => 'الأعمال والمحاسبة';
+
+  @override
+  String get faq_group_dawah => 'الدعوة والتربية';
+
+  @override
+  String get faq_group_ilm => 'العلم والأسئلة';
+
+  @override
+  String get faq_group_app => 'استخدام التطبيق';
+
+  @override
+  String get faq_group_other => 'أخرى';
+
+  @override
+  String get faq_more_title => 'لديك سؤال آخر؟';
+
+  @override
+  String get faq_more_body =>
+      'اسأل العلماء عن المسائل الشرعية، واكتب للدعم عن التطبيق.';
+
+  @override
+  String get faq_ask_masala => 'مسألة';
+
+  @override
+  String get faq_ask_support => 'الدعم';
+
+  @override
+  String get ilm_group_learn => 'تعلّم واختبر';
+
+  @override
+  String get ilm_group_quran => 'القرآن والأذكار والأدعية';
+
+  @override
+  String get ilm_group_know => 'اعرف';
+
+  @override
+  String get adhkar_hint => 'انقر للعدّ · اضغط مطولًا لإنقاص واحدة';
+
+  @override
+  String get adhkar_reset => 'ابدأ من جديد';
+
+  @override
+  String get adhkar_reset_title => 'مسح عدّ هذه المجموعة؟';
+
+  @override
+  String get adhkar_reset_body =>
+      'يبدأ عدّ اليوم من الصفر. تبقى علامة اليومية.';
+
+  @override
+  String get adhkar_done_of => 'تم';
+
+  @override
+  String get adhkar_minutes_fmt => 'نحو %n دقائق';
+
+  @override
+  String get adhkar_ticked_today => 'سُجّل في يومية اليوم';
+
+  @override
+  String get adhkar_diary_ticked => 'الحمد لله — سُجّل في يومية اليوم';
+
+  @override
+  String get dhikr_virtue => 'الفضل';
+
+  @override
+  String get adhkar_set_complete => 'اكتملت المجموعة — ما شاء الله';
+
+  @override
+  String get article_back_to_list => 'العودة إلى المقالات';
+
+  @override
+  String get search_hit_label => 'نتيجة البحث';
+
+  @override
+  String get live_quiz_no_usrah_hint =>
+      'تُلعب المسابقات المباشرة داخل الأسرة. لست في أسرة بعد — اطلب الانضمام، وإلى ذلك الحين العب مسابقات التدريب.';
+
+  @override
+  String get adhkar_tab_morning => 'الصباح';
+
+  @override
+  String get adhkar_tab_evening => 'المساء';
+
+  @override
+  String get adhkar_tab_post_salat => 'بعد الصلاة';
 }

@@ -35,11 +35,11 @@ import '../../state/remote_state.dart'
         liveProvider;
 import '../../services/platform_channels.dart';
 import '../../l10n/app_strings.dart';
-import '../amal/amal_widgets.dart' show StreakBadge;
+import '../amal/amal_widgets.dart'
+    show StreakBadge, TriStateChips, TriStateLabels;
 import '../shared/widgets.dart';
 import '../shared/global_header.dart';
-import '../../core/external_urls.dart' show livePlaybackUrl, openExternalApp;
-import '../shared/when_bn.dart';
+import '../shared/live_program_card.dart';
 import 'guest_nudge.dart';
 import 'home_sections.dart';
 import 'schedule_card.dart';
@@ -337,7 +337,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // ── Post-prayer prompt ──
               if (prayer.postPrayerKey != null)
-                _PostPrayerPrompt(prayer: prayer, bn: bn),
+                PostPrayerPrompt(prayer: prayer, bn: bn),
 
               // ── Exact alarm permission ──
               if (_exactAlarmsGranted == false) ...[
@@ -432,24 +432,14 @@ class _MostUsedSection extends ConsumerWidget {
             ),
           )
         else
-          SizedBox(
-            height: 176,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: ranked.length,
-              separatorBuilder: (_, _) => const SizedBox(width: SLSpacing.s8),
-              itemBuilder: (context, i) {
-                final item = ranked[i];
-                return MostUsedCard(
-                  item: item,
-                  currentValue: amal.entry(today, item.def.key)?.value,
-                  lang: lang,
-                  onQuickLog: (value) => ref
-                      .read(amalProvider.notifier)
-                      .write(item.def.key, today, value, 'quick:home'),
-                );
-              },
-            ),
+          MostUsedList(
+            items: ranked,
+            valueOf: (key) => amal.entry(today, key)?.value,
+            lang: lang,
+            category: profile.category,
+            onQuickLog: (def, value) => ref
+                .read(amalProvider.notifier)
+                .write(def.key, today, value, 'quick:home'),
           ),
       ],
     );
@@ -612,11 +602,11 @@ class _IlmSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 44,
-              height: 44,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: theme.colorScheme.primaryContainer,
-                shape: BoxShape.circle,
+                borderRadius: SLRadius.brMd,
               ),
               child: Icon(icon, size: 22, color: theme.colorScheme.primary),
             ),
@@ -659,30 +649,35 @@ class _IlmSection extends ConsumerWidget {
           icon: PhosphorIconsRegular.graduationCap,
           action: _SeeAllButton('/ilm'),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: card(
-                icon: PhosphorIconsFill.graduationCap,
-                title: context.t('ilm_courses'),
-                desc: context.t('ilm_courses_desc'),
-                count: courseCount,
-                countUnit: context.t('ilm_courses'),
-                route: '/ilm/courses',
+        // equal heights, tops aligned (one card has a count line, the
+        // other may not)
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                child: card(
+                  icon: PhosphorIconsFill.graduationCap,
+                  title: context.t('ilm_courses'),
+                  desc: context.t('ilm_courses_desc'),
+                  count: courseCount,
+                  countUnit: context.t('ilm_courses'),
+                  route: '/ilm/courses',
+                ),
               ),
-            ),
-            const SizedBox(width: SLSpacing.s8),
-            Expanded(
-              child: card(
-                icon: PhosphorIconsFill.chartPieSlice,
-                title: context.t('ilm_quizzes'),
-                desc: context.t('ilm_quizzes_desc'),
-                count: quizCount,
-                countUnit: context.t('ilm_quizzes'),
-                route: '/ilm/quizzes',
+              const SizedBox(width: SLSpacing.s8),
+              Expanded(
+                child: card(
+                  icon: PhosphorIconsFill.chartPieSlice,
+                  title: context.t('ilm_quizzes'),
+                  desc: context.t('ilm_quizzes_desc'),
+                  count: quizCount,
+                  countUnit: context.t('ilm_quizzes'),
+                  route: '/ilm/quizzes',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     );
@@ -862,7 +857,6 @@ class _LivePreviewSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
     // Live is PUBLIC data; the section stays hidden while loading/offline
     // and when nothing is live or upcoming (home degrades like the other
     // sections do for guests — the full list lives at /more/live).
@@ -875,7 +869,6 @@ class _LivePreviewSection extends ConsumerWidget {
     final p = pick('live') ?? pick('upcoming');
     if (p == null) return const SizedBox.shrink();
     final isLive = p.status == 'live';
-    final watchUrl = isLive ? livePlaybackUrl(youtubeId: p.youtubeId) : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -885,106 +878,16 @@ class _LivePreviewSection extends ConsumerWidget {
           icon: PhosphorIconsRegular.broadcast,
           action: _SeeAllButton('/more/live'),
         ),
-        AppCard(
+        LiveProgramCard(
           key: const ValueKey('home_live_preview'),
+          program: p,
+          statusLabel: context.t(isLive ? 'live_now' : 'live_next'),
+          chipKey: const ValueKey('home_live_chip'),
+          watchKey: const ValueKey('home_live_watch'),
           onTap: () => context.push('/more/live'),
-          child: Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: isLive
-                      ? theme.colorScheme.error
-                      : theme.colorScheme.primaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isLive
-                      ? PhosphorIconsFill.broadcast
-                      : PhosphorIconsRegular.broadcast,
-                  size: 22,
-                  color: isLive
-                      ? theme.colorScheme.onError
-                      : theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: SLSpacing.s12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          key: const ValueKey('home_live_chip'),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: SLSpacing.s8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isLive
-                                ? theme.colorScheme.error
-                                : SLColors.gold.withValues(alpha: 0.18),
-                            borderRadius: SLRadius.brPill,
-                          ),
-                          child: Text(
-                            context.t(isLive ? 'live_now' : 'live_next'),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                              color: isLive
-                                  ? theme.colorScheme.onError
-                                  : theme.brightness == Brightness.dark
-                                  ? SLColors.darkGoldText
-                                  : SLColors.lightGoldText,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: SLSpacing.s4),
-                    Text(
-                      p.titleBn,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: SLSpacing.s4),
-                    if (!isLive)
-                      Text(
-                        whenBn(context, p.startsAt),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    if (watchUrl != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: SLSpacing.s8),
-                        child: FilledButton.icon(
-                          key: const ValueKey('home_live_watch'),
-                          icon: const Icon(
-                            PhosphorIconsFill.broadcast,
-                            size: 18,
-                          ),
-                          label: Text(context.t('live_watch_now')),
-                          onPressed: () => openExternalApp(watchUrl),
-                        ),
-                      )
-                    else
-                      Text(
-                        context.t('live_join_hint'),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          onRemind: () =>
+              requestLiveReminder(context, ref.read(apiProvider), p.id),
+          onJoinQuiz: () => context.push('/ilm/live-quiz'),
         ),
       ],
     );
@@ -993,8 +896,8 @@ class _LivePreviewSection extends ConsumerWidget {
 
 // ── Post-prayer prompt (20 min after the waqt begins) ───────────────────────
 
-class _PostPrayerPrompt extends ConsumerWidget {
-  const _PostPrayerPrompt({required this.prayer, required this.bn});
+class PostPrayerPrompt extends ConsumerWidget {
+  const PostPrayerPrompt({super.key, required this.prayer, required this.bn});
   final PrayerNow prayer;
   final bool bn;
 
@@ -1008,36 +911,6 @@ class _PostPrayerPrompt extends ConsumerWidget {
       amalProvider.select((s) => s.entry(today, 'salat_${key.name}')),
     );
     final value = entry?.value;
-
-    Widget option(String v, String text, IconData icon, Color color) {
-      final selected = value == v;
-      return Expanded(
-        child: Padding(
-          padding: const EdgeInsetsDirectional.only(end: 6),
-          child: FilledButton.icon(
-            style: FilledButton.styleFrom(
-              backgroundColor: selected ? color : null,
-              foregroundColor: selected
-                  ? theme.colorScheme.onPrimary
-                  : theme.colorScheme.primary,
-              minimumSize: const Size.fromHeight(SLSpacing.minTapTarget + 4),
-            ),
-            onPressed: selected
-                ? null
-                : () => ref
-                      .read(amalProvider.notifier)
-                      .write(
-                        'salat_${key.name}',
-                        today,
-                        v,
-                        'auto:prayer:${key.name}',
-                      ),
-            icon: Icon(icon, size: 18),
-            label: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-        ),
-      );
-    }
 
     return Container(
       margin: const EdgeInsets.only(top: SLSpacing.s12),
@@ -1068,31 +941,39 @@ class _PostPrayerPrompt extends ConsumerWidget {
           ),
           const SizedBox(height: SLSpacing.s4),
           Text(
-            context.t('prayer_post_salat'),
-            style: theme.textTheme.bodySmall,
+            context.t(
+              value is String && value.isNotEmpty
+                  ? 'prayer_prompt_saved'
+                  : 'prayer_prompt_sub',
+            ),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: SLSpacing.s12),
-          Row(
-            children: [
-              option(
-                'jamaat',
-                context.t('amal_jamaat'),
-                PhosphorIconsRegular.usersThree,
-                theme.colorScheme.primary,
-              ),
-              option(
-                'alone',
-                context.t('amal_alone'),
-                PhosphorIconsRegular.user,
-                theme.colorScheme.secondary,
-              ),
-              option(
-                'qaza',
-                context.t('amal_qaza'),
-                PhosphorIconsRegular.clock,
-                theme.colorScheme.error,
-              ),
-            ],
+          // The diary's own জামাতে / একা / কাযা chips: every label always
+          // readable (the old buttons drew primary text on a primary fill —
+          // two of three were blank — and the chosen one went grey and
+          // clipped to "জা…"). Tapping the chosen one again clears it.
+          TriStateChips(
+            key: const ValueKey('home_post_prayer_chips'),
+            value: value is String && value.isNotEmpty ? value : null,
+            idleColor: theme.brightness == Brightness.dark
+                ? SLColors.darkCard
+                : SLColors.lightCard,
+            labels: TriStateLabels(
+              jamaat: context.t('amal_jamaat'),
+              alone: context.t('amal_alone'),
+              qaza: context.t('amal_qaza'),
+            ),
+            onChanged: (v) => ref
+                .read(amalProvider.notifier)
+                .write(
+                  'salat_${key.name}',
+                  today,
+                  v ?? '',
+                  'auto:prayer:${key.name}',
+                ),
           ),
         ],
       ),

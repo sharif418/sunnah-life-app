@@ -284,7 +284,7 @@ class AppLocalizationsBn extends AppLocalizations {
       '৭ দিন ধরে প্রতিদিন একটি আমল — স্ট্রিক ধরে রাখুন';
 
   @override
-  String get amal_self_test => 'ইমান ও তাকওয়া সেলফ-টেস্ট';
+  String get amal_self_test => 'ঈমান ও তাকওয়া সেলফ-টেস্ট';
 
   @override
   String get amal_no_defs =>
@@ -631,7 +631,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get exact_alarm_grant => 'অনুমতি দিন';
 
   @override
-  String get hijri_adjust => 'হিজরি সমন্বয় (দিন)';
+  String get hijri_adjust => 'হিজরি তারিখ সমন্বয়';
 
   @override
   String get prayer_please_login => 'অ্যাকাউন্টে সেভ হবে';
@@ -780,10 +780,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get level_muhibbus_sunnah => 'মুহিব্বুস সুন্নাহ';
 
   @override
-  String get level_farze_ain_1 => 'ফরযে আইন — ক্যাটাগরি ১';
+  String get level_farze_ain_1 => 'ফরযে আইন — ক্যাটাগরি ১';
 
   @override
-  String get level_farze_ain_2 => 'ফরযে আইন — ক্যাটাগরি ২';
+  String get level_farze_ain_2 => 'ফরযে আইন — ক্যাটাগরি ২';
 
   @override
   String get madhhab_hanafi => 'হানাফি';
@@ -1943,7 +1943,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get search_title => 'অনুসন্ধান';
 
   @override
-  String get search_hint => 'দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…';
+  String get search_hint => 'দোয়া, আযকার, নাম খুঁজুন…';
 
   @override
   String get search_no_results => 'কিছু পাওয়া যায়নি — অন্য শব্দে চেষ্টা করুন';
@@ -2613,4 +2613,182 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get hijri_suffix => 'হিজরি';
+
+  @override
+  String get most_used_days_fmt => '৩০ দিনে %n দিন';
+
+  @override
+  String get most_used_done => 'আজ হয়েছে';
+
+  @override
+  String get live_today => 'আজ';
+
+  @override
+  String get live_tomorrow => 'আগামীকাল';
+
+  @override
+  String get live_in_days_fmt => '%n দিন পর';
+
+  @override
+  String get live_badge => 'লাইভ';
+
+  @override
+  String get guest_nudge_sub => 'অ্যাকাউন্ট খুললে যা পাবেন';
+
+  @override
+  String get article_cat_dawah => 'দাওয়াহ';
+
+  @override
+  String get article_cat_sunnah => 'সুন্নাহ';
+
+  @override
+  String get article_cat_tarbiyah => 'তারবিয়াহ';
+
+  @override
+  String get article_read_min => 'মিনিট পড়া';
+
+  @override
+  String get article_read => 'পড়ুন';
+
+  @override
+  String get chip_habit => 'অভ্যাস চ্যালেঞ্জ';
+
+  @override
+  String get chip_self_test => 'সেলফ-টেস্ট';
+
+  @override
+  String get chip_goals => 'লক্ষ্য';
+
+  @override
+  String get chip_usrah_q => 'প্রশ্নোত্তর';
+
+  @override
+  String get exercise_week_empty =>
+      'এই সপ্তাহে এখনো কিছু লেখা হয়নি — উপরে আজকের শরীরচর্চা যোগ করুন';
+
+  @override
+  String get self_test_quizzes => 'নিজেকে যাচাই করুন';
+
+  @override
+  String get live_none_all =>
+      'এখন কোনো লাইভ প্রোগ্রাম নেই। নতুন প্রোগ্রাম ঘোষণা হলে এখানে দেখা যাবে, ইনশাআল্লাহ।';
+
+  @override
+  String get about_faq_sub => 'নামাজ, আমল ও অ্যাপ নিয়ে সাধারণ প্রশ্নের উত্তর';
+
+  @override
+  String get autosilent_grant_first => 'আগে উপরের অনুমতিটি দিন';
+
+  @override
+  String get dawah_assess_empty =>
+      'এখনো কোনো মূল্যায়ন হয়নি। দায়িত্বশীল আপনার মূল্যায়ন করলে ফল এখানে দেখা যাবে।';
+
+  @override
+  String get dawah_req_fallback_note =>
+      'সর্বশেষ চেকলিস্ট আনা যায়নি — আগের সারসংক্ষেপ দেখানো হচ্ছে';
+
+  @override
+  String get habit_mark_today => 'আজ করেছি';
+
+  @override
+  String get search_try => 'যা খুঁজতে পারেন';
+
+  @override
+  String get prayer_prompt_sub =>
+      'জামাতে, একা না কাযা — এক চাপে আজকের ডায়েরিতে লেখা হবে';
+
+  @override
+  String get prayer_prompt_saved =>
+      'ডায়েরিতে লেখা হয়েছে — বদলাতে চাইলে অন্যটি চাপুন';
+
+  @override
+  String get faq_group_salat => 'নামাজ';
+
+  @override
+  String get faq_group_amal => 'আমল ও মুহাসাবা';
+
+  @override
+  String get faq_group_dawah => 'দাওয়াহ ও তারবিয়াহ';
+
+  @override
+  String get faq_group_ilm => 'ইলম ও প্রশ্ন';
+
+  @override
+  String get faq_group_app => 'অ্যাপ ব্যবহার';
+
+  @override
+  String get faq_group_other => 'অন্যান্য';
+
+  @override
+  String get faq_more_title => 'আরও প্রশ্ন আছে?';
+
+  @override
+  String get faq_more_body =>
+      'দ্বীনি মাসআলা হলে আলেমদের জিজ্ঞাসা করুন; অ্যাপের সমস্যা হলে সাপোর্টে লিখুন।';
+
+  @override
+  String get faq_ask_masala => 'মাসআলা';
+
+  @override
+  String get faq_ask_support => 'সাপোর্ট';
+
+  @override
+  String get ilm_group_learn => 'শিখুন ও যাচাই করুন';
+
+  @override
+  String get ilm_group_quran => 'কুরআন, যিকির ও দোয়া';
+
+  @override
+  String get ilm_group_know => 'জানুন';
+
+  @override
+  String get adhkar_hint => 'চাপ দিয়ে গুনুন · ভুল হলে চেপে ধরে একটি কমান';
+
+  @override
+  String get adhkar_reset => 'আবার শুরু';
+
+  @override
+  String get adhkar_reset_title => 'এই সেটের গণনা মুছবেন?';
+
+  @override
+  String get adhkar_reset_body =>
+      'আজকের গণনা শূন্য থেকে শুরু হবে। ডায়েরির টিক থাকবে।';
+
+  @override
+  String get adhkar_done_of => 'সম্পন্ন';
+
+  @override
+  String get adhkar_minutes_fmt => 'প্রায় %n মিনিট';
+
+  @override
+  String get adhkar_ticked_today => 'আজ ডায়েরিতে টিক দেওয়া হয়েছে';
+
+  @override
+  String get adhkar_diary_ticked =>
+      'আলহামদুলিল্লাহ — আজকের ডায়েরিতে টিক দেওয়া হলো';
+
+  @override
+  String get dhikr_virtue => 'ফযীলত';
+
+  @override
+  String get adhkar_set_complete => 'এই সেট সম্পূর্ণ — মাশাআল্লাহ';
+
+  @override
+  String get article_back_to_list => 'আর্টিকেল তালিকায় ফিরুন';
+
+  @override
+  String get search_hit_label => 'খোঁজা ফল';
+
+  @override
+  String get live_quiz_no_usrah_hint =>
+      'লাইভ কুইজ হয় উসরার সদস্যদের নিয়ে। আপনি এখনো কোনো উসরায় যুক্ত নন — যুক্ত হতে আবেদন করুন। ততক্ষণ ইলম ট্যাবের অনুশীলনের কুইজ খেলতে পারেন।';
+
+  @override
+  String get adhkar_tab_morning => 'সকাল';
+
+  @override
+  String get adhkar_tab_evening => 'সন্ধ্যা';
+
+  @override
+  String get adhkar_tab_post_salat => 'নামাজের পর';
 }

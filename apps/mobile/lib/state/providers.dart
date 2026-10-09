@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../api/api_client.dart';
+import '../services/session_store.dart';
 import '../db/api_cache.dart';
 import '../db/database.dart';
 import '../models/domain.dart';
@@ -29,9 +30,16 @@ final apiProvider = Provider<ApiClient>((ref) {
   client.onUnauthorized = () {
     ref.read(authProvider.notifier).forceSignOut();
   };
+  // every renewal rotates the refresh token — keep the new pair
+  client.onTokensRefreshed = (access, refresh) {
+    ref.read(sessionStoreProvider).saveTokens(access, refresh);
+  };
   ref.onDispose(client.dispose);
   return client;
 });
+
+/// The signed-in session on the phone (keystore-backed).
+final sessionStoreProvider = Provider<SessionStore>((ref) => SessionStore());
 
 final sharedPrefsProvider = FutureProvider<SharedPreferences>(
   (ref) => SharedPreferences.getInstance(),
@@ -212,35 +220,65 @@ class AuthState {
 enum AuthStatus { loading, guest, signedIn }
 
 class AuthNotifier extends Notifier<AuthState> {
-  static const _tokenKey = 'sl_token';
-
   @override
   AuthState build() {
     _restore();
     return const AuthState(status: AuthStatus.loading);
   }
 
+  /// Opening the app: the stored session comes back as it was.
+  ///
+  /// Until 2026-10-09 this asked the server first and signed the member out
+  /// on ANY failure — and the stored access token lives 15 minutes, so
+  /// nearly every reopen meant a new code (offline or on a slow network
+  /// too). Now: the last known user shows at once (offline-first), the
+  /// server is asked in the background, an expired access token is renewed
+  /// with the refresh token, and only a refused refresh signs out.
   Future<void> _restore() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString(_tokenKey);
-    if (token == null) {
+    final store = ref.read(sessionStoreProvider);
+    final saved = await store.read();
+    if (saved == null) {
       state = const AuthState(status: AuthStatus.guest);
       return;
     }
     final api = ref.read(apiProvider);
-    api.token = token;
+    api.token = saved.access;
+    api.refreshToken = saved.refresh;
+    final cached = saved.user;
+    if (cached != null) {
+      state = AuthState(status: AuthStatus.signedIn, user: cached);
+    }
     try {
       final user = await api.me();
       if (user != null) {
         state = AuthState(status: AuthStatus.signedIn, user: user);
+        await store.saveUser(user);
         return;
       }
-    } on ApiException {
-      // fall through to guest
+    } on ApiException catch (e) {
+      // 401 that a refresh could not cure: the client already fired
+      // onUnauthorized → forceSignOut. Anything else (offline, timeout,
+      // 5xx) keeps the session — the next request tries again.
+      if (e.status == 401) return;
+      if (cached != null) return;
+      // an install from before the user cache, offline: the session stays
+      // stored; the member shows as guest until the next open reaches the
+      // server
+      state = const AuthState(status: AuthStatus.guest);
+      return;
     }
-    await prefs.remove(_tokenKey);
-    api.token = null;
-    state = const AuthState(status: AuthStatus.guest);
+    await forceSignOut();
+  }
+
+  Future<void> _saveSession(VerifyResponse res) async {
+    final token = res.token;
+    if (token == null) return;
+    final api = ref.read(apiProvider);
+    api.token = token;
+    api.refreshToken = res.refreshToken;
+    final store = ref.read(sessionStoreProvider);
+    await store.saveTokens(token, res.refreshToken);
+    await store.saveUser(res.user);
   }
 
   /// OTP verify. Guest amal entries ride along (server merges by
@@ -263,11 +301,7 @@ class AuthNotifier extends Notifier<AuthState> {
       referredByCode: referredByCode,
       guestEntries: guestEntries.take(500).toList(),
     );
-    if (res.token != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_tokenKey, res.token!);
-      api.token = res.token;
-    }
+    await _saveSession(res);
     state = AuthState(status: AuthStatus.signedIn, user: res.user);
     await _consumePendingReferral(referredByCode);
     // Adopt the account's prayer profile locally.
@@ -310,12 +344,7 @@ class AuthNotifier extends Notifier<AuthState> {
       referredByCode: referredByCode,
       guestEntries: guestEntries.take(500).toList(),
     );
-    final token = res.token;
-    if (token != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_tokenKey, token);
-      api.token = token;
-    }
+    await _saveSession(res);
     state = AuthState(status: AuthStatus.signedIn, user: res.user);
     await _consumePendingReferral(referredByCode);
     // Adopt the account's profile — EXCEPT gender while it is still
@@ -338,6 +367,8 @@ class AuthNotifier extends Notifier<AuthState> {
   /// Replace the in-session user after a profile PATCH (gender completion).
   void updateUser(User user) {
     state = AuthState(status: AuthStatus.signedIn, user: user);
+    // the offline start shows the latest profile
+    ref.read(sessionStoreProvider).saveUser(user);
   }
 
   /// C-W3h: a successful sign-in that CARRIED a referral consumes the
@@ -367,13 +398,14 @@ class AuthNotifier extends Notifier<AuthState> {
 
   /// Local-only sign-out (used by the API client's 401 hook).
   Future<void> forceSignOut() async {
-    ref.read(apiProvider).token = null;
+    final api = ref.read(apiProvider);
+    api.token = null;
+    api.refreshToken = null;
     await _clearSession();
   }
 
   Future<void> _clearSession() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
+    await ref.read(sessionStoreProvider).clear();
     state = const AuthState(status: AuthStatus.guest);
   }
 }

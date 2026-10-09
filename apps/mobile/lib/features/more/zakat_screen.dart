@@ -101,39 +101,39 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
       body: ListView(
         padding: const EdgeInsets.all(SLSpacing.s16),
         children: [
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                field(
-                  _gold,
-                  context.t('zakat_gold'),
-                  PhosphorIconsRegular.wallet,
-                ),
-                const SizedBox(height: SLSpacing.s8),
-                field(
-                  _silver,
-                  context.t('zakat_silver'),
-                  PhosphorIconsRegular.circlesThree,
-                ),
-                const SizedBox(height: SLSpacing.s8),
-                field(
-                  _cash,
-                  context.t('zakat_cash'),
-                  PhosphorIconsRegular.creditCard,
-                ),
-                const SizedBox(height: SLSpacing.s8),
-                field(
-                  _invest,
-                  context.t('zakat_investments'),
-                  PhosphorIconsRegular.trendUp,
-                ),
-                const SizedBox(height: SLSpacing.s8),
-                // No Phosphor 2.1 equivalent (struck-through coin) — the
-                // one Material glyph left in the zakat form.
-                field(_debts, context.t('zakat_debts'), Icons.money_off),
-              ],
-            ),
+          // the fields straight on the page (a card around framed fields
+          // drew a double frame)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              field(
+                _gold,
+                context.t('zakat_gold'),
+                PhosphorIconsRegular.wallet,
+              ),
+              const SizedBox(height: SLSpacing.s8),
+              field(
+                _silver,
+                context.t('zakat_silver'),
+                PhosphorIconsRegular.circlesThree,
+              ),
+              const SizedBox(height: SLSpacing.s8),
+              field(
+                _cash,
+                context.t('zakat_cash'),
+                PhosphorIconsRegular.creditCard,
+              ),
+              const SizedBox(height: SLSpacing.s8),
+              field(
+                _invest,
+                context.t('zakat_investments'),
+                PhosphorIconsRegular.trendUp,
+              ),
+              const SizedBox(height: SLSpacing.s8),
+              // No Phosphor 2.1 equivalent (struck-through coin) — the
+              // one Material glyph left in the zakat form.
+              field(_debts, context.t('zakat_debts'), Icons.money_off),
+            ],
           ),
           const SizedBox(height: SLSpacing.s12),
           AppCard(
@@ -147,10 +147,24 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 ),
                 Align(
                   alignment: AlignmentDirectional.centerStart,
-                  child: Text(
-                    '৳${money(nisab)} (${bn ? '${toBn(85)} গ্রাম' : '85g'} × ৳${money(goldPrice)})',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
+                  // the value bold, how it is reached in quiet grey
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(
+                          text: '৳${money(nisab)} ',
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        TextSpan(
+                          text:
+                              '(${bn ? '${toBn(85)} গ্রাম' : '85g'} × ৳${money(goldPrice)})',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -179,13 +193,17 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: SLSpacing.s4),
-                Text(
-                  eligible
-                      ? '${context.t('zakat_percent_note')} (${context.t('zakat_net')} ৳${money(net)})'
-                      : context.t('zakat_below_nisab'),
-                  textAlign: TextAlign.center,
-                  style: theme.textTheme.bodySmall,
+                const SizedBox(height: SLSpacing.s8),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(
+                    eligible
+                        ? '${context.t('zakat_percent_note')} (${context.t('zakat_net')} ৳${money(net)})'
+                        : context.t('zakat_below_nisab'),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -208,38 +226,46 @@ class _ZakatScreenState extends ConsumerState<ZakatScreen> {
                 }
               },
             ),
-          const SizedBox(height: SLSpacing.s8),
-          Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Flexible(
-                  child: Text(
-                    '${context.t('zakat_donation_link')}: $donationUrl',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                // Copy affordance kept (genuinely useful for sharing the
-                // link on), alongside the new open action.
-                IconButton(
-                  tooltip: context.t('copy'),
-                  icon: Icon(
-                    PhosphorIconsRegular.copy,
-                    size: 16,
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                  onPressed: () async {
-                    await Clipboard.setData(ClipboardData(text: donationUrl));
-                    if (context.mounted) {
+          const SizedBox(height: SLSpacing.s12),
+          // the donation link as a proper row: what it is, the address on
+          // one line, copy on the right (centred text used to flip to
+          // left-aligned and split the URL when it wrapped)
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: ListTile(
+              leading: Icon(
+                PhosphorIconsRegular.handHeart,
+                color: theme.colorScheme.primary,
+              ),
+              title: Text(context.t('zakat_donation_link')),
+              subtitle: Text(
+                donationUrl,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              trailing: IconButton(
+                tooltip: context.t('copy'),
+                icon: const Icon(PhosphorIconsRegular.copy, size: 20),
+                onPressed: () async {
+                  await Clipboard.setData(ClipboardData(text: donationUrl));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(context.t('copied'))),
+                    );
+                  }
+                },
+              ),
+              onTap: canDonate
+                  ? () async {
+                      final opened = await openInAppBrowser(donationUrl);
+                      if (!context.mounted || opened) return;
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(context.t('copied'))),
+                        SnackBar(
+                          content: Text(context.t('donation_open_failed')),
+                        ),
                       );
                     }
-                  },
-                ),
-              ],
+                  : null,
             ),
           ),
         ],

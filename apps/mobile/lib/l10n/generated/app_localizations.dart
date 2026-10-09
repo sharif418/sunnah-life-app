@@ -637,7 +637,7 @@ abstract class AppLocalizations {
   /// No description provided for @amal_self_test.
   ///
   /// In bn, this message translates to:
-  /// **'ইমান ও তাকওয়া সেলফ-টেস্ট'**
+  /// **'ঈমান ও তাকওয়া সেলফ-টেস্ট'**
   String get amal_self_test;
 
   /// No description provided for @amal_no_defs.
@@ -1309,7 +1309,7 @@ abstract class AppLocalizations {
   /// No description provided for @hijri_adjust.
   ///
   /// In bn, this message translates to:
-  /// **'হিজরি সমন্বয় (দিন)'**
+  /// **'হিজরি তারিখ সমন্বয়'**
   String get hijri_adjust;
 
   /// No description provided for @prayer_please_login.
@@ -1603,13 +1603,13 @@ abstract class AppLocalizations {
   /// No description provided for @level_farze_ain_1.
   ///
   /// In bn, this message translates to:
-  /// **'ফরযে আইন — ক্যাটাগরি ১'**
+  /// **'ফরযে আইন — ক্যাটাগরি ১'**
   String get level_farze_ain_1;
 
   /// No description provided for @level_farze_ain_2.
   ///
   /// In bn, this message translates to:
-  /// **'ফরযে আইন — ক্যাটাগরি ২'**
+  /// **'ফরযে আইন — ক্যাটাগরি ২'**
   String get level_farze_ain_2;
 
   /// No description provided for @madhhab_hanafi.
@@ -3853,7 +3853,7 @@ abstract class AppLocalizations {
   /// No description provided for @search_hint.
   ///
   /// In bn, this message translates to:
-  /// **'দোয়া, আযকার, নাম বা আর্টিকেল খুঁজুন…'**
+  /// **'দোয়া, আযকার, নাম খুঁজুন…'**
   String get search_hint;
 
   /// No description provided for @search_no_results.
@@ -5139,6 +5139,342 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'হিজরি'**
   String get hijri_suffix;
+
+  /// No description provided for @most_used_days_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'৩০ দিনে %n দিন'**
+  String get most_used_days_fmt;
+
+  /// No description provided for @most_used_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ হয়েছে'**
+  String get most_used_done;
+
+  /// No description provided for @live_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ'**
+  String get live_today;
+
+  /// No description provided for @live_tomorrow.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগামীকাল'**
+  String get live_tomorrow;
+
+  /// No description provided for @live_in_days_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'%n দিন পর'**
+  String get live_in_days_fmt;
+
+  /// No description provided for @live_badge.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ'**
+  String get live_badge;
+
+  /// No description provided for @guest_nudge_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাকাউন্ট খুললে যা পাবেন'**
+  String get guest_nudge_sub;
+
+  /// No description provided for @article_cat_dawah.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াহ'**
+  String get article_cat_dawah;
+
+  /// No description provided for @article_cat_sunnah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সুন্নাহ'**
+  String get article_cat_sunnah;
+
+  /// No description provided for @article_cat_tarbiyah.
+  ///
+  /// In bn, this message translates to:
+  /// **'তারবিয়াহ'**
+  String get article_cat_tarbiyah;
+
+  /// No description provided for @article_read_min.
+  ///
+  /// In bn, this message translates to:
+  /// **'মিনিট পড়া'**
+  String get article_read_min;
+
+  /// No description provided for @article_read.
+  ///
+  /// In bn, this message translates to:
+  /// **'পড়ুন'**
+  String get article_read;
+
+  /// No description provided for @chip_habit.
+  ///
+  /// In bn, this message translates to:
+  /// **'অভ্যাস চ্যালেঞ্জ'**
+  String get chip_habit;
+
+  /// No description provided for @chip_self_test.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেলফ-টেস্ট'**
+  String get chip_self_test;
+
+  /// No description provided for @chip_goals.
+  ///
+  /// In bn, this message translates to:
+  /// **'লক্ষ্য'**
+  String get chip_goals;
+
+  /// No description provided for @chip_usrah_q.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রশ্নোত্তর'**
+  String get chip_usrah_q;
+
+  /// No description provided for @exercise_week_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই সপ্তাহে এখনো কিছু লেখা হয়নি — উপরে আজকের শরীরচর্চা যোগ করুন'**
+  String get exercise_week_empty;
+
+  /// No description provided for @self_test_quizzes.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজেকে যাচাই করুন'**
+  String get self_test_quizzes;
+
+  /// No description provided for @live_none_all.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখন কোনো লাইভ প্রোগ্রাম নেই। নতুন প্রোগ্রাম ঘোষণা হলে এখানে দেখা যাবে, ইনশাআল্লাহ।'**
+  String get live_none_all;
+
+  /// No description provided for @about_faq_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজ, আমল ও অ্যাপ নিয়ে সাধারণ প্রশ্নের উত্তর'**
+  String get about_faq_sub;
+
+  /// No description provided for @autosilent_grant_first.
+  ///
+  /// In bn, this message translates to:
+  /// **'আগে উপরের অনুমতিটি দিন'**
+  String get autosilent_grant_first;
+
+  /// No description provided for @dawah_assess_empty.
+  ///
+  /// In bn, this message translates to:
+  /// **'এখনো কোনো মূল্যায়ন হয়নি। দায়িত্বশীল আপনার মূল্যায়ন করলে ফল এখানে দেখা যাবে।'**
+  String get dawah_assess_empty;
+
+  /// No description provided for @dawah_req_fallback_note.
+  ///
+  /// In bn, this message translates to:
+  /// **'সর্বশেষ চেকলিস্ট আনা যায়নি — আগের সারসংক্ষেপ দেখানো হচ্ছে'**
+  String get dawah_req_fallback_note;
+
+  /// No description provided for @habit_mark_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ করেছি'**
+  String get habit_mark_today;
+
+  /// No description provided for @search_try.
+  ///
+  /// In bn, this message translates to:
+  /// **'যা খুঁজতে পারেন'**
+  String get search_try;
+
+  /// No description provided for @prayer_prompt_sub.
+  ///
+  /// In bn, this message translates to:
+  /// **'জামাতে, একা না কাযা — এক চাপে আজকের ডায়েরিতে লেখা হবে'**
+  String get prayer_prompt_sub;
+
+  /// No description provided for @prayer_prompt_saved.
+  ///
+  /// In bn, this message translates to:
+  /// **'ডায়েরিতে লেখা হয়েছে — বদলাতে চাইলে অন্যটি চাপুন'**
+  String get prayer_prompt_saved;
+
+  /// No description provided for @faq_group_salat.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজ'**
+  String get faq_group_salat;
+
+  /// No description provided for @faq_group_amal.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমল ও মুহাসাবা'**
+  String get faq_group_amal;
+
+  /// No description provided for @faq_group_dawah.
+  ///
+  /// In bn, this message translates to:
+  /// **'দাওয়াহ ও তারবিয়াহ'**
+  String get faq_group_dawah;
+
+  /// No description provided for @faq_group_ilm.
+  ///
+  /// In bn, this message translates to:
+  /// **'ইলম ও প্রশ্ন'**
+  String get faq_group_ilm;
+
+  /// No description provided for @faq_group_app.
+  ///
+  /// In bn, this message translates to:
+  /// **'অ্যাপ ব্যবহার'**
+  String get faq_group_app;
+
+  /// No description provided for @faq_group_other.
+  ///
+  /// In bn, this message translates to:
+  /// **'অন্যান্য'**
+  String get faq_group_other;
+
+  /// No description provided for @faq_more_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরও প্রশ্ন আছে?'**
+  String get faq_more_title;
+
+  /// No description provided for @faq_more_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'দ্বীনি মাসআলা হলে আলেমদের জিজ্ঞাসা করুন; অ্যাপের সমস্যা হলে সাপোর্টে লিখুন।'**
+  String get faq_more_body;
+
+  /// No description provided for @faq_ask_masala.
+  ///
+  /// In bn, this message translates to:
+  /// **'মাসআলা'**
+  String get faq_ask_masala;
+
+  /// No description provided for @faq_ask_support.
+  ///
+  /// In bn, this message translates to:
+  /// **'সাপোর্ট'**
+  String get faq_ask_support;
+
+  /// No description provided for @ilm_group_learn.
+  ///
+  /// In bn, this message translates to:
+  /// **'শিখুন ও যাচাই করুন'**
+  String get ilm_group_learn;
+
+  /// No description provided for @ilm_group_quran.
+  ///
+  /// In bn, this message translates to:
+  /// **'কুরআন, যিকির ও দোয়া'**
+  String get ilm_group_quran;
+
+  /// No description provided for @ilm_group_know.
+  ///
+  /// In bn, this message translates to:
+  /// **'জানুন'**
+  String get ilm_group_know;
+
+  /// No description provided for @adhkar_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'চাপ দিয়ে গুনুন · ভুল হলে চেপে ধরে একটি কমান'**
+  String get adhkar_hint;
+
+  /// No description provided for @adhkar_reset.
+  ///
+  /// In bn, this message translates to:
+  /// **'আবার শুরু'**
+  String get adhkar_reset;
+
+  /// No description provided for @adhkar_reset_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই সেটের গণনা মুছবেন?'**
+  String get adhkar_reset_title;
+
+  /// No description provided for @adhkar_reset_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের গণনা শূন্য থেকে শুরু হবে। ডায়েরির টিক থাকবে।'**
+  String get adhkar_reset_body;
+
+  /// No description provided for @adhkar_done_of.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন'**
+  String get adhkar_done_of;
+
+  /// No description provided for @adhkar_minutes_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রায় %n মিনিট'**
+  String get adhkar_minutes_fmt;
+
+  /// No description provided for @adhkar_ticked_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ ডায়েরিতে টিক দেওয়া হয়েছে'**
+  String get adhkar_ticked_today;
+
+  /// No description provided for @adhkar_diary_ticked.
+  ///
+  /// In bn, this message translates to:
+  /// **'আলহামদুলিল্লাহ — আজকের ডায়েরিতে টিক দেওয়া হলো'**
+  String get adhkar_diary_ticked;
+
+  /// No description provided for @dhikr_virtue.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফযীলত'**
+  String get dhikr_virtue;
+
+  /// No description provided for @adhkar_set_complete.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই সেট সম্পূর্ণ — মাশাআল্লাহ'**
+  String get adhkar_set_complete;
+
+  /// No description provided for @article_back_to_list.
+  ///
+  /// In bn, this message translates to:
+  /// **'আর্টিকেল তালিকায় ফিরুন'**
+  String get article_back_to_list;
+
+  /// No description provided for @search_hit_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'খোঁজা ফল'**
+  String get search_hit_label;
+
+  /// No description provided for @live_quiz_no_usrah_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ কুইজ হয় উসরার সদস্যদের নিয়ে। আপনি এখনো কোনো উসরায় যুক্ত নন — যুক্ত হতে আবেদন করুন। ততক্ষণ ইলম ট্যাবের অনুশীলনের কুইজ খেলতে পারেন।'**
+  String get live_quiz_no_usrah_hint;
+
+  /// No description provided for @adhkar_tab_morning.
+  ///
+  /// In bn, this message translates to:
+  /// **'সকাল'**
+  String get adhkar_tab_morning;
+
+  /// No description provided for @adhkar_tab_evening.
+  ///
+  /// In bn, this message translates to:
+  /// **'সন্ধ্যা'**
+  String get adhkar_tab_evening;
+
+  /// No description provided for @adhkar_tab_post_salat.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজের পর'**
+  String get adhkar_tab_post_salat;
 }
 
 class _AppLocalizationsDelegate

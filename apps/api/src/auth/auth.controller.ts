@@ -124,6 +124,6 @@ export function setTokenCookies(res: Response, accessToken: string, refreshToken
     sameSite: "lax",
     secure,
     path: "/",
-    maxAge: 7 * 86400 * 1000,
+    maxAge: Number(process.env.REFRESH_TOKEN_TTL_DAYS || 60) * 86400 * 1000,
   });
 }

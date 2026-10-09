@@ -345,18 +345,45 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
                   ],
                 ),
                 const SizedBox(height: SLSpacing.s8),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: SLSpacing.s8,
-                  children: [
-                    for (final m in const [10, 15, 20, 30, 45, 60])
-                      ChoiceChip(
-                        label: Text(_n(m)),
-                        selected: _minutes == m,
-                        showCheckmark: false,
-                        onSelected: (_) => setState(() => _minutes = m),
+                // six across when they fit, else three by two — never the
+                // ragged 4 + 2 a centred Wrap made on a small phone
+                LayoutBuilder(
+                  builder: (context, box) {
+                    const presets = [10, 15, 20, 30, 45, 60];
+                    final perRow =
+                        box.maxWidth >=
+                            6 * MediaQuery.textScalerOf(context).scale(56)
+                        ? 6
+                        : 3;
+                    Widget chip(int m) => ChoiceChip(
+                      label: SizedBox(
+                        width: double.infinity,
+                        child: Text(_n(m), textAlign: TextAlign.center),
                       ),
-                  ],
+                      selected: _minutes == m,
+                      showCheckmark: false,
+                      onSelected: (_) => setState(() => _minutes = m),
+                    );
+                    return Column(
+                      children: [
+                        for (var i = 0; i < presets.length; i += perRow)
+                          Padding(
+                            padding: EdgeInsets.only(
+                              top: i == 0 ? 0 : SLSpacing.s8,
+                            ),
+                            child: Row(
+                              children: [
+                                for (final (j, m)
+                                    in presets.skip(i).take(perRow).indexed) ...[
+                                  if (j > 0) const SizedBox(width: SLSpacing.s8),
+                                  Expanded(child: chip(m)),
+                                ],
+                              ],
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
                 const SizedBox(height: SLSpacing.s16),
                 SizedBox(
@@ -411,26 +438,49 @@ class _ExerciseScreenState extends ConsumerState<ExerciseScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 132,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                // a week of zeros drew 90px of white over flat stubs — say
+                // it in a line instead
+                if (weekTotal == 0)
+                  Row(
+                    key: const ValueKey('exercise_week_empty'),
                     children: [
-                      for (final day in week)
-                        Expanded(
-                          child: _DayBar(
-                            label: context.t(
-                              'weekday_short_${parseKey(day).weekday % 7}',
-                            ),
-                            value: _n(minutesOn(day)),
-                            fraction: minutesOn(day) / weekMax,
-                            reached: minutesOn(day) >= kExerciseDailyTarget,
-                            today: day == today,
+                      Icon(
+                        PhosphorIconsRegular.personSimpleRun,
+                        size: 22,
+                        color: cs.primary,
+                      ),
+                      const SizedBox(width: SLSpacing.s12),
+                      Expanded(
+                        child: Text(
+                          context.t('exercise_week_empty'),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: cs.onSurfaceVariant,
                           ),
                         ),
+                      ),
                     ],
+                  )
+                else
+                  SizedBox(
+                    height: 132,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        for (final day in week)
+                          Expanded(
+                            child: _DayBar(
+                              label: context.t(
+                                'weekday_short_${parseKey(day).weekday % 7}',
+                              ),
+                              value: _n(minutesOn(day)),
+                              fraction: minutesOn(day) / weekMax,
+                              reached: minutesOn(day) >= kExerciseDailyTarget,
+                              today: day == today,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
                 const SizedBox(height: SLSpacing.s12),
                 Text(
                   '${context.t('exercise_week_total')}: ${_n(weekTotal)} / '

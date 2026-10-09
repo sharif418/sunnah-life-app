@@ -156,7 +156,7 @@ class GlobalHeader extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: SLSpacing.s8),
+                      const SizedBox(width: SLSpacing.s12),
                       InkWell(
                         key: const ValueKey('header_city'),
                         borderRadius: SLRadius.brPill,

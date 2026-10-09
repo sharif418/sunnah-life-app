@@ -11,12 +11,11 @@ import 'package:go_router/go_router.dart';
 
 import '../../api/api_client.dart';
 import '../../core/bn_digits.dart';
-import '../../core/calendars.dart' show formatTimeBn;
-import '../../core/external_urls.dart';
 import '../../design/design_tokens.dart';
 import '../../models/domain.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
+import '../shared/live_program_card.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -48,20 +47,16 @@ class LiveScreen extends ConsumerWidget {
           ],
         ),
         data: (programs) {
-          String when(String iso) {
-            final t = DateTime.tryParse(iso)?.toLocal();
-            if (t == null) return iso;
-            final day = bn ? toBn(t.day) : '${t.day}';
-            return '$day ${context.t('month_${t.month}')} · '
-                '${formatTimeBn(t.hour * 60.0 + t.minute, bengali: bn)}';
-          }
-
-          Widget section(String title, Color color, List<LiveProgramItem> list,
-              {bool showTime = true, required String emptyKey}) {
+          Widget section(
+            String title,
+            IconData icon,
+            List<LiveProgramItem> list, {
+            required String emptyKey,
+          }) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeader(title, icon: PhosphorIconsRegular.broadcast),
+                SectionHeader(title, icon: icon),
                 // full width, like the program cards around it
                 if (list.isEmpty)
                   SizedBox(
@@ -76,149 +71,58 @@ class LiveScreen extends ConsumerWidget {
                     ),
                   ),
                 for (final p in list)
-                  AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: color.withValues(alpha: 0.15),
-                                borderRadius: SLRadius.brPill,
-                              ),
-                              child: Text(
-                                title,
-                                style: theme.textTheme.bodySmall
-                                    ?.copyWith(color: color),
-                              ),
-                            ),
-                            const Spacer(),
-                            if (p.gender == Gender.f)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 3),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.tertiary
-                                      .withValues(alpha: 0.15),
-                                  borderRadius: SLRadius.brPill,
-                                ),
-                                child: Text(
-                                  context.t('live_sisters_only'),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.tertiary),
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: SLSpacing.s4),
-                        Text(p.titleBn,
-                            style: theme.textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700)),
-                        if (p.hostName?.isNotEmpty ?? false)
-                          Text(
-                              '${context.t('live_host')}: ${p.hostName}',
-                              style: theme.textTheme.bodySmall),
-                        if (showTime)
-                          Text(
-                            when(p.startsAt),
-                            style: theme.textTheme.bodySmall?.copyWith(
-                                color:
-                                    theme.colorScheme.onSurfaceVariant),
-                          ),
-                        // LIVE-01 / LIVE-03: watch the stream or recording
-                        if (p.status != 'upcoming')
-                          for (final url in [
-                            livePlaybackUrl(
-                              youtubeId: p.youtubeId,
-                              recordingUrl: p.status == 'past' ? p.recordingUrl : null,
-                            ),
-                          ])
-                            if (url != null)
-                              Padding(
-                                padding: const EdgeInsets.only(top: SLSpacing.s8),
-                                child: FilledButton.icon(
-                                  key: ValueKey('live_watch_${p.id}'),
-                                  icon: const Icon(PhosphorIconsFill.broadcast, size: 18),
-                                  label: Text(context.t(
-                                    p.status == 'live' ? 'live_watch_now' : 'live_watch_recording',
-                                  )),
-                                  onPressed: () async {
-                                    final opened = await openExternalApp(url);
-                                    if (!opened && context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text(context.t('donation_open_failed'))),
-                                      );
-                                    }
-                                  },
-                                ),
-                              ),
-                        // AMOL-17: a scheduled quiz that is live → the usrah room
-                        if (p.status == 'live' && (p.quizId ?? '').isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.only(top: SLSpacing.s8),
-                            child: FilledButton.icon(
-                              key: ValueKey('live_quiz_join_${p.id}'),
-                              icon: const Icon(PhosphorIconsRegular.question, size: 18),
-                              label: Text(context.t('quiz_join_live')),
-                              onPressed: () => context.push('/ilm/live-quiz'),
-                            ),
-                          ),
-                        if (p.status == 'upcoming')
-                          Padding(
-                            padding: const EdgeInsets.only(top: SLSpacing.s8),
-                            child: OutlinedButton.icon(
-                              icon: const Icon(PhosphorIconsRegular.bell,
-                                  size: 18),
-                              label: Text(context.t('live_notify')),
-                              onPressed: () async {
-                                try {
-                                  await ref
-                                      .read(apiProvider)
-                                      .notifyLive(p.id);
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: Text(
-                                          context.t('live_will_remind')),
-                                    ));
-                                  }
-                                } on ApiException catch (e) {
-                                  if (context.mounted) {
-                                    ScaffoldMessenger.of(context)
-                                        .showSnackBar(SnackBar(
-                                      content: Text(e.message),
-                                    ));
-                                  }
-                                }
-                              },
-                            ),
-                          ),
-                      ],
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+                    child: LiveProgramCard(
+                      program: p,
+                      onRemind: () => requestLiveReminder(
+                        context,
+                        ref.read(apiProvider),
+                        p.id,
+                      ),
+                      onJoinQuiz: () => context.push('/ilm/live-quiz'),
                     ),
                   ),
-                const SizedBox(height: SLSpacing.s8),
+                const SizedBox(height: SLSpacing.s4),
               ],
             );
           }
 
+          // nothing at all: one calm state, not three bare "none" rows
+          if (programs.isEmpty) {
+            return ListView(
+              children: [
+                const SizedBox(height: SLSpacing.s32),
+                EmptyState(
+                  icon: PhosphorIconsRegular.broadcast,
+                  message: context.t('live_none_all'),
+                ),
+              ],
+            );
+          }
           return ListView(
             padding: const EdgeInsets.all(SLSpacing.s16),
             children: [
               section(
-                  context.t('live_now'), theme.colorScheme.error,
-                  programs.where((p) => p.status == 'live').toList(),
-                  showTime: false, emptyKey: 'live_none_now'),
+                context.t('live_now'),
+                PhosphorIconsRegular.broadcast,
+                programs.where((p) => p.status == 'live').toList(),
+                emptyKey: 'live_none_now',
+              ),
               section(
-                  context.t('live_upcoming'), theme.colorScheme.primary,
-                  programs.where((p) => p.status == 'upcoming').toList(),
-                  emptyKey: 'live_none_upcoming'),
+                context.t('live_upcoming'),
+                PhosphorIconsRegular.calendarBlank,
+                programs.where((p) => p.status == 'upcoming').toList()
+                  ..sort((a, b) => a.startsAt.compareTo(b.startsAt)),
+                emptyKey: 'live_none_upcoming',
+              ),
               section(
-                  context.t('live_past'), theme.colorScheme.onSurfaceVariant,
-                  programs.where((p) => p.status == 'past').toList(),
-                  emptyKey: 'live_none_past'),
+                context.t('live_past'),
+                PhosphorIconsRegular.playCircle,
+                programs.where((p) => p.status == 'past').toList()
+                  ..sort((a, b) => b.startsAt.compareTo(a.startsAt)),
+                emptyKey: 'live_none_past',
+              ),
               if (programs.isNotEmpty)
                 Center(
                   child: Text(
@@ -232,5 +136,4 @@ class LiveScreen extends ConsumerWidget {
       ),
     );
   }
-
 }

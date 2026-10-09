@@ -180,7 +180,7 @@ class _HabitBuilderScreenState extends ConsumerState<HabitBuilderScreen> {
                         label: Text(
                           doneToday
                               ? context.t('all_set')
-                              : context.t('amal_today'),
+                              : context.t('habit_mark_today'),
                         ),
                         onPressed: doneToday
                             ? null
@@ -282,6 +282,18 @@ class _DayDot extends StatelessWidget {
                       bengali ? toBn(dayNum) : '$dayNum',
                       style: theme.textTheme.bodySmall,
                     ),
+            ),
+          ),
+          // the weekday under the date, so the ringed circle reads as
+          // "today" and not "day ৭ of the challenge"
+          const SizedBox(height: 4),
+          Text(
+            context.t('weekday_short_${parseKey(day).weekday % 7}'),
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: isToday
+                  ? theme.colorScheme.primary
+                  : theme.colorScheme.onSurfaceVariant,
+              fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
             ),
           ),
         ],

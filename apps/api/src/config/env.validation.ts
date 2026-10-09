@@ -26,7 +26,7 @@ const schema = z
     .optional()
     .default(""),
   ACCESS_TOKEN_TTL_MIN: z.coerce.number().int().positive().default(15),
-  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(7),
+  REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().positive().default(60),
   SMS_PROVIDER: z.enum(["mock", "sslwireless", "infobip"]).default("mock"),
   SMS_SSLWIRELESS_URL: z.string().optional().default(""),
   SMS_SSLWIRELESS_USER: z.string().optional().default(""),

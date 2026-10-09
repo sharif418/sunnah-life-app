@@ -18,6 +18,7 @@ import '../../state/goals_state.dart';
 import '../../state/providers.dart';
 import '../../state/remote_state.dart';
 import '../shared/global_header.dart';
+import '../shared/when_bn.dart';
 import '../shared/widgets.dart';
 import 'assessment_confirm_sheet.dart';
 import 'dawah_journey.dart';
@@ -203,7 +204,8 @@ class _DawahOverviewTab extends ConsumerWidget {
                   .length,
               requirementsTotal: overview.requirements.length,
             ),
-            const SizedBox(height: SLSpacing.s16),
+            // one rhythm on this tab: 8 under a card + the header's own 16
+            const SizedBox(height: SLSpacing.s8),
 
             // Requirements checklist — “Live checklist” opens the live screen
             // (GET /api/dawah/requirements, B9 mobile parity with the web).
@@ -227,7 +229,7 @@ class _DawahOverviewTab extends ConsumerWidget {
                 ],
               ),
             ),
-            const SizedBox(height: SLSpacing.s16),
+            const SizedBox(height: SLSpacing.s24),
 
             // The usrah head's latest weekly comment to ME.
             ...switch (latestReviewFor(ref)) {
@@ -330,6 +332,7 @@ class _DawahOverviewTab extends ConsumerWidget {
               )
             else
               MaduTree(nodes: overview.downline),
+            const SizedBox(height: SLSpacing.s8),
 
             // Assessments — W4i: every row carries the acknowledgment STATUS
             // (pending_confirmation | confirmed | declined); a pending result
@@ -343,11 +346,22 @@ class _DawahOverviewTab extends ConsumerWidget {
             // the bottom of the member's own path
             if (overview.assessments.isEmpty)
               AppCard(
-                child: Text(
-                  context.t('empty_generic'),
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
+                child: Row(
+                  children: [
+                    Icon(
+                      PhosphorIconsRegular.clipboardText,
+                      color: theme.colorScheme.primary,
+                    ),
+                    const SizedBox(width: SLSpacing.s12),
+                    Expanded(
+                      child: Text(
+                        context.t('dawah_assess_empty'),
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               )
             else
@@ -585,35 +599,42 @@ class _UsrahTab extends ConsumerWidget {
                 EmptyState(message: context.t('empty_generic'))
               else
                 for (final a in bundle.announcements)
-                  AppCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            if (a.pinned)
-                              Icon(
-                                PhosphorIconsRegular.pushPin,
-                                size: 14,
-                                color: theme.colorScheme.tertiary,
-                              ),
-                            Expanded(
-                              child: Text(
-                                a.authorName ?? '',
-                                style: theme.textTheme.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+                    child: AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              if (a.pinned) ...[
+                                Icon(
+                                  PhosphorIconsRegular.pushPin,
+                                  size: 14,
+                                  color: theme.colorScheme.tertiary,
+                                ),
+                                const SizedBox(width: SLSpacing.s4),
+                              ],
+                              Expanded(
+                                child: Text(
+                                  a.authorName ?? '',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
-                            ),
-                            Text(
-                              a.createdAt.substring(0, 10),
-                              style: theme.textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: SLSpacing.s4),
-                        Text(a.body, style: theme.textTheme.bodyMedium),
-                      ],
+                              Text(
+                                whenBn(context, a.createdAt).split(' · ').first,
+                                style: theme.textTheme.bodySmall?.copyWith(
+                                  color: theme.colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: SLSpacing.s4),
+                          Text(a.body, style: theme.textTheme.bodyMedium),
+                        ],
+                      ),
                     ),
                   ),
             ],

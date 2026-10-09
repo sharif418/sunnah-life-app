@@ -96,8 +96,9 @@ class PrayerScheduleCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // grows with the text size, so "মাগরিব" never runs into its time
             SizedBox(
-              width: 66,
+              width: MediaQuery.textScalerOf(context).scale(66),
               child: Text(
                 waqtLabel(context, w.key, friday: friday),
                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -106,6 +107,7 @@ class PrayerScheduleCard extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(width: SLSpacing.s8),
             Expanded(
               child: Wrap(
                 spacing: SLSpacing.s8,
@@ -177,6 +179,7 @@ class PrayerScheduleCard extends StatelessWidget {
 
     return AppCard(
       padding: EdgeInsets.zero,
+      clip: true, // the pink forbidden strip runs to the rounded corners
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -226,31 +229,46 @@ class PrayerScheduleCard extends StatelessWidget {
               border: Border(top: BorderSide(color: cs.outline)),
             ),
             padding: const EdgeInsets.fromLTRB(4, 10, 4, 2),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(child: naflCell(PrayerKey.sunrise, clock(t.sunrise))),
-                Expanded(
-                  child: naflCell(
+            // four across while they fit; two by two on a small phone with
+            // large text (the Duha range used to shrink, Tahajjud touched
+            // the rim)
+            child: LayoutBuilder(
+              builder: (context, box) {
+                final cells = [
+                  naflCell(PrayerKey.sunrise, clock(t.sunrise)),
+                  naflCell(
                     PrayerKey.ishraq,
                     context
                         .t('sched_from_fmt')
                         .replaceAll('%t', clock(nafl.ishraq)),
                   ),
-                ),
-                Expanded(
-                  child: naflCell(
+                  naflCell(
                     PrayerKey.duha,
                     '${clock(nafl.duhaStart)}–${clock(nafl.duhaEnd)}',
                   ),
-                ),
-                Expanded(
-                  child: naflCell(
+                  naflCell(
                     PrayerKey.tahajjud,
                     '${clock(nafl.tahajjudStart)}–${clock(nafl.tahajjudEnd - 1)}',
                   ),
-                ),
-              ],
+                ];
+                final perRow =
+                    box.maxWidth >=
+                        4 * MediaQuery.textScalerOf(context).scale(84)
+                    ? 4
+                    : 2;
+                return Column(
+                  children: [
+                    for (var i = 0; i < cells.length; i += perRow)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          for (final c in cells.skip(i).take(perRow))
+                            Expanded(child: c),
+                        ],
+                      ),
+                  ],
+                );
+              },
             ),
           ),
           Container(

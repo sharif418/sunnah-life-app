@@ -2610,4 +2610,181 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get hijri_suffix => 'AH';
+
+  @override
+  String get most_used_days_fmt => '%n of 30 days';
+
+  @override
+  String get most_used_done => 'Done today';
+
+  @override
+  String get live_today => 'Today';
+
+  @override
+  String get live_tomorrow => 'Tomorrow';
+
+  @override
+  String get live_in_days_fmt => 'in %n days';
+
+  @override
+  String get live_badge => 'LIVE';
+
+  @override
+  String get guest_nudge_sub => 'What an account gives you';
+
+  @override
+  String get article_cat_dawah => 'Dawah';
+
+  @override
+  String get article_cat_sunnah => 'Sunnah';
+
+  @override
+  String get article_cat_tarbiyah => 'Tarbiyah';
+
+  @override
+  String get article_read_min => 'min read';
+
+  @override
+  String get article_read => 'Read';
+
+  @override
+  String get chip_habit => 'Habit';
+
+  @override
+  String get chip_self_test => 'Self-test';
+
+  @override
+  String get chip_goals => 'Goals';
+
+  @override
+  String get chip_usrah_q => 'Q&A';
+
+  @override
+  String get exercise_week_empty =>
+      'Nothing logged this week yet — add today\'s exercise above';
+
+  @override
+  String get self_test_quizzes => 'Test yourself';
+
+  @override
+  String get live_none_all =>
+      'No live programs right now. New ones will appear here.';
+
+  @override
+  String get about_faq_sub => 'Answers to common questions';
+
+  @override
+  String get autosilent_grant_first => 'Give the permission above first';
+
+  @override
+  String get dawah_assess_empty =>
+      'No assessments yet. Results appear here once you are assessed.';
+
+  @override
+  String get dawah_req_fallback_note =>
+      'Couldn\'t load the latest checklist — showing the summary';
+
+  @override
+  String get habit_mark_today => 'Done today';
+
+  @override
+  String get search_try => 'Try searching';
+
+  @override
+  String get prayer_prompt_sub =>
+      'In congregation, alone or qaza — one tap saves it to today\'s diary';
+
+  @override
+  String get prayer_prompt_saved =>
+      'Saved to the diary — tap another to change';
+
+  @override
+  String get faq_group_salat => 'Prayer';
+
+  @override
+  String get faq_group_amal => 'Deeds & diary';
+
+  @override
+  String get faq_group_dawah => 'Dawah & tarbiyah';
+
+  @override
+  String get faq_group_ilm => 'Learning & questions';
+
+  @override
+  String get faq_group_app => 'Using the app';
+
+  @override
+  String get faq_group_other => 'Other';
+
+  @override
+  String get faq_more_title => 'Still have a question?';
+
+  @override
+  String get faq_more_body =>
+      'Ask the scholars about a religious matter; write to support about the app.';
+
+  @override
+  String get faq_ask_masala => 'Ask a scholar';
+
+  @override
+  String get faq_ask_support => 'Support';
+
+  @override
+  String get ilm_group_learn => 'Learn and test';
+
+  @override
+  String get ilm_group_quran => 'Qur\'an, dhikr and duas';
+
+  @override
+  String get ilm_group_know => 'Know';
+
+  @override
+  String get adhkar_hint => 'Tap to count · press and hold to take one back';
+
+  @override
+  String get adhkar_reset => 'Start over';
+
+  @override
+  String get adhkar_reset_title => 'Clear this set\'s counts?';
+
+  @override
+  String get adhkar_reset_body =>
+      'Today\'s counts start from zero. The diary tick stays.';
+
+  @override
+  String get adhkar_done_of => 'done';
+
+  @override
+  String get adhkar_minutes_fmt => 'about %n min';
+
+  @override
+  String get adhkar_ticked_today => 'Ticked in today\'s diary';
+
+  @override
+  String get adhkar_diary_ticked => 'Alhamdulillah — ticked in today\'s diary';
+
+  @override
+  String get dhikr_virtue => 'Virtue';
+
+  @override
+  String get adhkar_set_complete => 'Set complete — masha\'Allah';
+
+  @override
+  String get article_back_to_list => 'Back to articles';
+
+  @override
+  String get search_hit_label => 'Search result';
+
+  @override
+  String get live_quiz_no_usrah_hint =>
+      'Live quizzes are played within an usrah. You are not in one yet — ask to join. Meanwhile, play the practice quizzes in Ilm.';
+
+  @override
+  String get adhkar_tab_morning => 'Morning';
+
+  @override
+  String get adhkar_tab_evening => 'Evening';
+
+  @override
+  String get adhkar_tab_post_salat => 'After salah';
 }

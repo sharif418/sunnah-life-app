@@ -20,7 +20,11 @@ class SelfTestScreen extends ConsumerStatefulWidget {
 }
 
 class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
-  List<Quiz>? _quizzes;
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<List<Quiz>> _future = ContentPack.quizzes();
 
   @override
   Widget build(BuildContext context) {
@@ -28,12 +32,16 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
-        title: Text(context.t('amal_self_test')),
+        // a long title scales down on a small phone with large text
+        // instead of losing its last word to "…"
+        title: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: AlignmentDirectional.centerStart,
+          child: Text(context.t('amal_self_test')),
+        ),
       ),
       body: FutureBuilder<List<Quiz>>(
-        future: _quizzes == null
-            ? ContentPack.quizzes()
-            : Future.value(_quizzes),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 80, count: 3);
@@ -50,36 +58,74 @@ class _SelfTestScreenState extends ConsumerState<SelfTestScreen> {
             children: [
               // AMOL-11: the 70-branch iman self-assessment leads the screen
               const _ImanCheckCard(),
-              const SizedBox(height: SLSpacing.s12),
+              // the quizzes under their own heading, each with an icon and a
+              // chevron so they read as tappable like the card above
+              SectionHeader(
+                context.t('self_test_quizzes'),
+                icon: PhosphorIconsRegular.question,
+              ),
               for (final quiz in quizzes) ...[
                 // AppCard has zero margin — space the cards explicitly.
                 if (quiz != quizzes.first)
-                  const SizedBox(height: SLSpacing.s12),
+                  const SizedBox(height: SLSpacing.s8),
                 AppCard(
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(builder: (_) => _QuizRunner(quiz: quiz)),
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        quiz.titleBn,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primaryContainer,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          PhosphorIconsRegular.listChecks,
+                          size: 20,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
-                      if (quiz.descBn?.isNotEmpty ?? false) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          quiz.descBn!,
-                          style: Theme.of(context).textTheme.bodySmall,
+                      const SizedBox(width: SLSpacing.s12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              quiz.titleBn,
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w700),
+                            ),
+                            if (quiz.descBn?.isNotEmpty ?? false) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                quiz.descBn!,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurfaceVariant,
+                                    ),
+                              ),
+                            ],
+                            const SizedBox(height: SLSpacing.s4),
+                            Text(
+                              '${bn ? toBn(quiz.questions.length) : quiz.questions.length} ${context.t('quiz_questions')} · ${bn ? toBn(quiz.minutes) : quiz.minutes} ${context.t('quiz_minutes')}',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: Theme.of(context).colorScheme.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                            ),
+                          ],
                         ),
-                      ],
-                      const SizedBox(height: SLSpacing.s8),
-                      Text(
-                        '${bn ? toBn(quiz.questions.length) : quiz.questions.length} ${context.t('quiz_questions')} · ${bn ? toBn(quiz.minutes) : quiz.minutes} ${context.t('quiz_minutes')}',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      ),
+                      const SizedBox(width: SLSpacing.s8),
+                      DirectionalIcon(
+                        PhosphorIconsRegular.caretRight,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                       ),
                     ],
                   ),

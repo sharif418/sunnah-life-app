@@ -3,34 +3,42 @@ library;
 
 import 'package:flutter/material.dart';
 
-import '../../core/bn_digits.dart';
 import '../../design/design_tokens.dart';
 import '../../models/content_models.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
 class IslamicNamesScreen extends StatefulWidget {
-  const IslamicNamesScreen({super.key});
+  const IslamicNamesScreen({super.key, this.highlightId});
+
+  /// From a search result (`?id=`): that name is shown first, framed, on
+  /// its own gender's tab.
+  final String? highlightId;
 
   @override
   State<IslamicNamesScreen> createState() => _IslamicNamesScreenState();
 }
 
 class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<List<IslamicName>> _future = ContentPack.islamicNames();
   bool _girls = false;
   String _query = '';
+  bool _highlightApplied = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bn = context.isBn;
     return Scaffold(
       appBar: AppBar(
         leading: const BackButton(),
         title: Text(context.t('ilm_baby_names')),
       ),
       body: FutureBuilder<List<IslamicName>>(
-        future: ContentPack.islamicNames(),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 64, count: 8);
@@ -38,24 +46,39 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
           final names = snap.data ?? const <IslamicName>[];
           if (names.isEmpty) {
             return EmptyState(
-                message: context.t('empty_generic'),
-                icon: PhosphorIconsRegular.baby);
+              message: context.t('empty_generic'),
+              icon: PhosphorIconsRegular.baby,
+            );
           }
-          var visible = names
-              .where((n) => n.gender == (_girls ? 'girl' : 'boy'))
-              .toList();
+          final hl = widget.highlightId;
+          final hit = hl == null
+              ? null
+              : names.where((n) => '${n.id}' == hl).firstOrNull;
+          if (hit != null && !_highlightApplied) {
+            // open on the found name's own tab
+            _highlightApplied = true;
+            _girls = hit.gender == 'girl';
+          }
           final q = _query.trim();
-          if (q.isNotEmpty) {
-            visible = visible
-                .where((n) =>
-                    n.name.contains(q) || n.meaningBn.contains(q))
-                .toList();
+          // searching looks through BOTH lists (a girl's name typed on the
+          // boys' tab used to answer "nothing here")
+          var visible = q.isEmpty
+              ? names
+                    .where((n) => n.gender == (_girls ? 'girl' : 'boy'))
+                    .toList()
+              : names
+                    .where((n) => n.name.contains(q) || n.meaningBn.contains(q))
+                    .toList();
+          if (hit != null && q.isEmpty && visible.contains(hit)) {
+            visible = [hit, ...visible.where((x) => !identical(x, hit))];
           }
           return Column(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: SLSpacing.s16, vertical: SLSpacing.s8),
+                  horizontal: SLSpacing.s16,
+                  vertical: SLSpacing.s8,
+                ),
                 child: Row(
                   children: [
                     Expanded(
@@ -63,7 +86,9 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                         onChanged: (v) => setState(() => _query = v),
                         decoration: InputDecoration(
                           hintText: context.t('search'),
-                          prefixIcon: const Icon(PhosphorIconsRegular.magnifyingGlass),
+                          prefixIcon: const Icon(
+                            PhosphorIconsRegular.magnifyingGlass,
+                          ),
                           isDense: true,
                         ),
                       ),
@@ -73,12 +98,18 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                       segments: [
                         ButtonSegment(
                           value: false,
-                          icon: const Icon(PhosphorIconsRegular.genderMale, size: 18),
+                          icon: const Icon(
+                            PhosphorIconsRegular.genderMale,
+                            size: 18,
+                          ),
                           label: Text(context.t('names_boy')),
                         ),
                         ButtonSegment(
                           value: true,
-                          icon: const Icon(PhosphorIconsRegular.genderFemale, size: 18),
+                          icon: const Icon(
+                            PhosphorIconsRegular.genderFemale,
+                            size: 18,
+                          ),
                           label: Text(context.t('names_girl')),
                         ),
                       ],
@@ -93,7 +124,8 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                 child: visible.isEmpty
                     ? EmptyState(
                         message: context.t('empty_generic'),
-                        icon: PhosphorIconsRegular.magnifyingGlass)
+                        icon: PhosphorIconsRegular.magnifyingGlass,
+                      )
                     : ListView.separated(
                         padding: const EdgeInsets.all(SLSpacing.s16),
                         itemCount: visible.length,
@@ -101,35 +133,38 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
                             const SizedBox(height: SLSpacing.s8),
                         itemBuilder: (context, i) {
                           final n = visible[i];
-                          return AppCard(
+                          // the list position meant nothing and, at large
+                          // text, ran into the meaning — name + meaning only
+                          final card = AppCard(
                             padding: const EdgeInsets.symmetric(
-                                horizontal: SLSpacing.s12,
-                                vertical: SLSpacing.s8),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(n.name,
-                                          style: theme.textTheme.bodyLarge
-                                              ?.copyWith(
-                                                  fontWeight:
-                                                      FontWeight.w700)),
-                                      Text(n.meaningBn,
-                                          style:
-                                              theme.textTheme.bodySmall),
-                                    ],
-                                  ),
-                                ),
-                                Text(
-                                  bn ? toBn(i + 1) : '${i + 1}',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                      color: theme.colorScheme.outline),
-                                ),
-                              ],
+                              horizontal: SLSpacing.s16,
+                              vertical: SLSpacing.s12,
                             ),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    n.name,
+                                    style: theme.textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    n.meaningBn,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                          return SearchHitFrame(
+                            hit: i == 0 && hit != null && identical(n, hit),
+                            child: card,
                           );
                         },
                       ),
@@ -140,5 +175,4 @@ class _IslamicNamesScreenState extends State<IslamicNamesScreen> {
       ),
     );
   }
-
 }

@@ -16,6 +16,11 @@ class SunnahsScreen extends StatefulWidget {
 }
 
 class _SunnahsScreenState extends State<SunnahsScreen> {
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<List<SunnahItem>> _future = ContentPack.sunnahs();
   String _category = 'all';
 
   static const _cats = <String, (String, IconData)>{
@@ -34,7 +39,7 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
         title: Text(context.t('ilm_sunnahs')),
       ),
       body: FutureBuilder<List<SunnahItem>>(
-        future: ContentPack.sunnahs(),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 72, count: 6);
@@ -52,7 +57,7 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
           return Column(
             children: [
               SizedBox(
-                height: 48,
+                height: MediaQuery.textScalerOf(context).scale(48),
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   padding: const EdgeInsets.symmetric(
@@ -82,7 +87,8 @@ class _SunnahsScreenState extends State<SunnahsScreen> {
                         message: context.t('empty_generic'),
                         icon: PhosphorIconsRegular.magnifyingGlass,
                       )
-                    : ListView.builder(
+                    : ListView.separated(
+                        separatorBuilder: (_, _) => const SizedBox(height: SLSpacing.s8),
                         padding: const EdgeInsets.all(SLSpacing.s16),
                         itemCount: visible.length,
                         itemBuilder: (context, i) {

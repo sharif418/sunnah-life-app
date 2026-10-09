@@ -362,16 +362,30 @@ final routerProvider = Provider<GoRouter>((ref) {
                     pageBuilder: (c, s) =>
                         slFadePage(child: const IlmSearchScreen()),
                   ),
-                  GoRoute(path: 'duas', builder: (c, s) => const DuasScreen()),
+                  // `?id=` (a search result) shows that item first, framed
+                  GoRoute(
+                    path: 'duas',
+                    pageBuilder: (c, s) => slFadePage(
+                      child: DuasScreen(
+                        highlightId: s.uri.queryParameters['id'],
+                      ),
+                    ),
+                  ),
                   GoRoute(
                     path: 'names99',
-                    pageBuilder: (c, s) =>
-                        slFadePage(child: const Names99Screen()),
+                    pageBuilder: (c, s) => slFadePage(
+                      child: Names99Screen(
+                        highlightId: s.uri.queryParameters['id'],
+                      ),
+                    ),
                   ),
                   GoRoute(
                     path: 'islamic-names',
-                    pageBuilder: (c, s) =>
-                        slFadePage(child: const IslamicNamesScreen()),
+                    pageBuilder: (c, s) => slFadePage(
+                      child: IslamicNamesScreen(
+                        highlightId: s.uri.queryParameters['id'],
+                      ),
+                    ),
                   ),
                   GoRoute(
                     path: 'iman-branches',
@@ -387,6 +401,18 @@ final routerProvider = Provider<GoRouter>((ref) {
                     path: 'articles',
                     pageBuilder: (c, s) =>
                         slFadePage(child: const ArticlesScreen()),
+                    routes: [
+                      // the reader is its own page: system back returns to
+                      // the list (it used to leave আর্টিকেল altogether)
+                      GoRoute(
+                        path: ':id',
+                        pageBuilder: (c, s) => slFadePage(
+                          child: ArticleReaderScreen(
+                            id: s.pathParameters['id']!,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

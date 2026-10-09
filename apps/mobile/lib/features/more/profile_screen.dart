@@ -94,14 +94,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     label: Text(context.t('onb_signin')),
                     onPressed: () => context.push('/auth'),
                   ),
-                ] else ...[
-                  const SizedBox(height: SLSpacing.s12),
-                  OutlinedButton.icon(
-                    icon: const Icon(PhosphorIconsRegular.signOut),
-                    label: Text(context.t('auth_signout')),
-                    onPressed: () => ref.read(authProvider.notifier).signOut(),
-                  ),
                 ],
+                // (sign-out moved to the foot, beside account deletion —
+                // the account actions live together, away from the top)
               ],
             ),
           ),
@@ -265,8 +260,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ListTile(
                   leading: const Icon(PhosphorIconsRegular.calendarBlank),
                   title: Text(context.t('hijri_adjust')),
-                  subtitle: Text(
-                      '${profile.hijriAdjust >= 0 ? '+' : ''}${profile.hijriAdjust}'),
+                  // − value + : the value sits between its buttons, in
+                  // Bengali digits (a lone "+0" under the label read as
+                  // detached)
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -276,6 +272,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onPressed: () => notifier.update(
                             hijriAdjust:
                                 (profile.hijriAdjust - 1).clamp(-2, 2)),
+                      ),
+                      SizedBox(
+                        width: 28,
+                        child: Text(
+                          () {
+                            final v = profile.hijriAdjust;
+                            final sign = v > 0 ? '+' : (v < 0 ? '−' : '');
+                            final n = v.abs();
+                            return '$sign${context.isBn ? toBn(n) : '$n'}';
+                          }(),
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
                       ),
                       IconButton(
                         tooltip: context.t('hijri_increase'),
@@ -352,7 +362,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('🌸'),
+                  // a lock, not an emoji: this note is about who sees her data
+                  Icon(
+                    PhosphorIconsRegular.lockSimple,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
                   const SizedBox(width: SLSpacing.s8),
                   Expanded(
                     child: Column(
@@ -379,6 +394,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // but unmistakable (opens a sheet that says what goes and stays)
           if (user != null) ...[
             const SizedBox(height: SLSpacing.s24),
+            SizedBox(
+              height: 48,
+              child: OutlinedButton.icon(
+                key: const ValueKey('profile_sign_out'),
+                icon: const Icon(PhosphorIconsRegular.signOut),
+                label: Text(context.t('auth_signout')),
+                onPressed: () => ref.read(authProvider.notifier).signOut(),
+              ),
+            ),
+            const SizedBox(height: SLSpacing.s8),
             Center(
               child: TextButton.icon(
                 key: const ValueKey('profile_delete_account'),
@@ -389,16 +414,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ),
           ],
-          const SizedBox(height: SLSpacing.s24),
-          Center(
-            child: Text(
-              _version.isEmpty
-                  ? context.t('version')
-                  : '${context.t('version')} ${context.isBn ? _version : _version}',
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant),
+          if (_version.isNotEmpty) ...[
+            const SizedBox(height: SLSpacing.s24),
+            Center(
+              child: Text(
+                '${context.t('version')} ${context.isBn ? toBn(_version) : _version}',
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

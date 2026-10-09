@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sunnah_life/core/external_urls.dart';
 import 'package:sunnah_life/design/design_tokens.dart';
 import 'package:sunnah_life/features/more/live_screen.dart';
+import 'package:sunnah_life/l10n/app_strings.dart';
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/remote_state.dart' show liveProvider;
 
@@ -53,10 +54,19 @@ void main() {
     });
   });
 
-  testWidgets('no programs: all three sections say so in words', (tester) async {
+  testWidgets('no programs at all: one calm empty state, not three', (
+    tester,
+  ) async {
     await _pump(tester, const []);
+    expect(find.text(S.tr(Lang.bn, 'live_none_all')), findsOneWidget);
+    expect(find.text('এখন কোনো লাইভ কার্যক্রম নেই'), findsNothing);
+  });
+
+  testWidgets('some programs: each empty section still says so in words', (
+    tester,
+  ) async {
+    await _pump(tester, [_program('u1', 'upcoming')]);
     expect(find.text('এখন কোনো লাইভ কার্যক্রম নেই'), findsOneWidget);
-    expect(find.text('আসন্ন কোনো প্রোগ্রাম নেই'), findsOneWidget);
     expect(find.text('এখনো কোনো রেকর্ডিং নেই'), findsOneWidget);
   });
 
