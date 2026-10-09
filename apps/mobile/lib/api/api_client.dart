@@ -95,9 +95,13 @@ class OtpResponse {
 }
 
 class VerifyResponse {
-  const VerifyResponse({required this.user, this.token});
+  const VerifyResponse({required this.user, this.token, this.refreshToken});
   final User user;
   final String? token;
+
+  /// The 60-day rotating refresh token — kept so the app renews its
+  /// 15-minute access token instead of signing the member out.
+  final String? refreshToken;
 }
 
 /// GET /api/auth/providers — which social sign-in buttons to show
@@ -239,14 +243,68 @@ class ApiClient {
   /// in tests that don't exercise the cache (and for pure guest use).
   final ApiCacheStore? cacheStore;
   String? _token;
+  String? _refreshToken;
 
   /// Bearer token (OTP-issued). Seams: cookie sessions also accepted by the
   /// server; http keeps no cookie jar by design.
   set token(String? value) => _token = value;
 
-  /// Fired on any 401: the session is dead — providers use this to clear
-  /// the persisted token and drop back to guest mode.
+  /// The refresh token that renews [token] when it expires.
+  set refreshToken(String? value) => _refreshToken = value;
+
+  /// Fired when the session is really dead — a 401 that a refresh could
+  /// not cure (refresh token expired or revoked): providers clear the
+  /// stored session and drop back to guest mode.
   void Function()? onUnauthorized;
+
+  /// Fired after every successful refresh with the NEW pair (the refresh
+  /// token rotates — the old one is spent), so it can be stored.
+  void Function(String access, String refresh)? onTokensRefreshed;
+
+  /// One refresh at a time: two requests failing together must not both
+  /// spend the same refresh token — the server treats a second use as a
+  /// replay and revokes the whole session.
+  Future<bool>? _refreshing;
+
+  /// Renews the access token. true = renewed; false = the session is dead
+  /// (refresh rejected). A network failure throws (status 0) — the member
+  /// must NOT be signed out for a bad connection.
+  Future<bool> refreshSession() {
+    return _refreshing ??= () async {
+      try {
+        final rt = _refreshToken;
+        if (rt == null) return false;
+        Uri uri = Uri.parse(
+          baseUrl.startsWith('http') ? baseUrl : 'https://$baseUrl',
+        ).replace(path: '/api/auth/refresh');
+        http.Response res;
+        try {
+          final request = http.Request('POST', uri)
+            ..headers['Content-Type'] = 'application/json'
+            ..body = jsonEncode({'refreshToken': rt});
+          res = await http.Response.fromStream(
+            await _inner.send(request).timeout(const Duration(seconds: 20)),
+          );
+        } catch (e) {
+          throw ApiException(0, 'নেটওয়ার্ক সমস্যা — $e');
+        }
+        if (res.statusCode >= 500) {
+          throw ApiException(res.statusCode, 'সার্ভার সমস্যা');
+        }
+        if (res.statusCode != 200 && res.statusCode != 201) return false;
+        final j = jsonDecode(utf8.decode(res.bodyBytes));
+        final access = j is Map ? j['accessToken'] as String? : null;
+        final refresh = j is Map ? j['refreshToken'] as String? : null;
+        if (access == null || refresh == null) return false;
+        _token = access;
+        _refreshToken = refresh;
+        onTokensRefreshed?.call(access, refresh);
+        return true;
+      } finally {
+        _refreshing = null;
+      }
+    }();
+  }
 
   Map<String, String> get _headers => {
     'Content-Type': 'application/json',
@@ -258,6 +316,7 @@ class ApiClient {
     String path, {
     Object? body,
     Map<String, String>? query,
+    bool retried = false,
   }) async {
     Uri uri;
     if (baseUrl.startsWith('http')) {
@@ -286,9 +345,21 @@ class ApiClient {
     } catch (_) {
       decoded = const {};
     }
-    if (res.statusCode == 401) {
-      // Session expired/revoked: drop the token, then notify the host.
+    if (res.statusCode == 401 &&
+        _token != null &&
+        !retried &&
+        !path.startsWith('/api/auth/')) {
+      // The 15-minute access token expired: renew it once and replay the
+      // request. Only a refused refresh ends the session.
+      final renewed = await refreshSession();
+      if (renewed) {
+        return _req(method, path, body: body, query: query, retried: true);
+      }
+    }
+    if (res.statusCode == 401 && !path.startsWith('/api/auth/otp')) {
+      // Session expired/revoked beyond repair: drop it, notify the host.
       _token = null;
+      _refreshToken = null;
       onUnauthorized?.call();
     }
     if (res.statusCode >= 400) {
@@ -373,6 +444,7 @@ class ApiClient {
       user: User.fromJson(j['user'] as Map<String, dynamic>),
       // The API returns {accessToken, refreshToken, …} (otp/verify envelope).
       token: j['accessToken'] as String?,
+      refreshToken: j['refreshToken'] as String?,
     );
   }
 
@@ -408,12 +480,22 @@ class ApiClient {
     return VerifyResponse(
       user: User.fromJson(j['user'] as Map<String, dynamic>),
       token: j['accessToken'] as String?,
+      refreshToken: j['refreshToken'] as String?,
     );
   }
 
   Future<void> logout() async {
-    await _req('POST', '/api/auth/logout');
-    _token = null;
+    try {
+      // the refresh token in the body revokes the whole session family
+      await _req(
+        'POST',
+        '/api/auth/logout',
+        body: {if (_refreshToken != null) 'refreshToken': _refreshToken},
+      );
+    } finally {
+      _token = null;
+      _refreshToken = null;
+    }
   }
 
   Future<User?> me() async {
@@ -428,6 +510,7 @@ class ApiClient {
   Future<void> deleteMe() async {
     await _req('DELETE', '/api/me', body: {'confirm': 'DELETE'});
     _token = null;
+    _refreshToken = null;
   }
 
   Future<User> updateMe(Map<String, dynamic> patch) async {
