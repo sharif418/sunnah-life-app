@@ -933,5 +933,14 @@
   "quiz_keep_playing": "Keep playing",
   "quiz_leave": "Leave",
   "quiz_review_title": "Your %n wrong answers — review",
-  "quiz_result_offline": "Offline — the score could not be sent"
+  "quiz_result_offline": "Offline — the score could not be sent",
+  "ilm_continue": "Continue",
+  "ilm_course_progress_fmt": "%d of %t lessons done",
+  "live_quiz_you_right": "Your answer is right",
+  "live_quiz_you_wrong": "Your answer was not right",
+  "live_quiz_you_skipped": "You did not answer this one",
+  "sunnah_mark_done": "Practised today",
+  "sunnah_done_today": "Done today",
+  "sunnah_today_count": "%n sunnahs practised today — alhamdulillah",
+  "sunnah_today_hint": "Tick the sunnahs you practised today"
 }

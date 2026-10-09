@@ -933,5 +933,14 @@
   "quiz_keep_playing": "চালিয়ে যাই",
   "quiz_leave": "ছেড়ে যাই",
   "quiz_review_title": "ভুল উত্তরগুলো (%nটি) — আবার দেখে নিন",
-  "quiz_result_offline": "অফলাইন — স্কোর সার্ভারে পাঠানো যায়নি"
+  "quiz_result_offline": "অফলাইন — স্কোর সার্ভারে পাঠানো যায়নি",
+  "ilm_continue": "চালিয়ে যান",
+  "ilm_course_progress_fmt": "%t পাঠের %dটি শেষ — চালিয়ে যান",
+  "live_quiz_you_right": "আপনার উত্তর সঠিক — মাশাআল্লাহ",
+  "live_quiz_you_wrong": "আপনার উত্তর ঠিক হয়নি",
+  "live_quiz_you_skipped": "এই প্রশ্নে আপনি উত্তর দেননি",
+  "sunnah_mark_done": "আজ পালন করেছি",
+  "sunnah_done_today": "আজ পালন হয়েছে",
+  "sunnah_today_count": "আজ %nটি সুন্নাহ পালন করেছেন — আলহামদুলিল্লাহ",
+  "sunnah_today_hint": "আজ যে সুন্নাহগুলো পালন করলেন, টিক দিয়ে রাখুন"
 }

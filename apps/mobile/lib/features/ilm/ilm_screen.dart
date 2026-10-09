@@ -2,12 +2,17 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../design/design_tokens.dart';
 import '../shared/contact_fab.dart' show kContactFabClearance;
 import '../shared/global_header.dart';
+import '../../models/quran_models.dart';
+import '../../state/providers.dart';
+import '../../state/remote_state.dart';
+import '../../core/bn_digits.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
@@ -261,6 +266,9 @@ class _IlmScreenState extends State<IlmScreen> {
                   ),
                 ),
               ),
+              // where the member left off: the Qur'an place and an
+              // unfinished course (the tiles carried no state at all)
+              const _ContinueSection(),
               // three groups, two tiles a row; a group's odd last tile
               // runs full width (a lone "আর্টিকেল" used to sit in an empty
               // row at the bottom)
@@ -304,4 +312,149 @@ class _IlmEntry {
   final String title;
   final String route;
   final bool badge;
+}
+
+/// "চালিয়ে যান" — the last Qur'an place and the first unfinished course;
+/// nothing when there is neither.
+class _ContinueSection extends ConsumerStatefulWidget {
+  const _ContinueSection();
+
+  @override
+  ConsumerState<_ContinueSection> createState() => _ContinueSectionState();
+}
+
+class _ContinueSectionState extends ConsumerState<_ContinueSection> {
+  (String surah, int ayah, int number)? _quran;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final row = await ref.read(dbProvider).lastReadEntry();
+      if (row == null) return;
+      final metas = await QuranRepository.metaOnly();
+      final m = metas.where((x) => x.number == row.surah).firstOrNull;
+      if (!mounted || m == null) return;
+      setState(() => _quran = (m.nameBn, row.ayah, row.surah));
+    } catch (_) {
+      // no place to show
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final bn = context.isBn;
+    String n(int v) => bn ? toBn(v) : '$v';
+    final courses = ref.watch(coursePackProvider).valueOrNull ?? const [];
+    final enrolled = ref.watch(enrollmentsProvider).valueOrNull ?? const [];
+    final open = <(String title, int done, int total, String id)>[
+      for (final e in enrolled)
+        for (final c in courses.where((c) => c.id == e.courseId))
+          if (c.lessonCount > 0 && e.done.length < c.lessonCount)
+            (c.titleBn, e.done.length, c.lessonCount, c.id),
+    ];
+    final quran = _quran;
+    if (quran == null && open.isEmpty) return const SizedBox.shrink();
+
+    Widget row({
+      required Key key,
+      required IconData icon,
+      required String title,
+      required String subtitle,
+      required VoidCallback onTap,
+      double? progress,
+    }) => AppCard(
+      key: key,
+      onTap: onTap,
+      padding: const EdgeInsets.all(SLSpacing.s12),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: cs.primary,
+              borderRadius: SLRadius.brMd,
+            ),
+            child: Icon(icon, size: 22, color: cs.onPrimary),
+          ),
+          const SizedBox(width: SLSpacing.s12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                if (progress != null) ...[
+                  const SizedBox(height: 6),
+                  ClipRRect(
+                    borderRadius: SLRadius.brPill,
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 6,
+                      backgroundColor: cs.outline,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: SLSpacing.s8),
+          DirectionalIcon(
+            PhosphorIconsRegular.caretRight,
+            color: cs.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          context.t('ilm_continue'),
+          icon: PhosphorIconsRegular.arrowClockwise,
+        ),
+        if (quran != null)
+          row(
+            key: const ValueKey('ilm_continue_quran'),
+            icon: PhosphorIconsRegular.bookOpen,
+            title: context.t('quran_continue'),
+            subtitle: '${quran.$1} · ${context.t('quran_ayah')} ${n(quran.$2)}',
+            onTap: () => context.push('/ilm/quran'),
+          ),
+        for (final c in open.take(1)) ...[
+          if (quran != null) const SizedBox(height: SLSpacing.s8),
+          row(
+            key: const ValueKey('ilm_continue_course'),
+            icon: PhosphorIconsRegular.graduationCap,
+            title: c.$1,
+            subtitle: context
+                .t('ilm_course_progress_fmt')
+                .replaceAll('%d', n(c.$2))
+                .replaceAll('%t', n(c.$3)),
+            progress: c.$2 / c.$3,
+            onTap: () => context.push('/ilm/courses/${c.$4}'),
+          ),
+        ],
+        const SizedBox(height: SLSpacing.s8),
+      ],
+    );
+  }
 }

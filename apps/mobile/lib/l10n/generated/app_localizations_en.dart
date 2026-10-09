@@ -2904,4 +2904,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quiz_result_offline => 'Offline — the score could not be sent';
+
+  @override
+  String get ilm_continue => 'Continue';
+
+  @override
+  String get ilm_course_progress_fmt => '%d of %t lessons done';
+
+  @override
+  String get live_quiz_you_right => 'Your answer is right';
+
+  @override
+  String get live_quiz_you_wrong => 'Your answer was not right';
+
+  @override
+  String get live_quiz_you_skipped => 'You did not answer this one';
+
+  @override
+  String get sunnah_mark_done => 'Practised today';
+
+  @override
+  String get sunnah_done_today => 'Done today';
+
+  @override
+  String get sunnah_today_count => '%n sunnahs practised today — alhamdulillah';
+
+  @override
+  String get sunnah_today_hint => 'Tick the sunnahs you practised today';
 }

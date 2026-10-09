@@ -2908,4 +2908,33 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quiz_result_offline => 'অফলাইন — স্কোর সার্ভারে পাঠানো যায়নি';
+
+  @override
+  String get ilm_continue => 'চালিয়ে যান';
+
+  @override
+  String get ilm_course_progress_fmt => '%t পাঠের %dটি শেষ — চালিয়ে যান';
+
+  @override
+  String get live_quiz_you_right => 'আপনার উত্তর সঠিক — মাশাআল্লাহ';
+
+  @override
+  String get live_quiz_you_wrong => 'আপনার উত্তর ঠিক হয়নি';
+
+  @override
+  String get live_quiz_you_skipped => 'এই প্রশ্নে আপনি উত্তর দেননি';
+
+  @override
+  String get sunnah_mark_done => 'আজ পালন করেছি';
+
+  @override
+  String get sunnah_done_today => 'আজ পালন হয়েছে';
+
+  @override
+  String get sunnah_today_count =>
+      'আজ %nটি সুন্নাহ পালন করেছেন — আলহামদুলিল্লাহ';
+
+  @override
+  String get sunnah_today_hint =>
+      'আজ যে সুন্নাহগুলো পালন করলেন, টিক দিয়ে রাখুন';
 }

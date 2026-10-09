@@ -5703,6 +5703,60 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'অফলাইন — স্কোর সার্ভারে পাঠানো যায়নি'**
   String get quiz_result_offline;
+
+  /// No description provided for @ilm_continue.
+  ///
+  /// In bn, this message translates to:
+  /// **'চালিয়ে যান'**
+  String get ilm_continue;
+
+  /// No description provided for @ilm_course_progress_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'%t পাঠের %dটি শেষ — চালিয়ে যান'**
+  String get ilm_course_progress_fmt;
+
+  /// No description provided for @live_quiz_you_right.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার উত্তর সঠিক — মাশাআল্লাহ'**
+  String get live_quiz_you_right;
+
+  /// No description provided for @live_quiz_you_wrong.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার উত্তর ঠিক হয়নি'**
+  String get live_quiz_you_wrong;
+
+  /// No description provided for @live_quiz_you_skipped.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই প্রশ্নে আপনি উত্তর দেননি'**
+  String get live_quiz_you_skipped;
+
+  /// No description provided for @sunnah_mark_done.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ পালন করেছি'**
+  String get sunnah_mark_done;
+
+  /// No description provided for @sunnah_done_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ পালন হয়েছে'**
+  String get sunnah_done_today;
+
+  /// No description provided for @sunnah_today_count.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ %nটি সুন্নাহ পালন করেছেন — আলহামদুলিল্লাহ'**
+  String get sunnah_today_count;
+
+  /// No description provided for @sunnah_today_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ যে সুন্নাহগুলো পালন করলেন, টিক দিয়ে রাখুন'**
+  String get sunnah_today_hint;
 }
 
 class _AppLocalizationsDelegate

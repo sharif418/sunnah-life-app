@@ -174,6 +174,18 @@ class SystemChannel {
 
   static const MethodChannel _ch = MethodChannel('sunnahlife/system');
 
+  /// Keep the screen from dimming while a reading screen is open (the
+  /// Qur'an reader) — the window flag, so it ends with the activity too.
+  static Future<void> keepScreenOn(bool on) async {
+    try {
+      await _ch.invokeMethod<void>('keepScreenOn', {'on': on});
+    } on MissingPluginException {
+      // tests / other platforms
+    } on PlatformException {
+      // ignore
+    }
+  }
+
   /// Native share sheet (Android ACTION_SEND) — zero plugins.
   static Future<void> shareText(String text) async {
     try {

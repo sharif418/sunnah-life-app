@@ -22,6 +22,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart'
+    show MediaItem;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/bn_digits.dart';
@@ -468,6 +470,9 @@ class SurahReaderScreen extends ConsumerStatefulWidget {
   ConsumerState<SurahReaderScreen> createState() => _SurahReaderScreenState();
 }
 
+/// Open readers holding the screen on.
+int _awakeReaders = 0;
+
 class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
   QuranReadingPrefs _prefs = const QuranReadingPrefs();
   DateTime _sessionStart = DateTime.now();
@@ -493,6 +498,14 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
   // ── Recitation audio (W3a) ──────────────────────────────────────────────────
   AudioPlayer? _player;
   StreamSubscription<ProcessingState>? _processingSub;
+  StreamSubscription<int?>? _indexSub;
+  StreamSubscription<bool>? _playingSub;
+
+  /// The ayah the current playlist starts at (playlist index 0).
+  int _playStart = 1;
+
+  /// The loaded surah (titles for the media notification).
+  Surah? _surah;
   int? _playingAyah;
 
   /// The current ayah is held mid-way (pause, not stop).
@@ -505,6 +518,9 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
     super.initState();
     _sessionStart = DateTime.now();
     _surahFuture = QuranRepository.surah(widget.surahNumber);
+    // reading: the screen stays on while a reader is open (counted —
+    // "next surah" opens the new reader before the old one is disposed)
+    if (_awakeReaders++ == 0) unawaited(SystemChannel.keepScreenOn(true));
     _loadBookmarks();
     _loadReciter();
     QuranReadingPrefs.load().then((p) {
@@ -512,6 +528,7 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
     });
     _surahFuture.then((surah) {
       if (!mounted) return;
+      _surah = surah;
       _totalAyahs = surah.ayahs.length;
       final target = widget.startAyah;
       if (target != null && target > 1 && target <= _totalAyahs) {
@@ -522,7 +539,10 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
 
   @override
   void dispose() {
+    if (--_awakeReaders == 0) unawaited(SystemChannel.keepScreenOn(false));
     _processingSub?.cancel();
+    _indexSub?.cancel();
+    _playingSub?.cancel();
     unawaited(_player?.dispose());
     _scroll.dispose();
     super.dispose();
@@ -862,58 +882,77 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
   }
 
   void _ensurePlayer() {
-    final existing = _player;
-    if (existing != null) return;
+    if (_player != null) return;
     final player = AudioPlayer();
     _player = player;
-    // Auto-advance: when an ayah finishes, play the next one until the
-    // surah ends (idle/stop states never emit `completed`).
+    // the end of the playlist (the surah's last ayah) stops
     _processingSub = player.processingStateStream.listen((state) {
-      if (state == ProcessingState.completed) _onAyahCompleted();
+      if (state == ProcessingState.completed) unawaited(_stopAudio());
+    });
+    // each ayah of the playlist as it comes up: the highlight, and the
+    // ayah kept in view unless the member is scrolling
+    _indexSub = player.currentIndexStream.listen((i) {
+      if (i == null || !mounted || _playingAyah == null) return;
+      final ayah = _playStart + i;
+      if (ayah == _playingAyah) return;
+      setState(() => _playingAyah = ayah);
+      _followAyah(ayah);
+    });
+    // pause/play from the notification or the lock screen
+    _playingSub = player.playingStream.listen((playing) {
+      if (!mounted || _playingAyah == null) return;
+      if (_paused == playing) setState(() => _paused = !playing);
     });
   }
 
-  void _onAyahCompleted() {
-    final current = _playingAyah;
-    if (current == null) return;
-    if (current < _totalAyahs) {
-      unawaited(_playAyah(current + 1));
-    } else {
-      unawaited(_stopAudio());
+  void _followAyah(int ayah) {
+    if (DateTime.now().difference(_userScrolledAt) >
+        const Duration(seconds: 4)) {
+      unawaited(_ensureVisible(ayah - 1));
     }
   }
 
+  /// Plays the surah from [ayah] to its end as ONE playlist: the next ayah
+  /// is prepared while this one plays (no gap on a slow network), and the
+  /// whole run continues with the screen off, controllable from the
+  /// notification and the lock screen.
   Future<void> _playAyah(int ayah) async {
     try {
       _ensurePlayer();
+      final total = _totalAyahs;
+      if (total == 0) return;
+      final surah = _surah;
+      final title = surah?.meta.nameBn ?? '';
+      final reciterName = _reciter.nameFor(context.lang.code);
+      _playStart = ayah;
       if (mounted) {
         setState(() {
           _playingAyah = ayah;
           _paused = false;
         });
-      } else {
-        _playingAyah = ayah;
-        _paused = false;
       }
-      // the recited ayah stays in view — unless the member is scrolling
-      if (DateTime.now().difference(_userScrolledAt) >
-          const Duration(seconds: 4)) {
-        unawaited(_ensureVisible(ayah - 1));
-      }
-      // LockCachingAudioSource caches each ayah on disk after the first
-      // play — re-listening is instant and offline once cached.
-      await _player!.setAudioSource(
-        // ignore: experimental_member_use
-        LockCachingAudioSource(
-          Uri.parse(
-            ayahAudioUrl(
-              reciter: _reciter,
-              surah: widget.surahNumber,
-              ayah: ayah,
+      _followAyah(ayah);
+      await _player!.setAudioSources([
+        for (var n = ayah; n <= total; n++)
+          // LockCachingAudioSource caches each ayah on disk after the first
+          // play — re-listening is instant and offline once cached.
+          // ignore: experimental_member_use
+          LockCachingAudioSource(
+            Uri.parse(
+              ayahAudioUrl(
+                reciter: _reciter,
+                surah: widget.surahNumber,
+                ayah: n,
+              ),
+            ),
+            tag: MediaItem(
+              id: '${widget.surahNumber}:$n',
+              title: '$title · ${context.t('quran_ayah')} ${_n(context, n)}',
+              album: context.t('quran_reader'),
+              artist: reciterName,
             ),
           ),
-        ),
-      );
+      ]);
       await _player!.play();
     } on Exception {
       // Network/404/source errors surface a SnackBar — never a crash.
@@ -924,6 +963,23 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
         ).showSnackBar(SnackBar(content: Text(context.t('quran_audio_error'))));
       }
     }
+  }
+
+  Future<void> _playPrevious() async {
+    final now = _playingAyah;
+    if (now == null || now <= 1) return;
+    final player = _player;
+    if (player != null && player.hasPrevious) {
+      await player.seekToPrevious();
+    } else {
+      // before the playlist's start: start again one ayah earlier
+      await _playAyah(now - 1);
+    }
+  }
+
+  Future<void> _playNext() async {
+    final player = _player;
+    if (player != null && player.hasNext) await player.seekToNext();
   }
 
   Future<void> _stopAudio() async {
@@ -1104,7 +1160,7 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
               ),
               IconButton(
                 tooltip: context.t('quran_prev_ayah'),
-                onPressed: ayah > 1 ? () => _playAyah(ayah - 1) : null,
+                onPressed: ayah > 1 ? _playPrevious : null,
                 icon: Transform.flip(
                   flipX: true,
                   child: const Icon(PhosphorIconsRegular.skipForward),
@@ -1124,9 +1180,7 @@ class _SurahReaderScreenState extends ConsumerState<SurahReaderScreen> {
               ),
               IconButton(
                 tooltip: context.t('quran_next_ayah'),
-                onPressed: ayah < _totalAyahs
-                    ? () => _playAyah(ayah + 1)
-                    : null,
+                onPressed: ayah < _totalAyahs ? _playNext : null,
                 icon: const Icon(PhosphorIconsRegular.skipForward),
               ),
               IconButton(
