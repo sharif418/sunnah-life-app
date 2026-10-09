@@ -95,3 +95,8 @@ String mapsPlaceUrl(double lat, double lng) =>
 /// does not list. Pure — unit tested.
 String mapsNearbySearchUrl(String query, double lat, double lng) =>
     'https://www.google.com/maps/search/${Uri.encodeComponent(query)}/@$lat,$lng,14z';
+
+/// A search in Google Maps with no point given — the Maps app searches
+/// around the phone's own location. Pure — unit tested.
+String mapsSearchUrl(String query) =>
+    'https://www.google.com/maps/search/${Uri.encodeComponent(query)}';

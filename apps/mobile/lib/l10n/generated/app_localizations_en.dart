@@ -2185,7 +2185,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mosque_view_list => 'List';
 
   @override
-  String get mosque_view_map => 'Map';
+  String get mosque_view_map => 'Direction';
 
   @override
   String get mosque_directions_btn => 'Directions';
@@ -3174,4 +3174,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get mosques_from_location_rough =>
       'From your location (approximate, ~%m m)';
+
+  @override
+  String get mosques_nearest => 'Nearest';
+
+  @override
+  String get mosques_more_nearby => 'More mosques nearby';
+
+  @override
+  String get mosques_star_tip =>
+      'Tap the star on the mosque you go to — it stays at the top.';
+
+  @override
+  String get mosques_maps_search => 'Find mosques near you in Google Maps';
 }

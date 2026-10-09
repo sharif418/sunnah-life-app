@@ -704,7 +704,7 @@
   "profile_phone_verify": "Confirm",
   "profile_phone_changed": "Mobile number changed",
   "mosque_view_list": "List",
-  "mosque_view_map": "Map",
+  "mosque_view_map": "Direction",
   "mosque_directions_btn": "Directions",
   "mosque_search_more": "Not listed? Search Google Maps",
   "mosque_north": "N",
@@ -1015,5 +1015,9 @@
   "mosques_city_section": "Around the centre of %c",
   "mosques_city_section_hint": "These may not be near you, so no distances are shown.",
   "mosques_relocate": "Find my location again",
-  "mosques_from_location_rough": "From your location (approximate, ~%m m)"
+  "mosques_from_location_rough": "From your location (approximate, ~%m m)",
+  "mosques_nearest": "Nearest",
+  "mosques_more_nearby": "More mosques nearby",
+  "mosques_star_tip": "Tap the star on the mosque you go to — it stays at the top.",
+  "mosques_maps_search": "Find mosques near you in Google Maps"
 }

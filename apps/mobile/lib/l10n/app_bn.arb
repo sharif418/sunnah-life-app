@@ -704,7 +704,7 @@
   "profile_phone_verify": "নিশ্চিত করুন",
   "profile_phone_changed": "মোবাইল নম্বর পরিবর্তন হয়েছে",
   "mosque_view_list": "তালিকা",
-  "mosque_view_map": "ম্যাপ",
+  "mosque_view_map": "দিক",
   "mosque_directions_btn": "পথ দেখুন",
   "mosque_search_more": "তালিকায় নেই? গুগল ম্যাপে খুঁজুন",
   "mosque_north": "উ",
@@ -1015,5 +1015,9 @@
   "mosques_city_section": "%c শহরের কেন্দ্রের আশেপাশে",
   "mosques_city_section_hint": "এগুলো আপনার কাছের নাও হতে পারে, তাই দূরত্ব দেখানো হচ্ছে না।",
   "mosques_relocate": "অবস্থান আবার খুঁজুন",
-  "mosques_from_location_rough": "আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)"
+  "mosques_from_location_rough": "আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)",
+  "mosques_nearest": "সবচেয়ে কাছে",
+  "mosques_more_nearby": "আশেপাশের আরও মসজিদ",
+  "mosques_star_tip": "যে মসজিদে নিয়মিত যান, তার তারকা চাপুন — সবার উপরে থাকবে।",
+  "mosques_maps_search": "গুগল ম্যাপে কাছের মসজিদ খুঁজুন"
 }

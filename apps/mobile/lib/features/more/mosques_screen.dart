@@ -179,13 +179,13 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen>
       _gate = why;
       _mapView = false;
     });
-    unawaited(_loadNear());
   }
 
   /// The nearby list: the server, else the last list near here, else the
   /// Foundation's own (bundled) list.
   Future<void> _loadNear() async {
-    if (_where == _Where.locating) return; // the fix decides the origin
+    // only the reader's own fix makes a list "near"
+    if (_where != _Where.gps) return;
     final seq = ++_seq;
     final o = _origin;
     setState(() {
@@ -321,19 +321,31 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bn = context.isBn;
-    // the origin follows the profile city when no GPS fix is in use
-    ref.listen(profileProvider.select((p) => (p.lat, p.lng)), (prev, next) {
-      if (_where == _Where.city && prev != next) unawaited(_loadNear());
-    });
     final o = _origin;
     final d = _distanceOrigin;
     final cityMode = _where == _Where.city;
-    final savedIds = {for (final s in _saved) s.id};
-    final nearby = [
-      for (final m in _near)
-        if (!savedIds.contains(m.id)) m,
+    // The one answer people come for first: the nearest mosque (saved or
+    // not — its star says which). Then the reader's own, then the rest.
+    final nearest = !cityMode && _near.isNotEmpty ? _near.first : null;
+    final mine = [
+      for (final m
+          in d == null ? _saved : sortMosquesByDistance(_saved, d.lat, d.lng))
+        if (m.id != nearest?.id) m,
     ];
-    final shown = _showAll ? nearby : nearby.take(_firstPage).toList();
+    final savedIds = {for (final s in _saved) s.id};
+    final rest = [
+      for (final m in _near)
+        if (m.id != nearest?.id && !savedIds.contains(m.id)) m,
+    ];
+    final shown = _showAll ? rest : rest.take(_firstPage).toList();
+
+    Widget tile(MosqueInfo m) => _MosqueTile(
+      mosque: m,
+      origin: d,
+      saved: _isSaved(m),
+      onTap: () => _showMosque(m),
+      onToggleSaved: () => _toggleSaved(m),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -341,14 +353,14 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen>
         title: Text(context.t('more_mosque')),
       ),
       body: RefreshIndicator(
-        onRefresh: _loadNear,
+        onRefresh: cityMode ? _start : _loadNear,
         child: ListView(
           padding: const EdgeInsets.all(SLSpacing.s16),
           children: [
             // the compass view needs the reader's own position
             if (_where == _Where.gps) _viewToggle(context),
             _whereCard(context, theme, bn),
-            if (!_loading && _source != _NearSource.live)
+            if (!cityMode && !_loading && _source != _NearSource.live)
               _OfflineNote(
                 text: context.t(
                   _source == _NearSource.cachedOffline
@@ -356,99 +368,111 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen>
                       : 'mosques_offline_curated',
                 ),
               ),
-            if (_mapView)
+            if (_mapView && _where == _Where.gps)
               ..._radar(context, theme, bn, o)
-            else ...[
-              // ── আমার মসজিদ ──
-              SectionHeader(
-                context.t('mosques_my'),
-                icon: PhosphorIconsRegular.star,
+            else if (cityMode) ...[
+              // without a position there is no "near": the reader's own
+              // mosques (no distance), and Google Maps, which can use the
+              // phone's location itself
+              if (mine.isNotEmpty) ...[
+                SectionHeader(
+                  context.t('mosques_my'),
+                  icon: PhosphorIconsRegular.star,
+                ),
+                for (final m in mine) tile(m),
+              ],
+              const SizedBox(height: SLSpacing.s8),
+              OutlinedButton.icon(
+                icon: const Icon(PhosphorIconsRegular.mapPin, size: 18),
+                label: Text(context.t('mosques_maps_search')),
+                onPressed: () => _open(mapsSearchUrl('mosque')),
               ),
-              if (_saved.isEmpty)
-                _HintCard(text: context.t('mosques_my_empty'))
-              else
-                for (final m
-                    in d == null
-                        ? _saved
-                        : sortMosquesByDistance(_saved, d.lat, d.lng))
-                  _MosqueTile(
-                    mosque: m,
-                    origin: d,
-                    saved: true,
-                    onTap: () => _showMosque(m),
-                    onToggleSaved: () => _toggleSaved(m),
+            ] else ...[
+              if (_loading) ...[
+                const SizedBox(height: SLSpacing.s8),
+                const Skeleton(height: 168),
+                const SizedBox(height: SLSpacing.s16),
+                const Skeleton(height: 64, count: 3),
+              ] else if (nearest == null)
+                _HintCard(text: context.t('mosques_none'))
+              else ...[
+                const SizedBox(height: SLSpacing.s8),
+                _NearestCard(
+                  key: const ValueKey('mosque_nearest'),
+                  mosque: nearest,
+                  origin: d!,
+                  saved: _isSaved(nearest),
+                  onTap: () => _showMosque(nearest),
+                  onDirections: () =>
+                      _open(mapsDirectionsUrl(nearest.lat, nearest.lng)),
+                  onToggleSaved: () => _toggleSaved(nearest),
+                ),
+                // ── আমার মসজিদ (only once there is one) ──
+                if (mine.isNotEmpty) ...[
+                  SectionHeader(
+                    context.t('mosques_my'),
+                    icon: PhosphorIconsRegular.star,
                   ),
-              // ── কাছের মসজিদ ──
-              SectionHeader(
-                cityMode
-                    ? context
-                          .t('mosques_city_section')
-                          .replaceAll('%c', ref.watch(profileProvider).city)
-                    : context.t('mosques_nearby'),
-                icon: PhosphorIconsRegular.mosque,
-                action: _loading || nearby.isEmpty || cityMode
-                    ? null
-                    : Text(
-                        context
-                            .t('mosques_nearby_count')
-                            .replaceAll(
-                              '%n',
-                              bn ? toBn(nearby.length) : '${nearby.length}',
-                            ),
+                  for (final m in mine) tile(m),
+                ],
+                // ── the rest, nearest first ──
+                if (rest.isNotEmpty) ...[
+                  SectionHeader(
+                    context.t('mosques_more_nearby'),
+                    icon: PhosphorIconsRegular.mosque,
+                    action: Text(
+                      context
+                          .t('mosques_nearby_count')
+                          .replaceAll(
+                            '%n',
+                            bn ? toBn(_near.length) : '${_near.length}',
+                          ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  if (_saved.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+                      child: Text(
+                        context.t('mosques_star_tip'),
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
-              ),
-              if (cityMode)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: SLSpacing.s8),
-                  child: Text(
-                    context.t('mosques_city_section_hint'),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
                     ),
-                  ),
-                ),
-              if (_loading)
-                const Skeleton(height: 76, count: 4)
-              else if (nearby.isEmpty)
-                _HintCard(text: context.t('mosques_none'))
-              else ...[
-                for (final m in shown)
-                  _MosqueTile(
-                    mosque: m,
-                    origin: d,
-                    saved: false,
-                    onTap: () => _showMosque(m),
-                    onToggleSaved: () => _toggleSaved(m),
-                  ),
-                if (!_showAll && nearby.length > _firstPage)
-                  Padding(
-                    padding: const EdgeInsets.only(top: SLSpacing.s4),
-                    child: TextButton(
-                      onPressed: () => setState(() => _showAll = true),
-                      child: Text(
-                        context
-                            .t('mosques_show_more')
-                            .replaceAll(
-                              '%n',
-                              bn
-                                  ? toBn(nearby.length - _firstPage)
-                                  : '${nearby.length - _firstPage}',
-                            ),
+                  for (final m in shown) tile(m),
+                  if (!_showAll && rest.length > _firstPage)
+                    Padding(
+                      padding: const EdgeInsets.only(top: SLSpacing.s4),
+                      child: TextButton(
+                        onPressed: () => setState(() => _showAll = true),
+                        child: Text(
+                          context
+                              .t('mosques_show_more')
+                              .replaceAll(
+                                '%n',
+                                bn
+                                    ? toBn(rest.length - _firstPage)
+                                    : '${rest.length - _firstPage}',
+                              ),
+                        ),
                       ),
                     ),
-                  ),
+                ],
               ],
+              const SizedBox(height: SLSpacing.s12),
+              OutlinedButton.icon(
+                icon: const Icon(
+                  PhosphorIconsRegular.magnifyingGlass,
+                  size: 18,
+                ),
+                label: Text(context.t('mosque_search_more')),
+                onPressed: () =>
+                    _open(mapsNearbySearchUrl('mosque', o.lat, o.lng)),
+              ),
             ],
-            const SizedBox(height: SLSpacing.s12),
-            OutlinedButton.icon(
-              icon: const Icon(PhosphorIconsRegular.magnifyingGlass, size: 18),
-              label: Text(context.t('mosque_search_more')),
-              onPressed: () =>
-                  _open(mapsNearbySearchUrl('mosque', o.lat, o.lng)),
-            ),
             const SizedBox(height: SLSpacing.s12),
             Text(
               context.t('mosques_attribution'),
@@ -726,6 +750,160 @@ String _place(MosqueInfo m) => [
     m.area!.trim(),
 ].join(', ');
 
+/// "সবচেয়ে কাছে": the nearest mosque as the screen's one clear answer —
+/// how far, on foot, which way, and the way there in one tap.
+class _NearestCard extends StatelessWidget {
+  const _NearestCard({
+    super.key,
+    required this.mosque,
+    required this.origin,
+    required this.saved,
+    required this.onTap,
+    required this.onDirections,
+    required this.onToggleSaved,
+  });
+  final MosqueInfo mosque;
+  final ({double lat, double lng}) origin;
+  final bool saved;
+  final VoidCallback onTap;
+  final VoidCallback onDirections;
+  final VoidCallback onToggleSaved;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final bn = context.isBn;
+    final place = _place(mosque);
+    final metres =
+        distanceKm(origin.lat, origin.lng, mosque.lat, mosque.lng) * 1000;
+    final rest = [
+      ?walkLabel(metres, bengali: bn),
+      if (metres >= 30)
+        directionWord(
+          bearingDeg(origin.lat, origin.lng, mosque.lat, mosque.lng),
+          bengali: bn,
+        ),
+    ].join(' · ');
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        SLSpacing.s16,
+        SLSpacing.s12,
+        SLSpacing.s4,
+        SLSpacing.s16,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: SLSpacing.s8,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: cs.primary.withValues(alpha: 0.10),
+                  borderRadius: SLRadius.brPill,
+                ),
+                child: Text(
+                  context.t('mosques_nearest'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: cs.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (mosque.verified) ...[
+                const SizedBox(width: SLSpacing.s8),
+                _VerifiedBadge(),
+              ],
+              const Spacer(),
+              _StarButton(saved: saved, onPressed: onToggleSaved),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: SLSpacing.s12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  mosque.named ? mosque.nameBn : context.t('mosques_unnamed'),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: mosque.named ? null : cs.onSurfaceVariant,
+                  ),
+                ),
+                if (place.isNotEmpty)
+                  Text(
+                    place,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                const SizedBox(height: SLSpacing.s12),
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(
+                        text: distanceLabel(metres, bengali: bn),
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: cs.primary,
+                        ),
+                      ),
+                      if (rest.isNotEmpty)
+                        TextSpan(
+                          text: '  ·  $rest',
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: SLSpacing.s12),
+                FilledButton.icon(
+                  key: const ValueKey('mosque_nearest_directions'),
+                  icon: const Icon(
+                    PhosphorIconsRegular.navigationArrow,
+                    size: 18,
+                  ),
+                  label: Text(context.t('mosque_directions_btn')),
+                  onPressed: onDirections,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StarButton extends StatelessWidget {
+  const _StarButton({required this.saved, required this.onPressed});
+  final bool saved;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => IconButton(
+    tooltip: context.t('mosques_star_a11y'),
+    onPressed: onPressed,
+    icon: Icon(
+      saved ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
+      color: saved
+          ? SLColors.goldDeep
+          : Theme.of(context).colorScheme.onSurfaceVariant,
+    ),
+  );
+}
+
+/// One row: name (and where), the distance on the trailing side where the
+/// eye compares it down the list, and the star.
 class _MosqueTile extends StatelessWidget {
   const _MosqueTile({
     super.key,
@@ -737,7 +915,7 @@ class _MosqueTile extends StatelessWidget {
   });
   final MosqueInfo mosque;
 
-  /// Null without the reader's own fix: no distance line then.
+  /// Null without the reader's own fix: no distance then.
   final ({double lat, double lng})? origin;
   final bool saved;
   final VoidCallback onTap;
@@ -747,34 +925,31 @@ class _MosqueTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final place = _place(mosque);
-    final meta = _meta(context, mosque, origin);
+    final bn = context.isBn;
+    final o = origin;
+    final metres = o == null
+        ? null
+        : distanceKm(o.lat, o.lng, mosque.lat, mosque.lng) * 1000;
+    final where = [
+      if (_place(mosque).isNotEmpty) _place(mosque),
+      if (metres != null && metres >= 30)
+        directionWord(
+          bearingDeg(o!.lat, o.lng, mosque.lat, mosque.lng),
+          bengali: bn,
+        ),
+    ].join(' · ');
     return Padding(
       padding: const EdgeInsets.only(bottom: SLSpacing.s8),
       child: AppCard(
         onTap: onTap,
         padding: const EdgeInsetsDirectional.fromSTEB(
-          SLSpacing.s12,
+          SLSpacing.s16,
           SLSpacing.s12,
           SLSpacing.s4,
           SLSpacing.s12,
         ),
         child: Row(
           children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: cs.primaryContainer,
-                borderRadius: SLRadius.brMd,
-              ),
-              child: Icon(
-                PhosphorIconsFill.mosque,
-                size: 22,
-                color: cs.primary,
-              ),
-            ),
-            const SizedBox(width: SLSpacing.s12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -805,36 +980,56 @@ class _MosqueTile extends StatelessWidget {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (place.isNotEmpty)
+                  if (where.isNotEmpty)
                     Text(
-                      place,
+                      where,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
                     ),
-                  if (meta != null) ...[
-                    const SizedBox(height: 2),
-                    Text(
-                      meta,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: cs.onSurface,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
-            IconButton(
-              tooltip: context.t('mosques_star_a11y'),
-              onPressed: onToggleSaved,
-              icon: Icon(
-                saved ? PhosphorIconsFill.star : PhosphorIconsRegular.star,
-                color: saved ? SLColors.goldDeep : cs.onSurfaceVariant,
+            if (metres != null) ...[
+              const SizedBox(width: SLSpacing.s8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    distanceLabel(metres, bengali: bn),
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (walkLabel(metres, bengali: bn) case final walk?)
+                    Semantics(
+                      label: walk,
+                      excludeSemantics: true,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            PhosphorIconsRegular.personSimpleWalk,
+                            size: 14,
+                            color: cs.onSurfaceVariant,
+                          ),
+                          Text(
+                            walk
+                                .replaceFirst(bn ? 'হেঁটে ' : '', '')
+                                .replaceFirst(' walk', ''),
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ),
-            ),
+            ],
+            _StarButton(saved: saved, onPressed: onToggleSaved),
           ],
         ),
       ),

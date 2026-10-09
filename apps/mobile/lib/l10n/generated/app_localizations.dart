@@ -4327,7 +4327,7 @@ abstract class AppLocalizations {
   /// No description provided for @mosque_view_map.
   ///
   /// In bn, this message translates to:
-  /// **'ম্যাপ'**
+  /// **'দিক'**
   String get mosque_view_map;
 
   /// No description provided for @mosque_directions_btn.
@@ -6195,6 +6195,30 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)'**
   String get mosques_from_location_rough;
+
+  /// No description provided for @mosques_nearest.
+  ///
+  /// In bn, this message translates to:
+  /// **'সবচেয়ে কাছে'**
+  String get mosques_nearest;
+
+  /// No description provided for @mosques_more_nearby.
+  ///
+  /// In bn, this message translates to:
+  /// **'আশেপাশের আরও মসজিদ'**
+  String get mosques_more_nearby;
+
+  /// No description provided for @mosques_star_tip.
+  ///
+  /// In bn, this message translates to:
+  /// **'যে মসজিদে নিয়মিত যান, তার তারকা চাপুন — সবার উপরে থাকবে।'**
+  String get mosques_star_tip;
+
+  /// No description provided for @mosques_maps_search.
+  ///
+  /// In bn, this message translates to:
+  /// **'গুগল ম্যাপে কাছের মসজিদ খুঁজুন'**
+  String get mosques_maps_search;
 }
 
 class _AppLocalizationsDelegate

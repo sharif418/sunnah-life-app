@@ -704,7 +704,7 @@
   "profile_phone_verify": "تأكيد",
   "profile_phone_changed": "تم تغيير رقم الجوال",
   "mosque_view_list": "قائمة",
-  "mosque_view_map": "خريطة",
+  "mosque_view_map": "الاتجاه",
   "mosque_directions_btn": "الاتجاهات",
   "mosque_search_more": "غير موجود؟ ابحث في خرائط جوجل",
   "mosque_north": "ش",
@@ -1015,5 +1015,9 @@
   "mosques_city_section": "حول وسط %c",
   "mosques_city_section_hint": "قد لا تكون قريبة منك، لذلك لا تظهر المسافات.",
   "mosques_relocate": "حدّد موقعي مجددًا",
-  "mosques_from_location_rough": "من موقعك (تقريبي، ~%m م)"
+  "mosques_from_location_rough": "من موقعك (تقريبي، ~%m م)",
+  "mosques_nearest": "الأقرب",
+  "mosques_more_nearby": "مساجد أخرى قريبة",
+  "mosques_star_tip": "اضغط النجمة على المسجد الذي ترتاده — يبقى في الأعلى.",
+  "mosques_maps_search": "ابحث عن المساجد القريبة في خرائط جوجل"
 }

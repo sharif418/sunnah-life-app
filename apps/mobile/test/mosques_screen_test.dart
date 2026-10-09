@@ -1,8 +1,9 @@
 // আমার মসজিদ (2026-10-09): nearby mosques from the server (OpenStreetMap +
 // verified), how far / on foot / which way, starring into "আমার মসজিদ"
 // (kept on the phone), and the offline fallback to the Foundation's list.
-// Without the phone's location no distance is shown (it would be from the
-// city centre, not the reader) — a primer offers location instead.
+// The nearest mosque leads. Without the phone's location there is no
+// "near" list at all (it would be measured from the city centre, not the
+// reader) — a primer offers location, Google Maps is the other way.
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
@@ -73,47 +74,72 @@ Future<void> _close(WidgetTester tester, ProviderContainer c) async {
   c.dispose();
 }
 
+/// The "আমার মসজিদ" section header (the app bar carries the same words).
+final _mySection = find.descendant(
+  of: find.byType(ListView),
+  matching: find.text('আমার মসজিদ'),
+);
+
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
 
-  testWidgets(
-    'nearby: distance, on foot, direction; unnamed and verified said plainly',
-    (tester) async {
-      final c = await _open(tester, GoldenApi());
-      expect(find.text('Kalachadpur Paschimpara Jame Masjid'), findsOneWidget);
-      expect(find.text('২৩০ মিটার · হেঁটে ~৩ মিনিট · পূর্বে'), findsOneWidget);
-      expect(find.text('মসজিদ (নাম জানা নেই)'), findsNWidgets(2));
-      expect(find.text('যাচাইকৃত'), findsOneWidget);
-      expect(
-        find.textContaining('OpenStreetMap', skipOffstage: false),
-        findsOneWidget,
-      );
-      await _close(tester, c);
-    },
-  );
+  testWidgets('the nearest leads: how far, on foot, which way, the way there', (
+    tester,
+  ) async {
+    final c = await _open(tester, GoldenApi());
+    final nearest = find.byKey(const ValueKey('mosque_nearest'));
+    expect(
+      find.descendant(
+        of: nearest,
+        matching: find.text('Kalachadpur Paschimpara Jame Masjid'),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: nearest,
+        matching: find.textContaining(
+          '২৩০ মিটার  ·  হেঁটে ~৩ মিনিট · পূর্বে',
+          findRichText: true,
+        ),
+      ),
+      findsOneWidget,
+    );
+    expect(
+      find.byKey(const ValueKey('mosque_nearest_directions')),
+      findsOneWidget,
+    );
+    // the rest: unnamed and verified said plainly, distance on the side
+    expect(find.text('মসজিদ (নাম জানা নেই)'), findsNWidgets(2));
+    expect(find.text('যাচাইকৃত'), findsOneWidget);
+    expect(find.text('৪১০ মিটার'), findsOneWidget);
+    // nothing starred yet: no empty "আমার মসজিদ" box, a one-line tip
+    expect(_mySection, findsNothing);
+    expect(find.textContaining('তারকা চাপুন'), findsOneWidget);
+    expect(
+      find.textContaining('OpenStreetMap', skipOffstage: false),
+      findsOneWidget,
+    );
+    await _close(tester, c);
+  });
 
   testWidgets('a star moves the mosque into আমার মসজিদ, kept on the phone', (
     tester,
   ) async {
     final c = await _open(tester, GoldenApi());
-    expect(
-      find.textContaining('তারকা চিহ্নে চাপুন'),
-      findsOneWidget,
-    ); // empty hint
-    await tester.tap(find.byTooltip('আমার মসজিদে রাখুন বা সরান').first);
+    // the second star is the first mosque after the nearest
+    await tester.tap(find.byTooltip('আমার মসজিদে রাখুন বা সরান').at(1));
     await tester.pumpAndSettle();
-    expect(find.textContaining('তারকা চিহ্নে চাপুন'), findsNothing);
+    expect(_mySection, findsOneWidget);
+    expect(find.textContaining('তারকা চাপুন'), findsNothing);
     final prefs = await SharedPreferences.getInstance();
     final saved = jsonDecode(prefs.getString('my_mosques_v1')!) as List;
-    expect(
-      (saved.single as Map)['nameBn'],
-      'Kalachadpur Paschimpara Jame Masjid',
-    );
+    expect(saved, hasLength(1));
     await _close(tester, c);
   });
 
   testWidgets(
-    'no location: a primer, the city list without distances; one tap → near me',
+    'no location: a primer, no list and no distance; one tap → near me',
     (tester) async {
       final c = await _open(
         tester,
@@ -121,15 +147,16 @@ void main() {
         location: FakeLocation(granted: false),
       );
       expect(find.byKey(const ValueKey('mosques_primer')), findsOneWidget);
-      expect(find.text('ঢাকা শহরের কেন্দ্রের আশেপাশে'), findsOneWidget);
-      expect(find.text('Kalachadpur Paschimpara Jame Masjid'), findsOneWidget);
+      // no "near" list measured from somewhere the reader is not
+      expect(find.text('Kalachadpur Paschimpara Jame Masjid'), findsNothing);
       expect(find.textContaining('মিটার'), findsNothing);
       expect(find.byKey(const ValueKey('mosque_view_toggle')), findsNothing);
+      expect(find.text('গুগল ম্যাপে কাছের মসজিদ খুঁজুন'), findsOneWidget);
 
       await tester.tap(find.text('আমার অবস্থান ব্যবহার করুন'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('mosques_primer')), findsNothing);
-      expect(find.text('২৩০ মিটার · হেঁটে ~৩ মিনিট · পূর্বে'), findsOneWidget);
+      expect(find.byKey(const ValueKey('mosque_nearest')), findsOneWidget);
       expect(find.textContaining('আপনার অবস্থান থেকে'), findsOneWidget);
       await _close(tester, c);
     },

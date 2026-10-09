@@ -43,6 +43,8 @@ void main() {
         'https://www.google.com/maps/dir/?api=1&destination=23.81,90.41');
     expect(mapsNearbySearchUrl('mosque', 23.81, 90.41),
         'https://www.google.com/maps/search/mosque/@23.81,90.41,14z');
+    // no point given: the Maps app searches around the phone itself
+    expect(mapsSearchUrl('mosque'), 'https://www.google.com/maps/search/mosque');
   });
 
   testWidgets('tapping near a pin selects that mosque', (tester) async {

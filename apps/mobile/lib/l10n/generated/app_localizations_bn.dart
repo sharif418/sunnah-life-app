@@ -2189,7 +2189,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get mosque_view_list => 'তালিকা';
 
   @override
-  String get mosque_view_map => 'ম্যাপ';
+  String get mosque_view_map => 'দিক';
 
   @override
   String get mosque_directions_btn => 'পথ দেখুন';
@@ -3177,4 +3177,17 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get mosques_from_location_rough =>
       'আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)';
+
+  @override
+  String get mosques_nearest => 'সবচেয়ে কাছে';
+
+  @override
+  String get mosques_more_nearby => 'আশেপাশের আরও মসজিদ';
+
+  @override
+  String get mosques_star_tip =>
+      'যে মসজিদে নিয়মিত যান, তার তারকা চাপুন — সবার উপরে থাকবে।';
+
+  @override
+  String get mosques_maps_search => 'গুগল ম্যাপে কাছের মসজিদ খুঁজুন';
 }

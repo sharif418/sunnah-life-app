@@ -2166,7 +2166,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mosque_view_list => 'قائمة';
 
   @override
-  String get mosque_view_map => 'خريطة';
+  String get mosque_view_map => 'الاتجاه';
 
   @override
   String get mosque_directions_btn => 'الاتجاهات';
@@ -3123,4 +3123,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mosques_from_location_rough => 'من موقعك (تقريبي، ~%m م)';
+
+  @override
+  String get mosques_nearest => 'الأقرب';
+
+  @override
+  String get mosques_more_nearby => 'مساجد أخرى قريبة';
+
+  @override
+  String get mosques_star_tip =>
+      'اضغط النجمة على المسجد الذي ترتاده — يبقى في الأعلى.';
+
+  @override
+  String get mosques_maps_search => 'ابحث عن المساجد القريبة في خرائط جوجل';
 }
