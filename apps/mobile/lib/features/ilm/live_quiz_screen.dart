@@ -539,6 +539,13 @@ class _Gate extends StatelessWidget {
               icon: const Icon(PhosphorIconsRegular.signIn, size: 18),
               label: Text(actionLabel),
             ),
+            // meanwhile, the practice quizzes (the hint promises them — now
+            // one tap away)
+            const SizedBox(height: SLSpacing.s8),
+            TextButton(
+              onPressed: () => context.push('/ilm/quizzes'),
+              child: Text(context.t('quiz_practice_go')),
+            ),
           ],
         ),
       ),

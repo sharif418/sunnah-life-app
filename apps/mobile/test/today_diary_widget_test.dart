@@ -121,10 +121,10 @@ void main() {
     expect(find.text('শরীরচর্চা'), findsOneWidget);
     // the row scrolls sideways — the later chips are a swipe away
     await tester.dragUntilVisible(
-      find.text('সেলফ-টেস্ট'),
+      find.text('আত্মযাচাই'),
       find.text('মাসের গ্রিড'),
       const Offset(-200, 0),
     );
-    expect(find.text('সেলফ-টেস্ট'), findsOneWidget);
+    expect(find.text('আত্মযাচাই'), findsOneWidget);
   });
 }

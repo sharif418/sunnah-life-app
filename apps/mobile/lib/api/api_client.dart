@@ -8,6 +8,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../core/honorific.dart';
 import '../models/domain.dart';
 
 class ApiException implements Exception {
@@ -949,7 +950,7 @@ class ApiClient {
 
   /// GET /api/courses — public catalog (lesson counts + enrollment stats).
   Future<List<CourseSummary>> courses() async {
-    final j = await _req('GET', '/api/courses');
+    final j = withHonorific(await _req('GET', '/api/courses')) as Map;
     return ((j['courses'] as List?) ?? [])
         .whereType<Map>()
         .map((e) => CourseSummary.fromJson(e.cast<String, dynamic>()))
@@ -958,8 +959,8 @@ class ApiClient {
 
   /// GET /api/courses/:id — course with lesson bodies + my progress.
   Future<CourseDetailResponse> courseDetail(String id) async {
-    final j = await _req('GET', '/api/courses/$id');
-    return CourseDetailResponse.fromJson(j);
+    final j = withHonorific(await _req('GET', '/api/courses/$id'));
+    return CourseDetailResponse.fromJson(j as Map<String, dynamic>);
   }
 
   /// GET /api/enrollments — my enrollment rows (progress per course).
@@ -990,8 +991,8 @@ class ApiClient {
   /// found nothing, so the app silently showed an EMPTY quiz list.
   Future<Map<String, dynamic>?> contentPackData(String key) async {
     final j = await _req('GET', '/api/content/${Uri.encodeComponent(key)}');
-    final data = j['data'];
-    return data is Map ? data.cast<String, dynamic>() : null;
+    final data = withHonorific(j['data']);
+    return data is Map<String, dynamic> ? data : null;
   }
 
   /// The quiz pack from the server (see [contentPackData]).

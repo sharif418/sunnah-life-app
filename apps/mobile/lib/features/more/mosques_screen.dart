@@ -204,7 +204,11 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
               final m = sorted[i - 1];
               final km = distanceKm(origin.lat, origin.lng, m.lat, m.lng);
               final bearing = bearingDeg(origin.lat, origin.lng, m.lat, m.lng);
-              return AppCard(
+              // the same air between cards as every other list (they
+              // nearly touched)
+              return Padding(
+                padding: const EdgeInsets.only(bottom: SLSpacing.s8),
+                child: AppCard(
                 onTap: () => _open(mapsDirectionsUrl(m.lat, m.lng)),
                 padding: const EdgeInsets.symmetric(
                     horizontal: SLSpacing.s12, vertical: SLSpacing.s8),
@@ -252,6 +256,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
                     ),
                   ],
                 ),
+              ),
               );
             },
           );
@@ -311,20 +316,30 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
         child: Padding(
           padding: const EdgeInsets.symmetric(
               horizontal: SLSpacing.s12, vertical: SLSpacing.s4),
-          child: Row(
+          // where the distances are measured from, and the switch as a real
+          // button that drops to its own line when space runs out (it read
+          // as one sentence: "…ঢাকা আমার কাছাকাছি")
+          child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            runSpacing: SLSpacing.s4,
+            spacing: SLSpacing.s8,
             children: [
-              Icon(
-                fromGps ? PhosphorIconsRegular.crosshair : PhosphorIconsRegular.buildings,
-                size: 20,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: SLSpacing.s8),
-              Expanded(
-                child: Text(
-                  label,
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(fontWeight: FontWeight.w600),
-                ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    fromGps ? PhosphorIconsRegular.crosshair : PhosphorIconsRegular.buildings,
+                    size: 20,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: SLSpacing.s8),
+                  Text(
+                    label,
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
               if (_locating)
                 const SizedBox(
@@ -333,7 +348,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               else
-                TextButton(
+                OutlinedButton.icon(
                   onPressed: () {
                     if (fromGps) {
                       setState(() => _fix = null); // back to city center
@@ -341,7 +356,11 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
                       _locate();
                     }
                   },
-                  child: Text(
+                  icon: Icon(
+                    fromGps ? PhosphorIconsRegular.buildings : PhosphorIconsRegular.crosshair,
+                    size: 18,
+                  ),
+                  label: Text(
                     fromGps
                         ? context.t('mosques_use_city')
                         : context.t('mosques_near_me'),

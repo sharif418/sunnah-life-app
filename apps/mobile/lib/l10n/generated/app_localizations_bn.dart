@@ -284,7 +284,7 @@ class AppLocalizationsBn extends AppLocalizations {
       '৭ দিন ধরে প্রতিদিন একটি আমল — স্ট্রিক ধরে রাখুন';
 
   @override
-  String get amal_self_test => 'ঈমান ও তাকওয়া সেলফ-টেস্ট';
+  String get amal_self_test => 'ঈমান ও তাকওয়া আত্মযাচাই';
 
   @override
   String get amal_no_defs =>
@@ -367,7 +367,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get ilm_articles => 'আর্টিকেল';
 
   @override
-  String get quran_reader => 'কুরআন পড়ুন';
+  String get quran_reader => 'আল-কুরআন';
 
   @override
   String get quran_translation_toggle => 'বাংলা অনুবাদ';
@@ -452,7 +452,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get more_live => 'লাইভ প্রোগ্রাম';
 
   @override
-  String get more_faq => 'জিজ্ঞাসা (FAQ)';
+  String get more_faq => 'সাধারণ প্রশ্নোত্তর';
 
   @override
   String get more_about => 'আমাদের সম্পর্কে';
@@ -1082,10 +1082,10 @@ class AppLocalizationsBn extends AppLocalizations {
   String get lesson_next => 'পরের পাঠ';
 
   @override
-  String get quiz_play => 'কুইজ খেলুন';
+  String get quiz_play => 'কুইজ শুরু করুন';
 
   @override
-  String get quiz_live_eligible => 'লাইভ কুইজযোগ্য';
+  String get quiz_live_eligible => 'লাইভ কুইজেও আছে';
 
   @override
   String get quiz_best => 'সেরা';
@@ -1288,7 +1288,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get dawah_req_load_failed => 'চেকলিস্ট আনা যায়নি';
 
   @override
-  String get dawah_req_live_action => 'লাইভ চেকলিস্ট';
+  String get dawah_req_live_action => 'সব শর্ত দেখুন';
 
   @override
   String get bell_minutes_title => 'ঘণ্টির সময় নির্ধারণ';
@@ -2654,7 +2654,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get chip_habit => 'অভ্যাস চ্যালেঞ্জ';
 
   @override
-  String get chip_self_test => 'সেলফ-টেস্ট';
+  String get chip_self_test => 'আত্মযাচাই';
 
   @override
   String get chip_goals => 'লক্ষ্য';
@@ -2970,4 +2970,32 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get ilm_desc_articles => 'তারবিয়াহ, দাওয়াহ ও সুন্নাহ নিয়ে লেখা';
+
+  @override
+  String get sync_waiting_short => 'অপেক্ষায়';
+
+  @override
+  String get sync_badge_waiting_a11y =>
+      '%n টি আমল ইন্টারনেট পেলে জমা হবে — বিস্তারিত দেখুন';
+
+  @override
+  String get sync_badge_failed_a11y => '%n টি আমল জমা হয়নি — বিস্তারিত দেখুন';
+
+  @override
+  String get sync_sheet_explain =>
+      'আমল প্রথমে ফোনে লেখা হয়, তারপর ইন্টারনেট পেলে নিজে থেকেই সার্ভারে জমা হয় — তাই উসরা প্রধান দেখতে পান, ফোন বদলালেও হারায় না।';
+
+  @override
+  String get sync_all_saved => 'সব আমল সার্ভারে জমা আছে';
+
+  @override
+  String get zakat_enter_prompt =>
+      'উপরের ঘরে আপনার সম্পদের পরিমাণ লিখুন — যাকাত হিসাব এখানে দেখাবে';
+
+  @override
+  String get zakat_hawl_note =>
+      'যাকাত ফরজ হয় সেই সম্পদে, যা পুরো এক চান্দ্রবছর আপনার মালিকানায় ছিল।';
+
+  @override
+  String get quiz_practice_go => 'অনুশীলনের কুইজ দিন';
 }

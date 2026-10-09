@@ -531,8 +531,17 @@ class _DhikrItemRowState extends State<_DhikrItemRow> {
           padding: const EdgeInsets.all(SLSpacing.s12),
           decoration: BoxDecoration(
             // the cream page ground, so each dhikr is its own tile on the
-            // white card (surfaceContainerLow IS the card colour)
-            color: done ? cs.primaryContainer : cs.surface,
+            // white card (surfaceContainerLow IS the card colour). Dark: a
+            // shade LIGHTER than the card — the page colour there is darker,
+            // so the tiles looked like holes cut into it
+            color: done
+                ? cs.primaryContainer
+                : Theme.of(context).brightness == Brightness.dark
+                ? Color.alphaBlend(
+                    Colors.white.withValues(alpha: 0.06),
+                    SLColors.darkCard,
+                  )
+                : cs.surface,
             borderRadius: SLRadius.brMd,
           ),
           child: Column(

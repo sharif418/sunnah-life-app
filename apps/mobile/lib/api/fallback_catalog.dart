@@ -303,7 +303,7 @@ const List<FallbackAmal> kFallbackAmalCatalog = <FallbackAmal>[
   ),
   (
     key: 'salat_slowly',
-    titleBn: 'ধীরে-সুস্থানে নামাজ (প্রতি রাকাত ২.৫ মিনিট+)',
+    titleBn: 'ধীরে-সুস্থে নামাজ (প্রতি রাকাত ২.৫ মিনিট+)',
     titleEn: 'Praying Slowly & With Composure (2.5 min+ per Rak\'ah)',
     category: 'lifestyle',
     inputType: 'boolean',

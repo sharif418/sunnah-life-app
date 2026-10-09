@@ -2932,4 +2932,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get ilm_desc_articles => 'مقالات في التربية والدعوة والسنة';
+
+  @override
+  String get sync_waiting_short => 'بالانتظار';
+
+  @override
+  String get sync_badge_waiting_a11y =>
+      '%n إدخالات ستُرفع عند الاتصال — التفاصيل';
+
+  @override
+  String get sync_badge_failed_a11y => '%n إدخالات لم تُحفظ — التفاصيل';
+
+  @override
+  String get sync_sheet_explain =>
+      'تُحفظ الإدخالات على الهاتف أولاً ثم تُرفع تلقائياً عند الاتصال.';
+
+  @override
+  String get sync_all_saved => 'كل شيء محفوظ على الخادم';
+
+  @override
+  String get zakat_enter_prompt => 'أدخل أموالك أعلاه — تظهر الزكاة هنا';
+
+  @override
+  String get zakat_hawl_note => 'تجب الزكاة في المال الذي حال عليه الحول.';
+
+  @override
+  String get quiz_practice_go => 'اختبار تدريبي';
 }

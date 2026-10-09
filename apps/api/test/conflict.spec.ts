@@ -272,6 +272,31 @@ describe("decideEntry", () => {
     expect("serverValue" in (d3 as object)).toBe(false);
   });
 
+  it("clearing a prayer (\"\") is a valid tri-state value — the clear reaches the server", () => {
+    expect(decideEntry({ ...base, value: "" }, DEF_KEYS, DEF_TYPES, TODAY, new Map(), null, now).ok).toBe(true);
+  });
+
+  it("an identical replay is accepted unchanged — even on a locked day (guest import, lost response)", () => {
+    const existing = {
+      amalKey: "salat_fajr",
+      date: "2025-06-14",
+      clientUpdatedAt: new Date("2025-06-14T10:00:00.000Z"),
+      value: "jamaat",
+    };
+    const locked = new Map([["2025-06-14", true]]);
+    expect(decideEntry(base, DEF_KEYS, DEF_TYPES, TODAY, locked, existing, now)).toEqual({
+      ok: true,
+      amalKey: "salat_fajr",
+      date: "2025-06-14",
+      unchanged: true,
+    });
+    // a DIFFERENT value on a locked day is still refused
+    expect(decideEntry({ ...base, value: "alone" }, DEF_KEYS, DEF_TYPES, TODAY, locked, existing, now)).toMatchObject({
+      ok: false,
+      reason: REJECT_REASONS.locked,
+    });
+  });
+
   it("a missing/invalid clientUpdatedAt falls back to server now", () => {
     const d = decideEntry({ ...base, clientUpdatedAt: "garbage" }, DEF_KEYS, DEF_TYPES, TODAY, new Map(), null, now);
     expect(d.ok).toBe(true);

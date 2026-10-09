@@ -1,6 +1,7 @@
-// The header sync badge: members see it only while something is pending /
-// failed / syncing; guests never (their diary is local by design and the
-// outbox count used to pop a permanent badge a moment after launch).
+// The header sync badge: members see it only when they should know — entries
+// that could not be saved, or entries waiting because the last upload did
+// not go through (offline). An ordinary upload is silent. Guests never (their
+// diary is local by design).
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,9 +48,21 @@ void main() {
     expect(find.text('৩'), findsNothing);
   });
 
-  testWidgets('member with pending rows: the count shows', (tester) async {
-    await _pump(tester, GoldenSignedInDaee.new, const SyncState(pending: 3));
-    expect(find.text('৩'), findsOneWidget);
+  testWidgets('member, an ordinary upload under way: quiet', (tester) async {
+    await _pump(tester, GoldenSignedInDaee.new, const SyncState(pending: 3, syncing: true));
+    expect(find.byType(Icon), findsNothing);
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+  });
+
+  testWidgets('member offline with waiting rows: says so', (tester) async {
+    await _pump(tester, GoldenSignedInDaee.new, const SyncState(pending: 3, stalled: true));
+    expect(find.text('৩ অপেক্ষায়'), findsOneWidget);
+    expect(find.bySemanticsLabel(RegExp('৩ টি আমল ইন্টারনেট পেলে জমা হবে')), findsOneWidget);
+  });
+
+  testWidgets('entries that could not be saved: red, with the word', (tester) async {
+    await _pump(tester, GoldenSignedInDaee.new, const SyncState(dead: 2));
+    expect(find.text('২ সমস্যা'), findsOneWidget);
   });
 
   testWidgets('member, nothing pending: quiet', (tester) async {

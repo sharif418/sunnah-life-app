@@ -78,8 +78,9 @@ class OutboxRejectDecision {
   /// [convergedEntryFor] instead of retrying.
   final bool converge;
 
-  /// Stop re-POSTing this row. Always true when [converge]; otherwise true
-  /// once [attempts] reaches [kMaxOutboxAttempts].
+  /// Stop re-POSTing this row. Always true when [converge] (flush then
+  /// clears the row as resolved); otherwise true once [attempts] reaches
+  /// [kMaxOutboxAttempts] — a real failure, shown in the sync sheet.
   final bool dead;
 }
 

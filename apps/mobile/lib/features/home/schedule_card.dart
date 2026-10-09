@@ -62,8 +62,10 @@ class PrayerScheduleCard extends StatelessWidget {
     Widget tag(String text, {required bool now}) => Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
       decoration: BoxDecoration(
+        // dark: a solid green pill (the near-black one vanished into the
+        // highlighted row; "পরবর্তী" beside it had a clear pill)
         color: now
-            ? cs.surfaceContainerLowest
+            ? (dark ? cs.primary : cs.surfaceContainerLowest)
             : (dark ? const Color(0xFF3B2F14) : SLColors.goldSoftLight),
         borderRadius: SLRadius.brPill,
       ),
@@ -73,7 +75,7 @@ class PrayerScheduleCard extends StatelessWidget {
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: now
-              ? cs.primary
+              ? (dark ? cs.onPrimary : cs.primary)
               : (dark ? const Color(0xFFD9B25F) : SLColors.lightGoldText),
         ),
       ),
