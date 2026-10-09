@@ -234,6 +234,35 @@ describe("sign-in never fails on the phone's guest leftovers", () => {
     // ('' is the app's own "cleared" tristate — the server mirrors it, as sync does)
   });
 
+  it("the phone's queue re-sends the imported guest diary: all accepted, nothing left as a failed upload", async () => {
+    const otp = await http().post("/api/auth/otp/request").send({ phone: PHONE }).expect(200);
+    const today = new Date().toISOString().slice(0, 10);
+    const old = new Date(Date.now() - 6 * 86_400_000).toISOString().slice(0, 10); // locked by now
+    const stamp = new Date(Date.now() - 60_000).toISOString();
+    const guest = [
+      { amalKey: "salat_maghrib", date: old, value: "jamaat", clientUpdatedAt: stamp, source: "manual" },
+      { amalKey: "salat_isha", date: today, value: "alone", clientUpdatedAt: stamp, source: "manual" },
+    ];
+    const res = await http()
+      .post("/api/auth/otp/verify")
+      .send({ phone: PHONE, code: otp.body.devCode, guestEntries: guest })
+      .expect(200);
+    const sync = await http()
+      .post("/api/amal/entries")
+      .set("Authorization", `Bearer ${res.body.accessToken}`)
+      .send({ entries: guest })
+      .expect(201);
+    expect(sync.body.rejected).toEqual([]);
+    expect(sync.body.accepted.map((e: { amalKey: string }) => e.amalKey).sort()).toEqual(["salat_isha", "salat_maghrib"]);
+    // and a cleared prayer now reaches the server
+    const clear = await http()
+      .post("/api/amal/entries")
+      .set("Authorization", `Bearer ${res.body.accessToken}`)
+      .send({ entries: [{ amalKey: "salat_isha", date: today, value: "", clientUpdatedAt: new Date().toISOString() }] })
+      .expect(201);
+    expect(clear.body.rejected).toEqual([]);
+  });
+
   it("an existing account keeps its name (the guest name on the phone does not overwrite it)", async () => {
     const otp = await http().post("/api/auth/otp/request").send({ phone: PHONE }).expect(200);
     const res = await http()
