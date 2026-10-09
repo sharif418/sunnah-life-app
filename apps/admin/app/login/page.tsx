@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { KeyRound, Phone, ShieldCheck, Sparkles, X } from "lucide-react";
 import { useSession } from "@/lib/session";
+import { homeRoute } from "@/lib/routes";
 import { api } from "@/lib/api";
 import { toBn } from "@/lib/bn";
 import { DEMO_ACCOUNTS, ROLE_GROUP_LABELS, ROLE_ORDER } from "@/lib/demo-accounts";
@@ -14,7 +15,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/toast";
 
 export default function LoginPage() {
-  const { status, login } = useSession();
+  const { status, user, login } = useSession();
   const router = useRouter();
   const { toast } = useToast();
 
@@ -27,8 +28,8 @@ export default function LoginPage() {
   const [quickBusy, setQuickBusy] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    if (status === "authenticated") router.replace("/");
-  }, [status, router]);
+    if (status === "authenticated") router.replace(homeRoute(user));
+  }, [status, user, router]);
 
   const requestCode = React.useCallback(
     async (p: string): Promise<string | null> => {
@@ -63,9 +64,9 @@ export default function LoginPage() {
       }
       setBusy(true);
       try {
-        await login(p, c);
+        const u = await login(p, c);
         toast("স্বাগতম! সফলভাবে লগইন হয়েছে", "success");
-        router.replace("/");
+        router.replace(homeRoute(u));
       } catch (err) {
         toast(err instanceof Error ? err.message : "লগইন সম্ভব হয়নি", "error");
       } finally {
@@ -80,9 +81,9 @@ export default function LoginPage() {
       setQuickBusy(p);
       try {
         const dev = await api.requestOtp(p);
-        await login(p, dev.devCode);
+        const u = await login(p, dev.devCode);
         toast("স্বাগতম! সফলভাবে লগইন হয়েছে", "success");
-        router.replace("/");
+        router.replace(homeRoute(u));
       } catch (err) {
         toast(err instanceof Error ? err.message : "দ্রুত লগইন সম্ভব হয়নি", "error");
       } finally {

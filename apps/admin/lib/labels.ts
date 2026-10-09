@@ -105,6 +105,12 @@ export const AUDIT_ACTION_LABELS_BN: Record<string, string> = {
   update_app_config: "অ্যাপ কনফিগ হালনাগাদ",
   level_rules_update: "স্তরের নিয়ম সম্পাদনা",
   content_pack_update: "কনটেন্ট হালনাগাদ",
+  content_submit: "কনটেন্ট যাচাইয়ে পাঠানো",
+  content_publish: "কনটেন্ট অনুমোদন ও প্রকাশ",
+  content_reject: "কনটেন্ট ফেরত",
+  content_rollback: "কনটেন্ট আগের সংস্করণে ফেরানো",
+  content_draft_discard: "কনটেন্টের খসড়া বাতিল",
+  content_role: "কনটেন্ট দলের ভূমিকা",
   answer_masala: "মাসআলার উত্তর",
   assessment_confirm: "মূল্যায়ন নিশ্চিত",
   assessment_decline: "মূল্যায়নে আপত্তি",
@@ -167,6 +173,21 @@ export function isSupervisor(role: string | undefined | null): boolean {
 
 export function isFullAdmin(role: string | undefined | null): boolean {
   return role === "full_admin";
+}
+
+export const CONTENT_ROLE_LABELS_BN: Record<"editor" | "reviewer", string> = {
+  editor: "কনটেন্ট সম্পাদক",
+  reviewer: "যাচাইকারী আলেম",
+};
+
+/** May open the content workflow: full_admin, or anyone on the content team. */
+export function canEditContent(user: { role: string; contentRole?: string | null } | null | undefined): boolean {
+  return !!user && (user.role === "full_admin" || user.contentRole === "editor" || user.contentRole === "reviewer");
+}
+
+/** May approve, reject and roll back (never their own draft — the API checks). */
+export function canReviewContent(user: { role: string; contentRole?: string | null } | null | undefined): boolean {
+  return !!user && (user.role === "full_admin" || user.contentRole === "reviewer");
 }
 
 export function pctBn(value: number | null | undefined): string {

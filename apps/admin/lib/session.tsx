@@ -26,7 +26,7 @@ import {
   type Role,
   type User,
 } from "./api";
-import { isSupervisor, isFullAdmin } from "./labels";
+import { canEditContent, canReviewContent, isSupervisor, isFullAdmin } from "./labels";
 
 export type SessionStatus = "loading" | "authenticated" | "anonymous" | "forbidden";
 
@@ -36,12 +36,25 @@ interface SessionValue {
   /** supervisor = usrah_head | invigilator | full_admin */
   supervisor: boolean;
   fullAdmin: boolean;
+  /** content team (or full_admin): may open the content workflow */
+  contentEditor: boolean;
+  /** reviewer alim (or full_admin): may approve / reject / roll back */
+  contentReviewer: boolean;
+  /** on the content team only — sees just the content pages */
+  contentOnly: boolean;
   login: (phone: string, code: string) => Promise<User>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
 
 const SessionContext = createContext<SessionValue | null>(null);
+
+/** Who may use the panel: supervisors, and the content team (editors and
+ * reviewing scholars, whatever their tarbiyah role — they see only the
+ * content pages). */
+function admitted(u: User): boolean {
+  return isSupervisor(u.role) || canEditContent(u);
+}
 
 export function useSession(): SessionValue {
   const ctx = useContext(SessionContext);
@@ -60,7 +73,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!me) {
       setTokens(null, null);
       setStatus("anonymous");
-    } else if (!isSupervisor(me.role)) {
+    } else if (!admitted(me)) {
       setStatus("forbidden");
     } else {
       setStatus("authenticated");
@@ -102,7 +115,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       const res = await api.verifyOtp(phone, code);
       setTokens(res.accessToken, res.refreshToken);
       setUser(res.user);
-      if (!isSupervisor(res.user.role)) {
+      if (!admitted(res.user)) {
         setStatus("forbidden");
       } else {
         setStatus("authenticated");
@@ -135,6 +148,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       user,
       supervisor: isSupervisor(user?.role),
       fullAdmin: isFullAdmin(user?.role),
+      contentEditor: canEditContent(user),
+      contentReviewer: canReviewContent(user),
+      contentOnly: !!user && !isSupervisor(user.role) && canEditContent(user),
       login,
       logout,
       refreshUser,

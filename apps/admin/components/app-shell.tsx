@@ -32,14 +32,16 @@ import {
   X,
 } from "lucide-react";
 import { useSession } from "@/lib/session";
-import { ROLE_LABELS_BN } from "@/lib/labels";
+import { CONTENT_ROLE_LABELS_BN, ROLE_LABELS_BN } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { RoleBadge } from "@/components/badges";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toBn, todayLineBn } from "@/lib/bn";
 
-type QueueKey = "reviews" | "support" | "masala" | "feedback" | "joinRequests";
+/** "content" = the content workflow's waiting work (GET /api/admin/cms). */
+type QueueKey = "reviews" | "support" | "masala" | "feedback" | "joinRequests" | "content";
 
 interface NavItem {
   href: string;
@@ -47,6 +49,9 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
   /** full_admin only (the API surface behind it is full_admin-only) */
   admin?: boolean;
+  /** the content workflow: full_admin + the content team (editors, reviewing
+   * scholars — who may be plain members and then see only this) */
+  content?: boolean;
   /** the waiting-work count shown beside the label */
   queue?: QueueKey;
 }
@@ -92,7 +97,7 @@ const NAV: NavGroup[] = [
   {
     label: "অ্যাপের কনটেন্ট",
     items: [
-      { href: "/content", label: "দোয়া, আর্টিকেল ও কোর্স", icon: BookOpen, admin: true },
+      { href: "/content", label: "কনটেন্ট ও যাচাই", icon: BookOpen, content: true, queue: "content" },
       { href: "/live", label: "লাইভ প্রোগ্রাম", icon: Radio },
       { href: "/catalog", label: "ডায়েরির আমল", icon: ListChecks, admin: true },
     ],
@@ -151,7 +156,7 @@ function BrandMark() {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { user, fullAdmin, logout } = useSession();
+  const { user, supervisor, fullAdmin, contentEditor, contentReviewer, contentOnly, logout } = useSession();
   const pathname = usePathname();
   const router = useRouter();
   const { resolvedTheme, setTheme } = useTheme();
@@ -168,18 +173,37 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const navGroups = React.useMemo(
     () =>
-      NAV.map((g) => ({ ...g, items: g.items.filter((it) => !it.admin || fullAdmin) })).filter(
-        (g) => g.items.length > 0
-      ),
-    [fullAdmin]
+      NAV.map((g) => ({
+        ...g,
+        items: g.items.filter((it) =>
+          it.content ? contentEditor : !contentOnly && (!it.admin || fullAdmin)
+        ),
+      })).filter((g) => g.items.length > 0),
+    [fullAdmin, contentEditor, contentOnly]
   );
 
+  // the tarbiyah queues are supervisor-only (GET /api/admin/queues)
   const queues = useQuery({
     queryKey: ["admin-queues"],
     queryFn: () => api.queues(),
-    enabled: !!user,
+    enabled: !!user && supervisor,
     refetchInterval: 60_000,
   });
+  // the content workflow's waiting work: a reviewer sees what awaits review;
+  // an editor sees their drafts that came back with a note
+  const cms = useQuery({
+    queryKey: ["cms-overview"],
+    queryFn: () => api.cmsOverview(),
+    enabled: !!user && contentEditor,
+    refetchInterval: 60_000,
+  });
+  const counts: Partial<Record<QueueKey, number | null>> = {
+    ...(queues.data ?? {}),
+    content: contentReviewer
+      ? cms.data?.pendingReview
+      : cms.data?.packs.filter((p) => p.working?.status === "rejected" && p.working.authorId === user?.id).length,
+  };
+  const contentRoleLabel = user?.contentRole ? CONTENT_ROLE_LABELS_BN[user.contentRole] : null;
 
   const onLogout = async () => {
     await logout();
@@ -227,7 +251,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden />
                       <span className="min-w-0 truncate">{item.label}</span>
-                      {item.queue ? <QueueCount n={queues.data?.[item.queue]} active={active} /> : null}
+                      {item.queue ? <QueueCount n={counts[item.queue]} active={active} /> : null}
                     </Link>
                   </li>
                 );
@@ -247,7 +271,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="min-w-0 flex-1 leading-tight">
             <p className="truncate text-sm font-semibold text-foreground">{user?.name}</p>
             <p className="text-xs text-muted-foreground">
-              {user ? ROLE_LABELS_BN[user.role] : ""}
+              {user ? (contentOnly && contentRoleLabel ? contentRoleLabel : ROLE_LABELS_BN[user.role]) : ""}
             </p>
           </div>
           <button
@@ -303,7 +327,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <span className="hidden text-xs text-muted-foreground md:block">{todayLineBn()}</span>
             {user ? (
               <span className="hidden sm:inline-flex">
-                <RoleBadge role={user.role} />
+                {contentOnly && contentRoleLabel ? <Badge variant="gold">{contentRoleLabel}</Badge> : <RoleBadge role={user.role} />}
               </span>
             ) : null}
             <button

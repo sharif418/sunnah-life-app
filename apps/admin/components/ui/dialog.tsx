@@ -20,6 +20,13 @@ interface DialogProps {
 export function Dialog({ open, onClose, title, description, children, footer, wide }: DialogProps) {
   const ref = React.useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = React.useState(false);
+  // the latest onClose without re-running the open effect: a parent passing
+  // an inline arrow re-renders it each time, and re-running would pull the
+  // focus back to the first field while someone is typing
+  const onCloseRef = React.useRef(onClose);
+  React.useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // SSR-safe mount gate — deferred a frame so the effect body stays free of
   // synchronous setState (react-hooks/set-state-in-effect).
@@ -29,7 +36,8 @@ export function Dialog({ open, onClose, title, description, children, footer, wi
   }, []);
 
   React.useEffect(() => {
-    if (!open) return;
+    // the panel exists once mounted (portal) — then focus, keys and the trap
+    if (!open || !mounted) return;
     const prevActive = document.activeElement as HTMLElement | null;
     const node = ref.current;
     const focusables = () =>
@@ -45,9 +53,12 @@ export function Dialog({ open, onClose, title, description, children, footer, wi
     }, 30);
 
     const onKey = (e: KeyboardEvent) => {
+      // only the topmost dialog answers keys (a nested one sits later in the DOM)
+      const dialogs = document.querySelectorAll('[role="dialog"]');
+      if (dialogs[dialogs.length - 1] !== node) return;
       if (e.key === "Escape") {
         e.stopPropagation();
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key === "Tab") {
@@ -73,7 +84,7 @@ export function Dialog({ open, onClose, title, description, children, footer, wi
       document.body.style.overflow = prevOverflow;
       prevActive?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open, mounted]);
 
   if (!mounted || !open) return null;
 
