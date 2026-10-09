@@ -1003,5 +1003,17 @@
   "adjust_save": "Save",
   "adjust_minus_a11y": "%w one minute earlier",
   "adjust_plus_a11y": "%w one minute later",
-  "adjust_on_home": "With your mosque's adjustment"
+  "adjust_on_home": "With your mosque's adjustment",
+  "mosques_locating": "Finding your location…",
+  "mosques_primer_title": "See the mosques near you",
+  "mosques_primer_body": "How far, how many minutes on foot and which way are measured from where you are. Your location is never stored.",
+  "mosques_primer_btn": "Use my location",
+  "mosques_primer_settings": "Allow in Settings",
+  "mosques_primer_settings_hint": "Location permission is off — turn on Location in Settings, then come back.",
+  "mosques_primer_gps_off": "Turn on location",
+  "mosques_primer_gps_off_hint": "The phone's location is off — turn it on, then come back.",
+  "mosques_city_section": "Around the centre of %c",
+  "mosques_city_section_hint": "These may not be near you, so no distances are shown.",
+  "mosques_relocate": "Find my location again",
+  "mosques_from_location_rough": "From your location (approximate, ~%m m)"
 }

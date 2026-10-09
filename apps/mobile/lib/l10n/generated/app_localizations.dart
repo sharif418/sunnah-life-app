@@ -6123,6 +6123,78 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আপনার মসজিদের সমন্বয়সহ'**
   String get adjust_on_home;
+
+  /// No description provided for @mosques_locating.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান খোঁজা হচ্ছে…'**
+  String get mosques_locating;
+
+  /// No description provided for @mosques_primer_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার কাছের মসজিদ দেখুন'**
+  String get mosques_primer_title;
+
+  /// No description provided for @mosques_primer_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'কত দূরে, হেঁটে কত মিনিট, কোন দিকে — এগুলো আপনার অবস্থান থেকে মাপা হয়। অবস্থান কোথাও জমা রাখা হয় না।'**
+  String get mosques_primer_body;
+
+  /// No description provided for @mosques_primer_btn.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার অবস্থান ব্যবহার করুন'**
+  String get mosques_primer_btn;
+
+  /// No description provided for @mosques_primer_settings.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেটিংসে অনুমতি দিন'**
+  String get mosques_primer_settings;
+
+  /// No description provided for @mosques_primer_settings_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থানের অনুমতি বন্ধ আছে — সেটিংসে গিয়ে «অবস্থান» চালু করে ফিরে আসুন।'**
+  String get mosques_primer_settings_hint;
+
+  /// No description provided for @mosques_primer_gps_off.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনের লোকেশন চালু করুন'**
+  String get mosques_primer_gps_off;
+
+  /// No description provided for @mosques_primer_gps_off_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনের লোকেশন বন্ধ আছে — চালু করে ফিরে আসুন।'**
+  String get mosques_primer_gps_off_hint;
+
+  /// No description provided for @mosques_city_section.
+  ///
+  /// In bn, this message translates to:
+  /// **'%c শহরের কেন্দ্রের আশেপাশে'**
+  String get mosques_city_section;
+
+  /// No description provided for @mosques_city_section_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'এগুলো আপনার কাছের নাও হতে পারে, তাই দূরত্ব দেখানো হচ্ছে না।'**
+  String get mosques_city_section_hint;
+
+  /// No description provided for @mosques_relocate.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থান আবার খুঁজুন'**
+  String get mosques_relocate;
+
+  /// No description provided for @mosques_from_location_rough.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)'**
+  String get mosques_from_location_rough;
 }
 
 class _AppLocalizationsDelegate

@@ -3084,4 +3084,43 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get adjust_on_home => 'مع تعديل مسجدك';
+
+  @override
+  String get mosques_locating => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get mosques_primer_title => 'اعرض المساجد القريبة منك';
+
+  @override
+  String get mosques_primer_body =>
+      'المسافة ودقائق المشي والاتجاه تُقاس من موقعك. لا يُحفظ موقعك في أي مكان.';
+
+  @override
+  String get mosques_primer_btn => 'استخدم موقعي';
+
+  @override
+  String get mosques_primer_settings => 'اسمح من الإعدادات';
+
+  @override
+  String get mosques_primer_settings_hint =>
+      'إذن الموقع متوقف — فعّله من الإعدادات ثم عد.';
+
+  @override
+  String get mosques_primer_gps_off => 'شغّل الموقع';
+
+  @override
+  String get mosques_primer_gps_off_hint => 'موقع الهاتف متوقف — شغّله ثم عد.';
+
+  @override
+  String get mosques_city_section => 'حول وسط %c';
+
+  @override
+  String get mosques_city_section_hint =>
+      'قد لا تكون قريبة منك، لذلك لا تظهر المسافات.';
+
+  @override
+  String get mosques_relocate => 'حدّد موقعي مجددًا';
+
+  @override
+  String get mosques_from_location_rough => 'من موقعك (تقريبي، ~%m م)';
 }

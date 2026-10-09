@@ -3136,4 +3136,45 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get adjust_on_home => 'আপনার মসজিদের সমন্বয়সহ';
+
+  @override
+  String get mosques_locating => 'আপনার অবস্থান খোঁজা হচ্ছে…';
+
+  @override
+  String get mosques_primer_title => 'আপনার কাছের মসজিদ দেখুন';
+
+  @override
+  String get mosques_primer_body =>
+      'কত দূরে, হেঁটে কত মিনিট, কোন দিকে — এগুলো আপনার অবস্থান থেকে মাপা হয়। অবস্থান কোথাও জমা রাখা হয় না।';
+
+  @override
+  String get mosques_primer_btn => 'আমার অবস্থান ব্যবহার করুন';
+
+  @override
+  String get mosques_primer_settings => 'সেটিংসে অনুমতি দিন';
+
+  @override
+  String get mosques_primer_settings_hint =>
+      'অবস্থানের অনুমতি বন্ধ আছে — সেটিংসে গিয়ে «অবস্থান» চালু করে ফিরে আসুন।';
+
+  @override
+  String get mosques_primer_gps_off => 'ফোনের লোকেশন চালু করুন';
+
+  @override
+  String get mosques_primer_gps_off_hint =>
+      'ফোনের লোকেশন বন্ধ আছে — চালু করে ফিরে আসুন।';
+
+  @override
+  String get mosques_city_section => '%c শহরের কেন্দ্রের আশেপাশে';
+
+  @override
+  String get mosques_city_section_hint =>
+      'এগুলো আপনার কাছের নাও হতে পারে, তাই দূরত্ব দেখানো হচ্ছে না।';
+
+  @override
+  String get mosques_relocate => 'অবস্থান আবার খুঁজুন';
+
+  @override
+  String get mosques_from_location_rough =>
+      'আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)';
 }

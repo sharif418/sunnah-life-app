@@ -3133,4 +3133,45 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adjust_on_home => 'With your mosque\'s adjustment';
+
+  @override
+  String get mosques_locating => 'Finding your location…';
+
+  @override
+  String get mosques_primer_title => 'See the mosques near you';
+
+  @override
+  String get mosques_primer_body =>
+      'How far, how many minutes on foot and which way are measured from where you are. Your location is never stored.';
+
+  @override
+  String get mosques_primer_btn => 'Use my location';
+
+  @override
+  String get mosques_primer_settings => 'Allow in Settings';
+
+  @override
+  String get mosques_primer_settings_hint =>
+      'Location permission is off — turn on Location in Settings, then come back.';
+
+  @override
+  String get mosques_primer_gps_off => 'Turn on location';
+
+  @override
+  String get mosques_primer_gps_off_hint =>
+      'The phone\'s location is off — turn it on, then come back.';
+
+  @override
+  String get mosques_city_section => 'Around the centre of %c';
+
+  @override
+  String get mosques_city_section_hint =>
+      'These may not be near you, so no distances are shown.';
+
+  @override
+  String get mosques_relocate => 'Find my location again';
+
+  @override
+  String get mosques_from_location_rough =>
+      'From your location (approximate, ~%m m)';
 }

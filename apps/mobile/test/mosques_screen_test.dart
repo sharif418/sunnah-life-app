@@ -1,6 +1,8 @@
 // আমার মসজিদ (2026-10-09): nearby mosques from the server (OpenStreetMap +
 // verified), how far / on foot / which way, starring into "আমার মসজিদ"
 // (kept on the phone), and the offline fallback to the Foundation's list.
+// Without the phone's location no distance is shown (it would be from the
+// city centre, not the reader) — a primer offers location instead.
 import 'dart:convert';
 
 import 'package:drift/drift.dart' show Value;
@@ -12,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sunnah_life/api/api_client.dart';
 import 'package:sunnah_life/app.dart';
+import 'package:sunnah_life/core/location_service.dart';
 import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/models/content_models.dart';
 import 'package:sunnah_life/state/prayer_state.dart';
@@ -25,7 +28,11 @@ class _OfflineApi extends GoldenApi {
       throw Exception('offline');
 }
 
-Future<ProviderContainer> _open(WidgetTester tester, ApiClient api) async {
+Future<ProviderContainer> _open(
+  WidgetTester tester,
+  ApiClient api, {
+  LocationService? location,
+}) async {
   tester.view.physicalSize = const Size(824, 4000);
   tester.view.devicePixelRatio = 2.0;
   addTearDown(tester.view.resetPhysicalSize);
@@ -43,10 +50,14 @@ Future<ProviderContainer> _open(WidgetTester tester, ApiClient api) async {
       prayerProvider.overrideWith(GoldenPinnedPrayer.new),
       headerNowProvider.overrideWithValue(kGoldenNow),
       apiProvider.overrideWithValue(api),
+      locationServiceProvider.overrideWithValue(location ?? FakeLocation()),
     ],
   );
   await tester.pumpWidget(
-    UncontrolledProviderScope(container: container, child: const BootstrapGate()),
+    UncontrolledProviderScope(
+      container: container,
+      child: const BootstrapGate(),
+    ),
   );
   await tester.pumpAndSettle();
   container.read(routerProvider).go('/more/mosques');
@@ -65,37 +76,80 @@ Future<void> _close(WidgetTester tester, ProviderContainer c) async {
 void main() {
   setUp(() => SharedPreferences.setMockInitialValues(<String, Object>{}));
 
-  testWidgets('nearby: distance, on foot, direction; unnamed and verified said plainly', (tester) async {
-    final c = await _open(tester, GoldenApi());
-    expect(find.text('Kalachadpur Paschimpara Jame Masjid'), findsOneWidget);
-    expect(find.text('২৩০ মিটার · হেঁটে ~৩ মিনিট · পূর্বে'), findsOneWidget);
-    expect(find.text('মসজিদ (নাম জানা নেই)'), findsNWidgets(2));
-    expect(find.text('যাচাইকৃত'), findsOneWidget);
-    expect(find.textContaining('OpenStreetMap', skipOffstage: false), findsOneWidget);
-    await _close(tester, c);
-  });
+  testWidgets(
+    'nearby: distance, on foot, direction; unnamed and verified said plainly',
+    (tester) async {
+      final c = await _open(tester, GoldenApi());
+      expect(find.text('Kalachadpur Paschimpara Jame Masjid'), findsOneWidget);
+      expect(find.text('২৩০ মিটার · হেঁটে ~৩ মিনিট · পূর্বে'), findsOneWidget);
+      expect(find.text('মসজিদ (নাম জানা নেই)'), findsNWidgets(2));
+      expect(find.text('যাচাইকৃত'), findsOneWidget);
+      expect(
+        find.textContaining('OpenStreetMap', skipOffstage: false),
+        findsOneWidget,
+      );
+      await _close(tester, c);
+    },
+  );
 
-  testWidgets('a star moves the mosque into আমার মসজিদ, kept on the phone', (tester) async {
+  testWidgets('a star moves the mosque into আমার মসজিদ, kept on the phone', (
+    tester,
+  ) async {
     final c = await _open(tester, GoldenApi());
-    expect(find.textContaining('তারকা চিহ্নে চাপুন'), findsOneWidget); // empty hint
+    expect(
+      find.textContaining('তারকা চিহ্নে চাপুন'),
+      findsOneWidget,
+    ); // empty hint
     await tester.tap(find.byTooltip('আমার মসজিদে রাখুন বা সরান').first);
     await tester.pumpAndSettle();
     expect(find.textContaining('তারকা চিহ্নে চাপুন'), findsNothing);
     final prefs = await SharedPreferences.getInstance();
     final saved = jsonDecode(prefs.getString('my_mosques_v1')!) as List;
-    expect((saved.single as Map)['nameBn'], 'Kalachadpur Paschimpara Jame Masjid');
+    expect(
+      (saved.single as Map)['nameBn'],
+      'Kalachadpur Paschimpara Jame Masjid',
+    );
     await _close(tester, c);
   });
 
-  testWidgets('offline with nothing kept: the Foundation list, and it says so', (tester) async {
-    await tester.runAsync(() async {
-      // the bundled pack loads through rootBundle — prewarm it off the fake clock
-      ContentPack.resetForTesting();
-      await ContentPack.mosques();
-    });
-    final c = await _open(tester, _OfflineApi());
-    expect(find.text('ইন্টারনেট নেই — ফাউন্ডেশনের তালিকা থেকে দেখানো হচ্ছে'), findsOneWidget);
-    expect(find.text('যাচাইকৃত'), findsWidgets);
-    await _close(tester, c);
-  });
+  testWidgets(
+    'no location: a primer, the city list without distances; one tap → near me',
+    (tester) async {
+      final c = await _open(
+        tester,
+        GoldenApi(),
+        location: FakeLocation(granted: false),
+      );
+      expect(find.byKey(const ValueKey('mosques_primer')), findsOneWidget);
+      expect(find.text('ঢাকা শহরের কেন্দ্রের আশেপাশে'), findsOneWidget);
+      expect(find.text('Kalachadpur Paschimpara Jame Masjid'), findsOneWidget);
+      expect(find.textContaining('মিটার'), findsNothing);
+      expect(find.byKey(const ValueKey('mosque_view_toggle')), findsNothing);
+
+      await tester.tap(find.text('আমার অবস্থান ব্যবহার করুন'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('mosques_primer')), findsNothing);
+      expect(find.text('২৩০ মিটার · হেঁটে ~৩ মিনিট · পূর্বে'), findsOneWidget);
+      expect(find.textContaining('আপনার অবস্থান থেকে'), findsOneWidget);
+      await _close(tester, c);
+    },
+  );
+
+  testWidgets(
+    'offline with nothing kept: the Foundation list, and it says so',
+    (tester) async {
+      await tester.runAsync(() async {
+        // the bundled pack loads through rootBundle — prewarm it off the fake clock
+        ContentPack.resetForTesting();
+        await ContentPack.mosques();
+      });
+      final c = await _open(tester, _OfflineApi());
+      expect(
+        find.text('ইন্টারনেট নেই — ফাউন্ডেশনের তালিকা থেকে দেখানো হচ্ছে'),
+        findsOneWidget,
+      );
+      expect(find.text('যাচাইকৃত'), findsWidgets);
+      await _close(tester, c);
+    },
+  );
 }

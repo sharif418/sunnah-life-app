@@ -30,6 +30,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sunnah_life/app.dart';
+import 'package:sunnah_life/core/location_service.dart';
 import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
@@ -97,10 +98,12 @@ void main() {
   // a starred mosque); SL_RENDER_TAP='text' taps that text once the screen
   // has settled (open a sheet, switch a tab) — both on demand only.
   final seededPrefs = <String, Object>{
-    for (final e in ((Platform.environment['SL_RENDER_PREFS'] ?? '').isEmpty
-            ? <String, dynamic>{}
-            : jsonDecode(Platform.environment['SL_RENDER_PREFS']!) as Map<String, dynamic>)
-        .entries)
+    for (final e
+        in ((Platform.environment['SL_RENDER_PREFS'] ?? '').isEmpty
+                ? <String, dynamic>{}
+                : jsonDecode(Platform.environment['SL_RENDER_PREFS']!)
+                      as Map<String, dynamic>)
+            .entries)
       e.key: e.value as Object,
   };
   // SL_RENDER_TAP may list several steps: 'text|tip:tooltip|text'
@@ -108,6 +111,8 @@ void main() {
   // SL_RENDER_ADJUST='{"maghrib":5}' seeds the profile's ± minutes
   final seededAdjust = Platform.environment['SL_RENDER_ADJUST'];
   final suffix = Platform.environment['SL_RENDER_SUFFIX'] ?? '';
+  // SL_RENDER_GPS=1: the phone has location (else it has none)
+  final gps = Platform.environment['SL_RENDER_GPS'] == '1';
 
   setUp(() {
     SharedPreferences.setMockInitialValues(seededPrefs);
@@ -116,7 +121,8 @@ void main() {
   for (final path in paths) {
     for (final theme in themes) {
       for (final (width, scale) in _viewports) {
-        final name = '${_slug(path)}${suffix}_${theme}_${width.toInt()}w_${scale}x';
+        final name =
+            '${_slug(path)}${suffix}_${theme}_${width.toInt()}w_${scale}x';
         testWidgets(
           name,
           (tester) async {
@@ -148,6 +154,9 @@ void main() {
                 prayerProvider.overrideWith(GoldenPinnedPrayer.new),
                 headerNowProvider.overrideWithValue(kGoldenNow),
                 apiProvider.overrideWithValue(GoldenApi()),
+                locationServiceProvider.overrideWithValue(
+                  FakeLocation(granted: gps),
+                ),
               ],
             );
 

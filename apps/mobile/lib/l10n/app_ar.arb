@@ -1003,5 +1003,17 @@
   "adjust_save": "حفظ",
   "adjust_minus_a11y": "%w دقيقة أبكر",
   "adjust_plus_a11y": "%w دقيقة أخّر",
-  "adjust_on_home": "مع تعديل مسجدك"
+  "adjust_on_home": "مع تعديل مسجدك",
+  "mosques_locating": "جارٍ تحديد موقعك…",
+  "mosques_primer_title": "اعرض المساجد القريبة منك",
+  "mosques_primer_body": "المسافة ودقائق المشي والاتجاه تُقاس من موقعك. لا يُحفظ موقعك في أي مكان.",
+  "mosques_primer_btn": "استخدم موقعي",
+  "mosques_primer_settings": "اسمح من الإعدادات",
+  "mosques_primer_settings_hint": "إذن الموقع متوقف — فعّله من الإعدادات ثم عد.",
+  "mosques_primer_gps_off": "شغّل الموقع",
+  "mosques_primer_gps_off_hint": "موقع الهاتف متوقف — شغّله ثم عد.",
+  "mosques_city_section": "حول وسط %c",
+  "mosques_city_section_hint": "قد لا تكون قريبة منك، لذلك لا تظهر المسافات.",
+  "mosques_relocate": "حدّد موقعي مجددًا",
+  "mosques_from_location_rough": "من موقعك (تقريبي، ~%m م)"
 }
