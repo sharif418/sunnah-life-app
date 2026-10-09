@@ -8,7 +8,7 @@ export type Role = "user" | "daee" | "usrah_head" | "invigilator" | "full_admin"
 export type Level = "none" | "muhibbus_sunnah" | "farze_ain_1" | "farze_ain_2";
 export type UserCategory = "general" | "hafez" | "alim";
 export type Lang = "bn" | "en" | "ar";
-export type CalcMethodKey = "karachi" | "mwl" | "isna" | "egypt" | "makkah" | "dubai";
+export type CalcMethodKey = "ifb" | "karachi" | "mwl" | "isna" | "egypt" | "makkah" | "dubai";
 export type Madhhab = "hanafi" | "shafii";
 
 export const ROLE_LABELS_BN: Record<Role, string> = {

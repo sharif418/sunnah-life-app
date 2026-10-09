@@ -2191,7 +2191,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mosque_directions_btn => 'Directions';
 
   @override
-  String get mosque_search_more => 'More mosques nearby (Google Maps)';
+  String get mosque_search_more => 'Not listed? Search Google Maps';
 
   @override
   String get mosque_north => 'N';
@@ -2998,4 +2998,68 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get quick_qibla_desc => 'Find the prayer direction';
+
+  @override
+  String get method_ifb => 'Islamic Foundation Bangladesh';
+
+  @override
+  String get mosques_my => 'My mosques';
+
+  @override
+  String get mosques_my_empty =>
+      'Tap the star beside the mosques you go to — they stay here, with distance and directions.';
+
+  @override
+  String get mosques_nearby => 'Mosques nearby';
+
+  @override
+  String get mosques_nearby_count => '%n within 5 km';
+
+  @override
+  String get mosques_unnamed => 'Mosque (name unknown)';
+
+  @override
+  String get mosques_verified => 'Verified';
+
+  @override
+  String get mosques_show_more => 'Show more (%n)';
+
+  @override
+  String get mosques_offline => 'Offline — showing the last list';
+
+  @override
+  String get mosques_offline_curated =>
+      'Offline — showing the Foundation\'s list';
+
+  @override
+  String get mosques_none => 'No mosque on the map within 5 km';
+
+  @override
+  String get mosques_save => 'Add to my mosques';
+
+  @override
+  String get mosques_unsave => 'Remove from my mosques';
+
+  @override
+  String get mosques_saved_snack => 'Added to my mosques';
+
+  @override
+  String get mosques_removed_snack => 'Removed from my mosques';
+
+  @override
+  String get mosques_show_on_map => 'Show on map';
+
+  @override
+  String get mosques_attribution =>
+      'Mosque data: © OpenStreetMap contributors · Verified: As-Sunnah Foundation';
+
+  @override
+  String get mosques_city_hint =>
+      'Measured from the city centre — tap «Near me» for real distances';
+
+  @override
+  String get mosques_privacy => 'Your location is not stored anywhere';
+
+  @override
+  String get mosques_star_a11y => 'Add to or remove from my mosques';
 }

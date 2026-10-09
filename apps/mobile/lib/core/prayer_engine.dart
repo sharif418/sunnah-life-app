@@ -107,6 +107,9 @@ class PrayerEngine {
     Madhhab madhhab,
   ) {
     final p = switch (method) {
+      // Islamic Foundation Bangladesh = the Karachi angles; its start times
+      // are rounded up to the minute in compute() (see the web/API engine)
+      CalcMethod.ifb => adhan.CalculationMethodParameters.karachi(),
       CalcMethod.karachi => adhan.CalculationMethodParameters.karachi(),
       CalcMethod.mwl => adhan.CalculationMethodParameters.muslimWorldLeague(),
       CalcMethod.isna => adhan.CalculationMethodParameters.northAmerica(),
@@ -148,6 +151,9 @@ class PrayerEngine {
       date: date,
       coordinates: coordinates,
       calculationParameters: params,
+      // IFB rounds UP below — it needs the seconds (the library otherwise
+      // rounds to the NEAREST minute, which would undo the precaution)
+      precision: method == CalcMethod.ifb,
     );
 
     final fajr = _minutesUtcAsLocal(times.fajr, tz);
@@ -168,16 +174,22 @@ class PrayerEngine {
     final tahajjudCont = sunset + (2 * nightLen) / 3;
     final tahajjud = tahajjudCont >= 1440 ? tahajjudCont - 1440 : tahajjudCont;
 
+    // Islamic Foundation Bangladesh: every start time rounded UP to the
+    // whole minute (precaution) — matches IFB's published Dhaka timetable
+    // to the minute or within one (same rule as src/lib/prayer-times.ts)
+    double start(double m) =>
+        method == CalcMethod.ifb ? (m - 1e-9).ceilToDouble() : m;
+
     return PrayerTimesBundle(
-      fajr: fajr,
+      fajr: start(fajr),
       sunrise: sunrise,
       ishraq: ishraq,
       duha: duha,
-      dhuhr: dhuhr,
-      asr: asr,
-      maghrib: maghrib,
+      dhuhr: start(dhuhr),
+      asr: start(asr),
+      maghrib: start(maghrib),
       sunset: sunset,
-      isha: isha,
+      isha: start(isha),
       tahajjud: tahajjud,
     );
   }
