@@ -1481,7 +1481,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get reminder_upcoming => 'قادم';
 
   @override
-  String get contact_title => 'تواصل معنا';
+  String get contact_title => 'المساعدة والتواصل';
 
   @override
   String get contact_call => 'اتصال';
@@ -3136,4 +3136,25 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mosques_maps_search => 'ابحث عن المساجد القريبة في خرائط جوجل';
+
+  @override
+  String get contact_sub => 'سؤال أو مشكلة في التطبيق — نحن هنا.';
+
+  @override
+  String get contact_support_sub => 'اكتب لنا — يصلك الرد في التطبيق';
+
+  @override
+  String get contact_masala_sub => 'سؤال شرعي للمفتي';
+
+  @override
+  String get contact_orgs => 'مؤسساتنا';
+
+  @override
+  String get contact_email_a11y => 'راسل %o';
+
+  @override
+  String get contact_call_a11y => 'اتصل بـ %o';
+
+  @override
+  String get contact_site_a11y => 'افتح موقع %o';
 }

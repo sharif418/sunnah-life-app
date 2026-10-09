@@ -30,6 +30,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:sunnah_life/app.dart';
+import 'package:sunnah_life/api/api_client.dart';
 import 'package:sunnah_life/core/location_service.dart';
 import 'package:sunnah_life/db/database.dart';
 import 'package:sunnah_life/state/prayer_state.dart';
@@ -76,7 +77,9 @@ final List<(double width, double textScale)> _viewports = () {
 }();
 
 /// Logical height of every capture — tall enough for most scroll content.
-const double _height = 2000;
+// SL_RENDER_HEIGHT=800 renders a real phone's height (sheets, FABs)
+final double _height =
+    double.tryParse(Platform.environment['SL_RENDER_HEIGHT'] ?? '') ?? 2000;
 
 String _slug(String path) =>
     path == '/' ? 'home' : path.substring(1).replaceAll('/', '_');
@@ -113,6 +116,8 @@ void main() {
   final suffix = Platform.environment['SL_RENDER_SUFFIX'] ?? '';
   // SL_RENDER_GPS=1: the phone has location (else it has none)
   final gps = Platform.environment['SL_RENDER_GPS'] == '1';
+  // SL_RENDER_CONTACTS=1: the server's real contacts (mounts the headset FAB)
+  final contacts = Platform.environment['SL_RENDER_CONTACTS'] == '1';
 
   setUp(() {
     SharedPreferences.setMockInitialValues(seededPrefs);
@@ -153,7 +158,9 @@ void main() {
                 authProvider.overrideWith(GoldenSignedInDaee.new),
                 prayerProvider.overrideWith(GoldenPinnedPrayer.new),
                 headerNowProvider.overrideWithValue(kGoldenNow),
-                apiProvider.overrideWithValue(GoldenApi()),
+                apiProvider.overrideWithValue(
+                  contacts ? _ContactsApi() : GoldenApi(),
+                ),
                 locationServiceProvider.overrideWithValue(
                   FakeLocation(granted: gps),
                 ),
@@ -211,6 +218,8 @@ void main() {
               if (step.isEmpty) continue;
               final target = step.startsWith('tip:')
                   ? find.byTooltip(step.substring(4))
+                  : step.startsWith('sem:')
+                  ? find.bySemanticsLabel(step.substring(4))
                   : find.text(step);
               await tester.ensureVisible(target.first);
               await tester.pumpAndSettle();
@@ -254,4 +263,15 @@ void main() {
       }
     }
   }
+}
+
+/// The app config as the server sends it (packages/content/app-config.json).
+class _ContactsApi extends GoldenApi {
+  @override
+  Future<AppConfig> config() async => AppConfig.fromJson(
+    jsonDecode(
+          File('../../packages/content/app-config.json').readAsStringSync(),
+        )
+        as Map<String, dynamic>,
+  );
 }

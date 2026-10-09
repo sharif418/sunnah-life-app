@@ -479,7 +479,7 @@
   "reminder_due": "Due",
   "reminder_overdue": "Overdue",
   "reminder_upcoming": "Upcoming",
-  "contact_title": "Contact us",
+  "contact_title": "Help & contact",
   "contact_call": "Call",
   "contact_website": "Website",
   "contact_call_failed": "Could not place the call",
@@ -1019,5 +1019,12 @@
   "mosques_nearest": "Nearest",
   "mosques_more_nearby": "More mosques nearby",
   "mosques_star_tip": "Tap the star on the mosque you go to — it stays at the top.",
-  "mosques_maps_search": "Find mosques near you in Google Maps"
+  "mosques_maps_search": "Find mosques near you in Google Maps",
+  "contact_sub": "A question or a problem with the app — we are here.",
+  "contact_support_sub": "Write to us — the answer comes in the app",
+  "contact_masala_sub": "A religious question for the mufti",
+  "contact_orgs": "Our institutions",
+  "contact_email_a11y": "Email %o",
+  "contact_call_a11y": "Call %o",
+  "contact_site_a11y": "Open the %o website"
 }

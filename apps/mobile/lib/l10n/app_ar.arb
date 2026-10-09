@@ -479,7 +479,7 @@
   "reminder_due": "الآن",
   "reminder_overdue": "متأخر",
   "reminder_upcoming": "قادم",
-  "contact_title": "تواصل معنا",
+  "contact_title": "المساعدة والتواصل",
   "contact_call": "اتصال",
   "contact_website": "الموقع الإلكتروني",
   "contact_call_failed": "تعذّر إجراء الاتصال",
@@ -1019,5 +1019,12 @@
   "mosques_nearest": "الأقرب",
   "mosques_more_nearby": "مساجد أخرى قريبة",
   "mosques_star_tip": "اضغط النجمة على المسجد الذي ترتاده — يبقى في الأعلى.",
-  "mosques_maps_search": "ابحث عن المساجد القريبة في خرائط جوجل"
+  "mosques_maps_search": "ابحث عن المساجد القريبة في خرائط جوجل",
+  "contact_sub": "سؤال أو مشكلة في التطبيق — نحن هنا.",
+  "contact_support_sub": "اكتب لنا — يصلك الرد في التطبيق",
+  "contact_masala_sub": "سؤال شرعي للمفتي",
+  "contact_orgs": "مؤسساتنا",
+  "contact_email_a11y": "راسل %o",
+  "contact_call_a11y": "اتصل بـ %o",
+  "contact_site_a11y": "افتح موقع %o"
 }

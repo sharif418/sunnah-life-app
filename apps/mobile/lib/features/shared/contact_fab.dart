@@ -1,5 +1,10 @@
 /// Contact panel (C-W4a) — the floating headset button + its bottom sheet.
 ///
+/// 2026-10-10: the sheet opened on five near-identical institution cards
+/// with only a website chip — nothing a headset promises. It now leads with
+/// help for the app (live support, FAQ, masala), then the institutions as
+/// one compact list (row → website; mail/call buttons where given).
+///
 /// The five institutions come from GET /api/config contacts (admin-editable,
 /// `AppConfig.contacts`) — parsed since B1 but previously unused on mobile.
 /// Each row: org name + Bengali description + a phone action (tel: via
@@ -14,7 +19,10 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../../design/phosphor_icons.dart';
+
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../api/api_client.dart';
@@ -37,7 +45,9 @@ class ContactFab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final contacts = ref.watch(configProvider).maybeWhen(
+    final contacts = ref
+        .watch(configProvider)
+        .maybeWhen(
           data: (c) => c.contacts,
           orElse: () => const <ConfigContact>[],
         );
@@ -73,18 +83,21 @@ Future<void> showContactSheet(BuildContext context) {
     context: context,
     useSafeArea: true,
     showDragHandle: true,
+    isScrollControlled: true,
     builder: (context) => const _ContactSheet(),
   );
 }
 
+/// "সাহায্য ও যোগাযোগ": what a headset promises first — help with the app
+/// (live support, FAQ, a question for the mufti) — then the institutions
+/// as one compact list (tap a row for its website; mail/call where given).
 class _ContactSheet extends ConsumerWidget {
   const _ContactSheet();
 
-  /// tel: launch — the in-app browser view cannot dial; phone links always
-  /// go to the external dialer (and never throw).
-  Future<bool> _call(BuildContext context, String phone) async {
-    final uri = Uri.tryParse('tel:${phone.trim()}');
-    if (uri == null) return false;
+  /// tel:/mailto: go to the phone's own app (and never throw).
+  static Future<bool> _launch(String scheme, String to) async {
+    final uri = Uri.tryParse('$scheme:${to.trim()}');
+    if (uri == null || to.trim().isEmpty) return false;
     try {
       return await launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
@@ -95,142 +108,205 @@ class _ContactSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final contacts = ref.watch(configProvider).maybeWhen(
+    final contacts = ref
+        .watch(configProvider)
+        .maybeWhen(
           data: (c) => c.contacts,
           orElse: () => const <ConfigContact>[],
         );
 
-    return SafeArea(
-      top: false,
-      child: Padding(
+    // take the router before the sheet closes — its context goes with it
+    void go(String path) {
+      final router = GoRouter.of(context);
+      Navigator.pop(context);
+      router.push(path);
+    }
+
+    void failed(String key) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(context.t(key))));
+    }
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      builder: (context, scroll) => ListView(
+        controller: scroll,
         padding: const EdgeInsets.fromLTRB(
           SLSpacing.s16,
           0,
           SLSpacing.s16,
-          SLSpacing.s16,
+          SLSpacing.s24,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.t('contact_title'),
-              style: theme.textTheme.titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
+        children: [
+          Text(
+            context.t('contact_title'),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: SLSpacing.s4),
-            Flexible(
-              child: contacts.isEmpty
-                  ? EmptyState(
-                      message: context.t('notifications_empty'),
-                      icon: PhosphorIconsRegular.headset,
-                    )
-                  : SingleChildScrollView(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          for (final c in contacts)
-                            _ContactRow(
-                              contact: c,
-                              onCall: () async {
-                                final opened = await _call(
-                                  context,
-                                  c.phone ?? '',
-                                );
-                                if (!opened && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        context.t('contact_call_failed'),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                              onWebsite: () async {
-                                final url = c.website ?? '';
-                                final opened = await openInAppBrowser(url);
-                                if (!opened && context.mounted) {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        context.t('donation_open_failed'),
-                                      ),
-                                    ),
-                                  );
-                                }
-                              },
-                            ),
-                        ],
+          ),
+          const SizedBox(height: SLSpacing.s4),
+          Text(
+            context.t('contact_sub'),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: SLSpacing.s16),
+          MenuGroupCard(
+            rows: [
+              MenuRow(
+                key: const ValueKey('contact_support'),
+                icon: PhosphorIconsRegular.headset,
+                title: context.t('more_support'),
+                subtitle: context.t('contact_support_sub'),
+                onTap: () => go('/more/support'),
+              ),
+              MenuRow(
+                icon: PhosphorIconsRegular.question,
+                title: context.t('more_faq'),
+                subtitle: context.t('about_faq_sub'),
+                onTap: () => go('/more/faq'),
+              ),
+              MenuRow(
+                icon: PhosphorIconsRegular.chatCircle,
+                title: context.t('more_masala'),
+                subtitle: context.t('contact_masala_sub'),
+                onTap: () => go('/more/masala'),
+              ),
+            ],
+          ),
+          if (contacts.isNotEmpty) ...[
+            const SizedBox(height: SLSpacing.s8),
+            SectionHeader(
+              context.t('contact_orgs'),
+              icon: PhosphorIconsRegular.buildings,
+            ),
+            AppCard(
+              padding: EdgeInsets.zero,
+              child: Column(
+                children: [
+                  for (final (i, c) in contacts.indexed) ...[
+                    if (i > 0)
+                      Divider(
+                        height: 1,
+                        indent: SLSpacing.s16,
+                        endIndent: SLSpacing.s16,
+                        color: theme.colorScheme.outlineVariant,
                       ),
+                    _OrgRow(
+                      contact: c,
+                      onWebsite: () async {
+                        if (!await openInAppBrowser(c.website ?? '')) {
+                          failed('donation_open_failed');
+                        }
+                      },
+                      onEmail: () async {
+                        if (!await _launch('mailto', c.email ?? '')) {
+                          failed('donation_open_failed');
+                        }
+                      },
+                      onCall: () async {
+                        if (!await _launch('tel', c.phone ?? '')) {
+                          failed('contact_call_failed');
+                        }
+                      },
                     ),
+                  ],
+                ],
+              ),
             ),
           ],
-        ),
+        ],
       ),
     );
   }
 }
 
-class _ContactRow extends StatelessWidget {
-  const _ContactRow({
+/// One institution: name and what it does; the row opens its website, the
+/// small buttons mail or call it where the Foundation gave those.
+class _OrgRow extends StatelessWidget {
+  const _OrgRow({
     required this.contact,
-    required this.onCall,
     required this.onWebsite,
+    required this.onEmail,
+    required this.onCall,
   });
 
   final ConfigContact contact;
-  final Future<void> Function() onCall;
   final Future<void> Function() onWebsite;
+  final Future<void> Function() onEmail;
+  final Future<void> Function() onCall;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final org = contact.org;
     final hasPhone = (contact.phone ?? '').trim().isNotEmpty;
+    final hasMail = (contact.email ?? '').trim().isNotEmpty;
     final hasSite = isLaunchableHttpUrl(contact.website ?? '');
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            contact.org,
-            style: theme.textTheme.bodyLarge
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          if (contact.descBn.isNotEmpty)
-            Text(
-              contact.descBn,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
+    String a11y(String key) => context.t(key).replaceAll('%o', org);
+    return InkWell(
+      onTap: hasSite ? onWebsite : null,
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(
+          SLSpacing.s16,
+          SLSpacing.s12,
+          SLSpacing.s4,
+          SLSpacing.s12,
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    org,
+                    style: theme.textTheme.bodyLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  if (contact.descBn.isNotEmpty)
+                    Text(
+                      contact.descBn,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                ],
               ),
             ),
-          const SizedBox(height: SLSpacing.s8),
-          Row(
-            children: [
-              if (hasPhone)
-                ActionChip(
-                  avatar: Icon(
-                    PhosphorIconsFill.phone,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  label: Text(context.t('contact_call')),
-                  onPressed: onCall,
+            if (hasPhone)
+              IconButton(
+                tooltip: a11y('contact_call_a11y'),
+                onPressed: onCall,
+                icon: Icon(PhosphorIconsRegular.phone, color: cs.primary),
+              ),
+            if (hasMail)
+              IconButton(
+                tooltip: a11y('contact_email_a11y'),
+                onPressed: onEmail,
+                icon: Icon(
+                  PhosphorIconsRegular.envelopeSimple,
+                  color: cs.primary,
                 ),
-              if (hasPhone && hasSite) const SizedBox(width: SLSpacing.s8),
-              if (hasSite)
-                ActionChip(
-                  avatar: Icon(
-                    PhosphorIconsRegular.globe,
-                    size: 16,
-                    color: theme.colorScheme.primary,
-                  ),
-                  label: Text(context.t('contact_website')),
-                  onPressed: onWebsite,
+              ),
+            if (hasSite)
+              IconButton(
+                tooltip: a11y('contact_site_a11y'),
+                onPressed: onWebsite,
+                icon: Icon(
+                  PhosphorIconsRegular.arrowSquareOut,
+                  color: cs.onSurfaceVariant,
                 ),
-            ],
-          ),
-        ],
+              ),
+          ],
+        ),
       ),
     );
   }
