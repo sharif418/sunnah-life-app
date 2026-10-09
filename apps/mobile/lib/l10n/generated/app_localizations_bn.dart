@@ -2195,7 +2195,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get mosque_directions_btn => 'পথ দেখুন';
 
   @override
-  String get mosque_search_more => 'আশেপাশের আরও মসজিদ (Google Maps)';
+  String get mosque_search_more => 'তালিকায় নেই? গুগল ম্যাপে খুঁজুন';
 
   @override
   String get mosque_north => 'উ';
@@ -2998,4 +2998,71 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quiz_practice_go => 'অনুশীলনের কুইজ দিন';
+
+  @override
+  String get quick_qibla_desc => 'নামাজের দিক খুঁজুন';
+
+  @override
+  String get method_ifb => 'ইসলামিক ফাউন্ডেশন বাংলাদেশ';
+
+  @override
+  String get mosques_my => 'আমার মসজিদ';
+
+  @override
+  String get mosques_my_empty =>
+      'যে মসজিদে নিয়মিত যান, তার পাশের তারকা চিহ্নে চাপুন — এখানে থাকবে, দূরত্ব আর পথসহ।';
+
+  @override
+  String get mosques_nearby => 'কাছের মসজিদ';
+
+  @override
+  String get mosques_nearby_count => '৫ কিমির মধ্যে %nটি';
+
+  @override
+  String get mosques_unnamed => 'মসজিদ (নাম জানা নেই)';
+
+  @override
+  String get mosques_verified => 'যাচাইকৃত';
+
+  @override
+  String get mosques_show_more => 'আরও দেখুন (%n)';
+
+  @override
+  String get mosques_offline => 'ইন্টারনেট নেই — আগের তালিকা দেখানো হচ্ছে';
+
+  @override
+  String get mosques_offline_curated =>
+      'ইন্টারনেট নেই — ফাউন্ডেশনের তালিকা থেকে দেখানো হচ্ছে';
+
+  @override
+  String get mosques_none => '৫ কিমির মধ্যে ম্যাপে কোনো মসজিদ পাওয়া যায়নি';
+
+  @override
+  String get mosques_save => 'আমার মসজিদে রাখুন';
+
+  @override
+  String get mosques_unsave => 'আমার মসজিদ থেকে সরান';
+
+  @override
+  String get mosques_saved_snack => 'আমার মসজিদে রাখা হয়েছে';
+
+  @override
+  String get mosques_removed_snack => 'আমার মসজিদ থেকে সরানো হয়েছে';
+
+  @override
+  String get mosques_show_on_map => 'ম্যাপে দেখুন';
+
+  @override
+  String get mosques_attribution =>
+      'মসজিদের তথ্য: © OpenStreetMap অবদানকারী · যাচাইকৃত: আস-সুন্নাহ ফাউন্ডেশন';
+
+  @override
+  String get mosques_city_hint =>
+      'শহরের কেন্দ্র থেকে মাপা — সঠিক দূরত্বের জন্য «আমার কাছাকাছি» চাপুন';
+
+  @override
+  String get mosques_privacy => 'আপনার অবস্থান কোথাও জমা রাখা হয় না';
+
+  @override
+  String get mosques_star_a11y => 'আমার মসজিদে রাখুন বা সরান';
 }

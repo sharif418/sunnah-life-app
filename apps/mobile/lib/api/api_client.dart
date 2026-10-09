@@ -9,6 +9,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import '../core/honorific.dart';
+import '../models/content_models.dart' show MosqueInfo;
 import '../models/domain.dart';
 
 class ApiException implements Exception {
@@ -986,6 +987,24 @@ class ApiClient {
     },
   );
 
+  /// GET /api/mosques/near — mosques within 5 km (OpenStreetMap + the
+  /// Foundation's verified list), nearest first. The point is rounded to
+  /// ~100 m before it leaves the phone; the server stores nothing.
+  Future<NearbyMosques> mosquesNear(double lat, double lng) async {
+    final j = await _req(
+      'GET',
+      '/api/mosques/near',
+      query: {'lat': lat.toStringAsFixed(3), 'lng': lng.toStringAsFixed(3)},
+    );
+    return NearbyMosques(
+      mosques: ((j['mosques'] as List?) ?? const [])
+          .whereType<Map>()
+          .map((e) => MosqueInfo.fromApi(e.cast<String, dynamic>()))
+          .toList(),
+      attribution: j['attribution'] as String? ?? '',
+    );
+  }
+
   /// GET /api/content/:pack — the pack document the admin CMS edits. The
   /// route answers `{pack, data}`; reading the top level (as quizPack did)
   /// found nothing, so the app silently showed an EMPTY quiz list.
@@ -1103,4 +1122,11 @@ class ApiClient {
     );
     return SearchResults.fromJson(j);
   }
+}
+
+/// GET /api/mosques/near — what the mosque screen lists.
+class NearbyMosques {
+  const NearbyMosques({required this.mosques, required this.attribution});
+  final List<MosqueInfo> mosques;
+  final String attribution;
 }

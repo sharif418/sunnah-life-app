@@ -15,7 +15,7 @@ enum UserCategory { general, hafez, alim }
 
 enum Madhhab { hanafi, shafii }
 
-enum CalcMethod { karachi, mwl, isna, egypt, makkah, dubai }
+enum CalcMethod { ifb, karachi, mwl, isna, egypt, makkah, dubai }
 
 extension GenderJson on Gender {
   String get json => switch (this) {
@@ -115,6 +115,7 @@ extension MadhhabJson on Madhhab {
 
 extension CalcMethodJson on CalcMethod {
   String get json => switch (this) {
+    CalcMethod.ifb => 'ifb',
     CalcMethod.karachi => 'karachi',
     CalcMethod.mwl => 'mwl',
     CalcMethod.isna => 'isna',
@@ -123,6 +124,7 @@ extension CalcMethodJson on CalcMethod {
     CalcMethod.dubai => 'dubai',
   };
   static CalcMethod fromJson(String v) => switch (v) {
+    'ifb' => CalcMethod.ifb,
     'mwl' => CalcMethod.mwl,
     'isna' => CalcMethod.isna,
     'egypt' => CalcMethod.egypt,
@@ -133,6 +135,7 @@ extension CalcMethodJson on CalcMethod {
 
   /// ARB key for the localized label (was hard-coded Bengali).
   String get labelKey => switch (this) {
+    CalcMethod.ifb => 'method_ifb',
     CalcMethod.karachi => 'method_karachi',
     CalcMethod.mwl => 'method_mwl',
     CalcMethod.isna => 'method_isna',

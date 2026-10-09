@@ -6,6 +6,7 @@ import 'package:sunnah_life/api/api_client.dart';
 import 'package:sunnah_life/api/fallback_catalog.dart' show fallbackDefinitions;
 import 'package:sunnah_life/core/date_keys.dart';
 import 'package:sunnah_life/core/prayer_engine.dart';
+import 'package:sunnah_life/models/content_models.dart' show MosqueInfo;
 import 'package:sunnah_life/models/domain.dart';
 import 'package:sunnah_life/state/prayer_state.dart';
 import 'package:sunnah_life/state/providers.dart';
@@ -211,4 +212,25 @@ class GoldenApi extends ApiClient {
 
   @override
   Future<List<Quiz>> quizPack() async => const [];
+
+  /// Real mosques near the demo user (Baridhara / Gulshan, from the
+  /// OpenStreetMap snapshot) — English and Bengali names, two unnamed, one
+  /// verified, as the server answers.
+  @override
+  Future<NearbyMosques> mosquesNear(double lat, double lng) async =>
+      const NearbyMosques(
+        attribution: '© OpenStreetMap contributors',
+        mosques: [
+          MosqueInfo(id: 'osm:n5147515959', nameBn: 'Kalachadpur Paschimpara Jame Masjid', addressBn: '', lat: 23.810082, lng: 90.414707),
+          MosqueInfo(id: 'osm:n6795162870', nameBn: 'ডি ও এইচ এস বারিধারা মসজিদ', nameEn: 'DOHS Baridhara Mosque', addressBn: '', lat: 23.813368, lng: 90.410321),
+          MosqueInfo(id: 'osm:w295652387', nameBn: 'Baridhara Ahle-Hadith Jame Masjid', addressBn: '', lat: 23.806397, lng: 90.416562),
+          MosqueInfo(id: 'osm:w586530563', nameBn: 'Masjid Al-Aqsa', addressBn: '', area: 'Dhaka', lat: 23.814775, lng: 90.416614),
+          MosqueInfo(id: 'osm:w984929007', nameBn: 'বিপিসি মসজিদ', nameEn: 'BPC Mosque', addressBn: '', area: 'Dhaka', lat: 23.817095, lng: 90.41603),
+          MosqueInfo(id: 'osm:n13954873520', nameBn: 'Baitul Atik Mosque', addressBn: '', lat: 23.809979, lng: 90.422169),
+          MosqueInfo(id: 'osm:n13954874495', nameBn: '', addressBn: '', lat: 23.809651, lng: 90.42384),
+          MosqueInfo(id: 'osm:w498513213', nameBn: 'গুলশান সমিতি মসজিদ', nameEn: 'Gulshan Society Mosque', addressBn: '', area: 'Dhaka', lat: 23.800778, lng: 90.407823),
+          MosqueInfo(id: 'msj-gulshan-azad', nameBn: 'গুলশান আজাদ মসজিদ', addressBn: 'গুলশান-২ সার্কেল, ঢাকা', area: 'গুলশান', lat: 23.7925, lng: 90.4158, verified: true),
+          MosqueInfo(id: 'osm:n13954893634', nameBn: '', addressBn: '', lat: 23.810328, lng: 90.424842),
+        ],
+      );
 }

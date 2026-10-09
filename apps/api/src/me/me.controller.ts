@@ -60,9 +60,9 @@ export class MePatchDto {
   @IsIn(["hanafi", "shafii"], { message: "মাযহাব ঠিক নয়" })
   madhhab?: string;
 
-  @ApiProperty({ required: false, enum: ["karachi", "mwl", "isna", "egypt", "makkah", "dubai"] })
+  @ApiProperty({ required: false, enum: ["ifb", "karachi", "mwl", "isna", "egypt", "makkah", "dubai"] })
   @IsOptional()
-  @IsIn(["karachi", "mwl", "isna", "egypt", "makkah", "dubai"], { message: "হিসাব পদ্ধতি ঠিক নয়" })
+  @IsIn(["ifb", "karachi", "mwl", "isna", "egypt", "makkah", "dubai"], { message: "হিসাব পদ্ধতি ঠিক নয়" })
   calcMethod?: string;
 
   @ApiProperty({ required: false })

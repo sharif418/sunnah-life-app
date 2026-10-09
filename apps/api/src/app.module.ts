@@ -32,6 +32,7 @@ import { UsrahModule } from "./usrah/usrah.module";
 import { ReviewsModule } from "./reviews/reviews.module";
 import { AssessmentsModule } from "./assessments/assessments.module";
 import { CmsModule } from "./cms/cms.module";
+import { MosquesModule } from "./mosques/mosques.module";
 import { AdminModule } from "./admin/admin.module";
 import { ReportsModule } from "./reports/reports.module";
 import { EngagementModule } from "./engagement/engagement.module";
@@ -79,6 +80,7 @@ import { TestRlsModule } from "./test-rls/test-rls.module";
     AssessmentsModule,
     AdminModule,
     CmsModule, // content workflow: drafts → review → publish (2026-10-09)
+    MosquesModule, // mosques near a point: OpenStreetMap + the verified list (2026-10-09)
     ReportsModule,
     EngagementModule,
     PushModule, // FCM push: token registration + PushService fan-out (B2)

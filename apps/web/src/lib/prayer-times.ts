@@ -20,8 +20,28 @@ const fixHour = (h: number) => ((h % 24) + 24) % 24;
 
 export const CALC_METHODS: Record<
   CalcMethodKey,
-  { labelBn: string; labelEn: string; fajr: number; isha: number; ishaMinutes?: number }
+  {
+    labelBn: string;
+    labelEn: string;
+    fajr: number;
+    isha: number;
+    ishaMinutes?: number;
+    /** start times rounded UP to the whole minute (precaution, ihtiyat) */
+    roundUp?: boolean;
+  }
 > = {
+  // Islamic Foundation Bangladesh: the Karachi angles (18°/18°), Hanafi Asr,
+  // Maghrib 3 min after sunset, and every start time rounded up to the
+  // whole minute. Checked against IFB's published Dhaka times on 12 Dec 2025
+  // and 28 Aug 2026: 6 of 9 times exact, the other 3 within one minute
+  // (plain Karachi, rounded down: 3 of 9).
+  ifb: {
+    labelBn: "ইসলামিক ফাউন্ডেশন বাংলাদেশ",
+    labelEn: "Islamic Foundation Bangladesh",
+    fajr: 18,
+    isha: 18,
+    roundUp: true,
+  },
   karachi: { labelBn: "করাচি (বাংলাদেশ ডিফল্ট)", labelEn: "Karachi / Univ. of Islamic Sciences", fajr: 18, isha: 18 },
   mwl: { labelBn: "মুসলিম ওয়ার্ল্ড লীগ", labelEn: "Muslim World League", fajr: 18, isha: 17 },
   isna: { labelBn: "ইসনা (উত্তর আমেরিকা)", labelEn: "ISNA", fajr: 15, isha: 15 },
@@ -124,7 +144,17 @@ export function computePrayerTimes(
   if (!isFinite(isha)) isha = midNight;
   if (isha > midNight) isha = midNight;
 
-  const maghrib = sunset + MAGHRIB_SAFETY_MIN;
+  let maghrib = sunset + MAGHRIB_SAFETY_MIN;
+  let dhuhrStart = dhuhr;
+  let asrStart = asr;
+  if (method.roundUp) {
+    const up = (m: number) => Math.ceil(m - 1e-9);
+    fajr = up(fajr);
+    dhuhrStart = up(dhuhr);
+    asrStart = up(asr);
+    maghrib = up(maghrib);
+    isha = up(isha);
+  }
 
   // Derived blessed times
   const ishraq = sunrise + ISHRAQ_AFTER_SUNRISE_MIN;
@@ -138,8 +168,8 @@ export function computePrayerTimes(
     sunrise,
     ishraq,
     duha,
-    dhuhr,
-    asr,
+    dhuhr: dhuhrStart,
+    asr: asrStart,
     maghrib,
     sunset,
     isha,
