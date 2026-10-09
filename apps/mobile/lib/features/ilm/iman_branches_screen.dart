@@ -9,8 +9,19 @@ import '../../models/content_models.dart';
 import '../shared/widgets.dart';
 import '../../design/phosphor_icons.dart';
 
-class ImanBranchesScreen extends StatelessWidget {
+class ImanBranchesScreen extends StatefulWidget {
   const ImanBranchesScreen({super.key});
+
+  @override
+  State<ImanBranchesScreen> createState() => _ImanBranchesScreenState();
+}
+
+class _ImanBranchesScreenState extends State<ImanBranchesScreen> {
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<List<ImanBranch>> _future = ContentPack.imanBranches();
 
   static const _groupLabels = <String, (String, IconData)>{
     'heart': ('iman_branch_heart', PhosphorIconsRegular.heart),
@@ -28,7 +39,7 @@ class ImanBranchesScreen extends StatelessWidget {
         title: Text(context.t('ilm_iman_branches')),
       ),
       body: FutureBuilder<List<ImanBranch>>(
-        future: ContentPack.imanBranches(),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 64, count: 8);

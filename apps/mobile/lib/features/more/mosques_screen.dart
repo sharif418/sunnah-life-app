@@ -56,6 +56,11 @@ class MosquesScreen extends ConsumerStatefulWidget {
 }
 
 class _MosquesScreenState extends ConsumerState<MosquesScreen> {
+  // Loaded ONCE: a FutureBuilder handed a fresh ContentPack future in
+  // build() fell back to the skeleton on every setState — each tap or
+  // keystroke rebuilt the list (scroll jumped to the top, the search
+  // field lost its text and the keyboard).
+  late final Future<List<MosqueInfo>> _future = ContentPack.mosques();
   CitySnap? _fix;
   bool _locating = false;
   bool _mapView = false;
@@ -118,7 +123,7 @@ class _MosquesScreenState extends ConsumerState<MosquesScreen> {
         title: Text(context.t('more_mosque')),
       ),
       body: FutureBuilder<List<MosqueInfo>>(
-        future: ContentPack.mosques(),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Skeleton(height: 72, count: 5);

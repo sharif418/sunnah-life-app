@@ -99,10 +99,16 @@ Future<bool> showTilawatSheet(
               label: Text(context.t('save')),
               onPressed: () async {
                 if (pages > 0) {
+                  // ADD to what today already holds — a second session used
+                  // to overwrite the first (4 pages in the morning + 2 in
+                  // the evening read as 2)
+                  final today = dateKey(DateTime.now());
+                  final before = amal.entry(today, 'tilawat')?.value;
+                  final sofar = before is num ? before.toDouble() : 0.0;
                   await amal.write(
                     'tilawat',
-                    dateKey(DateTime.now()),
-                    pages,
+                    today,
+                    sofar + pages,
                     'auto:quran:tilawat',
                   );
                 }

@@ -221,6 +221,10 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
   AudioPlayer? _player;
   StreamSubscription<ProcessingState>? _processingSub;
   int? _playingAyah;
+
+  /// The current ayah is held mid-way (pause, not stop): its button
+  /// resumes from where it was instead of starting the ayah over.
+  bool _paused = false;
   int _totalAyahs = 0;
   ReciterOption _reciter = kQuranReciters.first;
 
@@ -401,10 +405,14 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
   Future<void> _playAyah(int ayah) async {
     try {
       _ensurePlayer();
-      if (_playingAyah != ayah && mounted) {
-        setState(() => _playingAyah = ayah);
+      if ((_playingAyah != ayah || _paused) && mounted) {
+        setState(() {
+          _playingAyah = ayah;
+          _paused = false;
+        });
       } else {
         _playingAyah = ayah;
+        _paused = false;
       }
       // LockCachingAudioSource caches each ayah on disk after the first
       // play — re-listening is instant and offline once cached.
@@ -436,9 +444,13 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
 
   Future<void> _stopAudio() async {
     if (mounted && _playingAyah != null) {
-      setState(() => _playingAyah = null);
+      setState(() {
+        _playingAyah = null;
+        _paused = false;
+      });
     } else {
       _playingAyah = null;
+      _paused = false;
     }
     try {
       await _player?.stop();
@@ -448,8 +460,17 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
   }
 
   void _toggleAudio(int ayah) {
-    if (_playingAyah == ayah) {
-      unawaited(_stopAudio());
+    final player = _player;
+    if (_playingAyah == ayah && player != null) {
+      // the pause icon pauses (it used to stop — the next tap restarted the
+      // ayah from its first word); a paused ayah resumes
+      if (_paused) {
+        setState(() => _paused = false);
+        unawaited(player.play());
+      } else {
+        setState(() => _paused = true);
+        unawaited(player.pause());
+      }
     } else {
       unawaited(_playAyah(ayah));
     }
@@ -580,7 +601,7 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                   ayah.numberInSurah,
                 ));
                 final playing = _playingAyah == ayah.numberInSurah;
-                return AnimatedContainer(
+                final tile = AnimatedContainer(
                   key: _ayahKeys.putIfAbsent(i, GlobalKey.new),
                   duration: SLMotion.base,
                   curve: SLMotion.standard,
@@ -638,7 +659,7 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                                 onPressed: () =>
                                     _toggleAudio(ayah.numberInSurah),
                                 icon: Icon(
-                                  playing
+                                  playing && !_paused
                                       ? PhosphorIconsRegular.pauseCircle
                                       : PhosphorIconsRegular.playCircle,
                                   color: playing
@@ -704,6 +725,28 @@ class _SurahReaderScreenState extends ConsumerState<_SurahReaderScreen> {
                       ),
                     ],
                   ),
+                );
+                if (i != 0 || !surah.bismillahPre) return tile;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Padding(
+                      key: const ValueKey('quran_basmala'),
+                      padding: const EdgeInsets.only(
+                        top: SLSpacing.s4,
+                        bottom: SLSpacing.s16,
+                      ),
+                      child: Text(
+                        'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ',
+                        textAlign: TextAlign.center,
+                        textDirection: TextDirection.rtl,
+                        style: SLType.quran(
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                    tile,
+                  ],
                 );
               },
             );

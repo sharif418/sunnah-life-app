@@ -2737,4 +2737,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ilm_group_know => 'Know';
+
+  @override
+  String get adhkar_hint => 'Tap to count · press and hold to take one back';
+
+  @override
+  String get adhkar_reset => 'Start over';
+
+  @override
+  String get adhkar_reset_title => 'Clear this set\'s counts?';
+
+  @override
+  String get adhkar_reset_body =>
+      'Today\'s counts start from zero. The diary tick stays.';
+
+  @override
+  String get adhkar_done_of => 'done';
+
+  @override
+  String get adhkar_minutes_fmt => 'about %n min';
+
+  @override
+  String get adhkar_ticked_today => 'Ticked in today\'s diary';
+
+  @override
+  String get adhkar_diary_ticked => 'Alhamdulillah — ticked in today\'s diary';
+
+  @override
+  String get dhikr_virtue => 'Virtue';
+
+  @override
+  String get adhkar_set_complete => 'Set complete — masha\'Allah';
+
+  @override
+  String get article_back_to_list => 'Back to articles';
+
+  @override
+  String get search_hit_label => 'Search result';
+
+  @override
+  String get live_quiz_no_usrah_hint =>
+      'Live quizzes are played within an usrah. You are not in one yet — ask to join. Meanwhile, play the practice quizzes in Ilm.';
+
+  @override
+  String get adhkar_tab_morning => 'Morning';
+
+  @override
+  String get adhkar_tab_evening => 'Evening';
+
+  @override
+  String get adhkar_tab_post_salat => 'After salah';
 }

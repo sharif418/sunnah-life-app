@@ -5379,6 +5379,102 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'জানুন'**
   String get ilm_group_know;
+
+  /// No description provided for @adhkar_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'চাপ দিয়ে গুনুন · ভুল হলে চেপে ধরে একটি কমান'**
+  String get adhkar_hint;
+
+  /// No description provided for @adhkar_reset.
+  ///
+  /// In bn, this message translates to:
+  /// **'আবার শুরু'**
+  String get adhkar_reset;
+
+  /// No description provided for @adhkar_reset_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই সেটের গণনা মুছবেন?'**
+  String get adhkar_reset_title;
+
+  /// No description provided for @adhkar_reset_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজকের গণনা শূন্য থেকে শুরু হবে। ডায়েরির টিক থাকবে।'**
+  String get adhkar_reset_body;
+
+  /// No description provided for @adhkar_done_of.
+  ///
+  /// In bn, this message translates to:
+  /// **'সম্পন্ন'**
+  String get adhkar_done_of;
+
+  /// No description provided for @adhkar_minutes_fmt.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রায় %n মিনিট'**
+  String get adhkar_minutes_fmt;
+
+  /// No description provided for @adhkar_ticked_today.
+  ///
+  /// In bn, this message translates to:
+  /// **'আজ ডায়েরিতে টিক দেওয়া হয়েছে'**
+  String get adhkar_ticked_today;
+
+  /// No description provided for @adhkar_diary_ticked.
+  ///
+  /// In bn, this message translates to:
+  /// **'আলহামদুলিল্লাহ — আজকের ডায়েরিতে টিক দেওয়া হলো'**
+  String get adhkar_diary_ticked;
+
+  /// No description provided for @dhikr_virtue.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফযীলত'**
+  String get dhikr_virtue;
+
+  /// No description provided for @adhkar_set_complete.
+  ///
+  /// In bn, this message translates to:
+  /// **'এই সেট সম্পূর্ণ — মাশাআল্লাহ'**
+  String get adhkar_set_complete;
+
+  /// No description provided for @article_back_to_list.
+  ///
+  /// In bn, this message translates to:
+  /// **'আর্টিকেল তালিকায় ফিরুন'**
+  String get article_back_to_list;
+
+  /// No description provided for @search_hit_label.
+  ///
+  /// In bn, this message translates to:
+  /// **'খোঁজা ফল'**
+  String get search_hit_label;
+
+  /// No description provided for @live_quiz_no_usrah_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'লাইভ কুইজ হয় উসরার সদস্যদের নিয়ে। আপনি এখনো কোনো উসরায় যুক্ত নন — যুক্ত হতে আবেদন করুন। ততক্ষণ ইলম ট্যাবের অনুশীলনের কুইজ খেলতে পারেন।'**
+  String get live_quiz_no_usrah_hint;
+
+  /// No description provided for @adhkar_tab_morning.
+  ///
+  /// In bn, this message translates to:
+  /// **'সকাল'**
+  String get adhkar_tab_morning;
+
+  /// No description provided for @adhkar_tab_evening.
+  ///
+  /// In bn, this message translates to:
+  /// **'সন্ধ্যা'**
+  String get adhkar_tab_evening;
+
+  /// No description provided for @adhkar_tab_post_salat.
+  ///
+  /// In bn, this message translates to:
+  /// **'নামাজের পর'**
+  String get adhkar_tab_post_salat;
 }
 
 class _AppLocalizationsDelegate
