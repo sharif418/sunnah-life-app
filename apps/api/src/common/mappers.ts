@@ -46,6 +46,7 @@ export function toDomainUser(u: UserRow): User {
     city: u.city ?? null,
     createdAt: u.createdAt.toISOString(),
     lastActiveAt: u.lastActiveAt.toISOString(),
+    contentRole: ((u as { contentRole?: string | null }).contentRole ?? null) as User["contentRole"],
   };
 }
 

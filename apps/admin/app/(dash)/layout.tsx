@@ -3,7 +3,7 @@
 import * as React from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "@/lib/session";
-import { routeAllowed } from "@/lib/routes";
+import { homeRoute, routeAllowed } from "@/lib/routes";
 import { AppShell } from "@/components/app-shell";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // W4h — URL-level role gate: a role opening a page outside its map is
   // redirected to their dashboard (not a 403 wall). The nav filters links;
   // this catches direct URLs / stale bookmarks. The API re-checks everything.
-  const allowed = routeAllowed(pathname, user?.role);
+  const allowed = routeAllowed(pathname, user);
   React.useEffect(() => {
-    if (status === "authenticated" && user && !routeAllowed(pathname, user.role)) {
-      router.replace("/");
+    if (status === "authenticated" && user && !routeAllowed(pathname, user)) {
+      router.replace(homeRoute(user));
     }
   }, [status, user, pathname, router]);
 
@@ -55,7 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <h2 className="text-lg font-bold">এই প্যানেলটি তত্ত্বাবধায়কদের জন্য</h2>
             <p className="text-sm leading-relaxed text-muted-foreground">
               স্বাগতম {user?.name}! আপনার ভূমিকা অনুযায়ী অ্যাডমিন প্যানেল ব্যবহারের অনুমতি নেই।
-              উসরা প্রধান, পরিদর্শক বা প্রধান অ্যাডমিন অ্যাকাউন্ট দিয়ে লগইন করুন।
+              উসরা প্রধান, পরিদর্শক, প্রধান অ্যাডমিন বা কনটেন্ট দলের অ্যাকাউন্ট দিয়ে লগইন করুন।
             </p>
             <Button variant="destructive" className="mt-2" onClick={() => router.push("/login")}>
               লগআউট করুন

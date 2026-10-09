@@ -292,6 +292,7 @@ class Quiz {
   final String? descBn;
   final String category;
   final int minutes;
+
   /// Live-quiz eligible (played in the usrah room over socket.io).
   final bool live;
   final List<QuizQuestion> questions;
@@ -474,7 +475,8 @@ const List<Map<String, dynamic>> kFallbackQuizzes = [
 class ContentPack {
   const ContentPack._();
 
-  static Future<String> Function(String path) _loadAsset = rootBundle.loadString;
+  static Future<String> Function(String path) _loadAsset =
+      rootBundle.loadString;
 
   /// Completed cache — decoded DATA per file, zone-free (the FaqRepository/
   /// QuranRepository lesson: memoizing the FUTURE instead breaks fake-zone
@@ -490,7 +492,9 @@ class ContentPack {
   /// loads cannot complete inside the fake-async zone — tests inject a
   /// File-based loader and prewarm the pack cache under runAsync.
   @visibleForTesting
-  static set assetLoaderForTesting(Future<String> Function(String path) loader) {
+  static set assetLoaderForTesting(
+    Future<String> Function(String path) loader,
+  ) {
     _loadAsset = loader;
     _cache.clear();
     _loading.clear();
@@ -502,13 +506,18 @@ class ContentPack {
     _loadAsset = rootBundle.loadString;
     _cache.clear();
     _loading.clear();
+    _revalidated.clear();
   }
 
-  /// The admin-editable packs, by file → API pack key. These load from the
-  /// server first (so a CMS edit reaches the app), then the last copy kept
-  /// on the phone (offline), then the bundled asset.
+  /// The admin-managed packs (everything but the Qur'an), by file → API
+  /// pack key. A scholar-approved edit reaches the app without a release.
   static const Map<String, String> _remotePacks = {
+    'adhkar.json': 'adhkar',
     'duas.json': 'duas',
+    'sunnahs.json': 'sunnahs',
+    'names99.json': 'names99',
+    'islamic-names.json': 'islamic-names',
+    'iman-branches.json': 'iman-branches',
     'articles.json': 'articles',
     'faq.json': 'faq',
     'mosques.json': 'mosques',
@@ -518,26 +527,17 @@ class ContentPack {
   /// Set at app start (GET /api/content/:pack). Null in tests → the bundle.
   static Future<Map<String, dynamic>?> Function(String packKey)? remote;
 
-  static Future<Map<String, dynamic>?> _remoteOrCached(String file) async {
-    final key = _remotePacks[file];
-    final fetch = remote;
-    if (key == null || fetch == null) return null;
-    final prefsKey = 'content_pack_cache_$file';
-    try {
-      final data = await fetch(key).timeout(const Duration(seconds: 6));
-      if (data != null && data.isNotEmpty) {
-        try {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString(prefsKey, jsonEncode(data));
-        } catch (_) {}
-        return data;
-      }
-    } catch (_) {
-      // offline / server error → the copy from last time
-    }
+  /// Packs already refreshed from the server this session.
+  static final Set<String> _revalidated = {};
+
+  static String _prefsKey(String file) => 'content_pack_cache_$file';
+
+  /// The copy kept on the phone from the last refresh (null: none yet).
+  static Future<Map<String, dynamic>?> _phoneCopy(String file) async {
+    if (!_remotePacks.containsKey(file)) return null;
     try {
       final prefs = await SharedPreferences.getInstance();
-      final raw = prefs.getString(prefsKey);
+      final raw = prefs.getString(_prefsKey(file));
       if (raw != null) {
         final d = jsonDecode(raw);
         if (d is Map<String, dynamic>) return d;
@@ -546,24 +546,48 @@ class ContentPack {
     return null;
   }
 
+  /// Stale-while-revalidate: a screen opens at once on the phone's copy (or
+  /// the bundle), never waiting on the network — the adhkar must open on a
+  /// weak connection at Fajr. Meanwhile the server's copy is fetched (once a
+  /// session) and kept, so the next open shows the newest approved content.
+  static void _revalidate(String file) {
+    final key = _remotePacks[file];
+    final fetch = remote;
+    if (key == null || fetch == null || !_revalidated.add(file)) return;
+    () async {
+      try {
+        final data = await fetch(key).timeout(const Duration(seconds: 20));
+        if (data == null || data.isEmpty) return;
+        _cache[file] = data;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_prefsKey(file), jsonEncode(data));
+      } catch (_) {
+        _revalidated.remove(file); // offline — try again on the next open
+      }
+    }();
+  }
+
   static Future<Map<String, dynamic>> _load(String file) {
     final cached = _cache[file];
-    if (cached != null) return Future.value(cached);
+    if (cached != null) {
+      _revalidate(file);
+      return Future.value(cached);
+    }
     return _loading[file] ??= () async {
       try {
-        final fresh = await _remoteOrCached(file);
-        if (fresh != null) {
-          _cache[file] = fresh;
-          _loading.remove(file);
-          return fresh;
+        var data = await _phoneCopy(file);
+        if (data == null) {
+          final raw = await _loadAsset('assets/content/$file');
+          final decoded = jsonDecode(raw);
+          data = decoded is Map<String, dynamic>
+              ? decoded
+              : <String, dynamic>{};
         }
-        final raw = await _loadAsset('assets/content/$file');
-        final decoded = jsonDecode(raw);
-        final data =
-            decoded is Map<String, dynamic> ? decoded : <String, dynamic>{};
-        _cache[file] = data;
+        // a refresh that landed while this was loading is newer — keep it
+        final result = _cache[file] ??= data;
         _loading.remove(file);
-        return data;
+        _revalidate(file);
+        return result;
       } catch (e) {
         debugPrint('$file load failed: $e');
         // A failed load must not poison future opens — drop the in-flight
@@ -573,6 +597,10 @@ class ContentPack {
       }
     }();
   }
+
+  /// A whole pack document, for a screen that reads its own shape (the
+  /// FAQ screen's grouped entries).
+  static Future<Map<String, dynamic>> document(String file) => _load(file);
 
   static List<T> _list<T>(
     Map<String, dynamic> j,

@@ -68,7 +68,12 @@ export interface User {
   city: string | null;
   createdAt: string;
   lastActiveAt: string;
+  /** Content workflow: may draft ("editor") or also approve ("reviewer")
+   *  the content packs in the admin CMS; null for everyone else. */
+  contentRole?: ContentRole | string | null;
 }
+
+export type ContentRole = "editor" | "reviewer";
 
 // ── Amal (Muhasaba diary) ───────────────────────────────────────────────────
 

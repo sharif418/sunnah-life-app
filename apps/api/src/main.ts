@@ -17,6 +17,7 @@ import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import helmet from "helmet";
 import { AppModule } from "./app.module";
+import { applyBodyLimits } from "./common/body-limits";
 import { StructuredLogger } from "./common/structured-logger";
 import { docsEnabled, setupSwagger } from "./common/swagger-setup";
 import { RedisSocketAdapter } from "./common/redis-socket.adapter";
@@ -37,6 +38,9 @@ async function bootstrap(): Promise<void> {
   // health/live + health/ready joined health here [C-W5-ops] — the liveness
   // URL must stay stable for orchestrators; readiness is its monitor twin.
   app.setGlobalPrefix("api", { exclude: ["health", "health/live", "health/ready", "metrics"] });
+
+  // a 2mb JSON limit for the content CMS only (whole packs) — see body-limits.ts
+  applyBodyLimits(app);
 
   // socket.io gateways (live usrah quiz) mount on the SAME HTTP server at
   // /socket.io — one backend, one auth, one deployment. The Redis adapter

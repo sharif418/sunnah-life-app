@@ -2937,4 +2937,37 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get sunnah_today_hint =>
       'আজ যে সুন্নাহগুলো পালন করলেন, টিক দিয়ে রাখুন';
+
+  @override
+  String get ilm_desc_courses => 'ধাপে ধাপে দ্বীন শিখুন — পাঠ ও অগ্রগতি';
+
+  @override
+  String get ilm_desc_quizzes => 'নিজের জ্ঞান যাচাই করুন, ভুল থেকে শিখুন';
+
+  @override
+  String get ilm_desc_live_quiz => 'উসরার সবার সাথে একসাথে কুইজ';
+
+  @override
+  String get ilm_desc_quran => 'আরবি, বাংলা অনুবাদ ও তিলাওয়াত';
+
+  @override
+  String get ilm_desc_adhkar => 'সকাল-সন্ধ্যা ও নামাজের পরের যিকির, গণনাসহ';
+
+  @override
+  String get ilm_desc_duas => 'প্রতিদিনের মাসনূন দোয়া, সূত্রসহ';
+
+  @override
+  String get ilm_desc_sunnahs => 'দৈনন্দিন ও ভুলে যাওয়া সুন্নাহ';
+
+  @override
+  String get ilm_desc_names99 => 'অর্থ ও ফযীলতসহ';
+
+  @override
+  String get ilm_desc_islamic_names => 'শিশুর অর্থবহ নাম — ছেলে ও মেয়ে';
+
+  @override
+  String get ilm_desc_iman_branches => '৭০ শাখা — আর নিজের ঈমান যাচাই';
+
+  @override
+  String get ilm_desc_articles => 'তারবিয়াহ, দাওয়াহ ও সুন্নাহ নিয়ে লেখা';
 }

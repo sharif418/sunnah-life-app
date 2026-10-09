@@ -2899,4 +2899,37 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sunnah_today_hint => 'علّم السنن التي عملت بها اليوم';
+
+  @override
+  String get ilm_desc_courses => 'تعلّم خطوة بخطوة';
+
+  @override
+  String get ilm_desc_quizzes => 'اختبر نفسك وتعلّم من أخطائك';
+
+  @override
+  String get ilm_desc_live_quiz => 'مسابقة مع أسرتك';
+
+  @override
+  String get ilm_desc_quran => 'العربية والترجمة والتلاوة';
+
+  @override
+  String get ilm_desc_adhkar => 'أذكار الصباح والمساء وبعد الصلاة';
+
+  @override
+  String get ilm_desc_duas => 'أدعية يومية مع مصادرها';
+
+  @override
+  String get ilm_desc_sunnahs => 'سنن يومية ومنسية';
+
+  @override
+  String get ilm_desc_names99 => 'مع المعاني والفضائل';
+
+  @override
+  String get ilm_desc_islamic_names => 'أسماء ذات معنى للأولاد والبنات';
+
+  @override
+  String get ilm_desc_iman_branches => 'الشعب السبعون والفحص الذاتي';
+
+  @override
+  String get ilm_desc_articles => 'مقالات في التربية والدعوة والسنة';
 }

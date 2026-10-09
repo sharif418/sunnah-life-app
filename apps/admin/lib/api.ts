@@ -54,10 +54,13 @@ export function gatewayUrl(path: string): string {
 
 export class ApiError extends Error {
   status: number;
-  constructor(status: number, message: string) {
+  /** content workflow: the per-item problems a submit was refused for */
+  issues?: PackIssue[];
+  constructor(status: number, message: string, issues?: PackIssue[]) {
     super(message);
     this.status = status;
     this.name = "ApiError";
+    this.issues = issues;
   }
 }
 
@@ -79,7 +82,8 @@ async function rawCall<T>(path: string, init?: CallInit): Promise<T> {
   });
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok) {
-    throw new ApiError(res.status, (data as { error?: string })?.error ?? `HTTP ${res.status}`);
+    const body = data as { error?: string; issues?: PackIssue[] } | null;
+    throw new ApiError(res.status, body?.error ?? `HTTP ${res.status}`, body?.issues);
   }
   return data as T;
 }
@@ -114,6 +118,8 @@ async function call<T>(path: string, init?: CallInit): Promise<T> {
 
 export type Gender = "M" | "F";
 export type Role = "user" | "daee" | "usrah_head" | "invigilator" | "full_admin";
+/** Content team role — orthogonal to the tarbiyah role (set by full_admin). */
+export type ContentRole = "editor" | "reviewer";
 export type Level = "none" | "muhibbus_sunnah" | "farze_ain_1" | "farze_ain_2";
 export type UserCategory = "general" | "hafez" | "alim";
 export type AmalInputType = "tristate" | "boolean" | "count" | "quantity" | "text";
@@ -142,6 +148,8 @@ export interface User {
   photoUrl: string | null;
   gender: Gender;
   role: Role;
+  /** content team: editor drafts, reviewer (an alim) approves */
+  contentRole?: ContentRole | null;
   category: UserCategory;
   memberCode: string | null;
   referredById: string | null;
@@ -590,6 +598,78 @@ export interface AdminQueues {
   joinRequests: number | null;
 }
 
+// ── content workflow (apps/api/src/cms) ─────────────────────────────────────
+
+export type CmsPackKey =
+  | "adhkar"
+  | "duas"
+  | "sunnahs"
+  | "names99"
+  | "islamic-names"
+  | "iman-branches"
+  | "articles"
+  | "courses"
+  | "quizzes"
+  | "mosques"
+  | "faq";
+
+export type RevisionStatus = "draft" | "in_review" | "published" | "rejected" | "archived";
+
+export interface PackIssue {
+  /** e.g. "items[3].reference" */
+  path: string;
+  message: string;
+}
+
+export interface RevisionMeta {
+  id: string;
+  version: number;
+  status: RevisionStatus;
+  itemCount: number;
+  note: string | null;
+  reviewNote: string | null;
+  authorId: string;
+  authorName: string | null;
+  reviewerId: string | null;
+  reviewerName: string | null;
+  createdAt: string;
+  updatedAt: string;
+  submittedAt: string | null;
+  reviewedAt: string | null;
+  publishedAt: string | null;
+}
+
+export interface CmsPackSummary {
+  pack: CmsPackKey;
+  labelBn: string;
+  liveVersion: number;
+  liveItemCount: number;
+  livePublishedAt: string | null;
+  working: RevisionMeta | null;
+}
+
+export interface CmsOverview {
+  packs: CmsPackSummary[];
+  canReview: boolean;
+  pendingReview: number;
+}
+
+export interface CmsPackDetail {
+  pack: CmsPackKey;
+  labelBn: string;
+  live: Record<string, unknown>;
+  working: (RevisionMeta & { data: Record<string, unknown>; issues: PackIssue[] }) | null;
+  history: RevisionMeta[];
+}
+
+export interface ContentTeamMember {
+  id: string;
+  name: string;
+  phone: string | null;
+  contentRole: ContentRole;
+  gender: Gender;
+}
+
 // ── endpoints ────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -811,13 +891,40 @@ export const api = {
     return call<ReferralTreePage>(`/api/admin/referral-tree${q ? `?${q}` : ""}`);
   },
 
-  // W4h: content pack CMS (full_admin write; the read is the public pack route)
+  // the public pack read (what the apps get now)
   contentPack: (pack: string) =>
     call<{ pack: string; data: unknown }>(`/api/content/${encodeURIComponent(pack)}`),
-  updateContentPack: (pack: string, doc: Record<string, unknown>) =>
-    call<{ pack: string; itemCount: number; bytes: number }>(
-      `/api/admin/content/${encodeURIComponent(pack)}`,
-      { method: "PUT", json: doc }
+
+  // content workflow: draft → scholar review → publish (apps/api/src/cms)
+  cmsOverview: () => call<CmsOverview>("/api/admin/cms"),
+  cmsPack: (pack: CmsPackKey) => call<CmsPackDetail>(`/api/admin/cms/${pack}`),
+  cmsRevision: (pack: CmsPackKey, id: string) =>
+    call<RevisionMeta & { data: Record<string, unknown> }>(`/api/admin/cms/${pack}/revisions/${encodeURIComponent(id)}`),
+  cmsSaveDraft: (pack: CmsPackKey, data: Record<string, unknown>, note?: string) =>
+    call<{ id: string; version: number; status: RevisionStatus; issues: PackIssue[] }>(`/api/admin/cms/${pack}/draft`, {
+      method: "PUT",
+      json: { data, note },
+    }),
+  cmsDiscardDraft: (pack: CmsPackKey) => call<{ ok: boolean }>(`/api/admin/cms/${pack}/draft`, { method: "DELETE" }),
+  cmsSubmit: (pack: CmsPackKey) =>
+    call<{ id: string; version: number; status: RevisionStatus }>(`/api/admin/cms/${pack}/submit`, { method: "POST" }),
+  cmsWithdraw: (pack: CmsPackKey) =>
+    call<{ id: string; version: number; status: RevisionStatus }>(`/api/admin/cms/${pack}/withdraw`, { method: "POST" }),
+  cmsReview: (pack: CmsPackKey, decision: "approve" | "reject", note?: string) =>
+    call<{ id: string; version: number; status: RevisionStatus }>(`/api/admin/cms/${pack}/review`, {
+      method: "POST",
+      json: { decision, note },
+    }),
+  cmsRollback: (pack: CmsPackKey, revisionId: string) =>
+    call<{ id: string; version: number; status: RevisionStatus }>(`/api/admin/cms/${pack}/rollback`, {
+      method: "POST",
+      json: { revisionId },
+    }),
+  contentTeam: () => call<{ editors: ContentTeamMember[] }>("/api/admin/cms/editors"),
+  setContentRole: (userId: string, contentRole: ContentRole | null) =>
+    call<{ id: string; name: string; contentRole: ContentRole | null }>(
+      `/api/admin/cms/editors/${encodeURIComponent(userId)}`,
+      { method: "PATCH", json: { contentRole } }
     ),
 
   // W4h: app configuration CMS (full_admin)

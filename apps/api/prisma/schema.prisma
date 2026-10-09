@@ -66,6 +66,11 @@ model User {
   // set when the member deleted their own account (DELETE /api/me): the row
   // stays only as an anonymous anchor for what they did for others
   deletedAt     DateTime?
+  // Content workflow (2026-10-09): who may draft / review the content packs
+  // in the admin CMS — orthogonal to the tarbiyah role. null | "editor" |
+  // "reviewer" (a reviewer may also draft). Set only by full_admin (column
+  // guard trigger).
+  contentRole   String?
 
   sessions              Session[]
   deviceTokens          DeviceToken[]
@@ -531,4 +536,30 @@ model UsrahJoinRequest {
 
   @@index([userId, createdAt])
   @@index([status, createdAt])
+}
+
+// Content workflow (2026-10-09): every version of every content pack —
+// draft → in_review → published (or rejected back to the editor); the
+// newest published revision is what the apps serve (also written to the
+// pack override file). Older published revisions stay for rollback.
+// System-only RLS: the CMS endpoints check the content role first.
+model ContentRevision {
+  id          String    @id @default(cuid())
+  pack        String
+  version     Int
+  status      String    // draft | in_review | published | rejected | archived
+  dataJson    Json
+  itemCount   Int       @default(0)
+  note        String?   // the editor's change note
+  reviewNote  String?   // the reviewer's note (required on reject)
+  authorId    String
+  reviewerId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  submittedAt DateTime?
+  reviewedAt  DateTime?
+  publishedAt DateTime?
+
+  @@unique([pack, version])
+  @@index([pack, status])
 }

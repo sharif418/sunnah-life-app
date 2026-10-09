@@ -333,12 +333,8 @@ void main() {
       expect(find.text(S.tr(Lang.bn, key)), findsOneWidget, reason: key);
     }
 
-    await scrollTo(tester, find.text(S.tr(Lang.bn, 'more_section_knowledge')));
-    expect(find.text(S.tr(Lang.bn, 'more_section_knowledge')), findsOneWidget);
-    for (final key in ['ilm_names99', 'ilm_baby_names', 'ilm_iman_branches']) {
-      await scrollTo(tester, find.text(S.tr(Lang.bn, key)));
-      expect(find.text(S.tr(Lang.bn, key)), findsOneWidget, reason: key);
-    }
+    // knowledge has one home — the Ilm tab (no জ্ঞান group repeating it)
+    expect(find.text(S.tr(Lang.bn, 'more_section_knowledge')), findsNothing);
 
     await scrollTo(tester, find.text(S.tr(Lang.bn, 'more_section_support')));
     expect(find.text(S.tr(Lang.bn, 'more_section_support')), findsOneWidget);
@@ -402,7 +398,7 @@ void main() {
     await scrollTo(tester, find.text(S.tr(Lang.bn, 'more_autosilent')));
     expect(find.text(S.tr(Lang.bn, 'more_autosilent')), findsOneWidget);
     expect(find.text(S.tr(Lang.bn, 'more_detox')), findsNothing);
-    await scrollTo(tester, find.text(S.tr(Lang.bn, 'more_section_knowledge')));
+    await scrollTo(tester, find.text(S.tr(Lang.bn, 'more_section_support')));
     expect(find.text(S.tr(Lang.bn, 'more_detox')), findsNothing);
   });
 

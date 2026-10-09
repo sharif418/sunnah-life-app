@@ -46,57 +46,68 @@ class _IlmScreenState extends State<IlmScreen> {
         icon: PhosphorIconsRegular.graduationCap,
         title: context.t('ilm_courses'),
         route: '/ilm/courses',
+        subtitle: context.t('ilm_desc_courses'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.question,
         title: context.t('ilm_quizzes'),
         route: '/ilm/quizzes',
+        subtitle: context.t('ilm_desc_quizzes'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.broadcast,
         title: context.t('ilm_live_quiz'),
         route: '/ilm/live-quiz',
+        subtitle: context.t('ilm_desc_live_quiz'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.bookOpen,
         title: context.t('ilm_quran'),
         route: '/ilm/quran',
+        subtitle: context.t('ilm_desc_quran'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.plant,
         title: context.t('ilm_adhkar'),
         route: '/ilm/adhkar',
+        subtitle: context.t('ilm_desc_adhkar'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.hand,
         title: context.t('ilm_duas'),
         route: '/ilm/duas',
+        subtitle: context.t('ilm_desc_duas'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.sun,
         title: context.t('ilm_names99'),
         route: '/ilm/names99',
+        subtitle: context.t('ilm_desc_names99'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.baby,
         title: context.t('ilm_baby_names'),
         route: '/ilm/islamic-names',
+        subtitle: context.t('ilm_desc_islamic_names'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.heart,
         title: context.t('ilm_iman_branches'),
         route: '/ilm/iman-branches',
+        subtitle: context.t('ilm_desc_iman_branches'),
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.sunHorizon,
         title: context.t('ilm_sunnahs'),
         route: '/ilm/sunnahs',
+        subtitle: context.t('ilm_desc_sunnahs'),
         badge: _sunnahsNew,
       ),
       _IlmEntry(
         icon: PhosphorIconsRegular.article,
         title: context.t('ilm_articles'),
         route: '/ilm/articles',
+        subtitle: context.t('ilm_desc_articles'),
       ),
     ];
 
@@ -133,83 +144,6 @@ class _IlmScreenState extends State<IlmScreen> {
       if (!context.mounted) return;
       context.push(e.route);
     }
-
-    Widget badge() => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(
-        color: theme.colorScheme.tertiary,
-        borderRadius: SLRadius.brPill,
-      ),
-      child: Text(
-        context.t('badge_new'),
-        style: theme.textTheme.bodySmall?.copyWith(
-          // dark ink on gold (white was 2.6:1)
-          color: theme.colorScheme.onTertiary,
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-
-    Widget icon(IconData i) => Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.primaryContainer,
-        borderRadius: SLRadius.brMd,
-      ),
-      child: Icon(i, size: 24, color: theme.colorScheme.primary),
-    );
-
-    Widget tile(_IlmEntry e, {bool wide = false}) => AppCard(
-      key: ValueKey('ilm_tile_${e.route}'),
-      onTap: () => open(e),
-      padding: const EdgeInsets.all(SLSpacing.s12),
-      child: wide
-          ? Row(
-              children: [
-                icon(e.icon),
-                const SizedBox(width: SLSpacing.s12),
-                Expanded(
-                  child: Text(
-                    e.title,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                if (e.badge) badge(),
-                const SizedBox(width: SLSpacing.s4),
-                DirectionalIcon(
-                  PhosphorIconsRegular.caretRight,
-                  size: 18,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ],
-            )
-          : Stack(
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      icon(e.icon),
-                      const SizedBox(height: SLSpacing.s8),
-                      Text(
-                        e.title,
-                        textAlign: TextAlign.center,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (e.badge)
-                  PositionedDirectional(top: 0, end: 0, child: badge()),
-              ],
-            ),
-    );
 
     return Scaffold(
       body: SafeArea(
@@ -269,29 +203,26 @@ class _IlmScreenState extends State<IlmScreen> {
               // where the member left off: the Qur'an place and an
               // unfinished course (the tiles carried no state at all)
               const _ContinueSection(),
-              // three groups, two tiles a row; a group's odd last tile
-              // runs full width (a lone "আর্টিকেল" used to sit in an empty
-              // row at the bottom)
-              for (final (gi, group) in groups.indexed) ...[
+              // three headed groups of full-width rows — the More tab's
+              // pattern (one way of listing places across the app): a name
+              // and a one-line hint per row, the whole row tappable, nothing
+              // squeezed into a tile at large text sizes
+              for (final group in groups) ...[
                 SectionHeader(group.$1, icon: group.$2),
-                for (var i = 0; i < group.$3.length; i += 2)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: SLSpacing.s12),
-                    child: i + 1 < group.$3.length
-                        ? IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(child: tile(group.$3[i])),
-                                const SizedBox(width: SLSpacing.s12),
-                                Expanded(child: tile(group.$3[i + 1])),
-                              ],
-                            ),
-                          )
-                        : tile(group.$3[i], wide: true),
-                  ),
-                if (gi < groups.length - 1)
-                  const SizedBox(height: SLSpacing.s4),
+                MenuGroupCard(
+                  rows: [
+                    for (final e in group.$3)
+                      MenuRow(
+                        key: ValueKey('ilm_tile_${e.route}'),
+                        icon: e.icon,
+                        title: e.title,
+                        subtitle: e.subtitle,
+                        badge: e.badge ? context.t('badge_new') : null,
+                        onTap: () => open(e),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: SLSpacing.s8),
               ],
             ],
           ),
@@ -306,11 +237,15 @@ class _IlmEntry {
     required this.icon,
     required this.title,
     required this.route,
+    required this.subtitle,
     this.badge = false,
   });
   final IconData icon;
   final String title;
   final String route;
+
+  /// One line of what is inside (rows say what they hold; tiles could not).
+  final String subtitle;
   final bool badge;
 }
 
