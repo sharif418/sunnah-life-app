@@ -1639,7 +1639,7 @@ abstract class AppLocalizations {
   /// No description provided for @method_isna.
   ///
   /// In bn, this message translates to:
-  /// **'ISNA (উত্তর আমেরিকা)'**
+  /// **'ইসনা (উত্তর আমেরিকা)'**
   String get method_isna;
 
   /// No description provided for @method_egypt.
@@ -4327,7 +4327,7 @@ abstract class AppLocalizations {
   /// No description provided for @mosque_view_map.
   ///
   /// In bn, this message translates to:
-  /// **'ম্যাপ'**
+  /// **'দিক'**
   String get mosque_view_map;
 
   /// No description provided for @mosque_directions_btn.
@@ -5997,6 +5997,228 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আমার মসজিদে রাখুন বা সরান'**
   String get mosques_star_a11y;
+
+  /// No description provided for @method_pick_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফজর ও এশার হিসাব কোন নিয়মে হবে। বাংলাদেশে মসজিদের সময়ের সাথে মেলাতে ইসলামিক ফাউন্ডেশন বাছুন।'**
+  String get method_pick_hint;
+
+  /// No description provided for @method_recommended.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রস্তাবিত'**
+  String get method_recommended;
+
+  /// No description provided for @method_desc_ifb.
+  ///
+  /// In bn, this message translates to:
+  /// **'দেশের মসজিদগুলোর সময়সূচির ভিত্তি — ১৮°/১৮°, শুরুর সময়ে সতর্কতার মিনিটসহ'**
+  String get method_desc_ifb;
+
+  /// No description provided for @method_desc_karachi.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৮°/১৮° — ফাউন্ডেশনের মতোই, তবে সতর্কতার মিনিট ছাড়া (প্রায় ১ মিনিট আগে)'**
+  String get method_desc_karachi;
+
+  /// No description provided for @method_desc_mwl.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৮°/১৭° — ইউরোপসহ বিভিন্ন অঞ্চলে প্রচলিত'**
+  String get method_desc_mwl;
+
+  /// No description provided for @method_desc_isna.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৫°/১৫° — উত্তর আমেরিকার জন্য; বাংলাদেশে ফজর দেরিতে দেখায়'**
+  String get method_desc_isna;
+
+  /// No description provided for @method_desc_egypt.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৯.৫°/১৭.৫° — মিসর ও আফ্রিকার কিছু দেশে'**
+  String get method_desc_egypt;
+
+  /// No description provided for @method_desc_makkah.
+  ///
+  /// In bn, this message translates to:
+  /// **'সৌদি আরবের জন্য — এশা মাগরিবের ৯০ মিনিট পরে'**
+  String get method_desc_makkah;
+
+  /// No description provided for @method_desc_dubai.
+  ///
+  /// In bn, this message translates to:
+  /// **'১৮.২°/১৮.২° — সংযুক্ত আরব আমিরাতের জন্য'**
+  String get method_desc_dubai;
+
+  /// No description provided for @adjust_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজের মসজিদের সাথে মেলান'**
+  String get adjust_title;
+
+  /// No description provided for @adjust_none.
+  ///
+  /// In bn, this message translates to:
+  /// **'সমন্বয় নেই'**
+  String get adjust_none;
+
+  /// No description provided for @adjust_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার মসজিদের আযান হিসাবের সময়ের চেয়ে কয়েক মিনিট পরে বা আগে হলে, এখানে মিলিয়ে নিন।'**
+  String get adjust_hint;
+
+  /// No description provided for @adjust_where.
+  ///
+  /// In bn, this message translates to:
+  /// **'হোম, ডায়েরি, নামাজের বেল ও অটো-সাইলেন্ট — সব জায়গায় এই সময় লাগবে।'**
+  String get adjust_where;
+
+  /// No description provided for @adjust_calc_mine.
+  ///
+  /// In bn, this message translates to:
+  /// **'হিসাবে %c · আপনার %m'**
+  String get adjust_calc_mine;
+
+  /// No description provided for @adjust_calc_only.
+  ///
+  /// In bn, this message translates to:
+  /// **'হিসাবে %c'**
+  String get adjust_calc_only;
+
+  /// No description provided for @adjust_earlier_warning.
+  ///
+  /// In bn, this message translates to:
+  /// **'ওয়াক্ত শুরুর আগে নামাজ হয় না — সময় আগে সরালে সাবধান থাকুন।'**
+  String get adjust_earlier_warning;
+
+  /// No description provided for @adjust_reset.
+  ///
+  /// In bn, this message translates to:
+  /// **'সব শূন্য করুন'**
+  String get adjust_reset;
+
+  /// No description provided for @adjust_save.
+  ///
+  /// In bn, this message translates to:
+  /// **'সংরক্ষণ করুন'**
+  String get adjust_save;
+
+  /// No description provided for @adjust_minus_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%w এক মিনিট আগে'**
+  String get adjust_minus_a11y;
+
+  /// No description provided for @adjust_plus_a11y.
+  ///
+  /// In bn, this message translates to:
+  /// **'%w এক মিনিট পরে'**
+  String get adjust_plus_a11y;
+
+  /// No description provided for @adjust_on_home.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার মসজিদের সমন্বয়সহ'**
+  String get adjust_on_home;
+
+  /// No description provided for @mosques_locating.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান খোঁজা হচ্ছে…'**
+  String get mosques_locating;
+
+  /// No description provided for @mosques_primer_title.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার কাছের মসজিদ দেখুন'**
+  String get mosques_primer_title;
+
+  /// No description provided for @mosques_primer_body.
+  ///
+  /// In bn, this message translates to:
+  /// **'কত দূরে, হেঁটে কত মিনিট, কোন দিকে — এগুলো আপনার অবস্থান থেকে মাপা হয়। অবস্থান কোথাও জমা রাখা হয় না।'**
+  String get mosques_primer_body;
+
+  /// No description provided for @mosques_primer_btn.
+  ///
+  /// In bn, this message translates to:
+  /// **'আমার অবস্থান ব্যবহার করুন'**
+  String get mosques_primer_btn;
+
+  /// No description provided for @mosques_primer_settings.
+  ///
+  /// In bn, this message translates to:
+  /// **'সেটিংসে অনুমতি দিন'**
+  String get mosques_primer_settings;
+
+  /// No description provided for @mosques_primer_settings_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থানের অনুমতি বন্ধ আছে — সেটিংসে গিয়ে «অবস্থান» চালু করে ফিরে আসুন।'**
+  String get mosques_primer_settings_hint;
+
+  /// No description provided for @mosques_primer_gps_off.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনের লোকেশন চালু করুন'**
+  String get mosques_primer_gps_off;
+
+  /// No description provided for @mosques_primer_gps_off_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'ফোনের লোকেশন বন্ধ আছে — চালু করে ফিরে আসুন।'**
+  String get mosques_primer_gps_off_hint;
+
+  /// No description provided for @mosques_city_section.
+  ///
+  /// In bn, this message translates to:
+  /// **'%c শহরের কেন্দ্রের আশেপাশে'**
+  String get mosques_city_section;
+
+  /// No description provided for @mosques_city_section_hint.
+  ///
+  /// In bn, this message translates to:
+  /// **'এগুলো আপনার কাছের নাও হতে পারে, তাই দূরত্ব দেখানো হচ্ছে না।'**
+  String get mosques_city_section_hint;
+
+  /// No description provided for @mosques_relocate.
+  ///
+  /// In bn, this message translates to:
+  /// **'অবস্থান আবার খুঁজুন'**
+  String get mosques_relocate;
+
+  /// No description provided for @mosques_from_location_rough.
+  ///
+  /// In bn, this message translates to:
+  /// **'আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)'**
+  String get mosques_from_location_rough;
+
+  /// No description provided for @mosques_nearest.
+  ///
+  /// In bn, this message translates to:
+  /// **'সবচেয়ে কাছে'**
+  String get mosques_nearest;
+
+  /// No description provided for @mosques_more_nearby.
+  ///
+  /// In bn, this message translates to:
+  /// **'আশেপাশের আরও মসজিদ'**
+  String get mosques_more_nearby;
+
+  /// No description provided for @mosques_star_tip.
+  ///
+  /// In bn, this message translates to:
+  /// **'যে মসজিদে নিয়মিত যান, তার তারকা চাপুন — সবার উপরে থাকবে।'**
+  String get mosques_star_tip;
+
+  /// No description provided for @mosques_maps_search.
+  ///
+  /// In bn, this message translates to:
+  /// **'গুগল ম্যাপে কাছের মসজিদ খুঁজুন'**
+  String get mosques_maps_search;
 }
 
 class _AppLocalizationsDelegate

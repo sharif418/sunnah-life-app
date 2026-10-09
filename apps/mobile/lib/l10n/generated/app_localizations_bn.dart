@@ -798,7 +798,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get method_mwl => 'মুসলিম ওয়ার্ল্ড লীগ';
 
   @override
-  String get method_isna => 'ISNA (উত্তর আমেরিকা)';
+  String get method_isna => 'ইসনা (উত্তর আমেরিকা)';
 
   @override
   String get method_egypt => 'মিসরীয়';
@@ -2189,7 +2189,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get mosque_view_list => 'তালিকা';
 
   @override
-  String get mosque_view_map => 'ম্যাপ';
+  String get mosque_view_map => 'দিক';
 
   @override
   String get mosque_directions_btn => 'পথ দেখুন';
@@ -3065,4 +3065,129 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get mosques_star_a11y => 'আমার মসজিদে রাখুন বা সরান';
+
+  @override
+  String get method_pick_hint =>
+      'ফজর ও এশার হিসাব কোন নিয়মে হবে। বাংলাদেশে মসজিদের সময়ের সাথে মেলাতে ইসলামিক ফাউন্ডেশন বাছুন।';
+
+  @override
+  String get method_recommended => 'প্রস্তাবিত';
+
+  @override
+  String get method_desc_ifb =>
+      'দেশের মসজিদগুলোর সময়সূচির ভিত্তি — ১৮°/১৮°, শুরুর সময়ে সতর্কতার মিনিটসহ';
+
+  @override
+  String get method_desc_karachi =>
+      '১৮°/১৮° — ফাউন্ডেশনের মতোই, তবে সতর্কতার মিনিট ছাড়া (প্রায় ১ মিনিট আগে)';
+
+  @override
+  String get method_desc_mwl => '১৮°/১৭° — ইউরোপসহ বিভিন্ন অঞ্চলে প্রচলিত';
+
+  @override
+  String get method_desc_isna =>
+      '১৫°/১৫° — উত্তর আমেরিকার জন্য; বাংলাদেশে ফজর দেরিতে দেখায়';
+
+  @override
+  String get method_desc_egypt => '১৯.৫°/১৭.৫° — মিসর ও আফ্রিকার কিছু দেশে';
+
+  @override
+  String get method_desc_makkah =>
+      'সৌদি আরবের জন্য — এশা মাগরিবের ৯০ মিনিট পরে';
+
+  @override
+  String get method_desc_dubai => '১৮.২°/১৮.২° — সংযুক্ত আরব আমিরাতের জন্য';
+
+  @override
+  String get adjust_title => 'নিজের মসজিদের সাথে মেলান';
+
+  @override
+  String get adjust_none => 'সমন্বয় নেই';
+
+  @override
+  String get adjust_hint =>
+      'আপনার মসজিদের আযান হিসাবের সময়ের চেয়ে কয়েক মিনিট পরে বা আগে হলে, এখানে মিলিয়ে নিন।';
+
+  @override
+  String get adjust_where =>
+      'হোম, ডায়েরি, নামাজের বেল ও অটো-সাইলেন্ট — সব জায়গায় এই সময় লাগবে।';
+
+  @override
+  String get adjust_calc_mine => 'হিসাবে %c · আপনার %m';
+
+  @override
+  String get adjust_calc_only => 'হিসাবে %c';
+
+  @override
+  String get adjust_earlier_warning =>
+      'ওয়াক্ত শুরুর আগে নামাজ হয় না — সময় আগে সরালে সাবধান থাকুন।';
+
+  @override
+  String get adjust_reset => 'সব শূন্য করুন';
+
+  @override
+  String get adjust_save => 'সংরক্ষণ করুন';
+
+  @override
+  String get adjust_minus_a11y => '%w এক মিনিট আগে';
+
+  @override
+  String get adjust_plus_a11y => '%w এক মিনিট পরে';
+
+  @override
+  String get adjust_on_home => 'আপনার মসজিদের সমন্বয়সহ';
+
+  @override
+  String get mosques_locating => 'আপনার অবস্থান খোঁজা হচ্ছে…';
+
+  @override
+  String get mosques_primer_title => 'আপনার কাছের মসজিদ দেখুন';
+
+  @override
+  String get mosques_primer_body =>
+      'কত দূরে, হেঁটে কত মিনিট, কোন দিকে — এগুলো আপনার অবস্থান থেকে মাপা হয়। অবস্থান কোথাও জমা রাখা হয় না।';
+
+  @override
+  String get mosques_primer_btn => 'আমার অবস্থান ব্যবহার করুন';
+
+  @override
+  String get mosques_primer_settings => 'সেটিংসে অনুমতি দিন';
+
+  @override
+  String get mosques_primer_settings_hint =>
+      'অবস্থানের অনুমতি বন্ধ আছে — সেটিংসে গিয়ে «অবস্থান» চালু করে ফিরে আসুন।';
+
+  @override
+  String get mosques_primer_gps_off => 'ফোনের লোকেশন চালু করুন';
+
+  @override
+  String get mosques_primer_gps_off_hint =>
+      'ফোনের লোকেশন বন্ধ আছে — চালু করে ফিরে আসুন।';
+
+  @override
+  String get mosques_city_section => '%c শহরের কেন্দ্রের আশেপাশে';
+
+  @override
+  String get mosques_city_section_hint =>
+      'এগুলো আপনার কাছের নাও হতে পারে, তাই দূরত্ব দেখানো হচ্ছে না।';
+
+  @override
+  String get mosques_relocate => 'অবস্থান আবার খুঁজুন';
+
+  @override
+  String get mosques_from_location_rough =>
+      'আপনার অবস্থান থেকে (আনুমানিক, ~%m মি)';
+
+  @override
+  String get mosques_nearest => 'সবচেয়ে কাছে';
+
+  @override
+  String get mosques_more_nearby => 'আশেপাশের আরও মসজিদ';
+
+  @override
+  String get mosques_star_tip =>
+      'যে মসজিদে নিয়মিত যান, তার তারকা চাপুন — সবার উপরে থাকবে।';
+
+  @override
+  String get mosques_maps_search => 'গুগল ম্যাপে কাছের মসজিদ খুঁজুন';
 }

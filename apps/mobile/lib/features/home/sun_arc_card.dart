@@ -463,7 +463,7 @@ class _Sky extends StatelessWidget {
                         right: 0,
                         top: 8,
                         child: Text(
-                          '${context.t('sun_noon')} ${clockOnly(times.dhuhr - 1, bengali: bn)}',
+                          '${context.t('sun_noon')} ${clockOnly(times.noon - 1, bengali: bn)}',
                           textAlign: TextAlign.center,
                           style: small,
                         ),

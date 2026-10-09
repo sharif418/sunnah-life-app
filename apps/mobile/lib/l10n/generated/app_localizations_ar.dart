@@ -2166,7 +2166,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get mosque_view_list => 'قائمة';
 
   @override
-  String get mosque_view_map => 'خريطة';
+  String get mosque_view_map => 'الاتجاه';
 
   @override
   String get mosque_directions_btn => 'الاتجاهات';
@@ -3021,4 +3021,119 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mosques_star_a11y => 'إضافة أو إزالة';
+
+  @override
+  String get method_pick_hint => 'طريقة حساب الفجر والعشاء.';
+
+  @override
+  String get method_recommended => 'مُوصى به';
+
+  @override
+  String get method_desc_ifb => '١٨°/١٨° مع دقائق احتياط';
+
+  @override
+  String get method_desc_karachi => '١٨°/١٨° دون احتياط';
+
+  @override
+  String get method_desc_mwl => '١٨°/١٧°';
+
+  @override
+  String get method_desc_isna => '١٥°/١٥° لأمريكا الشمالية';
+
+  @override
+  String get method_desc_egypt => '١٩٫٥°/١٧٫٥°';
+
+  @override
+  String get method_desc_makkah => 'العشاء بعد المغرب بـ٩٠ دقيقة';
+
+  @override
+  String get method_desc_dubai => '١٨٫٢°/١٨٫٢°';
+
+  @override
+  String get adjust_title => 'وافق مسجدك';
+
+  @override
+  String get adjust_none => 'لا تعديل';
+
+  @override
+  String get adjust_hint => 'إن كان أذان مسجدك يختلف بدقائق، عدّله هنا.';
+
+  @override
+  String get adjust_where => 'تُستخدم في كل مكان.';
+
+  @override
+  String get adjust_calc_mine => 'محسوب %c · وقتك %m';
+
+  @override
+  String get adjust_calc_only => 'محسوب %c';
+
+  @override
+  String get adjust_earlier_warning => 'لا تصح الصلاة قبل وقتها.';
+
+  @override
+  String get adjust_reset => 'إعادة الكل';
+
+  @override
+  String get adjust_save => 'حفظ';
+
+  @override
+  String get adjust_minus_a11y => '%w دقيقة أبكر';
+
+  @override
+  String get adjust_plus_a11y => '%w دقيقة أخّر';
+
+  @override
+  String get adjust_on_home => 'مع تعديل مسجدك';
+
+  @override
+  String get mosques_locating => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get mosques_primer_title => 'اعرض المساجد القريبة منك';
+
+  @override
+  String get mosques_primer_body =>
+      'المسافة ودقائق المشي والاتجاه تُقاس من موقعك. لا يُحفظ موقعك في أي مكان.';
+
+  @override
+  String get mosques_primer_btn => 'استخدم موقعي';
+
+  @override
+  String get mosques_primer_settings => 'اسمح من الإعدادات';
+
+  @override
+  String get mosques_primer_settings_hint =>
+      'إذن الموقع متوقف — فعّله من الإعدادات ثم عد.';
+
+  @override
+  String get mosques_primer_gps_off => 'شغّل الموقع';
+
+  @override
+  String get mosques_primer_gps_off_hint => 'موقع الهاتف متوقف — شغّله ثم عد.';
+
+  @override
+  String get mosques_city_section => 'حول وسط %c';
+
+  @override
+  String get mosques_city_section_hint =>
+      'قد لا تكون قريبة منك، لذلك لا تظهر المسافات.';
+
+  @override
+  String get mosques_relocate => 'حدّد موقعي مجددًا';
+
+  @override
+  String get mosques_from_location_rough => 'من موقعك (تقريبي، ~%m م)';
+
+  @override
+  String get mosques_nearest => 'الأقرب';
+
+  @override
+  String get mosques_more_nearby => 'مساجد أخرى قريبة';
+
+  @override
+  String get mosques_star_tip =>
+      'اضغط النجمة على المسجد الذي ترتاده — يبقى في الأعلى.';
+
+  @override
+  String get mosques_maps_search => 'ابحث عن المساجد القريبة في خرائط جوجل';
 }

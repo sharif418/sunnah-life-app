@@ -166,7 +166,7 @@ export const api = {
   /** DELETE /api/me — delete the signed-in account (Play's rule; see /delete-account). */
   deleteMe: () =>
     req<{ ok: boolean }>(route("/me"), { method: "DELETE", body: JSON.stringify({ confirm: "DELETE" }) }),
-  updateMe: (patch: Partial<Pick<User, "name" | "email" | "gender" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category">>) =>
+  updateMe: (patch: Partial<Pick<User, "name" | "email" | "gender" | "language" | "madhhab" | "calcMethod" | "lat" | "lng" | "city" | "district" | "workplace" | "department" | "category" | "prayerAdjust">>) =>
     req<{ user: User }>(route("/me"), { method: "PATCH", body: JSON.stringify(patch) }),
 
   config: () => req<AppConfig>(route("/config")),

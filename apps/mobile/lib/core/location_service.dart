@@ -9,6 +9,7 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
 import 'cities.dart';
@@ -139,9 +140,53 @@ class LocationFailureException implements Exception {
   String toString() => 'LocationFailureException($failure)';
 }
 
+/// The location service screens use — overridden in tests with a fake fix.
+final locationServiceProvider = Provider<LocationService>(
+  (ref) => const LocationService(),
+);
+
 /// Thin geolocator wrapper — the ONLY file the app imports geolocator from.
 class LocationService {
   const LocationService();
+
+  /// What a screen can do right now — asks nothing, shows no dialog.
+  Future<LocationGate> currentGate() async {
+    try {
+      final on = await Geolocator.isLocationServiceEnabled();
+      final permission = await Geolocator.checkPermission();
+      return locationGate(serviceEnabled: on, permission: permission);
+    } catch (_) {
+      return LocationGate.blocked;
+    }
+  }
+
+  /// The phone's last known fix — instant, so a "near me" list can show at
+  /// once while a fresh fix is on its way. Null unless permission is
+  /// already granted and the fix is recent (an old one is not "near me").
+  Future<CitySnap?> lastKnownSnapIfGranted({
+    List<CityEntry> cities = kCities,
+    Duration maxAge = const Duration(minutes: 30),
+  }) async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      if (permission != LocationPermission.whileInUse &&
+          permission != LocationPermission.always) {
+        return null;
+      }
+      final pos = await Geolocator.getLastKnownPosition();
+      if (pos == null || DateTime.now().difference(pos.timestamp) > maxAge) {
+        return null;
+      }
+      return snapToNearestCity(
+        pos.latitude,
+        pos.longitude,
+        cities,
+        accuracyM: pos.accuracy,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
 
   /// City-level accuracy is plenty (snapping to a district center), so the
   /// balanced-power priority keeps battery drain minimal.

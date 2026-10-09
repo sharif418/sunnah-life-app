@@ -60,11 +60,16 @@ class GuestProfiles extends Table {
   RealColumn get lat => real().withDefault(const Constant(23.8103))();
   RealColumn get lng => real().withDefault(const Constant(90.4125))();
   RealColumn get tz => real().withDefault(const Constant(6.0))();
-  TextColumn get method => text().withDefault(const Constant('karachi'))();
+  // Islamic Foundation Bangladesh for new installs (2026-10-09); existing
+  // rows keep the method they have
+  TextColumn get method => text().withDefault(const Constant('ifb'))();
   TextColumn get madhhab => text().withDefault(const Constant('hanafi'))();
   TextColumn get category => text().withDefault(const Constant('general'))();
   TextColumn get themeMode => text().withDefault(const Constant('system'))();
   IntColumn get hijriAdjust => integer().withDefault(const Constant(0))();
+
+  /// The reader's ± minutes per farz waqt (PrayerAdjust JSON, "{}" = none).
+  TextColumn get prayerAdjust => text().withDefault(const Constant('{}'))();
   BoolColumn get onboardingDone =>
       boolean().withDefault(const Constant(false))();
 
@@ -147,13 +152,14 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.e);
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   /// v1 → v2 (C-W3d): outbox gained `last_error` + `dead_at`. Existing user
   /// data survives — additive ALTER TABLEs only (drift's addColumn).
   /// v2 → v3 (C-W4c): the local custom-checklist table — pure CREATE TABLE,
   /// no existing column touched.
   /// v3 → v4 (W4-fix4): the remote-read cache table — pure CREATE TABLE.
+  /// v4 → v5 (2026-10-09): guest_profiles.prayer_adjust — additive column.
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) => m.createAll(),
@@ -167,6 +173,22 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 4) {
         await m.createTable(remoteCacheTable);
+      }
+      if (from < 5) {
+        final hasProfiles = await customSelect(
+          "SELECT 1 FROM sqlite_master WHERE type = 'table' "
+          "AND name = 'guest_profiles'",
+        ).get();
+        if (hasProfiles.isEmpty) {
+          await m.createTable(guestProfiles);
+        } else {
+          await m.addColumn(guestProfiles, guestProfiles.prayerAdjust);
+          // IFB became the default; Karachi was only ever the default
+          // before (same move as the server's migration)
+          await customStatement(
+            "UPDATE guest_profiles SET method = 'ifb' WHERE method = 'karachi'",
+          );
+        }
       }
     },
   );
@@ -201,12 +223,12 @@ class AppDatabase extends _$AppDatabase {
   /// member's own checklist items, the guest profile). Reading position and
   /// bookmarks are device conveniences and stay.
   Future<void> wipeAccountData() => transaction(() async {
-        await delete(amalEntries).go();
-        await delete(outbox).go();
-        await delete(remoteCacheTable).go();
-        await delete(customChecklistItems).go();
-        await delete(guestProfiles).go();
-      });
+    await delete(amalEntries).go();
+    await delete(outbox).go();
+    await delete(remoteCacheTable).go();
+    await delete(customChecklistItems).go();
+    await delete(guestProfiles).go();
+  });
 
   Future<void> setSetting(String key, String value) => into(settingsTable)
       .insertOnConflictUpdate(
@@ -326,11 +348,12 @@ class AppDatabase extends _$AppDatabase {
 
   /// Snapshot of the ALIVE outbox (dead rows are skipped by flush).
   Future<List<domain.AmalEntry>> pendingEntries({int limit = 500}) async {
-    final rows = await (select(outbox)
-          ..where((t) => t.deadAt.isNull())
-          ..orderBy([(t) => OrderingTerm(expression: t.id)])
-          ..limit(limit))
-        .get();
+    final rows =
+        await (select(outbox)
+              ..where((t) => t.deadAt.isNull())
+              ..orderBy([(t) => OrderingTerm(expression: t.id)])
+              ..limit(limit))
+            .get();
     return rows
         .map(
           (r) => domain.AmalEntry(
@@ -346,12 +369,15 @@ class AppDatabase extends _$AppDatabase {
 
   /// Alive outbox rows with their [OutboxRow.attempts] counters — flush()
   /// needs both to apply the reject policy (cap = kMaxOutboxAttempts).
-  Future<List<(OutboxRow, domain.AmalEntry)>> pendingOps({int limit = 500}) async {
-    final rows = await (select(outbox)
-          ..where((t) => t.deadAt.isNull())
-          ..orderBy([(t) => OrderingTerm(expression: t.id)])
-          ..limit(limit))
-        .get();
+  Future<List<(OutboxRow, domain.AmalEntry)>> pendingOps({
+    int limit = 500,
+  }) async {
+    final rows =
+        await (select(outbox)
+              ..where((t) => t.deadAt.isNull())
+              ..orderBy([(t) => OrderingTerm(expression: t.id)])
+              ..limit(limit))
+            .get();
     return [
       for (final r in rows)
         (
@@ -377,13 +403,14 @@ class AppDatabase extends _$AppDatabase {
     required bool dead,
     DateTime? now,
   }) async {
-    final row = await (select(outbox)
-          ..where((t) => t.amalKey.equals(amalKey) & t.date.equals(date)))
-        .getSingleOrNull();
+    final row =
+        await (select(outbox)
+              ..where((t) => t.amalKey.equals(amalKey) & t.date.equals(date)))
+            .getSingleOrNull();
     if (row == null) return;
-    await (update(outbox)
-          ..where((t) => t.amalKey.equals(amalKey) & t.date.equals(date)))
-        .write(
+    await (update(
+      outbox,
+    )..where((t) => t.amalKey.equals(amalKey) & t.date.equals(date))).write(
       OutboxCompanion(
         attempts: Value(row.attempts + 1),
         lastError: Value(reason),
@@ -519,14 +546,13 @@ class AppDatabase extends _$AppDatabase {
     required String dateKey,
     required String title,
     required int sortOrder,
-  }) =>
-      into(customChecklistItems).insert(
-        CustomChecklistItemsCompanion.insert(
-          dateKey: dateKey,
-          title: title,
-          sortOrder: Value(sortOrder),
-        ),
-      );
+  }) => into(customChecklistItems).insert(
+    CustomChecklistItemsCompanion.insert(
+      dateKey: dateKey,
+      title: title,
+      sortOrder: Value(sortOrder),
+    ),
+  );
 
   Future<void> setChecklistDone(int id, {required bool done}) =>
       (update(customChecklistItems)..where((t) => t.id.equals(id))).write(
@@ -540,21 +566,21 @@ class AppDatabase extends _$AppDatabase {
 
   /// The last-good envelope for [key], or null when this endpoint has
   /// never succeeded for this scope (the UI keeps its error state then).
-  Future<RemoteCacheRow?> remoteCache(String key) =>
-      (select(remoteCacheTable)..where((t) => t.key.equals(key)))
-          .getSingleOrNull();
+  Future<RemoteCacheRow?> remoteCache(String key) => (select(
+    remoteCacheTable,
+  )..where((t) => t.key.equals(key))).getSingleOrNull();
 
   Future<void> saveRemoteCache({
     required String key,
     required String payload,
     required DateTime fetchedAt,
   }) => into(remoteCacheTable).insertOnConflictUpdate(
-        RemoteCacheTableCompanion.insert(
-          key: key,
-          payload: payload,
-          fetchedAt: fetchedAt,
-        ),
-      );
+    RemoteCacheTableCompanion.insert(
+      key: key,
+      payload: payload,
+      fetchedAt: fetchedAt,
+    ),
+  );
 }
 
 LazyDatabase _openConnection() {

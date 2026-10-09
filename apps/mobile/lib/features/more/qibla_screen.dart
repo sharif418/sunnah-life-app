@@ -214,7 +214,7 @@ class _QiblaScreenState extends ConsumerState<QiblaScreen> {
             const SizedBox(height: SLSpacing.s8),
             Text(
               '${context.t('qibla_compass_heading')}: ${bn ? toBn(_heading?.round() ?? 0) : (_heading?.round() ?? 0)}°'
-              '${_headingAccuracy != null ? ' (±${bn ? toBn(_headingAccuracy!.round()) : _headingAccuracy!.round()}°)' : ''}',
+              '${_headingAccuracy != null ? ' (~${bn ? toBn(_headingAccuracy!.round()) : _headingAccuracy!.round()}°)' : ''}',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodySmall,
             ),

@@ -1,7 +1,7 @@
 import { Res, Req, Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post } from "@nestjs/common";
 import { ApiOperation, ApiTags } from "@nestjs/swagger";
 import type { Response } from "express";
-import { IsEmail, IsIn, IsLatitude, IsLongitude, IsNotEmpty, IsOptional, IsString, MaxLength, ValidateIf } from "class-validator";
+import { IsEmail, IsIn, IsLatitude, IsLongitude, IsNotEmpty, IsObject, IsOptional, IsString, MaxLength, ValidateIf } from "class-validator";
 import { ApiProperty } from "@nestjs/swagger";
 import { RlsService } from "../common/rls.service";
 import { GuardService } from "../common/guard.service";
@@ -12,6 +12,7 @@ import { ApiError } from "../common/api-error";
 import { AuthService } from "../auth/auth.service";
 import { StorageService } from "../storage/storage.service";
 import { deleteOwnAccount } from "./account-deletion";
+import { parsePrayerAdjust } from "../shared/prayer-times";
 
 /** Gender is locked once set: a user whose account was created WITHOUT one
  *  (social sign-in — gender "unspecified") sets it exactly once here, as the
@@ -65,6 +66,15 @@ export class MePatchDto {
   @IsIn(["ifb", "karachi", "mwl", "isna", "egypt", "makkah", "dubai"], { message: "হিসাব পদ্ধতি ঠিক নয়" })
   calcMethod?: string;
 
+  @ApiProperty({
+    required: false,
+    example: { fajr: 2, maghrib: 5 },
+    description: "Minutes added to each start time to match the member's own mosque: keys fajr/dhuhr/asr/maghrib/isha, whole numbers −30..30; {} clears.",
+  })
+  @IsOptional()
+  @IsObject({ message: "নামাজের সময় সমন্বয় ঠিক নয়" })
+  prayerAdjust?: Record<string, number>;
+
   @ApiProperty({ required: false })
   @IsOptional()
   @IsLatitude({ message: "অক্ষাংশ ঠিক নয়" })
@@ -117,7 +127,7 @@ export class MePatchDto {
 
 const ALLOWED_FIELDS = [
   "name", "email", "gender", "language", "madhhab", "calcMethod", "lat", "lng", "city",
-  "district", "workplace", "department", "category", "tz",
+  "district", "workplace", "department", "category", "tz", "prayerAdjust",
 ] as const;
 
 @ApiTags("me")
@@ -178,6 +188,11 @@ export class MeController {
       if (current !== "unspecified" && current === body.gender) {
         delete data.gender; // no-op, not an error
       }
+    }
+    if (data.prayerAdjust !== undefined) {
+      const adjust = parsePrayerAdjust(data.prayerAdjust);
+      if (!adjust) throw new ApiError(400, "নামাজের সময় সমন্বয় ঠিক নয় — প্রতি ওয়াক্তে ৩০ মিনিট পর্যন্ত");
+      data.prayerAdjust = adjust;
     }
     if (data.email !== undefined) {
       const e = typeof data.email === "string" ? data.email.trim().toLowerCase() : "";

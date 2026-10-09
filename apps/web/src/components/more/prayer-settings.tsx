@@ -1,6 +1,6 @@
 "use client";
 
-// নামাজের সেটিংস — হিসাব পদ্ধতি, মাযহাব (আসর), শহর।
+// নামাজের সেটিংস — হিসাব পদ্ধতি, নিজের মসজিদের সাথে মেলানো, মাযহাব (আসর), শহর।
 // PrayerSettingsControls প্রোফাইল পেজেও ব্যবহৃত হয়; সাইন-ইন থাকলে
 // পরিবর্তনগুলো debounced-ভাবে /api/me-তে সংরক্ষিত হয়।
 
@@ -16,15 +16,15 @@ import {
 import { SubShell, SectionLabel } from "@/components/more/bits";
 import { CityPicker } from "@/components/more/city-picker";
 import { useNow, usePrayerDay, SCHEDULE_ROWS } from "@/components/home/prayer-hooks";
-import { CALC_METHODS } from "@/lib/prayer-times";
+import { ADJUSTABLE_PRAYERS, CALC_METHODS, PRAYER_ADJUST_LIMIT, computePrayerTimes } from "@/lib/prayer-times";
 import { formatTimeBn, hijriDate, toBn } from "@/lib/calendars";
 import { useHijriAdjust } from "@/hooks/use-hijri-adjust";
 import { useApp } from "@/lib/store";
 import { api } from "@/lib/api";
 import { PRAYER_LABELS_BN } from "@/types/domain";
-import type { CalcMethodKey, Madhhab } from "@/types/domain";
+import type { CalcMethodKey, Madhhab, PrayerAdjust, PrayerAdjustKey } from "@/types/domain";
 import { toast } from "sonner";
-import { AlarmClock, CalendarDays, MapPin, Clock3, Minus, Plus } from "lucide-react";
+import { AlarmClock, CalendarDays, CircleAlert, Landmark, MapPin, Clock3, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -46,7 +46,7 @@ export function PrayerSettingsControls({ withPreview = false }: { withPreview?: 
   // সাইন-ইন থাকলে debounced সার্ভার সিঙ্ক (শুধু নামাজ-সংক্রান্ত ফিল্ড)।
   const lastSynced = React.useRef<string | null>(null);
   React.useEffect(() => {
-    const sig = JSON.stringify([profile.method, profile.madhhab, profile.city, profile.lat, profile.lng]);
+    const sig = JSON.stringify([profile.method, profile.madhhab, profile.city, profile.lat, profile.lng, profile.prayerAdjust ?? {}]);
     if (!user) {
       lastSynced.current = sig;
       return;
@@ -64,6 +64,7 @@ export function PrayerSettingsControls({ withPreview = false }: { withPreview?: 
           city: profile.city,
           lat: profile.lat,
           lng: profile.lng,
+          prayerAdjust: profile.prayerAdjust ?? {},
         })
         .then(() => {
           lastSynced.current = sig;
@@ -73,7 +74,7 @@ export function PrayerSettingsControls({ withPreview = false }: { withPreview?: 
         });
     }, 800);
     return () => clearTimeout(id);
-  }, [user, profile.method, profile.madhhab, profile.city, profile.lat, profile.lng]);
+  }, [user, profile.method, profile.madhhab, profile.city, profile.lat, profile.lng, profile.prayerAdjust]);
 
   return (
     <div className="space-y-4">
@@ -105,14 +106,17 @@ export function PrayerSettingsControls({ withPreview = false }: { withPreview?: 
                 {(Object.keys(CALC_METHODS) as CalcMethodKey[]).map((k) => (
                   <SelectItem key={k} value={k} className="py-2.5">
                     {CALC_METHODS[k].labelBn}
+                    {k === "ifb" && <span className="ms-2 text-xs font-semibold text-primary">প্রস্তাবিত</span>}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              বাংলাদেশের জন্য প্রচলিত: করাচি পদ্ধতি (ফজর ও ইশা ১৮°)।
+              বাংলাদেশের জন্য প্রস্তাবিত: ইসলামিক ফাউন্ডেশন — দেশের মসজিদগুলোর সময়সূচির ভিত্তি (১৮°/১৮°, শুরুর সময়ে সতর্কতার মিনিটসহ)।
             </p>
           </div>
+
+          <PrayerAdjustRows />
 
           {/* মাযহাব */}
           <div className="space-y-1.5">
@@ -222,6 +226,105 @@ function HijriAdjustRow() {
       <p className="text-xs leading-relaxed text-muted-foreground">
         চাঁদ দেখার ভিত্তিতে তারিখ এক-দুই দিন আগে-পিছে হলে এখানে ঠিক করুন। আইয়ামে বীযের রোযার দিনও এ অনুযায়ী হিসাব হয়।
       </p>
+    </div>
+  );
+}
+
+const signedBn = (n: number) => (n > 0 ? "+" : n < 0 ? "−" : "") + toBn(Math.abs(n));
+
+/**
+ * নিজের মসজিদের সাথে মেলান (mobile parity): whole minutes per waqt on top
+ * of the calculation, so Home, the diary and the prayer pushes follow the
+ * member's own mosque. Each row shows the calculated time and, once moved,
+ * the member's own — the change is judged against a real clock time.
+ */
+function PrayerAdjustRows() {
+  const adjust = useApp((s) => s.profile.prayerAdjust ?? {});
+  const updateProfile = useApp((s) => s.updateProfile);
+  const now = useNow(60_000);
+  const { cfg } = usePrayerDay(now);
+  const dayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+  const calculated = React.useMemo(() => {
+    const [y, m, d] = dayKey.split("-").map(Number);
+    return computePrayerTimes({ y, m, d }, { ...cfg, adjust: {} });
+  }, [dayKey, cfg]);
+  const set = (k: PrayerAdjustKey, n: number) => {
+    const next: PrayerAdjust = { ...adjust };
+    const v = Math.max(-PRAYER_ADJUST_LIMIT, Math.min(PRAYER_ADJUST_LIMIT, n));
+    if (v === 0) delete next[k];
+    else next[k] = v;
+    updateProfile({ prayerAdjust: next });
+  };
+  const anyEarlier = ADJUSTABLE_PRAYERS.some((k) => (adjust[k] ?? 0) < 0);
+  const isEmpty = ADJUSTABLE_PRAYERS.every((k) => !adjust[k]);
+
+  return (
+    <div className="space-y-1.5">
+      <SectionLabel icon={<Landmark className="size-4" />}>নিজের মসজিদের সাথে মেলান</SectionLabel>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        আপনার মসজিদের আযান হিসাবের সময়ের চেয়ে কয়েক মিনিট পরে বা আগে হলে, এখানে মিলিয়ে নিন।
+      </p>
+      <ul className="divide-y divide-border rounded-xl border border-border">
+        {ADJUSTABLE_PRAYERS.map((k) => {
+          const n = adjust[k] ?? 0;
+          const label = PRAYER_LABELS_BN[k];
+          return (
+            <li key={k} className="flex items-center gap-2 px-3 py-2.5">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold">{label}</p>
+                <p className={cn("text-xs tabular-nums", n ? "font-medium text-primary" : "text-muted-foreground")}>
+                  হিসাবে {formatTimeBn(calculated[k])}
+                  {n !== 0 && ` · আপনার ${formatTimeBn(calculated[k] + n)}`}
+                </p>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-10 rounded-full"
+                aria-label={`${label} এক মিনিট আগে`}
+                disabled={n <= -PRAYER_ADJUST_LIMIT}
+                onClick={() => set(k, n - 1)}
+              >
+                <Minus className="size-4" />
+              </Button>
+              <span className="w-9 text-center text-sm font-semibold tabular-nums" aria-live="polite">
+                {signedBn(n)}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-10 rounded-full"
+                aria-label={`${label} এক মিনিট পরে`}
+                disabled={n >= PRAYER_ADJUST_LIMIT}
+                onClick={() => set(k, n + 1)}
+              >
+                <Plus className="size-4" />
+              </Button>
+            </li>
+          );
+        })}
+      </ul>
+      {anyEarlier && (
+        <p className="flex items-start gap-2 rounded-xl border border-destructive/35 bg-destructive/[0.06] px-3 py-2.5 text-xs leading-relaxed text-destructive">
+          <CircleAlert className="mt-0.5 size-4 shrink-0" />
+          ওয়াক্ত শুরুর আগে নামাজ হয় না — সময় আগে সরালে সাবধান থাকুন।
+        </p>
+      )}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          হোম, ডায়েরি ও নামাজের নোটিফিকেশন — সব জায়গায় এই সময় লাগবে।
+        </p>
+        {!isEmpty && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-10 shrink-0 text-primary"
+            onClick={() => updateProfile({ prayerAdjust: {} })}
+          >
+            সব শূন্য করুন
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

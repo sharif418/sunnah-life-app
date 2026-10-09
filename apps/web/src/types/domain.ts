@@ -54,6 +54,8 @@ export interface User {
   language: Lang;
   madhhab: Madhhab;
   calcMethod: CalcMethodKey;
+  /** per-waqt minutes to match the member's own mosque ({} = none) */
+  prayerAdjust?: PrayerAdjust;
   lat: number | null;
   lng: number | null;
   city: string | null;
@@ -138,7 +140,14 @@ export interface PrayerConfig {
   madhhab: Madhhab;
   /** hours offset from UTC, e.g. 6 for Dhaka */
   tzOffsetHours: number;
+  /** the member's own mosque: whole minutes added to each start time */
+  adjust?: PrayerAdjust;
 }
+
+/** The five start times a member may shift to match their own mosque. */
+export type PrayerAdjustKey = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
+/** Minutes per waqt, −30..30; a missing key means 0. */
+export type PrayerAdjust = Partial<Record<PrayerAdjustKey, number>>;
 
 export type PrayerKey =
   | "fajr"
@@ -164,6 +173,9 @@ export interface PrayerTimes {
   sunset: number;
   isha: number;
   tahajjud: number;
+  /** Dhuhr as calculated, before the member's adjustment — the zawal
+   *  window is tied to the sun, not to the mosque's adhan */
+  noon: number;
 }
 
 export const PRAYER_LABELS_BN: Record<PrayerKey, string> = {

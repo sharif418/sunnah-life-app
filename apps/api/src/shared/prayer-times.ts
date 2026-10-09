@@ -5,7 +5,7 @@
 // night-middle high-latitude adjustment with polar NaN guards.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import type { CalcMethodKey, PrayerConfig, PrayerKey, PrayerTimes } from "./domain";
+import type { CalcMethodKey, PrayerAdjust, PrayerAdjustKey, PrayerConfig, PrayerKey, PrayerTimes } from "./domain";
 
 const DEG = Math.PI / 180;
 const sin = (d: number) => Math.sin(d * DEG);
@@ -42,13 +42,42 @@ export const CALC_METHODS: Record<
     isha: 18,
     roundUp: true,
   },
-  karachi: { labelBn: "করাচি (বাংলাদেশ ডিফল্ট)", labelEn: "Karachi / Univ. of Islamic Sciences", fajr: 18, isha: 18 },
+  karachi: { labelBn: "করাচি (১৮°/১৮°)", labelEn: "Karachi / Univ. of Islamic Sciences", fajr: 18, isha: 18 },
   mwl: { labelBn: "মুসলিম ওয়ার্ল্ড লীগ", labelEn: "Muslim World League", fajr: 18, isha: 17 },
   isna: { labelBn: "ইসনা (উত্তর আমেরিকা)", labelEn: "ISNA", fajr: 15, isha: 15 },
   egypt: { labelBn: "মিসরীয় সাধারণ সংস্থা", labelEn: "Egyptian General Authority", fajr: 19.5, isha: 17.5 },
   makkah: { labelBn: "উম্মুল কুরা, মক্কা", labelEn: "Umm al-Qura, Makkah", fajr: 18.5, isha: 0, ishaMinutes: 90 },
   dubai: { labelBn: "দুবাই", labelEn: "Dubai", fajr: 18.2, isha: 18.2 },
 };
+
+/** The five start times a member may shift to match their own mosque. */
+export const ADJUSTABLE_PRAYERS: readonly PrayerAdjustKey[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
+export const PRAYER_ADJUST_LIMIT = 30;
+
+/**
+ * A per-waqt adjustment as stored or sent: known keys only, whole minutes
+ * within ±30, zeros dropped. Returns null when `raw` is not a valid
+ * adjustment (the API rejects it); readers use `?? {}`.
+ */
+export function parsePrayerAdjust(raw: unknown): PrayerAdjust | null {
+  if (raw === null || raw === undefined || raw === "") return {};
+  let v = raw;
+  if (typeof v === "string") {
+    try {
+      v = JSON.parse(v);
+    } catch {
+      return null;
+    }
+  }
+  if (typeof v !== "object" || v === null || Array.isArray(v)) return null;
+  const out: PrayerAdjust = {};
+  for (const [k, n] of Object.entries(v as Record<string, unknown>)) {
+    if (!(ADJUSTABLE_PRAYERS as readonly string[]).includes(k)) return null;
+    if (typeof n !== "number" || !Number.isInteger(n) || Math.abs(n) > PRAYER_ADJUST_LIMIT) return null;
+    if (n !== 0) out[k as PrayerAdjustKey] = n;
+  }
+  return out;
+}
 
 /** Ishraq begins ~20 min after sunrise (documented assumption, PLAN.md §9). */
 export const ISHRAQ_AFTER_SUNRISE_MIN = 20;
@@ -102,7 +131,7 @@ function asrTime(factor: number, lat: number, decl: number): number {
  */
 export function computePrayerTimes(
   dateParts: { y: number; m: number; d: number },
-  cfg: Pick<PrayerConfig, "lat" | "lng" | "tzOffsetHours" | "method" | "madhhab">
+  cfg: Pick<PrayerConfig, "lat" | "lng" | "tzOffsetHours" | "method" | "madhhab" | "adjust">
 ): PrayerTimes {
   const method = CALC_METHODS[cfg.method] ?? CALC_METHODS.karachi;
   const asrFactor = cfg.madhhab === "shafii" ? 1 : 2; // Hanafi = 2
@@ -155,6 +184,14 @@ export function computePrayerTimes(
     maghrib = up(maghrib);
     isha = up(isha);
   }
+  const noon = dhuhrStart;
+  // the member's own mosque: whole minutes on top of the calculation
+  const mine = (k: PrayerAdjustKey) => cfg.adjust?.[k] ?? 0;
+  fajr += mine("fajr");
+  dhuhrStart += mine("dhuhr");
+  asrStart += mine("asr");
+  maghrib += mine("maghrib");
+  isha += mine("isha");
 
   // Derived blessed times
   const ishraq = sunrise + ISHRAQ_AFTER_SUNRISE_MIN;
@@ -174,6 +211,7 @@ export function computePrayerTimes(
     sunset,
     isha,
     tahajjud,
+    noon,
   };
 }
 
@@ -244,7 +282,7 @@ export interface ForbiddenWindow {
 export function forbiddenWindows(t: PrayerTimes): ForbiddenWindow[] {
   return [
     { key: "sunrise", labelBn: "সূর্যোদয়ের নিষিদ্ধ সময়", from: t.sunrise - 15, to: t.sunrise + 20 },
-    { key: "zawal", labelBn: "জওয়াল (সূর্য মাথার উপরে)", from: t.dhuhr - 10, to: t.dhuhr + 5 },
+    { key: "zawal", labelBn: "জওয়াল (সূর্য মাথার উপরে)", from: t.noon - 10, to: t.noon + 5 },
     { key: "sunset", labelBn: "সূর্যাস্তের নিষিদ্ধ সময়", from: t.sunset - 15, to: t.sunset + 5 },
   ];
 }
