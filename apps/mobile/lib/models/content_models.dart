@@ -9,6 +9,8 @@ import 'package:flutter/foundation.dart' show debugPrint, visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../core/honorific.dart';
+
 // ── Pack models (mirror domain.ts content interfaces) ────────────────────────
 
 class DuaCategory {
@@ -539,7 +541,8 @@ class ContentPack {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_prefsKey(file));
       if (raw != null) {
-        final d = jsonDecode(raw);
+        // a copy kept by an older version may predate the honorific rule
+        final d = withHonorific(jsonDecode(raw));
         if (d is Map<String, dynamic>) return d;
       }
     } catch (_) {}
@@ -578,7 +581,7 @@ class ContentPack {
         var data = await _phoneCopy(file);
         if (data == null) {
           final raw = await _loadAsset('assets/content/$file');
-          final decoded = jsonDecode(raw);
+          final decoded = withHonorific(jsonDecode(raw));
           data = decoded is Map<String, dynamic>
               ? decoded
               : <String, dynamic>{};
@@ -620,7 +623,11 @@ class ContentPack {
     List<Map<String, dynamic>> fallback,
   ) {
     final items = (j[key] as List? ?? []).whereType<Map>().toList();
-    if (items.isEmpty) return fallback;
+    if (items.isEmpty) {
+      return [
+        for (final m in fallback) withHonorific(m) as Map<String, dynamic>,
+      ];
+    }
     return items.map((e) => Map<String, dynamic>.from(e)).toList();
   }
 

@@ -180,7 +180,7 @@ function IslamicNamesView({ onBack }: { onBack: () => void }) {
       <BackBar label="আরও-তে ফিরুন" onBack={onBack} />
       <h2 className="text-lg font-bold">ইসলামিক নাম</h2>
       <p className="mt-0.5 text-xs text-muted-foreground">
-        নবীজি ﷺ বলেছেন — সত্য দোয়ার দিন তোমাদের নাম ডেকে ডাকা হবে, সুতরাং সুন্দর নাম রাখো (আবু দাউদ ৪৯৪৮)
+        নবীজি (সা.) বলেছেন — সত্য দোয়ার দিন তোমাদের নাম ডেকে ডাকা হবে, সুতরাং সুন্দর নাম রাখো (আবু দাউদ ৪৯৪৮)
       </p>
       <div className="relative mt-3">
         <Input

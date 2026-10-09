@@ -5,6 +5,7 @@
 // only pays the network cost once per pack.
 
 import { apiUrl } from "@/lib/api-base";
+import { withHonorific } from "@/lib/honorific";
 import type {
   ArticleItem,
   Course,
@@ -76,7 +77,7 @@ async function fetchPack<P>(key: string): Promise<PackModule<P>> {
   const res = await fetch(apiUrl(`/api/content/${key}`), { headers: { Accept: "application/json" } });
   if (!res.ok) throw new Error(`কন্টেন্ট লোড করা যায়নি (${key}, ${res.status})`);
   const json = (await res.json()) as { data: P };
-  return { default: json.data };
+  return { default: withHonorific(json.data) };
 }
 
 const loaders = {

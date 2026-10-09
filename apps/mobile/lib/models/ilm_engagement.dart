@@ -10,6 +10,7 @@ import 'dart:convert';
 
 import 'package:flutter/services.dart' show rootBundle;
 
+import '../core/honorific.dart';
 import 'user.dart';
 
 export 'content_models.dart' show Quiz, QuizQuestion;
@@ -394,7 +395,7 @@ class QuizLiveTokenResponse {
 Future<List<CourseDetail>> loadBundledCourses() async {
   try {
     final raw = await rootBundle.loadString('assets/content/courses.json');
-    final decoded = jsonDecode(raw);
+    final decoded = withHonorific(jsonDecode(raw));
     final courses = decoded is Map ? decoded['courses'] : null;
     if (courses is! List) return const [];
     return courses
