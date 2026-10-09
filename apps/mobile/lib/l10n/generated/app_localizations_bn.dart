@@ -2998,4 +2998,7 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get quiz_practice_go => 'অনুশীলনের কুইজ দিন';
+
+  @override
+  String get quick_qibla_desc => 'নামাজের দিক খুঁজুন';
 }

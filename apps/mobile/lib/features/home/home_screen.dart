@@ -60,7 +60,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// "সময়সূচি দেখুন" affordance scrolls it into view (the in-page hero
   /// transition; the schedule is a section of THIS screen, so no route
   /// Hero tag is involved).
-  final GlobalKey _scheduleKey = GlobalKey();
 
   @override
   void initState() {
@@ -216,17 +215,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   /// Smooth in-page scroll from the ring hero to the schedule section
   /// (C-W4b hero interpretation: the schedule lives on the same screen, so
   /// the "flight" is an animated ensureVisible, not a route Hero).
-  void _showSchedule() {
-    final ctx = _scheduleKey.currentContext;
-    if (ctx == null) return;
-    Scrollable.ensureVisible(
-      ctx,
-      duration: SLMotion.slow,
-      curve: SLMotion.standard,
-      alignment: 0.1,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final prayer = ref.watch(prayerProvider);
@@ -285,7 +273,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 prayer: prayer,
                 bn: bn,
                 friday: friday,
-                onShowSchedule: _showSchedule,
                 todayPrayers: [
                   for (final key in const [
                     PrayerKey.fajr,
@@ -318,7 +305,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               // ── Schedule (the hero's in-page destination) ──
               SectionHeader(
-                key: _scheduleKey,
                 context.t('prayer_schedule'),
                 icon: PhosphorIconsRegular.clock,
               ),
@@ -475,11 +461,13 @@ class _QuickAccessGrid extends StatelessWidget {
             subtitle: context.t('quick_quran_desc'),
             route: '/ilm/quran',
           ),
+          // (the diary is the muhasaba card's own button just above, and the
+          // আমল tab — this slot opens what Home could not reach before)
           (
-            icon: PhosphorIconsFill.clipboardText,
-            title: context.t('quick_muhasaba'),
-            subtitle: context.t('quick_muhasaba_desc'),
-            route: '/amal',
+            icon: PhosphorIconsRegular.compass,
+            title: context.t('more_qibla'),
+            subtitle: context.t('quick_qibla_desc'),
+            route: '/more/qibla',
           ),
           (
             icon: PhosphorIconsFill.chartPieSlice,
