@@ -942,5 +942,16 @@
   "sunnah_mark_done": "Practised today",
   "sunnah_done_today": "Done today",
   "sunnah_today_count": "%n sunnahs practised today — alhamdulillah",
-  "sunnah_today_hint": "Tick the sunnahs you practised today"
+  "sunnah_today_hint": "Tick the sunnahs you practised today",
+  "ilm_desc_courses": "Learn step by step — lessons and progress",
+  "ilm_desc_quizzes": "Test yourself and learn from mistakes",
+  "ilm_desc_live_quiz": "A quiz together with your usrah",
+  "ilm_desc_quran": "Arabic, Bengali translation and recitation",
+  "ilm_desc_adhkar": "Morning, evening and after-salah dhikr with counters",
+  "ilm_desc_duas": "Everyday sunnah duas with sources",
+  "ilm_desc_sunnahs": "Daily and forgotten sunnahs — tick what you practise",
+  "ilm_desc_names99": "With meanings and virtues",
+  "ilm_desc_islamic_names": "Meaningful names for boys and girls",
+  "ilm_desc_iman_branches": "The 70 branches — and a self-check",
+  "ilm_desc_articles": "Writing on tarbiyah, dawah and sunnah"
 }

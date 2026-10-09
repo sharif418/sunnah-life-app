@@ -131,42 +131,42 @@ class MoreScreen extends ConsumerWidget {
                 context.t('more_section_worship'),
                 icon: PhosphorIconsRegular.mosque,
               ),
-              _MoreGroupCard(
+              MenuGroupCard(
                 rows: [
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.calculator,
                     title: context.t('more_zakat'),
                     onTap: () => context.push('/more/zakat'),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.compass,
                     title: context.t('more_qibla'),
                     onTap: () => context.push('/more/qibla'),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.mosque,
                     title: context.t('more_mosque'),
                     onTap: () => context.push('/more/mosques'),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     // a speech bubble: the FAQ row below keeps the "?"
                     icon: PhosphorIconsRegular.chatCircle,
                     title: context.t('more_masala'),
                     onTap: () => context.push('/more/masala'),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.broadcast,
                     title: context.t('more_live'),
                     onTap: () => context.push('/more/live'),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.bellSlash,
                     title: context.t('more_autosilent'),
                     onTap: () => context.push('/more/autosilent'),
                   ),
                   // Guard-module seed (W4d) — hidden while the admin flag is off.
                   if (detoxEnabled)
-                    _MoreRow(
+                    MenuRow(
                       icon: PhosphorIconsRegular.shield,
                       title: context.t('more_detox'),
                       onTap: () => context.push('/more/detox'),
@@ -174,54 +174,31 @@ class MoreScreen extends ConsumerWidget {
                 ],
               ),
 
-              // ── জ্ঞান ── (same routes as the Ilm tab — no duplicates)
-              SectionHeader(
-                context.t('more_section_knowledge'),
-                icon: PhosphorIconsRegular.graduationCap,
-              ),
-              _MoreGroupCard(
-                rows: [
-                  _MoreRow(
-                    icon: PhosphorIconsRegular.sun,
-                    title: context.t('ilm_names99'),
-                    onTap: () => context.push('/ilm/names99'),
-                  ),
-                  _MoreRow(
-                    icon: PhosphorIconsRegular.baby,
-                    title: context.t('ilm_baby_names'),
-                    onTap: () => context.push('/ilm/islamic-names'),
-                  ),
-                  _MoreRow(
-                    icon: PhosphorIconsRegular.heart,
-                    title: context.t('ilm_iman_branches'),
-                    onTap: () => context.push('/ilm/iman-branches'),
-                  ),
-                ],
-              ),
-
-              // ── সহায়তা ──
+              // (the জ্ঞান group — 99 names, baby names, iman branches —
+              // repeated the Ilm tab's entries; knowledge now has ONE home:
+              // the Ilm tab. More keeps tools, help and the account.)
               SectionHeader(
                 context.t('more_section_support'),
                 icon: PhosphorIconsRegular.headset,
               ),
-              _MoreGroupCard(
+              MenuGroupCard(
                 rows: [
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.headset,
                     title: context.t('more_support'),
                     onTap: () => context.push('/more/support'),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.userPlus,
                     title: context.t('more_usrah_join'),
                     onTap: () => showUsrahJoinSheet(context),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.star,
                     title: context.t('more_feedback'),
                     onTap: () => showFeedbackSheet(context),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.question,
                     title: context.t('more_faq'),
                     onTap: () => context.push('/more/faq'),
@@ -234,14 +211,14 @@ class MoreScreen extends ConsumerWidget {
                 context.t('more_section_app'),
                 icon: PhosphorIconsRegular.dotsNine,
               ),
-              _MoreGroupCard(
+              MenuGroupCard(
                 rows: [
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.info,
                     title: context.t('more_about'),
                     onTap: () => context.push('/more/about'),
                   ),
-                  _MoreRow(
+                  MenuRow(
                     icon: PhosphorIconsRegular.shareNetwork,
                     title: context.t('more_share_app'),
                     onTap: () => _shareApp(context),
@@ -255,10 +232,10 @@ class MoreScreen extends ConsumerWidget {
                   child: Text(context.t('more_groups')),
                 ),
                 const SizedBox(height: SLSpacing.s4),
-                _MoreGroupCard(
+                MenuGroupCard(
                   rows: [
                     for (final g in groups)
-                      _MoreRow(
+                      MenuRow(
                         icon: PhosphorIconsRegular.globe,
                         title: g.titleBn,
                         subtitle: g.descBn,
@@ -541,94 +518,6 @@ class _ServiceRow extends StatelessWidget {
 
 /// One grouped-card section: hairline dividers between the rows (the Amal
 /// Today compact-row idiom).
-class _MoreGroupCard extends StatelessWidget {
-  const _MoreGroupCard({required this.rows});
-  final List<_MoreRow> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (var i = 0; i < rows.length; i++) ...[
-            if (i > 0)
-              Divider(
-                height: 1,
-                indent: SLSpacing.s16,
-                endIndent: SLSpacing.s16,
-                color: Theme.of(context).dividerColor.withValues(alpha: 0.6),
-              ),
-            rows[i],
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-/// One More row — the WHOLE row is tappable (44px+; list rows 60–64dp).
-class _MoreRow extends StatelessWidget {
-  const _MoreRow({
-    required this.icon,
-    required this.title,
-    required this.onTap,
-    this.subtitle,
-  });
-  final IconData icon;
-  final String title;
-  final String? subtitle;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 60),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: SLSpacing.s16,
-            vertical: SLSpacing.s12,
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: theme.colorScheme.primary),
-              const SizedBox(width: SLSpacing.s12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    if (subtitle?.isNotEmpty ?? false)
-                      Text(
-                        subtitle!,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const DirectionalIcon(PhosphorIconsRegular.caretRight),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// মতামত — textarea + POST /api/feedback, from the More tile (kept a
 /// sheet per spec; works for guests too — the endpoint is public).
 Future<void> showFeedbackSheet(BuildContext context) {

@@ -942,5 +942,16 @@
   "sunnah_mark_done": "عملت بها اليوم",
   "sunnah_done_today": "تمت اليوم",
   "sunnah_today_count": "عملت اليوم بـ %n من السنن — الحمد لله",
-  "sunnah_today_hint": "علّم السنن التي عملت بها اليوم"
+  "sunnah_today_hint": "علّم السنن التي عملت بها اليوم",
+  "ilm_desc_courses": "تعلّم خطوة بخطوة",
+  "ilm_desc_quizzes": "اختبر نفسك وتعلّم من أخطائك",
+  "ilm_desc_live_quiz": "مسابقة مع أسرتك",
+  "ilm_desc_quran": "العربية والترجمة والتلاوة",
+  "ilm_desc_adhkar": "أذكار الصباح والمساء وبعد الصلاة",
+  "ilm_desc_duas": "أدعية يومية مع مصادرها",
+  "ilm_desc_sunnahs": "سنن يومية ومنسية",
+  "ilm_desc_names99": "مع المعاني والفضائل",
+  "ilm_desc_islamic_names": "أسماء ذات معنى للأولاد والبنات",
+  "ilm_desc_iman_branches": "الشعب السبعون والفحص الذاتي",
+  "ilm_desc_articles": "مقالات في التربية والدعوة والسنة"
 }

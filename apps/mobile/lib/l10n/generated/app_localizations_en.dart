@@ -2931,4 +2931,39 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sunnah_today_hint => 'Tick the sunnahs you practised today';
+
+  @override
+  String get ilm_desc_courses => 'Learn step by step — lessons and progress';
+
+  @override
+  String get ilm_desc_quizzes => 'Test yourself and learn from mistakes';
+
+  @override
+  String get ilm_desc_live_quiz => 'A quiz together with your usrah';
+
+  @override
+  String get ilm_desc_quran => 'Arabic, Bengali translation and recitation';
+
+  @override
+  String get ilm_desc_adhkar =>
+      'Morning, evening and after-salah dhikr with counters';
+
+  @override
+  String get ilm_desc_duas => 'Everyday sunnah duas with sources';
+
+  @override
+  String get ilm_desc_sunnahs =>
+      'Daily and forgotten sunnahs — tick what you practise';
+
+  @override
+  String get ilm_desc_names99 => 'With meanings and virtues';
+
+  @override
+  String get ilm_desc_islamic_names => 'Meaningful names for boys and girls';
+
+  @override
+  String get ilm_desc_iman_branches => 'The 70 branches — and a self-check';
+
+  @override
+  String get ilm_desc_articles => 'Writing on tarbiyah, dawah and sunnah';
 }

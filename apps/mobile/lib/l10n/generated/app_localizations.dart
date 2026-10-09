@@ -5757,6 +5757,72 @@ abstract class AppLocalizations {
   /// In bn, this message translates to:
   /// **'আজ যে সুন্নাহগুলো পালন করলেন, টিক দিয়ে রাখুন'**
   String get sunnah_today_hint;
+
+  /// No description provided for @ilm_desc_courses.
+  ///
+  /// In bn, this message translates to:
+  /// **'ধাপে ধাপে দ্বীন শিখুন — পাঠ ও অগ্রগতি'**
+  String get ilm_desc_courses;
+
+  /// No description provided for @ilm_desc_quizzes.
+  ///
+  /// In bn, this message translates to:
+  /// **'নিজের জ্ঞান যাচাই করুন, ভুল থেকে শিখুন'**
+  String get ilm_desc_quizzes;
+
+  /// No description provided for @ilm_desc_live_quiz.
+  ///
+  /// In bn, this message translates to:
+  /// **'উসরার সবার সাথে একসাথে কুইজ'**
+  String get ilm_desc_live_quiz;
+
+  /// No description provided for @ilm_desc_quran.
+  ///
+  /// In bn, this message translates to:
+  /// **'আরবি, বাংলা অনুবাদ ও তিলাওয়াত'**
+  String get ilm_desc_quran;
+
+  /// No description provided for @ilm_desc_adhkar.
+  ///
+  /// In bn, this message translates to:
+  /// **'সকাল-সন্ধ্যা ও নামাজের পরের যিকির, গণনাসহ'**
+  String get ilm_desc_adhkar;
+
+  /// No description provided for @ilm_desc_duas.
+  ///
+  /// In bn, this message translates to:
+  /// **'প্রতিদিনের মাসনূন দোয়া, সূত্রসহ'**
+  String get ilm_desc_duas;
+
+  /// No description provided for @ilm_desc_sunnahs.
+  ///
+  /// In bn, this message translates to:
+  /// **'দৈনন্দিন ও ভুলে যাওয়া সুন্নাহ'**
+  String get ilm_desc_sunnahs;
+
+  /// No description provided for @ilm_desc_names99.
+  ///
+  /// In bn, this message translates to:
+  /// **'অর্থ ও ফযীলতসহ'**
+  String get ilm_desc_names99;
+
+  /// No description provided for @ilm_desc_islamic_names.
+  ///
+  /// In bn, this message translates to:
+  /// **'শিশুর অর্থবহ নাম — ছেলে ও মেয়ে'**
+  String get ilm_desc_islamic_names;
+
+  /// No description provided for @ilm_desc_iman_branches.
+  ///
+  /// In bn, this message translates to:
+  /// **'৭০ শাখা — আর নিজের ঈমান যাচাই'**
+  String get ilm_desc_iman_branches;
+
+  /// No description provided for @ilm_desc_articles.
+  ///
+  /// In bn, this message translates to:
+  /// **'তারবিয়াহ, দাওয়াহ ও সুন্নাহ নিয়ে লেখা'**
+  String get ilm_desc_articles;
 }
 
 class _AppLocalizationsDelegate
