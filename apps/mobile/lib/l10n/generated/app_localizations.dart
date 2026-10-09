@@ -1837,7 +1837,7 @@ abstract class AppLocalizations {
   /// No description provided for @quran_juz.
   ///
   /// In bn, this message translates to:
-  /// **'জুয়'**
+  /// **'পারা'**
   String get quran_juz;
 
   /// No description provided for @sunnah_cat_all.

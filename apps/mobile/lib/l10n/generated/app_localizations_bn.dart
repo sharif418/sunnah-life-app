@@ -899,7 +899,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get badge_new => 'নতুন';
 
   @override
-  String get quran_juz => 'জুয়';
+  String get quran_juz => 'পারা';
 
   @override
   String get sunnah_cat_all => 'সব';
